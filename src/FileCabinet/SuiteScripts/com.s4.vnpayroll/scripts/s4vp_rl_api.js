@@ -34,6 +34,19 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		}
 	}
 
+	/** internal id của custom record của gói (để mở danh sách NetSuite). */
+	function recordTypeIds() {
+		const out = {};
+		try {
+			for (const r of Store.run("SELECT internalid, scriptid FROM customrecordtype WHERE UPPER(scriptid) LIKE 'CUSTOMRECORD_S4VP_%'", [], "s4vp_rectypes")) {
+				out[String(r.scriptid).toLowerCase().replace("customrecord_s4vp_", "")] = String(r.internalid);
+			}
+		} catch (e) {
+			log.error({ title: "recordTypeIds", details: String(e.message || e) });
+		}
+		return out;
+	}
+
 	function bootstrap() {
 		let subsidiaries = [];
 		try {
@@ -55,6 +68,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 			periods: Periods.list().map((p) => ({ id: p.id, code: p.name, paygroup: p.paygroup, start: p.start, end: p.end, status: p.status, attStatus: p.att_status, taxMonth: p.tax_month, stdDays: p.std_days, last: p.last_in_month })),
 			unverified,
 			earningTypes: setup.length ? Settings.earningTypes().list.filter((e) => e.isActive).map((e) => ({ id: e.id, code: e.code, name: e.description, taxTreatment: e.taxTreatment, isOvertime: e.isOvertime })) : [],
+			recordTypeIds: recordTypeIds(),
 			recordTypes: { batch: Store.rec("batch").type, period: Store.rec("period").type, employee: Store.rec("employee").type, attendance: Store.rec("attendance").type, setup: Store.rec("setup").type, company: Store.rec("company").type },
 		};
 	}

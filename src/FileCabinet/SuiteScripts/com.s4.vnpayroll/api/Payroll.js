@@ -514,7 +514,13 @@ define([
 		const b = getBatch(batchId);
 		if (!b.calculated) throw fail("Calculate the batch first", "Hãy tính bảng lương trước");
 		const c = context(b);
-		return Journal.buildRelease(releaseModel(c), journalConfig(c));
+		const je = Journal.buildRelease(releaseModel(c), journalConfig(c));
+		// Số hiệu TK cho màn hình xem trước
+		const ids = [...new Set(je.lines.map((l) => String(l.account)))];
+		const numbers = {};
+		if (ids.length) for (const a of Store.run(`SELECT id, acctnumber FROM account WHERE id IN (${ids.map(() => "?").join(",")})`, ids, "s4vp_je_accounts")) numbers[String(a.id)] = a.acctnumber;
+		je.lines = je.lines.map((l) => Object.assign({}, l, { accountNumber: numbers[String(l.account)] || l.account }));
+		return je;
 	}
 
 	function release(batchId) {

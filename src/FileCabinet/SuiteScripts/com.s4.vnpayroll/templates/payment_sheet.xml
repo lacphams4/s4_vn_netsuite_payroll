@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<!-- VP643000 Bảng thanh toán tiền lương, A4 ngang. Dữ liệu: alias data, dựng bằng core/PrintModel.paymentSheet. -->
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<macrolist>
+		<macro id="pagefooter">
+			<table width="100%"><tr><td align="right" style="font-size: 7pt; color: #666666;"><pagenumber/> / <totalpages/></td></tr></table>
+		</macro>
+	</macrolist>
+	<style type="text/css">
+		body { font-family: NotoSans, sans-serif; font-size: 6pt; }
+		td { padding: 1px 1px; vertical-align: top; }
+		table.grid { border-collapse: collapse; }
+		table.grid th { border: 0.5pt solid #000000; font-weight: bold; vertical-align: middle; padding: 1px; }
+		p.h { margin: 0; text-align: center; }
+		table.grid td { border: 0.5pt solid #000000; }
+		.b { font-weight: bold; }
+		.i { font-style: italic; }
+		.title { font-size: 12pt; font-weight: bold; }
+		.small { font-size: 7pt; }
+	</style>
+</head>
+<body size="A4-landscape" padding="0.6cm 0.5cm 0.6cm 0.6cm" footer="pagefooter" footer-height="0.6cm">
+	<table width="100%"><tr>
+		<#list data.logos as l><td width="8%" style="vertical-align: middle;"><img src="${l.url?html}" style="height: 28px;" /></td></#list>
+		<td style="vertical-align: middle; font-size: 8pt;"><span class="b">${data.companyName?html}</span><#list data.companyLines as c><br/>${c?html}</#list></td>
+	</tr></table>
+	<p class="title" align="center">${data.title?html}</p>
+	<p align="center" style="font-size: 8pt;">${data.periodLine?html} - ${data.batchLine?html}</p>
+	<p align="right" class="small i">${data.currencyLine?html}</p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<thead><tr>
+			<th width="2%" align="center"><p class="h" align="center">${data.heads.stt?html}</p></th>
+			<th width="3.6%" align="center"><p class="h" align="center">${data.heads.code?html}</p></th>
+			<th width="8%" align="center"><p class="h" align="center">${data.heads.name?html}</p></th>
+			<th width="5.3%" align="center"><p class="h" align="center">${data.heads.base?html}</p></th>
+			<th width="2.4%" align="center"><p class="h" align="center">${data.heads.leave?html}</p></th>
+			<th width="4.8%" align="center"><p class="h" align="center">${data.heads.benefit?html}</p></th>
+			<th width="5.3%" align="center"><p class="h" align="center">${data.heads.main?html}</p></th>
+			<th width="5.3%" align="center"><p class="h" align="center">${data.heads.gross?html}</p></th>
+			<th width="4.6%" align="center"><p class="h" align="center">${data.heads.exempt?html}</p></th>
+			<th width="5.3%" align="center"><p class="h" align="center">${data.heads.taxable?html}</p></th>
+			<th width="5.3%" align="center"><p class="h" align="center">${data.heads.deduct?html}</p></th>
+			<th width="5.3%" align="center"><p class="h" align="center">${data.heads.assessable?html}</p></th>
+			<th width="4.8%" align="center"><p class="h" align="center">${data.heads.pit?html}</p></th>
+			<th width="5%" align="center"><p class="h" align="center">${data.heads.si?html}</p></th>
+			<th width="4.6%" align="center"><p class="h" align="center">${data.heads.hi?html}</p></th>
+			<th width="4.2%" align="center"><p class="h" align="center">${data.heads.ui?html}</p></th>
+			<th width="5%" align="center"><p class="h" align="center">${data.heads.insTotal?html}</p></th>
+			<th width="4.8%" align="center"><p class="h" align="center">${data.heads.eeIns?html}</p></th>
+			<th width="5%" align="center"><p class="h" align="center">${data.heads.adjust?html}</p></th>
+			<th width="5.5%" align="center"><p class="h" align="center">${data.heads.net?html}</p></th>
+			<th width="2.9%" align="center"><p class="h" align="center">${data.heads.sign?html}</p></th>
+		</tr></thead>
+		<#list data.rows as r>
+		<tr>
+			<td align="center">${r.stt}</td><td>${r.code?html}</td><td>${r.name?html}</td>
+			<td align="right">${r.base}</td><td align="right">${r.leave}</td><td align="right">${r.benefit}</td><td align="right">${r.main}</td>
+			<td align="right">${r.gross}</td><td align="right">${r.exempt}</td><td align="right">${r.taxable}</td><td align="right">${r.deduct}</td>
+			<td align="right">${r.assessable}</td><td align="right">${r.pit}</td><td align="right">${r.si}</td><td align="right">${r.hi}</td>
+			<td align="right">${r.ui}</td><td align="right">${r.insTotal}</td><td align="right">${r.eeIns}</td><td align="right">${r.adjust}</td>
+			<td align="right" class="b">${r.net}</td><td></td>
+		</tr>
+		</#list>
+		<tr>
+			<td></td><td colspan="2" class="b">${data.heads.total?html}</td>
+			<td align="right" class="b">${data.total.base}</td><td align="right" class="b">${data.total.leave}</td><td align="right" class="b">${data.total.benefit}</td><td align="right" class="b">${data.total.main}</td>
+			<td align="right" class="b">${data.total.gross}</td><td align="right" class="b">${data.total.exempt}</td><td align="right" class="b">${data.total.taxable}</td><td align="right" class="b">${data.total.deduct}</td>
+			<td align="right" class="b">${data.total.assessable}</td><td align="right" class="b">${data.total.pit}</td><td align="right" class="b">${data.total.si}</td><td align="right" class="b">${data.total.hi}</td>
+			<td align="right" class="b">${data.total.ui}</td><td align="right" class="b">${data.total.insTotal}</td><td align="right" class="b">${data.total.eeIns}</td><td align="right" class="b">${data.total.adjust}</td>
+			<td align="right" class="b">${data.total.net}</td><td></td>
+		</tr>
+	</table>
+	<p class="i" style="margin-top: 4px; font-size: 8pt;">${data.netWords?html}</p>
+	<table width="100%" table-layout="fixed" style="margin-top: 8px; page-break-inside: avoid; font-size: 8pt;">
+		<tr><#list data.signers as s><td width="33%" align="center"><span class="b">${s.title?html}</span><br/><span class="small i">${data.signNote?html}</span><br/><br/><br/><br/>${s.name?html}</td></#list></tr>
+	</table>
+</body>
+</pdf>

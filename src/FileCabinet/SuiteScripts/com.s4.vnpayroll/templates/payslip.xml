@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<!-- VP641000 Phiếu lương: mỗi nhân viên một trang, A4 dọc. Dữ liệu: alias data, dựng bằng core/PrintModel.payslips. -->
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<macrolist>
+		<macro id="pageheader">
+			<table width="100%"><tr>
+				<#list data.logos as l><td width="20%" style="vertical-align: middle;"><img src="${l.url?html}" style="height: 32px;" /></td></#list>
+				<td style="vertical-align: middle;"><span class="b">${data.companyName?html}</span><#list data.companyLines as c><br/><span class="small">${c?html}</span></#list></td>
+			</tr></table>
+		</macro>
+		<macro id="pagefooter">
+			<table width="100%"><tr><td align="right" style="font-size: 7pt; color: #666666;"><pagenumber/> / <totalpages/></td></tr></table>
+		</macro>
+	</macrolist>
+	<style type="text/css">
+		body { font-family: NotoSans, sans-serif; font-size: 9pt; }
+		td { padding: 2px 4px; vertical-align: top; }
+		table.grid { border-collapse: collapse; }
+		table.grid th { border: 0.5pt solid #000000; font-weight: bold; padding: 3px; background-color: #f0f0f0; }
+		p.h { margin: 0; text-align: center; }
+		table.grid td { border: 0.5pt solid #000000; }
+		.b { font-weight: bold; }
+		.i { font-style: italic; }
+		.small { font-size: 7.5pt; }
+		.title { font-size: 13pt; font-weight: bold; }
+		.sec { font-weight: bold; margin-top: 8px; }
+	</style>
+</head>
+<body size="A4" padding="1.0cm 1.4cm 1.0cm 1.6cm" header="pageheader" header-height="1.4cm" footer="pagefooter" footer-height="0.6cm">
+<#list data.pages as pg>
+	<p class="title" align="center">${data.title?html}</p>
+	<p align="center">${data.periodLine?html}</p>
+	<p align="center" class="small i">${data.batchLine?html}</p>
+	<table width="100%" table-layout="fixed" style="margin-top: 6px;">
+		<#list pg.info as f>
+		<tr><td width="40%">${f.label?html}</td><td width="60%" class="b">${f.value?html}</td></tr>
+		</#list>
+	</table>
+	<p class="sec">${data.labels.a?html}</p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<thead><tr>
+			<th width="8%" align="center"><p class="h" align="center">${data.labels.stt?html}</p></th>
+			<th width="44%" align="center"><p class="h" align="center">${data.labels.item?html}</p></th>
+			<th width="12%" align="center"><p class="h" align="center">${data.labels.qty?html}</p></th>
+			<th width="16%" align="center"><p class="h" align="center">${data.labels.rate?html}</p></th>
+			<th width="20%" align="center"><p class="h" align="center">${data.labels.amount?html}</p></th>
+		</tr></thead>
+		<#list pg.earnings as e>
+		<tr><td align="center">${e.stt}</td><td>${e.name?html}</td><td align="right">${e.qty}</td><td align="right">${e.rate}</td><td align="right">${e.amount}</td></tr>
+		</#list>
+		<tr><td></td><td colspan="3" class="b">${data.labels.gross?html}</td><td align="right" class="b">${pg.gross}</td></tr>
+	</table>
+	<p class="sec">${data.labels.b?html}</p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<#list pg.deductions as d>
+		<tr><td width="80%">${d.label?html}</td><td width="20%" align="right">${d.amount}</td></tr>
+		</#list>
+		<tr><td width="80%" class="b">${data.labels.totalDeduction?html}</td><td width="20%" align="right" class="b">${pg.totalDeduction}</td></tr>
+	</table>
+	<p class="sec">${data.labels.c?html}</p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<#list pg.tax as x>
+		<tr><td width="80%">${x.label?html}</td><td width="20%" align="right">${x.value}</td></tr>
+		</#list>
+	</table>
+	<table width="100%" table-layout="fixed" style="margin-top: 8px;">
+		<tr><td width="70%" class="title">${data.labels.net?html}</td><td width="30%" align="right" class="title">${pg.net}</td></tr>
+		<tr><td colspan="2" class="i">${data.labels.words?html}: ${pg.netWords?html}</td></tr>
+	</table>
+	<p class="small i" style="margin-top: 10px;">${data.labels.confidential?html}</p>
+	<#sep><pbr/></#sep>
+</#list>
+</body>
+</pdf>

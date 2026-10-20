@@ -1,0 +1,11 @@
+<singlepageapp scriptid="custspa_s4vp_payroll">
+  <name>S4VP VN Payroll</name>
+  <description>VN Payroll workspace: payroll batches (load employees, calculate, approve, release, reverse, agency bills, bank file, print), payroll profiles, advances and setup.</description>
+  <url>s4vp-payroll</url>
+  <folder>[/SuiteScripts/com.s4.vnpayroll/spa/payroll/]</folder>
+  <clientscriptfile>[/SuiteScripts/com.s4.vnpayroll/spa/payroll/SpaClient.js]</clientscriptfile>
+  <serverscriptfile>[/SuiteScripts/com.s4.vnpayroll/spa/payroll/SpaServer.js]</serverscriptfile>
+  <loglevel>AUDIT</loglevel>
+  <audienceallroles>F</audienceallroles>
+  <audienceroles>ADMINISTRATOR|[customrole_s4vp_hr]|[customrole_s4vp_accountant]</audienceroles>
+</singlepageapp>

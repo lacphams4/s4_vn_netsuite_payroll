@@ -1,0 +1,18 @@
+<suitelet scriptid="customscript_s4vp_sl_print">
+  <name>S4VP Payroll Print (Suitelet)</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_sl_print.js]</scriptfile>
+  <description>PDF payslips, payroll payment sheet and contractor fee settlement of a payroll batch (format=xml returns the filled template for debugging).</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_sl_print">
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>AUDIT</loglevel>
+      <status>RELEASED</status>
+      <title>S4VP Payroll Print</title>
+      <audslctrole>ADMINISTRATOR|[customrole_s4vp_hr]|[customrole_s4vp_accountant]</audslctrole>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>
