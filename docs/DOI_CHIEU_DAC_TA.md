@@ -17,7 +17,7 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | VP102020 | Gói phúc lợi | Xong | Record cha / con |
 | VP102030 | Quy tắc thu nhập | Xong | Record + điều kiện; bộ máy quy tắc đầy đủ 4.2 (463 test) |
 | VP102040 | Bảng đơn giá | Xong | Record bảng + dòng theo ngày hiệu lực, dự án; thang hoa hồng cho quy tắc nguồn T. Màn hình: danh sách NetSuite |
-| VP102050, VP102060 | Ca, mẫu xoay ca | Lõi xong | ShiftMatcher, ShiftPattern; chưa có record |
+| VP102050, VP102060 | Ca, mẫu xoay ca | Xong | Record ca (giờ vào / ra HH:mm, nghỉ, ân hạn, OT tối thiểu), mẫu xoay ca (chu kỳ mã ca) |
 | VP102070 | Work center | Ánh xạ | Dùng Class của NetSuite |
 | VP102080 | Tài khoản lương theo dự án | Chưa làm | Lõi CostAllocationBuilder đã hỗ trợ ưu tiên tài khoản dự án |
 | VP201000 | Kỳ lương | Xong | Sinh kỳ, đóng kỳ, khóa / mở khóa công |
@@ -27,10 +27,10 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | VP206000 | Số dư phép | Xong | Sổ phép, giao dịch phép, điều chỉnh; SPA > Chấm công và phép |
 | VP207000 | Tổ đội | Xong | Record tổ + thành viên theo hiệu lực |
 | VP303000 - VP306000 | Đơn nghỉ, OT, công tác, ngoại lệ | Xong | Luồng H -> P -> A / R, C; khóa theo kỳ công; giữ chỗ / dùng / hoàn phép; công tác sinh phiếu tạm ứng |
-| VP307000 | Bảng tổng hợp công | Xong | Lập (mô hình ngoại lệ), khóa, mở khóa; nguồn bảng công ký hiệu: chưa |
+| VP307000 | Bảng tổng hợp công | Xong | Lập (mô hình ngoại lệ và bảng công ký hiệu), khóa, mở khóa; Map/Reduce khi trên 150 người |
 | VP308000 | Phiếu sản lượng | Xong (API) | Phiếu cá nhân / tổ, tra đơn giá, nạp thành viên, chia tổ, duyệt, khóa khi ghi sổ, mở khi đảo; vào bảng lương qua quy tắc nguồn O / S (đã chạy TC-TS-01). Chưa có màn hình SPA riêng |
-| VP309000, VP310000, VP502000 | Phân ca, lượt chấm, xử lý chấm công | Lõi xong | Kịch bản 100 người, hiệu năng 2.000 x 31 ngày đạt |
-| VP311000 | Bảng công ký hiệu | Lõi xong | AttendanceSheetCalculator |
+| VP309000, VP310000, VP502000 | Phân ca, lượt chấm, xử lý chấm công | Xong | Sinh phân ca từ mẫu theo tổ (giữ ô sửa tay), nạp lượt chấm (SPA dán CSV / API), xử lý chấm công sinh phiếu trễ / sớm / vắng / thiếu lượt chấm và đơn OT gợi ý ở Tạm giữ, chạy lại thay chứng từ lần trước (đã chạy trên account kỳ 02/2027). Trên 3.000 người x ngày cần chạy nền: chưa có Map/Reduce |
+| VP311000 | Bảng công ký hiệu | Xong (API) | Nạp nhân viên, lưu 31 ô, cộng ký hiệu; lập bảng công cho nhóm nguồn S (CTV vào bảng công). Chưa có lưới nhập trên SPA |
 | VP312000 | Giờ công tính lương | Lõi xong | TimesheetSync, TimeImport; chưa nối Time Bill NetSuite |
 | VP501000 | Cấp phép năm | Xong | Cấp, chuyển phép, hết hạn; bỏ CTV |
 | VP301000 | Tạm ứng lương | Xong | Ghi sổ Nợ 141 / Có tiền; cấn trừ FIFO; hoàn khi đảo |

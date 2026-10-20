@@ -89,7 +89,11 @@ Một agent review đọc toàn bộ lớp NetSuite (không sửa mã) báo 21 �
 
 Hồi quy trên account sau khi sửa (BL000005, 12/2026): tính, duyệt, ghi sổ -> JE1809 (51726) **đã vào sổ cái** (tự duyệt); gọi ghi sổ lần hai -> `resumed`, không tạo JE thứ hai; bill cơ quan thu 51727 - 51729 (28.108.000; 1.820.000; 4.362.669); lập bill lần hai bị chặn; đảo bị chặn khi còn bill; ngày duyệt 21/10/2026 theo giờ Việt Nam (máy chủ lúc đó vẫn ngày 20/10). BL000006 (01/2027): ghi sổ bị NetSuite từ chối vì account chưa mở **kỳ thuế 01/2027** (Thiết lập > Quản lý các kỳ thuế) - việc cấu hình account, em không tự làm; khóa ghi sổ được gỡ đúng sau lỗi.
 
-### 2.6 Báo cáo
+### 2.6 Ca và chấm công máy (kỳ 02/2027)
+
+Ca HC 08:00 - 17:00 nghỉ 60', ân hạn 5', OT tối thiểu 30'; mẫu HC6; sinh phân ca tổ nề 15 - 17/02/2027 (9 ô); nạp 11 lượt chấm. Xử lý chấm công: E012 trễ 20' -> phiếu L, trừ 0,25; E012 ra 18:30 -> đơn OT 1,5 giờ; E013 chỉ chấm vào 16/02 -> phiếu điều chỉnh 0 (thiếu lượt chấm); E015 không chấm 3 ngày -> 3 phiếu điều chỉnh -1; còn lại đúng giờ. Chạy lại: xóa 6 chứng từ Tạm giữ của lần trước, sinh lại đúng 6, không trùng.
+
+### 2.7 Báo cáo
 
 BH tháng 12/2026: 3 người, tổng 28.108.000, chênh lệch C12 tính đúng; D02-LT tháng 12 không có biến động (khớp tháng 11). 05/KK-TNCN quý 4/2026: [16] = 5, [17] = 3, [21] = 349.172.285 (bảng lương đã đảo bị loại). Quyết toán năm 2026: E012, E013, E015 vào 05-1/BK; E014, E016 vào 05-2/BK.
 
