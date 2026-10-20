@@ -101,7 +101,9 @@ Hồi quy sau sửa: mở lại, tính, duyệt BL000006; xử lý chấm công 
 
 Điểm cần quyết: cấp phép năm chỉ lọc hồ sơ "đang hoạt động" (đúng đặc tả 3.6), nên NV05 đã nghỉ việc 31/12/2026 vẫn được cấp phép 2027 vì hồ sơ chưa ngừng hoạt động. Đề xuất: bỏ qua người có ngày làm việc cuối trước năm cấp (sửa cả hai bản).
 
-Chưa kiểm được trên account: tính lương bằng Map/Reduce (cần bảng trên 120 người), lập bảng công / cấp phép chạy nền (trên 150 người), phiếu lương tự phục vụ với tài khoản Employee Center, thao tác bằng role HR / Kế toán (đang thử bằng Administrator).
+Chạy nền (Map/Reduce) trên account, dùng tùy chọn `background` cho bảng nhỏ: lần đầu tính lương BL000007 (03/2027) bị lỗi "vượt giới hạn sử dụng" ở bước map (giới hạn 1.000 đơn vị, mỗi lô nạp lại ngữ cảnh); cơ chế an toàn giữ bảng ở "Chờ tính" và gỡ khóa đúng. Đã chuyển phần tính sang bước reduce (5.000 đơn vị), lô 25 dòng, cho cả Map/Reduce bảng công; chạy lại: BL000007 Đã tính, số khớp tính đồng bộ (E012 thực lĩnh 26.592.500, E015 50.754.400); lập bảng công kỳ 03/2027 chạy nền (thao tác đồng bộ bị chặn trong lúc chạy), khóa công chạy nền -> kỳ chuyển Đã khóa sau khi mọi lô xong.
+
+Chưa kiểm được trên account: hiệu năng 2.000 nhân viên, phiếu lương tự phục vụ với tài khoản Employee Center, thao tác bằng role HR / Kế toán (đang thử bằng Administrator).
 
 ### 2.8 Báo cáo
 

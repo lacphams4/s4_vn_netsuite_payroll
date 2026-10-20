@@ -145,9 +145,9 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		});
 	}
 
-	function calculate(id) {
+	function calculate(id, background) {
 		const lines = Payroll.lines(id);
-		if (lines.length <= SYNC_LIMIT) return Payroll.calculate(id);
+		if (!background && lines.length <= SYNC_LIMIT) return Payroll.calculate(id);
 		// Kiểm tra và giữ khóa trước khi gửi tác vụ (QC2 #1, #2); gửi lỗi thì gỡ khóa
 		Payroll.assertQueueable(id);
 		Payroll.markQueued(id);
@@ -185,7 +185,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					// Kỳ lớn chạy nền (Map/Reduce theo lô 50 nhân viên)
 					const op = { lockAttendance: "lock", unlockAttendance: "unlock", buildAttendance: "build" }[a];
 					const size = op === "unlock" ? Attendance.unlockSize(body.id) : Attendance.sizeOf(body.id);
-					if (size > Attendance.SYNC_LIMIT) return Attendance.queue(body.id, op);
+					if (body.background || size > Attendance.SYNC_LIMIT) return Attendance.queue(body.id, op);
 					return Attendance[op](body.id) || { ok: true };
 				}
 				case "saveDoc":
@@ -286,7 +286,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "loadEmployees":
 					return Payroll.loadEmployees(body.id);
 				case "calculate":
-					return calculate(body.id);
+					return calculate(body.id, !!body.background);
 				case "jobStatus": {
 					const s = task.checkStatus({ taskId: body.job });
 					return { status: s.status, stage: s.stage };

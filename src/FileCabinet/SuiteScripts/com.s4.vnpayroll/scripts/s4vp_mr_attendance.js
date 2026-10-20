@@ -10,7 +10,8 @@
  * @NModuleScope SameAccount
  */
 define(["N/runtime", "N/log", "../api/Attendance", "../api/Store"], (runtime, log, Attendance, Store) => {
-	const CHUNK = 50;
+	// Làm việc ở reduce (5.000 đơn vị), không ở map (1.000 đơn vị): mỗi lô nạp lại ngữ cảnh kỳ
+	const CHUNK = 25;
 
 	function param(name) {
 		return String(runtime.getCurrentScript().getParameter({ name }) || "");
@@ -43,7 +44,14 @@ define(["N/runtime", "N/log", "../api/Attendance", "../api/Store"], (runtime, lo
 	}
 
 	function map(context) {
-		const v = JSON.parse(context.value);
+		context.write({ key: String(context.key), value: context.value });
+	}
+
+	function reduce(context) {
+		for (const value of context.values) work(context, JSON.parse(value));
+	}
+
+	function work(context, v) {
 		let r;
 		if (v.op === "build") r = Attendance.buildChunk(v.period, v.ids);
 		else if (v.op === "lock") r = Attendance.lockChunk(v.period, v.ids);
@@ -53,7 +61,7 @@ define(["N/runtime", "N/log", "../api/Attendance", "../api/Store"], (runtime, lo
 			r = Attendance.accrueFor(Number(param("custscript_s4vp_mra_year")), param("custscript_s4vp_mra_policy") || null, param("custscript_s4vp_mra_rundate") || null, profiles);
 			r = { employees: r.rows.length };
 		}
-		context.write({ key: v.op, value: String((r && r.employees) || 0) });
+		context.write({ key: `${v.op}-${context.key}`, value: String((r && r.employees) || 0) });
 	}
 
 	function summarize(summary) {
@@ -70,7 +78,7 @@ define(["N/runtime", "N/log", "../api/Attendance", "../api/Store"], (runtime, lo
 	function finish(summary, op, period) {
 		const errors = [];
 		if (summary.inputSummary.error) errors.push(String(summary.inputSummary.error));
-		summary.mapSummary.errors.iterator().each((key, error) => {
+		const onError = (key, error) => {
 			let msg = error;
 			try {
 				msg = JSON.parse(error).message || error;
@@ -79,7 +87,9 @@ define(["N/runtime", "N/log", "../api/Attendance", "../api/Store"], (runtime, lo
 			}
 			errors.push(String(msg));
 			return true;
-		});
+		};
+		summary.mapSummary.errors.iterator().each(onError);
+		summary.reduceSummary.errors.iterator().each(onError);
 		let count = 0;
 		summary.output.iterator().each((key, value) => {
 			count += Number(value) || 0;
@@ -99,5 +109,5 @@ define(["N/runtime", "N/log", "../api/Attendance", "../api/Store"], (runtime, lo
 		log.audit({ title: `s4vp_mr_attendance ${op} ${period}`, details: `${count} employee(s)` });
 	}
 
-	return { getInputData, map, summarize };
+	return { getInputData, map, reduce, summarize };
 });
