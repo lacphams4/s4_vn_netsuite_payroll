@@ -17,7 +17,7 @@ const TEXT = {
 	vi: {
 		title: 'Lương VN',
 		subtitle: 'S4 VN Payroll',
-		views: {batches: 'Bảng lương', attendance: 'Chấm công và phép', reports: 'Báo cáo, tờ khai', profiles: 'Hồ sơ lương', advances: 'Tạm ứng lương', setup: 'Thiết lập'},
+		views: {batches: 'Bảng lương', attendance: 'Chấm công và phép', outputs: 'Sản lượng, khoán tổ', permits: 'Giấy phép lao động', reports: 'Báo cáo, tờ khai', profiles: 'Hồ sơ lương', advances: 'Tạm ứng lương', setup: 'Thiết lập'},
 		view: 'Màn hình',
 		subsidiary: 'Công ty con',
 		period: 'Kỳ lương',
@@ -102,6 +102,20 @@ const TEXT = {
 				entitled: 'Được cấp', carried: 'Chuyển', adjusted: 'Điều chỉnh', used: 'Đã dùng', pending: 'Chờ duyệt', available: 'Còn lại'},
 			accrued: (rows) => `Đã cấp phép: ${rows.filter((r) => r.accrued).length} người${rows.some((r) => r.message) ? ` · ${rows.filter((r) => r.message).map((r) => r.message).join('; ')}` : ''}`,
 		},
+		out: {
+			entries: 'Phiếu sản lượng', type: {I: 'Cá nhân', T: 'Tổ'}, status: {H: 'Tạm giữ', P: 'Chờ duyệt', A: 'Đã duyệt', C: 'Đã vào bảng lương'},
+			ops: {submit: 'Gửi duyệt', approve: 'Duyệt', hold: 'Tạm giữ', split: 'Chia tiền tổ', members: 'Nạp thành viên tổ'},
+			cols: {date: 'Ngày', type: 'Loại', table: 'Bảng đơn giá', team: 'Tổ', total: 'Thành tiền', split: 'Đã chia', lines: 'Dòng sản lượng', members: 'Thành viên'},
+			hint: 'Lập phiếu, dòng sản lượng, thành viên trên màn hình NetSuite (Mở bản ghi) hoặc qua API saveOutput; màn hình này để duyệt, chia tổ và theo dõi.',
+		},
+		wp: {
+			status: {D: 'Đang chuẩn bị', S: 'Đã nộp', A: 'Còn hiệu lực', E: 'Hết hạn', V: 'Thu hồi'},
+			ops: {submit: 'Nộp', issue: 'Đã cấp', revoke: 'Thu hồi', extend: 'Tạo gia hạn'},
+			cols: {no: 'Số giấy', effective: 'Hiệu lực', expiry: 'Hết hạn', left: 'Còn (ngày)', issue: 'Loại cấp'},
+			issueType: {N: 'Cấp mới', X: 'Gia hạn', R: 'Cấp lại'},
+			updateExpired: 'Cập nhật giấy hết hạn',
+			permitNo: 'Số giấy phép', issued: 'Ngày cấp (yyyy-mm-dd)',
+		},
 		rep: {
 			type: 'Báo cáo', types: {insurance: 'Bảng BH phải nộp và D02-LT (VP402000)', pitq: 'Tờ khai 05/KK-TNCN theo quý (VP403000)', pita: 'Dữ liệu quyết toán TNCN năm 05-1/BK, 05-2/BK (VP404000)', cost: 'Chi phí nhân sự theo tài khoản, đối chiếu GL (VP405000)'},
 			taxMonth: 'Tháng tính thuế (yyyyMM)', year: 'Năm', quarter: 'Quý', schedule: 'Bảng kê', c12: 'Số trên thông báo C12-TS', releasedOnly: 'Chỉ bảng lương đã ghi sổ',
@@ -116,7 +130,7 @@ const TEXT = {
 // Bản tiếng Anh: nhãn gốc theo Acumatica
 TEXT.en = Object.assign({}, TEXT.vi, {
 	title: 'VN Payroll',
-	views: {batches: 'Payroll Batches', attendance: 'Attendance and Leave', reports: 'Reports and Declarations', profiles: 'Employee Payroll Profiles', advances: 'Payroll Advances', setup: 'Setup'},
+	views: {batches: 'Payroll Batches', attendance: 'Attendance and Leave', outputs: 'Output Entries', permits: 'Work Permits', reports: 'Reports and Declarations', profiles: 'Employee Payroll Profiles', advances: 'Payroll Advances', setup: 'Setup'},
 	view: 'Screen', subsidiary: 'Subsidiary', period: 'Pay period', allPeriods: '(All periods)', load: 'View', newBatch: 'New batch', description: 'Description',
 	quick: 'Quick filter (name, code, amount...)', quickCount: (n) => `${n} matching rows`, empty: 'No data', loading: 'Loading...', working: 'Working...', done: 'Done', failed: 'Error',
 	back: 'Back to list', openRecord: 'Open record',
@@ -307,6 +321,11 @@ export default function PayrollApp() {
 	const repRef = useRef({taxMonth: '', year: String(new Date().getFullYear()), quarter: String(Math.floor(new Date().getMonth() / 3) + 1), schedule: '', c12: '', releasedOnly: 'F'});
 	const [repForm, setRepForm] = useState(repRef.current);
 	const [report, setReport] = useState(null);
+	const [outputs, setOutputs] = useState([]);
+	const [outPeriod, setOutPeriod] = useState('');
+	const [permits, setPermits] = useState([]);
+	const wpRef = useRef({permitNo: '', issued: ''});
+	const [wpForm, setWpForm] = useState(wpRef.current);
 
 	const run = (label, promise, after) => {
 		setBusy(label || t.working);
@@ -350,6 +369,9 @@ export default function PayrollApp() {
 		if (subsidiary && view === 'batches' && !batch) loadBatches(subsidiary, period);
 		if (subsidiary && view === 'profiles') run(t.loading, call({action: 'profiles', subsidiary}), (r) => setProfiles(r.employees));
 		if (subsidiary && view === 'advances') run(t.loading, call({action: 'advances', subsidiary}), (r) => setAdvances(r.advances));
+		if (subsidiary && view === 'outputs') run(t.loading, call({action: 'outputs', subsidiary, period: outPeriod}), (r) => setOutputs(r.outputs));
+		if (subsidiary && view === 'permits') run(t.loading, call({action: 'workPermits', subsidiary}), (r) => setPermits(r.permits));
+		if (subsidiary && (view === 'outputs' || view === 'permits') && !employees.length) call({action: 'profiles', subsidiary}).then((r) => setEmployees(r.employees.filter((e) => e.profile))).catch(() => {});
 		if (subsidiary && view === 'attendance') {
 			loadDocs(docType);
 			call({action: 'profiles', subsidiary}).then((r) => setEmployees(r.employees.filter((e) => e.profile))).catch(() => {});
@@ -438,6 +460,8 @@ export default function PayrollApp() {
 	else if (view === 'advances') renderAdvances();
 	else if (view === 'attendance') renderAttendance();
 	else if (view === 'reports') renderReports();
+	else if (view === 'outputs') renderOutputs();
+	else if (view === 'permits') renderPermits();
 	else renderSetup();
 
 	return (
@@ -1127,5 +1151,116 @@ export default function PayrollApp() {
 			items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{tr.d02}</Heading>, 'r-d02-title'));
 			items.push(grid(report.d02, 'r-d02', '240px'));
 		}
+	}
+
+	// ------------------------------------------------------------------ sản lượng, khoán tổ
+	function renderOutputs() {
+		const to = t.out;
+		const empName = (id) => {
+			const e = employees.find((x) => x.employee === String(id));
+			return e ? `${e.code} ${e.name}` : id;
+		};
+		const periodItems = [{value: '', label: t.allPeriods}].concat(boot.periods.map((p) => ({value: String(p.id), label: `${p.code} (${p.start} - ${p.end})`})));
+		const reload = (per) => run(t.loading, call({action: 'outputs', subsidiary, period: per === undefined ? outPeriod : per}), (r) => setOutputs(r.outputs));
+		items.push(
+			item(
+				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(230px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+					{[cell(labeled(t.period, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={outPeriod} onSelectionChanged={(a) => a.value !== undefined && a.value !== outPeriod && (setOutPeriod(a.value), reload(a.value))} />), 'o-per')]}
+				</GridPanel>,
+				'o-filters'
+			)
+		);
+		items.push(item(actionRow([<Button label={t.actions.refresh} action={() => reload()} />], messages.concat([{text: to.hint}])), 'o-actions'));
+		const op = (r, action) => run(t.working, post(action === 'split' ? {action: 'splitOutput', id: r.id} : action === 'members' ? {action: 'loadTeamMembers', id: r.id} : {action: 'outputAction', id: r.id, op: action}), () => reload());
+		const opsFor = (r) => (r.status === 'H' ? (r.type === 'T' ? ['members', 'split', 'submit'] : ['submit']) : r.status === 'P' ? ['approve', 'hold'] : r.status === 'A' ? ['hold'] : []);
+		const rows = outputs.map((r) => Object.assign({}, r, {
+			detailText: r.type === 'T'
+				? (r.members || []).map((m) => `${empName(m.employee)}: ${money(m.amount)}`).join('; ')
+				: (r.lines || []).map((l) => `${empName(l.employee)} ${l.item} ${num(l.qty)} x ${num(l.rate)} = ${money(l.amount)}`).join('; '),
+		}));
+		const filtered = quickFilter(rows, quick);
+		items.push(item(quickBox(filtered.count), 'quick'));
+		items.push(
+			item(
+				<DataGrid
+					dataSource={new ArrayDataSource(filtered.rows)}
+					columns={[
+						{name: 'name', label: t.cols.number, width: 100, type: DataGrid.ColumnType.TEMPLATED, content: safe((r) => <Button label={r.name} type={Button.Type.LINK} action={() => openRecord('customrecord_s4vp_output', r.id)} />)},
+						textCol('doc_date', to.cols.date, 100, (r) => r.doc_date),
+						textCol('type', to.cols.type, 70, (r) => to.type[r.type] || r.type),
+						textCol('description', t.description, 220, (r) => r.description || ''),
+						moneyCol('total', to.cols.total, 120),
+						moneyCol('split_total', to.cols.split, 120),
+						textCol('detailText', to.cols.members, 360, (r) => r.detailText),
+						textCol('status', t.cols.status, 110, (r) => to.status[r.status] || r.status),
+						{name: 'ops', label: '', width: 260, type: DataGrid.ColumnType.TEMPLATED, content: safe((r) => (
+							<StackPanel orientation={StackPanel.Orientation.HORIZONTAL} itemGap={StackPanel.GapSize.S}>
+								{opsFor(r).map((a) => <StackPanel.Item key={a}><Button label={to.ops[a]} type={Button.Type.LINK} action={() => op(r, a)} /></StackPanel.Item>).concat([<StackPanel.Item key="none">{plain('')}</StackPanel.Item>])}
+							</StackPanel>
+						))},
+					]}
+					columnStretch={true}
+					placeholder={t.empty}
+					rootStyle={{width: '100%', flexShrink: 0, height: '460px'}}
+				/>,
+				'o-grid'
+			)
+		);
+	}
+
+	// ------------------------------------------------------------------ giấy phép lao động
+	function renderPermits() {
+		const tw = t.wp;
+		const empName = (id) => {
+			const e = employees.find((x) => x.employee === String(id));
+			return e ? `${e.code} ${e.name}` : id;
+		};
+		const reload = () => run(t.loading, call({action: 'workPermits', subsidiary}), (r) => setPermits(r.permits));
+		const setWp = (k) => (a) => {
+			wpRef.current = Object.assign({}, wpRef.current, {[k]: String(a.text || '')});
+			setWpForm(wpRef.current);
+		};
+		items.push(
+			item(
+				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(230px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+					{[
+						cell(labeled(tw.permitNo, <TextBox rootStyle={{width: '100%'}} text={wpForm.permitNo} onTextChanged={setWp('permitNo')} />), 'w-no'),
+						cell(labeled(tw.issued, <TextBox rootStyle={{width: '100%'}} text={wpForm.issued} onTextChanged={setWp('issued')} />), 'w-iss'),
+					]}
+				</GridPanel>,
+				'w-form'
+			)
+		);
+		items.push(item(actionRow([<Button label={t.actions.refresh} action={reload} />, <Button label={tw.updateExpired} action={() => run(t.working, post({action: 'updateExpiredPermits'}), reload)} />], messages), 'w-actions'));
+		const op = (r, a) => run(t.working, post({action: 'workPermitAction', id: r.id, op: a, permitNo: wpRef.current.permitNo, issued: wpRef.current.issued}), reload);
+		const opsFor = (r) => (r.status === 'D' ? ['submit', 'issue'] : r.status === 'S' ? ['issue'] : r.status === 'A' ? ['extend', 'revoke'] : r.status === 'E' ? ['extend'] : []);
+		const filtered = quickFilter(permits, quick);
+		items.push(item(quickBox(filtered.count), 'quick'));
+		items.push(
+			item(
+				<DataGrid
+					dataSource={new ArrayDataSource(filtered.rows)}
+					columns={[
+						{name: 'name', label: t.cols.number, width: 100, type: DataGrid.ColumnType.TEMPLATED, content: safe((r) => <Button label={r.name || r.id} type={Button.Type.LINK} action={() => openRecord('customrecord_s4vp_work_permit', r.id)} />)},
+						textCol('employee', t.employee, 220, (r) => empName(r.employee)),
+						textCol('permit_no', tw.cols.no, 140, (r) => r.permit_no || ''),
+						textCol('issue_type', tw.cols.issue, 90, (r) => tw.issueType[r.issue_type] || r.issue_type || ''),
+						textCol('effective', tw.cols.effective, 100, (r) => r.effective || ''),
+						textCol('expiry', tw.cols.expiry, 100, (r) => r.expiry || ''),
+						textCol('daysLeft', tw.cols.left, 80, (r) => (r.daysLeft === null || r.daysLeft === undefined ? '' : String(r.daysLeft))),
+						textCol('status', t.cols.status, 110, (r) => tw.status[r.status] || r.status),
+						{name: 'ops', label: '', width: 220, type: DataGrid.ColumnType.TEMPLATED, content: safe((r) => (
+							<StackPanel orientation={StackPanel.Orientation.HORIZONTAL} itemGap={StackPanel.GapSize.S}>
+								{opsFor(r).map((a) => <StackPanel.Item key={a}><Button label={tw.ops[a]} type={Button.Type.LINK} action={() => op(r, a)} /></StackPanel.Item>).concat([<StackPanel.Item key="none">{plain('')}</StackPanel.Item>])}
+							</StackPanel>
+						))},
+					]}
+					columnStretch={true}
+					placeholder={t.empty}
+					rootStyle={{width: '100%', flexShrink: 0, height: '420px'}}
+				/>,
+				'w-grid'
+			)
+		);
 	}
 }
