@@ -1092,7 +1092,7 @@ define([
 		const info = employeesInfo(ls.map((l) => l.employee));
 		const ets = Settings.earningTypes();
 		return {
-			batch: Object.assign({}, b, { periodName: period ? period.name : "", periodStart: period && period.start, periodEnd: period && period.end, netInWords: Words.readAmount(b.ee_net || 0) }),
+			batch: Object.assign({}, b, { bills: safeJson(b.bills, []), periodName: period ? period.name : "", periodStart: period && period.start, periodEnd: period && period.end, netInWords: Words.readAmount(b.ee_net || 0) }),
 			lines: ls.map((l) => {
 				const d = parseDetail(l);
 				const e = info[l.employee] || {};

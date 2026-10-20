@@ -589,7 +589,8 @@ export default function PayrollApp() {
 			return `${x.tranid || id} (${state})`;
 		};
 		if (b.journal) extra.push({text: `${t.cols.journal}: ${txText(b.journal)}${b.reversal ? ` / ${t.reversalLabel} ${txText(b.reversal)}` : ''}`});
-		if (b.bills && b.bills.length) extra.push({text: `${t.billsLabel}: ${b.bills.map((x) => txText(x.id)).join(', ')}`});
+		const bills = Array.isArray(b.bills) ? b.bills : [];
+		if (bills.length) extra.push({text: `${t.billsLabel}: ${bills.map((x) => txText(x.id)).join(', ')}`});
 		if (b.messages) extra.push({text: b.messages.split('\n').slice(0, 3).join('; '), strong: true});
 		items.push(item(actionRow(buttons, messages), 'b-actions'));
 		items.push(item(<Text size={Text.Size.S} rootStyle={{whiteSpace: 'normal'}}>{extra.map((m) => m.text).join('  ·  ')}</Text>, 'b-totals'));
