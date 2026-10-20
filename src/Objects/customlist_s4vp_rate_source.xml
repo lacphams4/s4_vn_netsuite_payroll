@@ -1,0 +1,36 @@
+<customlist scriptid="customlist_s4vp_rate_source">
+  <name>S4VP rate_source</name>
+  <description>S4 VN Payroll code list rate_source; values keep the Acumatica codes (F, S, A, P, Q, C, T).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_rate_source_f">
+      <value>F - Số cố định</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_source_s">
+      <value>S - Lương hợp đồng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_source_a">
+      <value>A - Phụ cấp cố định</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_source_p">
+      <value>P - Gói phúc lợi</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_source_q">
+      <value>Q - Số lượng là thành tiền</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_source_c">
+      <value>C - Phần trăm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_source_t">
+      <value>T - Thang phần trăm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_pay_frequency">
+  <name>S4VP pay_frequency</name>
+  <description>S4 VN Payroll code list pay_frequency; values keep the Acumatica codes (M, S, W).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_pay_frequency_m">
+      <value>M - Tháng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_pay_frequency_s">
+      <value>S - Nửa tháng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_pay_frequency_w">
+      <value>W - Tuần</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

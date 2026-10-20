@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_attendance_status">
+  <name>S4VP attendance_status</name>
+  <description>S4 VN Payroll code list attendance_status; values keep the Acumatica codes (O, L).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_attendance_status_o">
+      <value>Mở</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_attendance_status_l">
+      <value>Đã khóa</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

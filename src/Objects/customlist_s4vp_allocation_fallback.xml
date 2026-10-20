@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_allocation_fallback">
+  <name>S4VP allocation_fallback</name>
+  <description>S4 VN Payroll code list allocation_fallback; values keep the Acumatica codes (P, D).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_allocation_fallback_p">
+      <value>P - Bảng tỷ lệ rồi dự án mặc định</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_allocation_fallback_d">
+      <value>D - Dự án mặc định</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

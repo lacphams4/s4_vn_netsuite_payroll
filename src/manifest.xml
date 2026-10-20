@@ -1,0 +1,15 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>S4 VN Payroll</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="true">ACCOUNTING</feature>
+      <feature required="false">SUBSIDIARIES</feature>
+      <feature required="false">DEPARTMENTS</feature>
+      <feature required="false">CLASSES</feature>
+      <feature required="false">LOCATIONS</feature>
+    </features>
+  </dependencies>
+</manifest>

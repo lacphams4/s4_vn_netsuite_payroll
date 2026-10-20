@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_allocation_method">
+  <name>S4VP allocation_method</name>
+  <description>S4 VN Payroll code list allocation_method; values keep the Acumatica codes (S, T, F, R).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_allocation_method_s">
+      <value>S - Theo thiết lập</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_allocation_method_t">
+      <value>T - Giờ timesheet</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_allocation_method_f">
+      <value>F - Bảng tỷ lệ cố định</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_allocation_method_r">
+      <value>R - Ngày phân ca</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

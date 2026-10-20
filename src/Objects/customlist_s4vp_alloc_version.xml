@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_alloc_version">
+  <name>S4VP alloc_version</name>
+  <description>S4 VN Payroll code list alloc_version; values keep the Acumatica codes (E, D).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_alloc_version_e">
+      <value>E - Phiên bản hiệu lực cuối kỳ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_alloc_version_d">
+      <value>D - Chia theo ngày lịch</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

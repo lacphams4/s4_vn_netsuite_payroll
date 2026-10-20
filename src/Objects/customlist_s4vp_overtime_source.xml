@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_overtime_source">
+  <name>S4VP overtime_source</name>
+  <description>S4 VN Payroll code list overtime_source; values keep the Acumatica codes (R, T).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_overtime_source_r">
+      <value>R - Đơn OT đã duyệt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_overtime_source_t">
+      <value>T - Timesheet</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

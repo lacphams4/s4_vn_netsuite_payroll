@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_employment_type">
+  <name>S4VP employment_type</name>
+  <description>S4 VN Payroll code list employment_type; values keep the Acumatica codes (E, C).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_employment_type_e">
+      <value>E - Nhân viên (HĐLĐ)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_employment_type_c">
+      <value>C - Cộng tác viên (HĐDV)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

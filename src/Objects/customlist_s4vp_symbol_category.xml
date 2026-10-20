@@ -1,0 +1,32 @@
+<customlist scriptid="customlist_s4vp_symbol_category">
+  <name>S4VP symbol_category</name>
+  <description>S4 VN Payroll code list symbol_category; values keep the Acumatica codes (W, P, U, S, T, N).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_symbol_category_w">
+      <value>W - Làm việc</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_symbol_category_p">
+      <value>P - Nghỉ có lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_symbol_category_u">
+      <value>U - Không lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_symbol_category_s">
+      <value>S - BHXH trả</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_symbol_category_t">
+      <value>T - Công tác</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_symbol_category_n">
+      <value>N - Không tính</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,8 @@
+<deploy>
+  <files>
+    <path>~/FileCabinet/SuiteScripts/com.s4.vnpayroll/*</path>
+  </files>
+  <objects>
+    <path>~/Objects/*</path>
+  </objects>
+</deploy>

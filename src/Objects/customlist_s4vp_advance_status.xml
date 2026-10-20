@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_advance_status">
+  <name>S4VP advance_status</name>
+  <description>S4 VN Payroll code list advance_status; values keep the Acumatica codes (H, B, O, C).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_advance_status_h">
+      <value>H - Tạm giữ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_advance_status_b">
+      <value>B - Chờ ghi sổ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_advance_status_o">
+      <value>O - Đang cấn trừ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_advance_status_c">
+      <value>C - Đã tất toán</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

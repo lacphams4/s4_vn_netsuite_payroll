@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_region">
+  <name>S4VP region</name>
+  <description>S4 VN Payroll code list region; values keep the Acumatica codes (I, II, III, IV).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_region_i">
+      <value>Vùng I</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_region_ii">
+      <value>Vùng II</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_region_iii">
+      <value>Vùng III</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_region_iv">
+      <value>Vùng IV</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

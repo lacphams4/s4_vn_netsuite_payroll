@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_attendance_mode">
+  <name>S4VP attendance_mode</name>
+  <description>S4 VN Payroll code list attendance_mode; values keep the Acumatica codes (E, S).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_attendance_mode_e">
+      <value>E - Chứng từ ngoại lệ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_attendance_mode_s">
+      <value>S - Bảng công ký hiệu</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

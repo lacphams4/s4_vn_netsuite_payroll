@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_accrual13_basis">
+  <name>S4VP accrual13_basis</name>
+  <description>S4 VN Payroll code list accrual13_basis; values keep the Acumatica codes (P, C).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_accrual13_basis_p">
+      <value>P - Lương HĐ và gói phúc lợi</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_accrual13_basis_c">
+      <value>C - Chỉ lương HĐ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

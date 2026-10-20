@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_inherit_bool">
+  <name>S4VP inherit_bool</name>
+  <description>S4 VN Payroll code list inherit_bool; values keep the Acumatica codes (Y, N).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_inherit_bool_y">
+      <value>Có</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_inherit_bool_n">
+      <value>Không</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,36 @@
+<customlist scriptid="customlist_s4vp_earning_category">
+  <name>S4VP earning_category</name>
+  <description>S4 VN Payroll code list earning_category; values keep the Acumatica codes (B, O, A, N, P, M, X).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_earning_category_b">
+      <value>B - Lương cơ bản</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_earning_category_o">
+      <value>O - Làm thêm, làm đêm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_earning_category_a">
+      <value>A - Phụ cấp</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_earning_category_n">
+      <value>N - Thưởng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_earning_category_p">
+      <value>P - Sản phẩm, khoán</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_earning_category_m">
+      <value>M - Ăn ca</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_earning_category_x">
+      <value>X - Khác</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>
