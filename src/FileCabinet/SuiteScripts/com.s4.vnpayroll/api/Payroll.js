@@ -565,10 +565,13 @@ define([
 	/** Account bật duyệt bút toán / bill: tạo ở trạng thái đã duyệt khi thiết lập tự duyệt (AutoReleaseGL). */
 	function approveOnCreate(rec) {
 		if (Settings.tenant().auto_approve === false) return;
+		// Journal Entry duyệt bằng cờ approved (Accounting Preferences > Require Approvals on Journal Entries);
+		// Vendor Bill dùng approvalstatus (2 = Approved). Account không bật duyệt thì không có trường: bỏ qua.
+		const field = rec.type === record.Type.JOURNAL_ENTRY ? ["approved", true] : ["approvalstatus", "2"];
 		try {
-			rec.setValue({ fieldId: "approvalstatus", value: "2" });
+			rec.setValue({ fieldId: field[0], value: field[1] });
 		} catch (e) {
-			// Account không dùng duyệt: không có trường
+			// không có trường
 		}
 	}
 
@@ -685,6 +688,17 @@ define([
 
 	// ------------------------------------------------------------------ đọc cho giao diện
 
+	/** Số chứng từ, trạng thái duyệt và ghi sổ của các giao dịch do bảng lương tạo. */
+	function transactionsInfo(ids) {
+		const list = ids.filter((x) => !blank(x)).map(String);
+		if (!list.length) return {};
+		const out = {};
+		for (const r of Store.run(`SELECT t.id, t.tranid, t.approvalstatus, BUILTIN.DF(t.approvalstatus) AS approval, t.posting, t.voided FROM transaction t WHERE t.id IN (${list.map(() => "?").join(",")})`, list, "s4vp_tran_info")) {
+			out[String(r.id)] = { tranid: r.tranid, approvalStatus: r.approvalstatus, approval: r.approval, posting: r.posting === "T", voided: r.voided === "T" };
+		}
+		return out;
+	}
+
 	function detail(batchId) {
 		const b = getBatch(batchId);
 		const period = Store.get("period", b.period);
@@ -703,6 +717,7 @@ define([
 				});
 			}),
 			inputs: inputs(batchId),
+			transactions: transactionsInfo([b.journal, b.reversal].concat(safeJson(b.bills, []).map((x) => x.id))),
 		};
 	}
 
@@ -715,6 +730,6 @@ define([
 
 	return {
 		create, loadEmployees, calculate, finishCalculation, removeHold, hold, approve, reject, reopen, release, reverse, agencyBills, bankFile,
-		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine,
+		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine, transactionsInfo,
 	};
 });

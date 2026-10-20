@@ -86,6 +86,8 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return Payroll.journalPreview(params.id);
 				case "bankfile":
 					return Payroll.bankFile(params.id);
+				case "txinfo":
+					return Payroll.transactionsInfo(String(params.ids || "").split(",").slice(0, 50));
 				case "advances":
 					return { advances: Advances.list({ subsidiary: params.subsidiary }) };
 				case "profiles":

@@ -52,9 +52,10 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             deductionCode: 'Mã khấu trừ',
             delete: 'Xóa',
             journalTitle: 'Bút toán dự kiến (chưa ghi sổ)',
-            totals: (b) => `Tổng thu nhập ${money(b.gross)} · BH NLĐ ${money(b.ee_ins)} · BH DN ${money(b.er_ins)} · Thuế ${money(b.pit)} · Thực lĩnh ${money(b.net)}`,
+            totals: (b) => `Tổng thu nhập ${money(b.gross || 0)} · BH NLĐ ${money(b.ee_ins || 0)} · BH DN ${money(b.er_ins || 0)} · Thuế ${money(b.pit || 0)} · Thực lĩnh ${money(b.net || 0)}`,
             netWords: (w) => `Thực lĩnh nhân viên bằng chữ: ${w}`,
             unverified: (list) => `Tham số chưa đối chiếu văn bản gốc, cần kế toán trưởng duyệt: ${list}`,
+            unverifiedShort: (n) => `${n} tham số pháp lý chưa đối chiếu văn bản gốc (xem Thiết lập)`,
             notReady: 'Chưa có thiết lập lương. Vào Thiết lập, bấm Nạp mặc định VN.',
             loadDefaults: 'Nạp mặc định VN',
             generate: 'Sinh kỳ lương',
@@ -72,6 +73,11 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             calcDone: (r) => (r.queued ? 'Đã đưa vào hàng đợi tính lương (bảng lớn), bấm Tải lại sau ít phút' : r.ok ? 'Đã tính xong, không có lỗi' : `Có ${r.errors.length} nhân viên lỗi: ${r.errors.slice(0, 3).join('; ')}`),
             jeCreated: (id) => `Đã tạo bút toán ${id}`,
             billsCreated: (r) => `Đã lập ${r.created.length} bill${r.skipped.length ? `; khoản chưa có cơ quan thu: ${r.skipped.map((s) => s.code).join(', ')}` : ''}`,
+            txPosted: 'đã ghi sổ',
+            txPending: 'chưa ghi sổ, chờ duyệt',
+            txVoided: 'đã hủy',
+            reversalLabel: 'đảo',
+            billsLabel: 'Bill cơ quan thu',
             yes: 'Đồng ý',
             cancel: 'Hủy',
         },
@@ -139,13 +145,13 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
     };
     const num = (n) => (n === null || n === undefined || n === '' ? '' : Number(n).toLocaleString('vi-VN', { maximumFractionDigits: 2 }));
     const pct = (n) => (n === null || n === undefined || n === '' ? '' : `${(Number(n) * 100).toLocaleString('vi-VN', { maximumFractionDigits: 2 })}%`);
-    const item = (child, key) => jsxRuntime.jsx(component.StackPanel.Item, { children: child }, key);
+    const item = (child, key) => (jsxRuntime.jsx(component.StackPanel.Item, { shrink: 0, children: child }, key));
     function actionRow(buttons, messages) {
         const parts = [];
         buttons.forEach((b, i) => parts.push(item(b, `btn-${i}`)));
         const list = (messages || []).filter((m) => m && m.text);
         if (list.length) {
-            parts.push(item(jsxRuntime.jsx(component.Text, { size: component.Text.Size.S, type: list.some((m) => m.strong) ? component.Text.Type.STRONG : component.Text.Type.WEAK, children: list.map((m) => m.text).join('  ·  ') }), 'status'));
+            parts.push(item(jsxRuntime.jsx(component.Text, { size: component.Text.Size.S, rootStyle: { whiteSpace: 'normal', overflowWrap: 'anywhere', maxWidth: '100%' }, type: list.some((m) => m.strong) ? component.Text.Type.STRONG : component.Text.Type.WEAK, children: list.map((m) => m.text).join('  ·  ') }), 'status'));
         }
         return (jsxRuntime.jsx(component.StackPanel, { orientation: component.StackPanel.Orientation.HORIZONTAL, itemGap: component.StackPanel.GapSize.M, alignment: component.StackPanel.Alignment.CENTER, wrap: true, children: parts }));
     }
@@ -223,6 +229,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
         const [error, setError] = core.useState('');
         const [confirm, setConfirm] = core.useState(null);
         const [input, setInput] = core.useState({ kind: 'E', employee: '', earning_type: '', code: '', qty: '1', rate: '', multiplier: '', amount: '', description: '' });
+        const inputRef = core.useRef(input);
         const [year, setYear] = core.useState(String(new Date().getFullYear()));
         const [paygroup, setPaygroup] = core.useState('');
         const run = (label, promise, after) => {
@@ -303,7 +310,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
         if (!boot.setupReady)
             messages.push({ text: t.notReady, strong: true });
         if (boot.unverified && boot.unverified.length)
-            messages.push({ text: t.unverified(boot.unverified.join(', ')) });
+            messages.push({ text: view === 'setup' ? t.unverified(boot.unverified.join(', ')) : t.unverifiedShort(boot.unverified.length) });
         // Hộp xác nhận cho thao tác ghi sổ, đảo, lập bill
         if (confirm) {
             items.push(item(actionRow([
@@ -347,7 +354,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     moneyCol('pit', t.cols.pit),
                     moneyCol('net', t.cols.net, 140),
                     { name: 'journal', label: t.cols.journal, width: 100, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.journal ? jsxRuntime.jsx(component.Button, { label: `JE ${r.journal}`, type: component.Button.Type.LINK, action: () => openJournal(r.journal) }) : plain(''))) },
-                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', height: '520px' } }), 'grid-batches'));
+                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '520px' } }), 'grid-batches'));
         }
         function quickBox(count) {
             return (jsxRuntime.jsxs(component.StackPanel, { orientation: component.StackPanel.Orientation.HORIZONTAL, itemGap: component.StackPanel.GapSize.M, alignment: component.StackPanel.Alignment.CENTER, children: [jsxRuntime.jsx(component.StackPanel.Item, { children: jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '360px' }, text: quick, placeholder: t.quick, onTextChanged: (a) => setQuick(String(a.text || '')) }) }, "q"), jsxRuntime.jsx(component.StackPanel.Item, { children: jsxRuntime.jsx(component.Text, { size: component.Text.Size.S, type: component.Text.Type.WEAK, children: count === null ? '' : t.quickCount(count) }) }, "c")] }));
@@ -379,11 +386,20 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             add(true, t.openRecord, () => openRecord(boot.recordTypes.batch, b.id));
             items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: `${b.name} · ${b.periodName} (${b.periodStart} - ${b.periodEnd}) · ${t.status[s] || s}${b.description ? ` · ${b.description}` : ''}` }), 'b-title'));
             const extra = [{ text: t.totals(b) }];
+            const tx = batch.transactions || {};
+            const txText = (id) => {
+                const x = tx[id] || {};
+                const state = x.voided ? t.txVoided : x.posting ? t.txPosted : t.txPending;
+                return `${x.tranid || id} (${state})`;
+            };
             if (b.journal)
-                extra.push({ text: `${t.cols.journal}: JE ${b.journal}${b.reversal ? ` / ${b.reversal}` : ''}` });
+                extra.push({ text: `${t.cols.journal}: ${txText(b.journal)}${b.reversal ? ` / ${t.reversalLabel} ${txText(b.reversal)}` : ''}` });
+            if (b.bills && b.bills.length)
+                extra.push({ text: `${t.billsLabel}: ${b.bills.map((x) => txText(x.id)).join(', ')}` });
             if (b.messages)
                 extra.push({ text: b.messages.split('\n').slice(0, 3).join('; '), strong: true });
-            items.push(item(actionRow(buttons, messages.concat(extra)), 'b-actions'));
+            items.push(item(actionRow(buttons, messages), 'b-actions'));
+            items.push(item(jsxRuntime.jsx(component.Text, { size: component.Text.Size.S, rootStyle: { whiteSpace: 'normal' }, children: extra.map((m) => m.text).join('  ·  ') }), 'b-totals'));
             const rows = batch.lines.map((l) => Object.assign({}, l, { note: [l.error, l.warnings].filter(Boolean).join(' | ') }));
             const filtered = quickFilter(rows, quick);
             const total = filtered.count === null ? null : filtered.rows.reduce((acc, r) => {
@@ -409,7 +425,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     moneyCol('advance', t.cols.advance, 110),
                     moneyCol('net', t.cols.net, 130),
                     textCol('note', t.cols.warn, 260, (r) => r.note || ''),
-                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', height: selected ? '300px' : '460px' } }), 'grid-lines'));
+                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: selected ? '300px' : '460px' } }), 'grid-lines'));
             const line = selected && batch.lines.find((l) => l.id === selected);
             if (line)
                 renderLineDetail(line);
@@ -427,14 +443,14 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                             moneyCol('amount', t.cols.amount, 120),
                             moneyCol('taxExemptAmount', t.cols.exemptAmt, 110),
                             textCol('source', t.cols.source, 70, (r) => `${r.source || ''} ${r.ruleCode || ''}`),
-                        ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', height: '220px' } }), 'd-earn'), cell(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(line.insurance), columns: [
+                        ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '220px' } }), 'd-earn'), cell(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(line.insurance), columns: [
                             textCol('code', t.cols.component, 90, (r) => r.code),
                             moneyCol('wageBase', t.cols.base, 110),
                             textCol('employeeRate', t.cols.eeRate, 70, (r) => pct(r.employeeRate)),
                             moneyCol('employeeAmount', t.cols.eeIns, 100),
                             textCol('employerRate', t.cols.erRate, 70, (r) => pct(r.employerRate)),
                             moneyCol('employerAmount', t.cols.erIns, 100),
-                        ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', height: '220px' } }), 'd-ins')] }), 'd-grids'));
+                        ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '220px' } }), 'd-ins')] }), 'd-grids'));
         }
         function renderInputs(editable) {
             const ets = boot.earningTypes || [];
@@ -453,10 +469,14 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     textCol('multiplier', t.cols.mult, 60, (r) => num(r.multiplier)),
                     moneyCol('amount', t.cols.amount, 110),
                     { name: 'del', label: '', width: 70, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (editable ? jsxRuntime.jsx(component.Button, { label: t.delete, type: component.Button.Type.LINK, action: () => act('deleteInput', { id: r.id }) }) : plain(''))) },
-                ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', height: '200px' } }), 'i-grid'));
+                ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '200px' } }), 'i-grid'));
             if (!editable)
                 return;
-            const set = (k) => (a) => setInput(Object.assign({}, input, { [k]: a.value !== undefined ? a.value : String(a.text || '') }));
+            // Giá trị form giữ trong ref: hai ô cập nhật liền nhau (rời ô này, bấm nút) không ghi đè nhau bằng trạng thái cũ
+            const set = (k) => (a) => {
+                inputRef.current = Object.assign({}, inputRef.current, { [k]: a.value !== undefined ? a.value : String(a.text || '') });
+                setInput(inputRef.current);
+            };
             const kindItems = [{ value: 'E', label: t.kind.E }, { value: 'D', label: t.kind.D }];
             const fields = [
                 cell(labeled(t.employee, jsxRuntime.jsx(component.Dropdown, { rootStyle: { width: '100%' }, dataSource: new core.ArrayDataSource(empItems), valueMember: "value", displayMember: "label", selectedValue: input.employee, onSelectionChanged: (a) => a.value && a.value !== input.employee && set('employee')(a) })), 'in-emp'),
@@ -476,8 +496,11 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             items.push(item(jsxRuntime.jsx(component.GridPanel, { rootStyle: { flexShrink: 0 }, columns: "repeat(auto-fill, minmax(200px, 1fr))", columnGap: component.GridPanel.GapSize.M, rowGap: component.GridPanel.GapSize.S, children: fields }), 'i-form'));
             const numOrNull = (v) => (String(v).trim() === '' ? null : Number(String(v).replace(/\./g, '').replace(',', '.')));
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: t.addInput, enabled: !busy && !!input.employee && (input.kind === 'D' || !!input.earning_type), action: () => act('saveInput', { values: { batch: batch.batch.id, employee: input.employee, kind: input.kind, earning_type: input.kind === 'E' ? input.earning_type : null, code: input.kind === 'D' ? input.code || 'KHAC' : '', description: input.description,
-                            qty: input.kind === 'E' ? numOrNull(input.qty) : null, rate: input.kind === 'E' ? numOrNull(input.rate) : null, multiplier: input.kind === 'E' ? numOrNull(input.multiplier) : null, amount: input.kind === 'D' ? numOrNull(input.amount) : null } }) }),
+                jsxRuntime.jsx(component.Button, { label: t.addInput, enabled: !busy && !!input.employee && (input.kind === 'D' || !!input.earning_type), action: () => {
+                        const input = inputRef.current;
+                        return act('saveInput', { values: { batch: batch.batch.id, employee: input.employee, kind: input.kind, earning_type: input.kind === 'E' ? input.earning_type : null, code: input.kind === 'D' ? input.code || 'KHAC' : '', description: input.description,
+                                qty: input.kind === 'E' ? numOrNull(input.qty) : null, rate: input.kind === 'E' ? numOrNull(input.rate) : null, multiplier: input.kind === 'E' ? numOrNull(input.multiplier) : null, amount: input.kind === 'D' ? numOrNull(input.amount) : null } });
+                    } }),
             ]), 'i-add'));
         }
         function renderJournal() {
@@ -489,7 +512,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     moneyCol('debit', t.cols.debit, 140),
                     moneyCol('credit', t.cols.credit, 140),
                     textCol('sub', t.cols.dimension, 160, (r) => [r.sub, r.branch, r.workCenter, r.project].filter(Boolean).join(' / ')),
-                ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', height: '320px' } }), 'j-grid'));
+                ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '320px' } }), 'j-grid'));
         }
         // ------------------------------------------------------------------ hồ sơ lương
         function renderProfiles() {
@@ -517,7 +540,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     textCol('effective', t.cols.effective, 100, (r) => r.effective || ''),
                     textCol('dependents', t.cols.deps, 60, (r) => r.dependents || 0),
                     { name: 'profile', label: t.cols.profile, width: 130, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.profile ? jsxRuntime.jsx(component.Button, { label: t.openRecord, type: component.Button.Type.LINK, action: () => openRecord(boot.recordTypes.employee, r.profile.id) }) : plain(t.noProfile))) },
-                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', height: '520px' } }), 'p-grid'));
+                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '520px' } }), 'p-grid'));
         }
         // ------------------------------------------------------------------ tạm ứng
         function renderAdvances() {
@@ -535,7 +558,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     moneyCol('balance', t.cols.balance, 130),
                     textCol('memo', t.cols.memo, 240, (r) => r.memo || ''),
                     { name: 'journal', label: t.cols.journal, width: 100, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.journal ? jsxRuntime.jsx(component.Button, { label: `JE ${r.journal}`, type: component.Button.Type.LINK, action: () => openJournal(r.journal) }) : plain(''))) },
-                ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', height: '480px' } }), 'a-grid'));
+                ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '480px' } }), 'a-grid'));
         }
         // ------------------------------------------------------------------ thiết lập
         function renderSetup() {

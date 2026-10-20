@@ -62,9 +62,10 @@ const TEXT = {
 		deductionCode: 'Mã khấu trừ',
 		delete: 'Xóa',
 		journalTitle: 'Bút toán dự kiến (chưa ghi sổ)',
-		totals: (b) => `Tổng thu nhập ${money(b.gross)} · BH NLĐ ${money(b.ee_ins)} · BH DN ${money(b.er_ins)} · Thuế ${money(b.pit)} · Thực lĩnh ${money(b.net)}`,
+		totals: (b) => `Tổng thu nhập ${money(b.gross || 0)} · BH NLĐ ${money(b.ee_ins || 0)} · BH DN ${money(b.er_ins || 0)} · Thuế ${money(b.pit || 0)} · Thực lĩnh ${money(b.net || 0)}`,
 		netWords: (w) => `Thực lĩnh nhân viên bằng chữ: ${w}`,
 		unverified: (list) => `Tham số chưa đối chiếu văn bản gốc, cần kế toán trưởng duyệt: ${list}`,
+		unverifiedShort: (n) => `${n} tham số pháp lý chưa đối chiếu văn bản gốc (xem Thiết lập)`,
 		notReady: 'Chưa có thiết lập lương. Vào Thiết lập, bấm Nạp mặc định VN.',
 		loadDefaults: 'Nạp mặc định VN',
 		generate: 'Sinh kỳ lương',
@@ -82,6 +83,11 @@ const TEXT = {
 		calcDone: (r) => (r.queued ? 'Đã đưa vào hàng đợi tính lương (bảng lớn), bấm Tải lại sau ít phút' : r.ok ? 'Đã tính xong, không có lỗi' : `Có ${r.errors.length} nhân viên lỗi: ${r.errors.slice(0, 3).join('; ')}`),
 		jeCreated: (id) => `Đã tạo bút toán ${id}`,
 		billsCreated: (r) => `Đã lập ${r.created.length} bill${r.skipped.length ? `; khoản chưa có cơ quan thu: ${r.skipped.map((s) => s.code).join(', ')}` : ''}`,
+		txPosted: 'đã ghi sổ',
+		txPending: 'chưa ghi sổ, chờ duyệt',
+		txVoided: 'đã hủy',
+		reversalLabel: 'đảo',
+		billsLabel: 'Bill cơ quan thu',
 		yes: 'Đồng ý',
 		cancel: 'Hủy',
 	},
@@ -150,7 +156,11 @@ const money = (n) => {
 const num = (n) => (n === null || n === undefined || n === '' ? '' : Number(n).toLocaleString('vi-VN', {maximumFractionDigits: 2}));
 const pct = (n) => (n === null || n === undefined || n === '' ? '' : `${(Number(n) * 100).toLocaleString('vi-VN', {maximumFractionDigits: 2})}%`);
 
-const item = (child, key) => <StackPanel.Item key={key}>{child}</StackPanel.Item>;
+const item = (child, key) => (
+	<StackPanel.Item key={key} shrink={0}>
+		{child}
+	</StackPanel.Item>
+);
 
 function actionRow(buttons, messages) {
 	const parts = [];
@@ -159,7 +169,7 @@ function actionRow(buttons, messages) {
 	if (list.length) {
 		parts.push(
 			item(
-				<Text size={Text.Size.S} type={list.some((m) => m.strong) ? Text.Type.STRONG : Text.Type.WEAK}>
+				<Text size={Text.Size.S} rootStyle={{whiteSpace: 'normal', overflowWrap: 'anywhere', maxWidth: '100%'}} type={list.some((m) => m.strong) ? Text.Type.STRONG : Text.Type.WEAK}>
 					{list.map((m) => m.text).join('  ·  ')}
 				</Text>,
 				'status'
@@ -262,6 +272,7 @@ export default function PayrollApp() {
 	const [error, setError] = useState('');
 	const [confirm, setConfirm] = useState(null);
 	const [input, setInput] = useState({kind: 'E', employee: '', earning_type: '', code: '', qty: '1', rate: '', multiplier: '', amount: '', description: ''});
+	const inputRef = useRef(input);
 	const [year, setYear] = useState(String(new Date().getFullYear()));
 	const [paygroup, setPaygroup] = useState('');
 
@@ -352,7 +363,7 @@ export default function PayrollApp() {
 	if (busy) messages.push({text: busy});
 	if (notice) messages.push({text: notice});
 	if (!boot.setupReady) messages.push({text: t.notReady, strong: true});
-	if (boot.unverified && boot.unverified.length) messages.push({text: t.unverified(boot.unverified.join(', '))});
+	if (boot.unverified && boot.unverified.length) messages.push({text: view === 'setup' ? t.unverified(boot.unverified.join(', ')) : t.unverifiedShort(boot.unverified.length)});
 
 	// Hộp xác nhận cho thao tác ghi sổ, đảo, lập bill
 	if (confirm) {
@@ -425,7 +436,7 @@ export default function PayrollApp() {
 					columnStretch={true}
 					highlightRowsOnHover={true}
 					placeholder={t.empty}
-					rootStyle={{width: '100%', height: '520px'}}
+					rootStyle={{width: '100%', flexShrink: 0, height: '520px'}}
 				/>,
 				'grid-batches'
 			)
@@ -479,9 +490,17 @@ export default function PayrollApp() {
 			)
 		);
 		const extra = [{text: t.totals(b)}];
-		if (b.journal) extra.push({text: `${t.cols.journal}: JE ${b.journal}${b.reversal ? ` / ${b.reversal}` : ''}`});
+		const tx = batch.transactions || {};
+		const txText = (id) => {
+			const x = tx[id] || {};
+			const state = x.voided ? t.txVoided : x.posting ? t.txPosted : t.txPending;
+			return `${x.tranid || id} (${state})`;
+		};
+		if (b.journal) extra.push({text: `${t.cols.journal}: ${txText(b.journal)}${b.reversal ? ` / ${t.reversalLabel} ${txText(b.reversal)}` : ''}`});
+		if (b.bills && b.bills.length) extra.push({text: `${t.billsLabel}: ${b.bills.map((x) => txText(x.id)).join(', ')}`});
 		if (b.messages) extra.push({text: b.messages.split('\n').slice(0, 3).join('; '), strong: true});
-		items.push(item(actionRow(buttons, messages.concat(extra)), 'b-actions'));
+		items.push(item(actionRow(buttons, messages), 'b-actions'));
+		items.push(item(<Text size={Text.Size.S} rootStyle={{whiteSpace: 'normal'}}>{extra.map((m) => m.text).join('  ·  ')}</Text>, 'b-totals'));
 
 		const rows = batch.lines.map((l) => Object.assign({}, l, {note: [l.error, l.warnings].filter(Boolean).join(' | ')}));
 		const filtered = quickFilter(rows, quick);
@@ -516,7 +535,7 @@ export default function PayrollApp() {
 					columnStretch={true}
 					highlightRowsOnHover={true}
 					placeholder={t.empty}
-					rootStyle={{width: '100%', height: selected ? '300px' : '460px'}}
+					rootStyle={{width: '100%', flexShrink: 0, height: selected ? '300px' : '460px'}}
 				/>,
 				'grid-lines'
 			)
@@ -547,7 +566,7 @@ export default function PayrollApp() {
 							]}
 							columnStretch={true}
 							placeholder={t.empty}
-							rootStyle={{width: '100%', height: '220px'}}
+							rootStyle={{width: '100%', flexShrink: 0, height: '220px'}}
 						/>,
 						'd-earn'
 					)}
@@ -564,7 +583,7 @@ export default function PayrollApp() {
 							]}
 							columnStretch={true}
 							placeholder={t.empty}
-							rootStyle={{width: '100%', height: '220px'}}
+							rootStyle={{width: '100%', flexShrink: 0, height: '220px'}}
 						/>,
 						'd-ins'
 					)}
@@ -598,13 +617,17 @@ export default function PayrollApp() {
 					]}
 					columnStretch={true}
 					placeholder={t.empty}
-					rootStyle={{width: '100%', height: '200px'}}
+					rootStyle={{width: '100%', flexShrink: 0, height: '200px'}}
 				/>,
 				'i-grid'
 			)
 		);
 		if (!editable) return;
-		const set = (k) => (a) => setInput(Object.assign({}, input, {[k]: a.value !== undefined ? a.value : String(a.text || '')}));
+		// Giá trị form giữ trong ref: hai ô cập nhật liền nhau (rời ô này, bấm nút) không ghi đè nhau bằng trạng thái cũ
+		const set = (k) => (a) => {
+			inputRef.current = Object.assign({}, inputRef.current, {[k]: a.value !== undefined ? a.value : String(a.text || '')});
+			setInput(inputRef.current);
+		};
 		const kindItems = [{value: 'E', label: t.kind.E}, {value: 'D', label: t.kind.D}];
 		const fields = [
 			cell(labeled(t.employee, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(empItems)} valueMember="value" displayMember="label" selectedValue={input.employee} onSelectionChanged={(a) => a.value && a.value !== input.employee && set('employee')(a)} />), 'in-emp'),
@@ -631,10 +654,11 @@ export default function PayrollApp() {
 		items.push(
 			item(
 				actionRow([
-					<Button label={t.addInput} enabled={!busy && !!input.employee && (input.kind === 'D' || !!input.earning_type)} action={() =>
-						act('saveInput', {values: {batch: batch.batch.id, employee: input.employee, kind: input.kind, earning_type: input.kind === 'E' ? input.earning_type : null, code: input.kind === 'D' ? input.code || 'KHAC' : '', description: input.description,
-							qty: input.kind === 'E' ? numOrNull(input.qty) : null, rate: input.kind === 'E' ? numOrNull(input.rate) : null, multiplier: input.kind === 'E' ? numOrNull(input.multiplier) : null, amount: input.kind === 'D' ? numOrNull(input.amount) : null}})
-					} />,
+					<Button label={t.addInput} enabled={!busy && !!input.employee && (input.kind === 'D' || !!input.earning_type)} action={() => {
+						const input = inputRef.current;
+						return act('saveInput', {values: {batch: batch.batch.id, employee: input.employee, kind: input.kind, earning_type: input.kind === 'E' ? input.earning_type : null, code: input.kind === 'D' ? input.code || 'KHAC' : '', description: input.description,
+							qty: input.kind === 'E' ? numOrNull(input.qty) : null, rate: input.kind === 'E' ? numOrNull(input.rate) : null, multiplier: input.kind === 'E' ? numOrNull(input.multiplier) : null, amount: input.kind === 'D' ? numOrNull(input.amount) : null}});
+					}} />,
 				]),
 				'i-add'
 			)
@@ -657,7 +681,7 @@ export default function PayrollApp() {
 					]}
 					columnStretch={true}
 					placeholder={t.empty}
-					rootStyle={{width: '100%', height: '320px'}}
+					rootStyle={{width: '100%', flexShrink: 0, height: '320px'}}
 				/>,
 				'j-grid'
 			)
@@ -706,7 +730,7 @@ export default function PayrollApp() {
 					columnStretch={true}
 					highlightRowsOnHover={true}
 					placeholder={t.empty}
-					rootStyle={{width: '100%', height: '520px'}}
+					rootStyle={{width: '100%', flexShrink: 0, height: '520px'}}
 				/>,
 				'p-grid'
 			)
@@ -736,7 +760,7 @@ export default function PayrollApp() {
 					]}
 					columnStretch={true}
 					placeholder={t.empty}
-					rootStyle={{width: '100%', height: '480px'}}
+					rootStyle={{width: '100%', flexShrink: 0, height: '480px'}}
 				/>,
 				'a-grid'
 			)
