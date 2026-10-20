@@ -183,6 +183,18 @@
       <showinlist>T</showinlist>
       <defaultchecked>T</defaultchecked>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_set_auto_approve">
+      <label>Tự duyệt bút toán, bill do phân hệ lương tạo</label>
+      <fieldtype>CHECKBOX</fieldtype>
+      <description>AutoReleaseGL: payroll journal entries and agency bills are created approved when the account uses journal / bill approval.</description>
+      <help>AutoReleaseGL: payroll journal entries and agency bills are created approved when the account uses journal / bill approval.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+      <defaultchecked>T</defaultchecked>
+    </customrecordcustomfield>
     <customrecordcustomfield scriptid="custrecord_s4vp_set_time_approval">
       <label>Chỉ lấy giờ đã duyệt</label>
       <fieldtype>CHECKBOX</fieldtype>
@@ -392,6 +404,18 @@
       <selectrecordtype>-3</selectrecordtype>
       <description>Cơ quan thuế</description>
       <help>Cơ quan thuế</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_set_location">
+      <label>Địa điểm mặc định cho chứng từ</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>-103</selectrecordtype>
+      <description>Default location for payroll journal entries and agency bills when the account requires a location.</description>
+      <help>Default location for payroll journal entries and agency bills when the account requires a location.</help>
       <ismandatory>F</ismandatory>
       <storevalue>T</storevalue>
       <displaytype>NORMAL</displaytype>

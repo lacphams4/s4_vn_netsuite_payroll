@@ -81,6 +81,11 @@ define([], () => {
 					"type": "check",
 					"target": null
 				},
+				"auto_approve": {
+					"id": "custrecord_s4vp_set_auto_approve",
+					"type": "check",
+					"target": null
+				},
 				"time_approval": {
 					"id": "custrecord_s4vp_set_time_approval",
 					"type": "check",
@@ -170,6 +175,11 @@ define([], () => {
 					"id": "custrecord_s4vp_set_pit_vendor",
 					"type": "select",
 					"target": "vendor"
+				},
+				"location": {
+					"id": "custrecord_s4vp_set_location",
+					"type": "select",
+					"target": "location"
 				}
 			}
 		},
@@ -257,6 +267,11 @@ define([], () => {
 					"id": "custrecord_s4vp_co_pit_vendor",
 					"type": "select",
 					"target": "vendor"
+				},
+				"location": {
+					"id": "custrecord_s4vp_co_location",
+					"type": "select",
+					"target": "location"
 				},
 				"preparer": {
 					"id": "custrecord_s4vp_co_preparer",

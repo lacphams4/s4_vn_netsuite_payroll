@@ -67,12 +67,14 @@ define(["./Store", "../core/StatutoryParameterProvider"], (Store, Provider) => {
 			allocationFallback: pick(g.alloc_fallback, t.alloc_fallback) || "P",
 			allocationVersionMode: pick(g.alloc_version, t.alloc_version) || "E",
 			requirePayrollApproval: t.require_approval !== false,
+			autoApprove: t.auto_approve !== false,
 			requireTimeApproval: t.time_approval !== false,
 			workPermitBlocksPayroll: !!t.wp_blocks,
 			mealAllowanceAmount: t.meal_amount || 0,
 			earningTypeIds: { base: t.base_et, allowance: t.allow_et, meal: t.meal_et, contractor: t.ctr_et, payout: t.payout_et },
 			accounts,
 			pitVendor: pick(c.pit_vendor, t.pit_vendor),
+			location: pick(c.location, t.location),
 			signers: { preparer: c.preparer || "", chiefAccountant: c.chief_accountant || "", director: c.director || "" },
 		};
 	}

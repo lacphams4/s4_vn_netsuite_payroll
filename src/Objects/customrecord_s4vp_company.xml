@@ -210,6 +210,18 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_co_location">
+      <label>Địa điểm mặc định cho chứng từ</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>-103</selectrecordtype>
+      <description>Default location for payroll journal entries and agency bills when the account requires a location.</description>
+      <help>Default location for payroll journal entries and agency bills when the account requires a location.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
     <customrecordcustomfield scriptid="custrecord_s4vp_co_preparer">
       <label>Người lập biểu</label>
       <fieldtype>TEXT</fieldtype>

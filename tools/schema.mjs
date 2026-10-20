@@ -71,6 +71,7 @@ export const records = [
 			["accident_rate", "Tỷ lệ BHTNLĐ ghi đè (%)", "float", { help: "Employer rate override for BHTNLD as a decimal, e.g. 0.003. Empty uses the statutory component." }],
 			["ext_ot", "Ngành được làm thêm 300 giờ / năm", "check"],
 			["require_approval", "Bắt buộc duyệt bảng lương", "check", { def: "T" }],
+			["auto_approve", "Tự duyệt bút toán, bill do phân hệ lương tạo", "check", { def: "T", help: "AutoReleaseGL: payroll journal entries and agency bills are created approved when the account uses journal / bill approval." }],
 			["time_approval", "Chỉ lấy giờ đã duyệt", "check", { def: "T" }],
 			["ot_source", "Nguồn giờ làm thêm", "select:list:overtime_source"],
 			["require_lock", "Bắt buộc khóa công trước khi tính lương", "check"],
@@ -499,6 +500,7 @@ function accountFields() {
 		["acc_13th", "TK trích trước tháng 13 (335)", "select:account"],
 		["acc_contractor", "TK phải trả CTV (3388 / 331)", "select:account"],
 		["pit_vendor", "Cơ quan thuế", "select:vendor"],
+		["location", "Địa điểm mặc định cho chứng từ", "select:location", { help: "Default location for payroll journal entries and agency bills when the account requires a location." }],
 	];
 }
 

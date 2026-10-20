@@ -161,7 +161,7 @@ define(["N/runtime", "./Store", "../core/VietnamDefaults"], (runtime, Store, VD)
 				name: vi ? "Thiết lập lương VN" : "VN Payroll Preferences", std_days: s.standardWorkDays || null, hours_per_day: s.standardHoursPerDay,
 				weekly_off: "0,6", region: s.defaultRegion, base_et: ets[s.baseEarningType].id, allow_et: ets[s.allowanceEarningType].id,
 				meal_et: ets[s.mealEarningType].id, ctr_et: ets[s.contractorEarningType].id, payout_et: ets[s.leavePayoutEarningType].id,
-				meal_amount: s.mealAllowanceAmount, union_fund: s.unionFundApplicable, ext_ot: s.extendedOvertimeSector, require_approval: s.requirePayrollApproval,
+				meal_amount: s.mealAllowanceAmount, union_fund: s.unionFundApplicable, ext_ot: s.extendedOvertimeSector, require_approval: s.requirePayrollApproval, auto_approve: true,
 				time_approval: s.requireTimeApproval, ot_source: s.overtimeSource, require_lock: s.requireAttendanceLock, leave_policy: pols[s.defaultLeavePolicy].id,
 				wp_blocks: s.workPermitBlocksPayroll, alloc_method: s.allocationMethod, alloc_fallback: s.allocationFallback, alloc_version: s.allocationVersionMode,
 				acc13_basis: s.accrual13thBasis, acc13_months: s.accrual13thMonths,

@@ -62,9 +62,10 @@ define(["N/query", "N/record", "./Schema"], (query, record, Schema) => {
 		const def = rec(name);
 		const cols = ["t.id AS id", "t.isinactive AS isinactive"];
 		if (def.includeName || def.numbering) cols.push("t.name AS name");
+		// Alias có tiền tố c_ để không trùng từ khóa SQL (from, to, date...)
 		for (const [key, f] of Object.entries(def.fields)) {
-			if (f.type === "date") cols.push(`TO_CHAR(t.${f.id}, 'YYYY-MM-DD') AS ${key}`);
-			else cols.push(`t.${f.id} AS ${key}`);
+			if (f.type === "date") cols.push(`TO_CHAR(t.${f.id}, 'YYYY-MM-DD') AS c_${key}`);
+			else cols.push(`t.${f.id} AS c_${key}`);
 		}
 		return cols.join(", ");
 	}
@@ -74,7 +75,7 @@ define(["N/query", "N/record", "./Schema"], (query, record, Schema) => {
 		const o = { id: String(row.id), isInactive: row.isinactive === "T" };
 		if (def.includeName || def.numbering) o.name = row.name;
 		for (const [key, f] of Object.entries(def.fields)) {
-			let v = row[key];
+			let v = row[`c_${key}`];
 			if (v === undefined) v = null;
 			if (f.type === "check") v = v === "T" || v === true;
 			else if (f.type === "select" && f.target && f.target.startsWith("list:")) v = codeOf(f.target.slice(5), v);
