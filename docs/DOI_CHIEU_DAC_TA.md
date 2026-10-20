@@ -10,25 +10,25 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | --- | --- | --- | --- |
 | VP101000 | Thiết lập lương VN | Xong | Record S4VP Thiết lập lương VN; SPA > Thiết lập: Nạp mặc định VN. Tab quy tắc trừ công, ký hiệu: record riêng. Approval Map: chưa (duyệt một cấp) |
 | VP101010 | Tham số pháp lý | Xong | Ba record tham số, biểu thuế, khoản trích + ngày lễ; cờ đã đối chiếu |
-| VP101020 | Thiết lập lương theo công ty | Xong | Theo subsidiary, ô trống kế thừa; thêm người ký, địa điểm mặc định. Load Industry Pack: lõi xong (core/IndustryPacks.js), chưa có nút |
+| VP101020 | Thiết lập lương theo công ty | Xong | Theo subsidiary, ô trống kế thừa; thêm người ký, địa điểm mặc định. Load Industry Pack: API `loadIndustryPack` (đã chạy gói Xây dựng), chưa có nút trên SPA; ca, mẫu xoay ca của gói Sản xuất bỏ qua vì chưa có record ca |
 | VP101030 | Nhóm lương | Xong | Record + Sinh kỳ lương (tháng / nửa tháng / tuần) |
 | VP102000 | Loại thu nhập | Xong | |
 | VP102010 | Loại nghỉ, chính sách phép | Xong | |
 | VP102020 | Gói phúc lợi | Xong | Record cha / con |
 | VP102030 | Quy tắc thu nhập | Xong | Record + điều kiện; bộ máy quy tắc đầy đủ 4.2 (463 test) |
-| VP102040 | Bảng đơn giá | Một phần | Record đã có; nối phiếu sản lượng đang làm |
+| VP102040 | Bảng đơn giá | Xong | Record bảng + dòng theo ngày hiệu lực, dự án; thang hoa hồng cho quy tắc nguồn T. Màn hình: danh sách NetSuite |
 | VP102050, VP102060 | Ca, mẫu xoay ca | Lõi xong | ShiftMatcher, ShiftPattern; chưa có record |
 | VP102070 | Work center | Ánh xạ | Dùng Class của NetSuite |
 | VP102080 | Tài khoản lương theo dự án | Chưa làm | Lõi CostAllocationBuilder đã hỗ trợ ưu tiên tài khoản dự án |
 | VP201000 | Kỳ lương | Xong | Sinh kỳ, đóng kỳ, khóa / mở khóa công |
 | VP203000 | Hồ sơ lương nhân viên | Xong | Hồ sơ + lịch sử lương + người phụ thuộc; danh sách trên SPA |
-| VP204000 | Giấy phép lao động | Một phần | Record đã có; API và cảnh báo khi tính lương đang làm |
-| VP205000 | Bảng tỷ lệ phân bổ dự án | Một phần | Record phiên bản + dòng đã có; API đang làm |
+| VP204000 | Giấy phép lao động | Xong (API) | Lập, nộp, cấp, thu hồi, gia hạn theo chuỗi, cập nhật hết hạn; cảnh báo / chặn khi tính lương (đã chạy). Chưa có màn hình SPA riêng |
+| VP205000 | Bảng tỷ lệ phân bổ dự án | Xong (API) | Phiên bản nháp, kích hoạt (thay thế bản cũ), khóa khi đã dùng; đưa vào phân bổ khi tính lương. Chưa có màn hình SPA riêng |
 | VP206000 | Số dư phép | Xong | Sổ phép, giao dịch phép, điều chỉnh; SPA > Chấm công và phép |
-| VP207000 | Tổ đội | Một phần | Record tổ + thành viên đã có |
+| VP207000 | Tổ đội | Xong | Record tổ + thành viên theo hiệu lực |
 | VP303000 - VP306000 | Đơn nghỉ, OT, công tác, ngoại lệ | Xong | Luồng H -> P -> A / R, C; khóa theo kỳ công; giữ chỗ / dùng / hoàn phép; công tác sinh phiếu tạm ứng |
 | VP307000 | Bảng tổng hợp công | Xong | Lập (mô hình ngoại lệ), khóa, mở khóa; nguồn bảng công ký hiệu: chưa |
-| VP308000 | Phiếu sản lượng | Một phần | Record phiếu, dòng, thành viên đã có; API đang làm |
+| VP308000 | Phiếu sản lượng | Xong (API) | Phiếu cá nhân / tổ, tra đơn giá, nạp thành viên, chia tổ, duyệt, khóa khi ghi sổ, mở khi đảo; vào bảng lương qua quy tắc nguồn O / S (đã chạy TC-TS-01). Chưa có màn hình SPA riêng |
 | VP309000, VP310000, VP502000 | Phân ca, lượt chấm, xử lý chấm công | Lõi xong | Kịch bản 100 người, hiệu năng 2.000 x 31 ngày đạt |
 | VP311000 | Bảng công ký hiệu | Lõi xong | AttendanceSheetCalculator |
 | VP312000 | Giờ công tính lương | Lõi xong | TimesheetSync, TimeImport; chưa nối Time Bill NetSuite |
@@ -41,7 +41,8 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | VP405000 | Chi phí nhân sự theo tài khoản | Xong | So với dòng JE của bảng lương |
 | VP409000 - VP409110 | GI, dashboard | Chưa làm | Có danh sách trên SPA; saved search / dashboard: giai đoạn sau |
 | VP641000 | Phiếu lương | Xong | PDF, song ngữ chọn được |
-| VP641100, VP601000 - VP603030 | Tự phục vụ, mobile | Chưa làm | |
+| VP601000, VP641100 | Phiếu lương của tôi, in phiếu lương của tôi | Xong | Suitelet tự phục vụ: chỉ bảng đã ghi sổ của chính người đăng nhập, lọc năm theo tháng tính thuế (sửa điểm 6.1 #8); chưa thử với tài khoản Employee Center |
+| VP602000 - VP603030 | Công, phép và đơn của tôi; mobile | Chưa làm | |
 | VP642000 | Bảng chấm công tháng (in) | Chưa làm | Dữ liệu có trên SPA |
 | VP643000 | Bảng thanh toán tiền lương | Xong | PDF A4 ngang |
 | VP644000 | Quyết toán CTV | Xong | PDF |

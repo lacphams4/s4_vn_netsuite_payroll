@@ -50,7 +50,8 @@ define([
 		const types = ctx.earningTypes || [];
 		const typeByCode = {};
 		for (const t of types) typeByCode[norm(t.code)] = t;
-		const warnings = [];
+		// Cảnh báo do lớp gọi đưa vào (giấy phép lao động sắp hết hạn...) đứng đầu danh sách
+		const warnings = (emp.extraWarnings || []).slice();
 		const isContractor = norm(emp.employmentType) === "C";
 
 		if (!emp.compensation) throw Errors.invalid("The employee has no compensation effective on the period end date.", "Nhân viên chưa có lịch sử lương hiệu lực đến cuối kỳ.");

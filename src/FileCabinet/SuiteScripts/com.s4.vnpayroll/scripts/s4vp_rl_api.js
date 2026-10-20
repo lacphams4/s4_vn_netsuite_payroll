@@ -11,7 +11,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance) => {
+define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	const ACCOUNTANT_ONLY = ["release", "reverse", "agencyBills"];
@@ -93,6 +93,14 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return { balances: Attendance.balances(params.subsidiary, Number(params.year)) };
 				case "attendance":
 					return { rows: Store.find("attendance", { where: "{period} = ?", params: [params.period] }) };
+				case "outputs":
+					return { outputs: Output.list(params.subsidiary, params.period) };
+				case "rateTables":
+					return { tables: Store.find("rate_table").map((t) => Output.rateTable(t.id)), teams: Store.find("team") };
+				case "workPermits":
+					return { permits: WorkPermits.list(params.subsidiary) };
+				case "allocVersions":
+					return { versions: AllocationPlans.list(params.employee) };
 				case "report":
 					return Reports.run(params);
 				case "txinfo":
@@ -164,6 +172,43 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "releaseAdvance":
 					if (isHr()) return { error: "Payroll HR cannot release advances", errorVi: "HR không có quyền ghi sổ tạm ứng" };
 					return Advances.release(body.id);
+				case "loadIndustryPack":
+					return Defaults.loadIndustryPack(body.code, body.subsidiary);
+				case "saveOutput":
+					return Output.save(body.values || {}, body.lines, body.members);
+				case "outputAction":
+					return Output.act(body.id, body.op);
+				case "loadTeamMembers":
+					return Output.loadTeamMembers(body.id);
+				case "splitOutput":
+					return Output.splitAmount(body.id);
+				case "saveRateLine":
+					return { id: Store.create("rate_line", body.values || {}) };
+				case "saveTeam": {
+					const id = body.id ? (Store.update("team", body.id, body.values || {}), body.id) : Store.create("team", body.values || {});
+					for (const m of body.members || []) Store.create("team_member", Object.assign({ team: id }, m));
+					return { id };
+				}
+				case "saveWorkPermit":
+					return WorkPermits.save(body.values || {});
+				case "workPermitAction": {
+					const op = body.op;
+					if (op === "submit") return WorkPermits.submit(body.id);
+					if (op === "issue") return WorkPermits.markIssued(body.id, { permitNo: body.permitNo, issued: body.issued });
+					if (op === "revoke") return WorkPermits.revoke(body.id);
+					if (op === "extend") return WorkPermits.createExtension(body.id);
+					return { error: `Unknown op ${op}`, errorVi: `Thao tác không hợp lệ ${op}` };
+				}
+				case "updateExpiredPermits":
+					return WorkPermits.updateExpired();
+				case "newAllocVersion":
+					return AllocationPlans.newVersion(body.employee, body.reason);
+				case "saveAllocLines":
+					return AllocationPlans.saveLines(body.id, body.lines || [], body.reason);
+				case "activateAllocVersion":
+					return AllocationPlans.activate(body.id, body.effective);
+				case "deleteAllocVersion":
+					return AllocationPlans.removeDraft(body.id);
 				case "createBatch":
 					return { id: Payroll.create(body) };
 				case "saveInput":

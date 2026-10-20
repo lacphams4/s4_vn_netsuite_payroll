@@ -8,7 +8,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "../core/VietnamDefaults"], (runtime, Store, VD) => {
+define(["N/runtime", "./Store", "../core/VietnamDefaults", "../core/IndustryPacks"], (runtime, Store, VD, Packs) => {
 	function isVietnamese() {
 		try {
 			return /^vi/i.test(String(runtime.getCurrentUser().getPreference({ name: "LANGUAGE" }) || ""));
@@ -187,11 +187,51 @@ define(["N/runtime", "./Store", "../core/VietnamDefaults"], (runtime, Store, VD)
 		return log;
 	}
 
+	/**
+	 * Load Industry Pack (VP101020, đặc tả 4.4): nạp gói CONSTRUCTION / TRADE / MANUFACTURING cho công ty con.
+	 * Chỉ thêm phần chưa có (so theo mã); quy tắc cần mức tiền do khách quyết được nạp ở trạng thái không hoạt động.
+	 * Chặn khi bảng quy tắc còn rỗng (phải Nạp mặc định VN trước, 4.9 #1). Ca, mẫu xoay ca chưa có record: bỏ qua, báo lại.
+	 */
+	function loadIndustryPack(code, subsidiary, options = {}) {
+		const vi = options.language ? /^vi/i.test(options.language) : isVietnamese();
+		const pick = (o) => (vi ? o.nameVi || o.name : o.name);
+		const ets = byName(Store.find("earning_type", { includeInactive: true }));
+		const groups = byName(Store.find("paygroup", { includeInactive: true }));
+		const tables = byName(Store.find("rate_table", { includeInactive: true }));
+		const rules = byName(Store.find("earning_rule", { includeInactive: true }));
+		const plan = Packs.planLoad(code, { earningTypes: Object.keys(ets), payGroups: Object.keys(groups), rateTables: Object.keys(tables), shifts: [], patterns: [], rules: Object.keys(rules) });
+		const created = { earningTypes: [], payGroups: [], rateTables: [], rules: [] };
+		for (const e of plan.earningTypes) {
+			ets[e.code] = { id: Store.create("earning_type", { name: e.code, description: pick(e), category: e.category, tax: e.taxTreatment || "T", cap_param: e.exemptCapParam || "" }) };
+			created.earningTypes.push(e.code);
+		}
+		for (const g of plan.payGroups) {
+			groups[g.code] = { id: Store.create("paygroup", { name: g.code, description: pick(g), subsidiary: subsidiary || null, frequency: g.frequency, week_start: 1, timing: "L", att_source: g.attendanceSource || "E" }) };
+			created.payGroups.push(g.code);
+		}
+		for (const t of plan.rateTables) {
+			Store.create("rate_table", { name: t.code, description: pick(t), type: t.type });
+			created.rateTables.push(t.code);
+		}
+		for (const r of plan.rules) {
+			const id = Store.create("earning_rule", {
+				name: r.code, description: vi ? r.descriptionVi || r.description : r.description, sequence: r.sequence, earning_type: ets[r.earningType] ? ets[r.earningType].id : null,
+				qty_source: r.quantitySource, rate_source: r.rateSource, fixed_rate: Number(r.fixedRate) || 0, multiplier: r.multiplier || 1, proration: r.proration || "N",
+				rate_table: r.rateTable || "", tier_method: r.tierMethod || "P", shift_kind: r.shiftKind || "", fail_action: r.failAction || "N", reduction: r.reductionPercent || 0,
+				isInactive: !r.isActive,
+			});
+			for (const c of r.conditions || []) Store.create("rule_cond", { rule: id, field: c.field, operator: c.comparison, value: Number(c.value) });
+			created.rules.push(r.code);
+		}
+		const skipped = plan.shifts.map((x) => x.code).concat(plan.patterns.map((x) => x.code));
+		return { created, skippedShifts: skipped };
+	}
+
 	function byName(rows) {
 		const out = {};
 		for (const r of rows) out[String(r.name || "").trim().toUpperCase()] = r;
 		return out;
 	}
 
-	return { load };
+	return { load, loadIndustryPack };
 });

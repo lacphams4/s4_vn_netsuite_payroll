@@ -70,6 +70,18 @@
       <shortlist>F</shortlist>
     </link>
     <link>
+      <linklabel>Bảng đơn giá</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_rate_table]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Tổ đội</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_team]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
       <linklabel>Loại nghỉ</linklabel>
       <linkobject>[scriptid=customrecord_s4vp_leave_type]</linkobject>
       <linktasktype>LIST</linktasktype>

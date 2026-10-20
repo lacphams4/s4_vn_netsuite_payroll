@@ -13,8 +13,8 @@
 define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
-	"../core/VietnameseNumberReader", "../core/LeaveLedger",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger) => {
+	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords",
+], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -319,6 +319,11 @@ define([
 		const prior = priorEarnings(c);
 		const ytd = ytdOvertime(c);
 		const otLines = overtimeLines(c, empIds);
+		// Sản lượng / doanh số (4.3.5), giấy phép lao động (3.9), bảng tỷ lệ phân bổ (4.5.3): đọc một lần cho cả lô
+		const outputs = Output.forPayroll(c.period.id, batchId, empIds);
+		ectx.rateTables = outputs.rateTables || {};
+		const permits = WorkPermits.forPayroll(empIds, c.period.start, c.period.end);
+		const plans = AllocationPlans.forPayroll(empIds);
 		const leaveLeft = paidLeaveRemaining(empIds.filter((id) => profiles[id] && EmploymentDays.terminatesIn(profiles[id].termination_date, c.period.start, c.period.end)), Dates.year(c.period.end));
 		const etById = c.earningTypes.byId;
 		const errors = [];
@@ -328,6 +333,8 @@ define([
 			const e = info[line.employee] || {};
 			try {
 				if (!prof) throw fail("The employee payroll profile is missing", "Nhân viên chưa có hồ sơ lương");
+				const wp = permits[line.employee];
+				if (wp && wp.blocking) throw fail(wp.warning.message, wp.warning.messageVi);
 				const comp = latestCompensation(comps[prof.id] || [], c.period.end);
 				const myInputs = ins[line.employee] || [];
 				const emp = {
@@ -348,6 +355,11 @@ define([
 					prior: prior[line.employee] || {},
 					leaveRemaining: leaveLeft[line.employee] || 0,
 					yearToDateOvertimeHours: ytd[line.employee] || 0,
+					outputAmounts: (outputs.outputAmounts || {})[line.employee] || {},
+					salesAmount: (outputs.salesAmount || {})[line.employee] || 0,
+					outputShares: (outputs.shares || {})[line.employee] || [],
+					allocationVersions: plans[line.employee] || [],
+					extraWarnings: wp && wp.warning ? [wp.warning] : [],
 					defaults: { project: prof.project || "", task: "", branch: prof.location || e.location || "", workCenter: prof.class || e.cls || "" },
 					accounts: {
 						employeeAccount: prof.expense_account || "", employeeSub: prof.department || e.department || "", defaultAccount: c.settings.accounts.acc_expense || "",
@@ -575,6 +587,13 @@ define([
 		const je = Journal.buildRelease(model, journalConfig(c));
 		const jeId = createJournal(c.batch.subsidiary, je.date, je.memo, je.lines, c.settings.location);
 		Store.submit("batch", batchId, { journal: jeId, status: "R" });
+		Output.markIncluded(c.period.id, batchId);
+		const used = {};
+		for (const e of model.employees) {
+			const nbrs = PlanRecords.usedVersions(e.allocations);
+			if (nbrs.length) used[e.employee] = nbrs;
+		}
+		AllocationPlans.markUsed(used);
 		for (const a of advRecs) {
 			const off = (a.offset || 0) + offsets[a.id].amount;
 			const bal = (a.amount || 0) - off;
@@ -644,6 +663,7 @@ define([
 		const memo = lang() === "vi" ? `Đảo bảng lương ${b.name} (kỳ ${c.period.name})` : `Reversal of payroll batch ${b.name} (period ${c.period.name})`;
 		const jeId = createJournal(b.subsidiary, Dates.iso(new Date()), memo, out, c.settings.location);
 		Store.submit("batch", batchId, { reversal: jeId, status: "V" });
+		Output.unmarkIncluded(batchId);
 		// Hoàn số dư tạm ứng
 		for (const l of lines(batchId)) {
 			for (const o of parseDetail(l).advanceOffsets || []) {

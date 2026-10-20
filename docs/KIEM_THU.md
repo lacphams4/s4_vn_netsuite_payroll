@@ -4,7 +4,7 @@ Cập nhật 21/10/2026. Hai lớp kiểm thử: (1) unit test lõi trên Node t
 
 ## 1. Unit test lõi
 
-Chạy: `npm test`. Kết quả: **814 / 814 đạt**, 25 bộ, không có `test.todo`.
+Chạy: `npm test`. Kết quả: **825 / 825 đạt**, 27 bộ, không có `test.todo`.
 
 | Bộ test | Số test | Ca vàng của đặc tả |
 | --- | --- | --- |
@@ -22,6 +22,7 @@ Chạy: `npm test`. Kết quả: **814 / 814 đạt**, 25 bộ, không có `test
 | reports, reportdata | 19 | TC34, TC36, không cư trú, S4-TC47 D02-LT và tăng lại |
 | engine | 6 | Nối toàn bộ pipeline 4.2.9: KB-15, FL-05, TC-ER-03, HD-02, UAT-1, TM-03 |
 | attendancedocs, print, foundation | 24 | Quy tắc chứng từ công, mô hình bản in, làm tròn, ngày, tham số |
+| outputrules, planrecords | 11 | TC-TS-01 phiếu tổ trên dữ liệu record, SIT-V2-01, AP-16, AP-07, ca 37/38 giấy phép lao động |
 
 Giả định ghi nhận khi port (chi tiết trong docs/DOI_CHIEU_DAC_TA.md mục 3):
 
@@ -70,7 +71,13 @@ Cấp phép năm 2026 (CTV bị loại, có thông báo), đơn nghỉ phép E01
 | E015 | 18/23, nghỉ 5 ngày (< 14 vẫn đóng BH) | Gross 46.956.522, BH NLĐ 4.807.000, thuế 2.164.952 |
 | E016 | 23/23, nghỉ việc trong kỳ | Lương 12.750.000 + trả 12 ngày phép 6.652.174; thuế 10% 1.940.217 |
 
-### 2.4 Báo cáo
+### 2.4 Kỳ 01/2027 (BL000006, khoán tổ, giấy phép lao động)
+
+Nạp gói ngành Xây dựng (loại thu nhập PCCT, PCXANHA, KHOAN; nhóm lương XD-VP, XD-CT, XDKHOAN; bảng đơn giá KHOAN-XD; quy tắc XD-SITE không hoạt động, XD-KHOAN hoạt động). Bảng đơn giá: bê tông 850.000 / m3, tường 125.000 / m2. Phiếu tổ SL000001 tổ nề: 12,5 m3 + 48 m2 = 16.625.000, chia ngày công x hệ số (E012 6 x 1,2; E013 6; E015 5) = **6.576.923 / 5.480.769 / 4.567.308** đúng TC-TS-01; gửi duyệt, duyệt. Giấy phép lao động WP000001 của E015 hết hạn 15/02/2027.
+
+Bảng lương 01/2027: công chuẩn 20 (đã loại ngày lễ 01/01/2027 trong lịch mặc định); mỗi người trong tổ có dòng KHOAN đúng phần chia; E015 có cảnh báo "Giấy phép lao động WP000001 hết hạn ngày 15/02/2027 (còn 15 ngày sau cuối kỳ)"; E016 đã nghỉ việc 31/12/2026 không được nạp; thuế E012 672.692 (khớp tính tay).
+
+### 2.5 Báo cáo
 
 BH tháng 12/2026: 3 người, tổng 28.108.000, chênh lệch C12 tính đúng; D02-LT tháng 12 không có biến động (khớp tháng 11). 05/KK-TNCN quý 4/2026: [16] = 5, [17] = 3, [21] = 349.172.285 (bảng lương đã đảo bị loại). Quyết toán năm 2026: E012, E013, E015 vào 05-1/BK; E014, E016 vào 05-2/BK.
 
@@ -97,3 +104,5 @@ Tạo trước khi sửa lỗi #3, vẫn chờ duyệt (chưa vào sổ cái); a
 - BL000004: JE1807 (51724).
 
 Đã ghi sổ (sau khi sửa): JE1808 (51725) tạm ứng TU000002.
+
+Bảng lương đang tạm giữ để anh thử thao tác: BL000005 (12/2026), BL000006 (01/2027).

@@ -10,6 +10,12 @@
       <shortlist>F</shortlist>
     </link>
     <link>
+      <linklabel>Phiếu lương của tôi</linklabel>
+      <linkobject>[scriptid=customscript_s4vp_sl_my_payroll.customdeploy_s4vp_sl_my_payroll]</linkobject>
+      <linktasktype>SCRIPT</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
       <linklabel>Hồ sơ lương nhân viên</linklabel>
       <linkobject>[scriptid=customrecord_s4vp_employee]</linkobject>
       <linktasktype>LIST</linktasktype>
@@ -24,6 +30,24 @@
     <link>
       <linklabel>Tạm ứng lương</linklabel>
       <linkobject>[scriptid=customrecord_s4vp_advance]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Phiếu sản lượng</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_output]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Giấy phép lao động</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_work_permit]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Bảng tỷ lệ phân bổ</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_alloc_version]</linkobject>
       <linktasktype>LIST</linktasktype>
       <shortlist>F</shortlist>
     </link>
