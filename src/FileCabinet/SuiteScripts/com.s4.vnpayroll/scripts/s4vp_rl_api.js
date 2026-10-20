@@ -11,7 +11,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports) => {
+define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	const ACCOUNTANT_ONLY = ["release", "reverse", "agencyBills"];
@@ -67,6 +67,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 			paygroups: Store.find("paygroup").map((g) => ({ id: g.id, code: g.name, description: g.description, frequency: g.frequency, subsidiary: g.subsidiary })),
 			periods: Periods.list().map((p) => ({ id: p.id, code: p.name, paygroup: p.paygroup, start: p.start, end: p.end, status: p.status, attStatus: p.att_status, taxMonth: p.tax_month, stdDays: p.std_days, last: p.last_in_month })),
 			unverified,
+			leaveTypes: setup.length ? Store.find("leave_type").map((l) => ({ id: l.id, code: l.name, name: l.description, allowHalf: l.allow_half })) : [],
 			earningTypes: setup.length ? Settings.earningTypes().list.filter((e) => e.isActive).map((e) => ({ id: e.id, code: e.code, name: e.description, taxTreatment: e.taxTreatment, isOvertime: e.isOvertime })) : [],
 			recordTypeIds: recordTypeIds(),
 			recordTypes: { batch: Store.rec("batch").type, period: Store.rec("period").type, employee: Store.rec("employee").type, attendance: Store.rec("attendance").type, setup: Store.rec("setup").type, company: Store.rec("company").type },
@@ -86,6 +87,12 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return Payroll.journalPreview(params.id);
 				case "bankfile":
 					return Payroll.bankFile(params.id);
+				case "docs":
+					return { docs: Attendance.list(params.type, params.subsidiary, { status: params.status || "", employee: params.employee || "", from: params.from || "", to: params.to || "" }) };
+				case "leaveBalances":
+					return { balances: Attendance.balances(params.subsidiary, Number(params.year)) };
+				case "attendance":
+					return { rows: Store.find("attendance", { where: "{period} = ?", params: [params.period] }) };
 				case "report":
 					return Reports.run(params);
 				case "txinfo":
@@ -125,9 +132,21 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "reopenPeriod":
 					return Periods.reopen(body.id) || { ok: true };
 				case "lockAttendance":
-					return Periods.lockAttendance(body.id) || { ok: true };
+					return Attendance.lock(body.id) || { ok: true };
 				case "unlockAttendance":
-					return Periods.unlockAttendance(body.id) || { ok: true };
+					return Attendance.unlock(body.id) || { ok: true };
+				case "buildAttendance":
+					return Attendance.build(body.id);
+				case "saveDoc":
+					return Attendance.save(body.type, body.values || {});
+				case "docAction":
+					return Attendance.act(body.type, body.id, body.op, { rejectReason: body.rejectReason || "" });
+				case "accrueLeave":
+					return Attendance.accrue(Number(body.year), body.policy || null, body.runDate, body.subsidiary || null);
+				case "expireLeave":
+					return Attendance.expire(Number(body.year), body.runDate);
+				case "adjustLeave":
+					return Attendance.adjust(body.employee, body.leaveType, Number(body.year), Number(body.qty), body.reason || "");
 				case "saveProfile":
 					return Profiles.save(body);
 				case "saveSetup":

@@ -9,7 +9,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/query", "N/record", "./Schema"], (query, record, Schema) => {
+define(["N/query", "N/record", "N/format", "./Schema"], (query, record, format, Schema) => {
 	const listCache = {};
 
 	/** {mã -> internal id} và {internal id -> mã} của một custom list. */
@@ -178,7 +178,8 @@ define(["N/query", "N/record", "./Schema"], (query, record, Schema) => {
 			const f = def.fields[key];
 			if (!f) throw new Error(`Unknown field ${name}.${key}`);
 			let value = v;
-			if (f.type === "date") value = toNsDate(v);
+			// submitFields quy đổi Date theo múi giờ máy chủ -> người dùng (lệch ngày): truyền chuỗi theo định dạng ngày của người dùng
+			if (f.type === "date") value = v ? format.format({ value: toNsDate(v), type: format.Type.DATE }) : "";
 			else if (f.type === "check") value = !!v;
 			else if (f.type === "select" && f.target && f.target.startsWith("list:")) value = idOf(f.target.slice(5), v) || "";
 			else if (value === null || value === undefined) value = "";

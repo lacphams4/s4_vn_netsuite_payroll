@@ -13,8 +13,8 @@
 define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
-	"../core/VietnameseNumberReader",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words) => {
+	"../core/VietnameseNumberReader", "../core/LeaveLedger",
+], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -251,6 +251,36 @@ define([
 		return out;
 	}
 
+	/** Giờ OT từ đơn OT đã duyệt có ngày làm trong [đầu kỳ, cuối kỳ] (3.7 AddOvertimeRequests), khi nguồn OT = R. */
+	function overtimeLines(c, employeeIds) {
+		const out = {};
+		if (c.settings.overtimeSource !== "R") return out;
+		const ets = c.earningTypes.byId;
+		for (const r of Store.findIn("ot_request", "employee", employeeIds)) {
+			if (r.status !== "A" || !(r.hours > 0) || !Dates.within(r.work_date, c.period.start, c.period.end)) continue;
+			const et = ets[r.earning_type] || {};
+			(out[r.employee] = out[r.employee] || []).push({
+				date: r.work_date, isOvertime: true, dayType: r.day_type || "N", hours: r.hours, isNight: !!r.is_night, earningType: et.code || "",
+				project: r.project || "", sourceId: r.name,
+			});
+		}
+		return out;
+	}
+
+	/** Ngày phép còn lại năm nghỉ việc: tổng khả dụng của loại nghỉ trừ số dư và có lương (2.10.2). */
+	function paidLeaveRemaining(employeeIds, year) {
+		const types = {};
+		for (const t of Store.find("leave_type", { includeInactive: true })) types[t.id] = t;
+		const out = {};
+		for (const b of Store.findIn("leave_balance", "employee", employeeIds)) {
+			const t = types[b.leave_type];
+			if (!t || !t.uses_balance || !t.is_paid || Number(b.year) !== Number(year)) continue;
+			const avail = Ledger.available({ entitled: b.entitled, carriedOver: b.carried, adjusted: b.adjusted, used: b.used, pending: b.pending });
+			out[b.employee] = (out[b.employee] || 0) + Number(avail);
+		}
+		return out;
+	}
+
 	function parseDetail(line) {
 		try {
 			return line.detail ? JSON.parse(line.detail) : {};
@@ -288,6 +318,8 @@ define([
 		const advances = openAdvances(c, empIds);
 		const prior = priorEarnings(c);
 		const ytd = ytdOvertime(c);
+		const otLines = overtimeLines(c, empIds);
+		const leaveLeft = paidLeaveRemaining(empIds.filter((id) => profiles[id] && EmploymentDays.terminatesIn(profiles[id].termination_date, c.period.start, c.period.end)), Dates.year(c.period.end));
 		const etById = c.earningTypes.byId;
 		const errors = [];
 
@@ -306,7 +338,7 @@ define([
 					compensation: comp ? { effectiveDate: comp.effective, baseSalary: comp.base_salary, insuranceWage: comp.insurance_wage || 0, fixedAllowance: comp.allowance || 0, package: comp.package ? c.packageNames[comp.package] : "" } : null,
 					dependents: (prof.pit_method || "P") === "P" ? deps[prof.id] || [] : [],
 					line: { standardDays: line.std_days, workDays: line.work_days, absenceDays: line.absence_days || 0, unpaidLeaveDays: line.unpaid_leave || 0, otherTaxDeductions: line.other_tax_ded || 0 },
-					timeLines: [],
+					timeLines: otLines[line.employee] || [],
 					manualEarnings: myInputs.filter((i) => i.kind === "E").map((i) => ({
 						earningType: etById[i.earning_type] ? etById[i.earning_type].code : "", description: i.description, quantity: blank(i.qty) ? 1 : i.qty, rate: i.rate || 0,
 						multiplier: i.multiplier, amount: i.amount || 0, amountLocked: i.manual_amount, project: i.project || "", branch: i.location || "", workCenter: i.class || "", sub: i.department || "",
@@ -314,7 +346,7 @@ define([
 					deductions: myInputs.filter((i) => i.kind === "D").map((i) => ({ code: i.code || "KHAC", name: i.description || i.code || "", amount: i.amount || 0, account: i.account })),
 					openAdvances: advances[line.employee] || [],
 					prior: prior[line.employee] || {},
-					leaveRemaining: 0,
+					leaveRemaining: leaveLeft[line.employee] || 0,
 					yearToDateOvertimeHours: ytd[line.employee] || 0,
 					defaults: { project: prof.project || "", task: "", branch: prof.location || e.location || "", workCenter: prof.class || e.cls || "" },
 					accounts: {
