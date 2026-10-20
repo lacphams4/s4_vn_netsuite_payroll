@@ -17,7 +17,7 @@ const TEXT = {
 	vi: {
 		title: 'Lương VN',
 		subtitle: 'S4 VN Payroll',
-		views: {batches: 'Bảng lương', profiles: 'Hồ sơ lương', advances: 'Tạm ứng lương', setup: 'Thiết lập'},
+		views: {batches: 'Bảng lương', attendance: 'Chấm công và phép', reports: 'Báo cáo, tờ khai', profiles: 'Hồ sơ lương', advances: 'Tạm ứng lương', setup: 'Thiết lập'},
 		view: 'Màn hình',
 		subsidiary: 'Công ty con',
 		period: 'Kỳ lương',
@@ -88,6 +88,26 @@ const TEXT = {
 		txVoided: 'đã hủy',
 		reversalLabel: 'đảo',
 		billsLabel: 'Bill cơ quan thu',
+		att: {
+			build: 'Lập bảng công', lock: 'Khóa công', unlock: 'Mở khóa công', summary: 'Bảng tổng hợp công', docs: 'Chứng từ', docType: 'Loại chứng từ',
+			types: {leave: 'Đơn nghỉ', ot: 'Đơn làm thêm giờ', trip: 'Đơn công tác', exception: 'Phiếu ngoại lệ chấm công'},
+			reqStatus: {H: 'Tạm giữ', P: 'Chờ duyệt', A: 'Đã duyệt', R: 'Từ chối', C: 'Đã hủy'},
+			ops: {submit: 'Gửi duyệt', approve: 'Duyệt', reject: 'Từ chối', cancel: 'Hủy'},
+			newDoc: 'Lập chứng từ', save: 'Lưu (tạm giữ)', from: 'Từ ngày (yyyy-mm-dd)', to: 'Đến ngày (yyyy-mm-dd)', workDate: 'Ngày (yyyy-mm-dd)',
+			hours: 'Số giờ', minutes: 'Số phút', adjust: 'Điều chỉnh công (-1..1)', reason: 'Lý do', leaveType: 'Loại nghỉ', destination: 'Nơi công tác',
+			advanceAmount: 'Số tiền tạm ứng', exceptionType: 'Loại ngoại lệ', exTypes: {L: 'Đi trễ', E: 'Về sớm', A: 'Điều chỉnh công'},
+			half: {A: 'Buổi sáng', P: 'Buổi chiều'}, fromHalf: 'Bắt đầu', toHalf: 'Kết thúc', days: 'Số ngày', dayUnit: 'ngày', dayType: 'Loại ngày',
+			accrue: 'Cấp phép năm', expire: 'Hết hạn phép chuyển', balances: 'Số dư phép', year: 'Năm',
+			cols: {std: 'Công chuẩn', paid: 'Nghỉ có lương', unpaid: 'Không lương', si: 'BHXH', trip: 'Công tác', late: 'Trừ trễ sớm', adj: 'Điều chỉnh', work: 'Công hưởng lương', ot: 'Giờ OT', status: 'Trạng thái',
+				entitled: 'Được cấp', carried: 'Chuyển', adjusted: 'Điều chỉnh', used: 'Đã dùng', pending: 'Chờ duyệt', available: 'Còn lại'},
+			accrued: (rows) => `Đã cấp phép: ${rows.filter((r) => r.accrued).length} người${rows.some((r) => r.message) ? ` · ${rows.filter((r) => r.message).map((r) => r.message).join('; ')}` : ''}`,
+		},
+		rep: {
+			type: 'Báo cáo', types: {insurance: 'Bảng BH phải nộp và D02-LT (VP402000)', pitq: 'Tờ khai 05/KK-TNCN theo quý (VP403000)', pita: 'Dữ liệu quyết toán TNCN năm 05-1/BK, 05-2/BK (VP404000)', cost: 'Chi phí nhân sự theo tài khoản, đối chiếu GL (VP405000)'},
+			taxMonth: 'Tháng tính thuế (yyyyMM)', year: 'Năm', quarter: 'Quý', schedule: 'Bảng kê', c12: 'Số trên thông báo C12-TS', releasedOnly: 'Chỉ bảng lương đã ghi sổ',
+			yesNo: {T: 'Có', F: 'Không'}, run: 'Xem', csv: 'Xuất CSV', d02: 'Danh sách biến động D02-LT', indicators: 'Chỉ tiêu tờ khai', c12Diff: (a, d) => `Thông báo C12-TS ${money(a)} · Chênh lệch ${money(d)}`,
+			code: 'Chỉ tiêu', item: 'Nội dung', value: 'Giá trị',
+		},
 		yes: 'Đồng ý',
 		cancel: 'Hủy',
 	},
@@ -96,7 +116,7 @@ const TEXT = {
 // Bản tiếng Anh: nhãn gốc theo Acumatica
 TEXT.en = Object.assign({}, TEXT.vi, {
 	title: 'VN Payroll',
-	views: {batches: 'Payroll Batches', profiles: 'Employee Payroll Profiles', advances: 'Payroll Advances', setup: 'Setup'},
+	views: {batches: 'Payroll Batches', attendance: 'Attendance and Leave', reports: 'Reports and Declarations', profiles: 'Employee Payroll Profiles', advances: 'Payroll Advances', setup: 'Setup'},
 	view: 'Screen', subsidiary: 'Subsidiary', period: 'Pay period', allPeriods: '(All periods)', load: 'View', newBatch: 'New batch', description: 'Description',
 	quick: 'Quick filter (name, code, amount...)', quickCount: (n) => `${n} matching rows`, empty: 'No data', loading: 'Loading...', working: 'Working...', done: 'Done', failed: 'Error',
 	back: 'Back to list', openRecord: 'Open record',
@@ -275,6 +295,18 @@ export default function PayrollApp() {
 	const inputRef = useRef(input);
 	const [year, setYear] = useState(String(new Date().getFullYear()));
 	const [paygroup, setPaygroup] = useState('');
+	const [attPeriod, setAttPeriod] = useState('');
+	const [attRows, setAttRows] = useState([]);
+	const [docType, setDocType] = useState('leave');
+	const [docs, setDocs] = useState([]);
+	const [balances, setBalances] = useState([]);
+	const [employees, setEmployees] = useState([]);
+	const docRef = useRef({});
+	const [docForm, setDocForm] = useState({});
+	const [repType, setRepType] = useState('insurance');
+	const repRef = useRef({taxMonth: '', year: String(new Date().getFullYear()), quarter: String(Math.floor(new Date().getMonth() / 3) + 1), schedule: '', c12: '', releasedOnly: 'F'});
+	const [repForm, setRepForm] = useState(repRef.current);
+	const [report, setReport] = useState(null);
 
 	const run = (label, promise, after) => {
 		setBusy(label || t.working);
@@ -318,7 +350,22 @@ export default function PayrollApp() {
 		if (subsidiary && view === 'batches' && !batch) loadBatches(subsidiary, period);
 		if (subsidiary && view === 'profiles') run(t.loading, call({action: 'profiles', subsidiary}), (r) => setProfiles(r.employees));
 		if (subsidiary && view === 'advances') run(t.loading, call({action: 'advances', subsidiary}), (r) => setAdvances(r.advances));
+		if (subsidiary && view === 'attendance') {
+			loadDocs(docType);
+			call({action: 'profiles', subsidiary}).then((r) => setEmployees(r.employees.filter((e) => e.profile))).catch(() => {});
+		}
 	}, [subsidiary, period, view]);
+
+	const loadDocs = (type) => run(t.loading, call({action: 'docs', type, subsidiary}), (r) => setDocs(r.docs));
+	const loadAttendance = (per) => per && run(t.loading, call({action: 'attendance', period: per}), (r) => setAttRows(r.rows));
+	const setDoc = (k) => (a) => {
+		docRef.current = Object.assign({}, docRef.current, {[k]: a.value !== undefined ? a.value : String(a.text || '')});
+		setDocForm(docRef.current);
+	};
+	const setRep = (k) => (a) => {
+		repRef.current = Object.assign({}, repRef.current, {[k]: a.value !== undefined ? a.value : String(a.text || '')});
+		setRepForm(repRef.current);
+	};
 
 	const act = (action, extra, message) => {
 		const id = batch.batch.id;
@@ -389,6 +436,8 @@ export default function PayrollApp() {
 	else if (view === 'batches' && batch) renderBatch();
 	else if (view === 'profiles') renderProfiles();
 	else if (view === 'advances') renderAdvances();
+	else if (view === 'attendance') renderAttendance();
+	else if (view === 'reports') renderReports();
 	else renderSetup();
 
 	return (
@@ -818,5 +867,265 @@ export default function PayrollApp() {
 			Object.keys(t.lists).map((k) => <Button label={t.lists[k]} type={Button.Type.LINK} action={() => boot.recordTypeIds && boot.recordTypeIds[k] && window.open(`/app/common/custom/custrecordentrylist.nl?rectype=${encodeURIComponent(boot.recordTypeIds[k])}`, '_blank')} />)
 		);
 		items.push(item(actionRow(links), 's-links'));
+	}
+
+	// ------------------------------------------------------------------ chấm công và phép
+	function renderAttendance() {
+		const ta = t.att;
+		const periodItems = boot.periods.map((p) => ({value: String(p.id), label: `${p.code} (${p.start} - ${p.end})${p.attStatus === 'L' ? ' 🔒' : ''}`}));
+		const per = boot.periods.find((p) => String(p.id) === attPeriod);
+		items.push(
+			item(
+				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(230px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+					{[
+						cell(labeled(t.period, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={attPeriod} onSelectionChanged={(a) => a.value && a.value !== attPeriod && (setAttPeriod(a.value), loadAttendance(a.value))} />), 'a-per'),
+					]}
+				</GridPanel>,
+				'a-filters'
+			)
+		);
+		const after = (r) => {
+			reloadBoot();
+			loadAttendance(attPeriod);
+			loadDocs(docType);
+			return r;
+		};
+		items.push(
+			item(
+				actionRow(
+					[
+						<Button label={ta.build} enabled={!busy && !!per && per.attStatus !== 'L'} action={() => run(t.working, post({action: 'buildAttendance', id: attPeriod}), after)} />,
+						<Button label={ta.lock} enabled={!busy && !!per && per.attStatus !== 'L'} action={() => run(t.working, post({action: 'lockAttendance', id: attPeriod}), after)} />,
+						<Button label={ta.unlock} enabled={!busy && !!per && per.attStatus === 'L'} action={() => run(t.working, post({action: 'unlockAttendance', id: attPeriod}), after)} />,
+					],
+					messages
+				),
+				'a-actions'
+			)
+		);
+		const empName = (id) => {
+			const e = employees.find((x) => x.employee === String(id));
+			return e ? `${e.code} ${e.name}` : id;
+		};
+		items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{ta.summary}</Heading>, 'a-sum-title'));
+		items.push(
+			item(
+				<DataGrid
+					dataSource={new ArrayDataSource(attRows)}
+					columns={[
+						textCol('employee', t.employee, 220, (r) => empName(r.employee)),
+						textCol('std_days', ta.cols.std, 80, (r) => num(r.std_days)),
+						textCol('paid_leave', ta.cols.paid, 90, (r) => num(r.paid_leave)),
+						textCol('unpaid_leave', ta.cols.unpaid, 90, (r) => num(r.unpaid_leave)),
+						textCol('si_leave', ta.cols.si, 70, (r) => num(r.si_leave)),
+						textCol('trip_days', ta.cols.trip, 80, (r) => num(r.trip_days)),
+						textCol('late_days', ta.cols.late, 90, (r) => num(r.late_days)),
+						textCol('adjust_days', ta.cols.adj, 80, (r) => num(r.adjust_days)),
+						textCol('work_days', ta.cols.work, 100, (r) => num(r.work_days)),
+						textCol('ot_hours', ta.cols.ot, 70, (r) => num(r.ot_hours)),
+						textCol('status', ta.cols.status, 90, (r) => (r.status === 'L' ? '🔒' : '')),
+					]}
+					columnStretch={true}
+					placeholder={t.empty}
+					rootStyle={{width: '100%', flexShrink: 0, height: '240px'}}
+				/>,
+				'a-sum'
+			)
+		);
+
+		// Chứng từ
+		const typeItems = Object.keys(ta.types).map((k) => ({value: k, label: ta.types[k]}));
+		items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{ta.docs}</Heading>, 'a-docs-title'));
+		items.push(
+			item(
+				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(230px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+					{[cell(labeled(ta.docType, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(typeItems)} valueMember="value" displayMember="label" selectedValue={docType} onSelectionChanged={(a) => a.value && a.value !== docType && (setDocType(a.value), loadDocs(a.value))} />), 'd-type')]}
+				</GridPanel>,
+				'a-doc-type'
+			)
+		);
+		const docAct = (r, op) => run(t.working, post({action: 'docAction', type: docType, id: r.id, op}), (x) => {
+			loadDocs(docType);
+			if (x.warnings && x.warnings.length) setNotice(x.warnings.map((w) => (language() === 'vi' ? w.messageVi : w.message)).join('; '));
+		});
+		const opsFor = (st, locked) => (locked ? [] : st === 'H' ? ['submit'] : st === 'P' ? ['approve', 'reject', 'cancel'] : st === 'A' ? ['cancel'] : []);
+		const range = (r) => (docType === 'leave' || docType === 'trip' ? `${r.from || ''} - ${r.to || ''}` : r.work_date || '');
+		const qty = (r) => (docType === 'leave' || docType === 'trip' ? `${num(r.days)} ${ta.dayUnit}` : docType === 'ot' ? `${num(r.hours)} h ${r.day_type || ''}` : r.exception_type === 'A' ? num(r.adjust_days) : `${r.minutes || 0}' (-${num(r.deduct_days)})`);
+		items.push(
+			item(
+				<DataGrid
+					dataSource={new ArrayDataSource(docs)}
+					columns={[
+						{name: 'name', label: t.cols.number, width: 100, type: DataGrid.ColumnType.TEMPLATED, content: safe((r) => <Button label={r.name} type={Button.Type.LINK} action={() => openRecord(`customrecord_s4vp_${{leave: 'leave_request', ot: 'ot_request', trip: 'business_trip', exception: 'att_exception'}[docType]}`, r.id)} />)},
+						textCol('employee', t.employee, 200, (r) => empName(r.employee)),
+						textCol('range', t.cols.docDate, 170, range),
+						textCol('qty', ta.days, 120, qty),
+						textCol('reason', ta.reason, 220, (r) => r.reason || r.purpose || ''),
+						textCol('status', ta.cols.status, 100, (r) => ta.reqStatus[r.status] || r.status),
+						{name: 'ops', label: '', width: 220, type: DataGrid.ColumnType.TEMPLATED, content: safe((r) => (
+							<StackPanel orientation={StackPanel.Orientation.HORIZONTAL} itemGap={StackPanel.GapSize.S}>
+								{opsFor(r.status, r.summary_locked).map((op) => <StackPanel.Item key={op}><Button label={ta.ops[op]} type={Button.Type.LINK} action={() => docAct(r, op)} /></StackPanel.Item>).concat([<StackPanel.Item key="none">{plain('')}</StackPanel.Item>])}
+							</StackPanel>
+						))},
+					]}
+					columnStretch={true}
+					placeholder={t.empty}
+					rootStyle={{width: '100%', flexShrink: 0, height: '260px'}}
+				/>,
+				'a-docs'
+			)
+		);
+
+		// Lập chứng từ mới
+		const f = docForm;
+		const empItems = employees.map((e) => ({value: e.employee, label: `${e.code} ${e.name}`}));
+		const leaveItems = (boot.leaveTypes || []).map((l) => ({value: l.id, label: `${l.code} ${l.name}`}));
+		const halfItems = [{value: 'A', label: ta.half.A}, {value: 'P', label: ta.half.P}];
+		const exItems = Object.keys(ta.exTypes).map((k) => ({value: k, label: ta.exTypes[k]}));
+		const dd = (key, label, list, k) => cell(labeled(label, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(list)} valueMember="value" displayMember="label" selectedValue={f[k] || ''} onSelectionChanged={(a) => a.value && a.value !== f[k] && setDoc(k)(a)} />), key);
+		const tb = (key, label, k) => cell(labeled(label, <TextBox rootStyle={{width: '100%'}} text={f[k] || ''} onTextChanged={setDoc(k)} />), key);
+		const fields = [dd('f-emp', t.employee, empItems, 'employee')];
+		if (docType === 'leave') fields.push(dd('f-lt', ta.leaveType, leaveItems, 'leave_type'), tb('f-from', ta.from, 'from'), dd('f-fh', ta.fromHalf, halfItems, 'from_half'), tb('f-to', ta.to, 'to'), dd('f-th', ta.toHalf, halfItems, 'to_half'), tb('f-reason', ta.reason, 'reason'));
+		if (docType === 'ot') fields.push(tb('f-wd', ta.workDate, 'work_date'), tb('f-h', ta.hours, 'hours'), tb('f-reason', ta.reason, 'reason'));
+		if (docType === 'trip') fields.push(tb('f-from', ta.from, 'from'), tb('f-to', ta.to, 'to'), tb('f-dest', ta.destination, 'destination'), tb('f-purpose', ta.reason, 'purpose'), tb('f-adv', ta.advanceAmount, 'advance_amount'));
+		if (docType === 'exception') fields.push(tb('f-wd', ta.workDate, 'work_date'), dd('f-ext', ta.exceptionType, exItems, 'exception_type'), tb('f-min', ta.minutes, 'minutes'), tb('f-adj', ta.adjust, 'adjust_days'), tb('f-reason', ta.reason, 'reason'));
+		items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{`${ta.newDoc}: ${ta.types[docType]}`}</Heading>, 'a-new-title'));
+		items.push(
+			item(
+				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(200px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+					{fields}
+				</GridPanel>,
+				'a-new-form'
+			)
+		);
+		const n = (v) => (v === undefined || String(v).trim() === '' ? null : Number(String(v).replace(',', '.')));
+		items.push(
+			item(
+				actionRow([
+					<Button label={ta.save} enabled={!busy && !!f.employee} action={() => {
+						const v = Object.assign({subsidiary}, docRef.current);
+						['hours', 'minutes', 'adjust_days', 'advance_amount'].forEach((k) => v[k] !== undefined && (v[k] = n(v[k])));
+						return run(t.working, post({action: 'saveDoc', type: docType, values: v}), (x) => {
+							docRef.current = {};
+							setDocForm({});
+							loadDocs(docType);
+							if (x.warnings && x.warnings.length) setNotice(x.warnings.map((w) => (language() === 'vi' ? w.messageVi : w.message)).join('; '));
+						});
+					}} />,
+				]),
+				'a-new-save'
+			)
+		);
+
+		// Phép năm
+		items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{ta.balances}</Heading>, 'a-bal-title'));
+		items.push(
+			item(
+				actionRow([
+					<Button label={`${ta.accrue} ${year}`} enabled={!busy && /^\d{4}$/.test(year)} action={() => run(t.working, post({action: 'accrueLeave', year: Number(year), subsidiary, runDate: new Date().toISOString().slice(0, 10)}), (r) => {
+						setNotice(ta.accrued(r.rows || []));
+						return run(t.loading, call({action: 'leaveBalances', subsidiary, year}), (x) => setBalances(x.balances));
+					})} />,
+					<Button label={`${ta.balances} ${year}`} enabled={!busy} action={() => run(t.loading, call({action: 'leaveBalances', subsidiary, year}), (x) => setBalances(x.balances))} />,
+				]),
+				'a-bal-actions'
+			)
+		);
+		items.push(
+			item(
+				<DataGrid
+					dataSource={new ArrayDataSource(balances)}
+					columns={[
+						textCol('employee', t.employee, 220, (r) => empName(r.employee)),
+						textCol('leaveTypeCode', ta.leaveType, 80, (r) => r.leaveTypeCode || ''),
+						textCol('entitled', ta.cols.entitled, 80, (r) => num(r.entitled)),
+						textCol('carried', ta.cols.carried, 80, (r) => num(r.carried)),
+						textCol('adjusted', ta.cols.adjusted, 80, (r) => num(r.adjusted)),
+						textCol('used', ta.cols.used, 80, (r) => num(r.used)),
+						textCol('pending', ta.cols.pending, 80, (r) => num(r.pending)),
+						textCol('available', ta.cols.available, 80, (r) => num(r.available)),
+					]}
+					columnStretch={true}
+					placeholder={t.empty}
+					rootStyle={{width: '100%', flexShrink: 0, height: '220px'}}
+				/>,
+				'a-bal'
+			)
+		);
+	}
+
+	// ------------------------------------------------------------------ báo cáo, tờ khai
+	function renderReports() {
+		const tr = t.rep;
+		const lang = language();
+		const f = repForm;
+		const typeItems = Object.keys(tr.types).map((k) => ({value: k, label: tr.types[k]}));
+		const months = [...new Set(boot.periods.map((p) => p.taxMonth).filter(Boolean))].sort().reverse().map((m) => ({value: m, label: `${m.slice(4, 6)}/${m.slice(0, 4)}`}));
+		const yn = [{value: 'F', label: tr.yesNo.F}, {value: 'T', label: tr.yesNo.T}];
+		const dd = (key, label, list, k) => cell(labeled(label, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(list)} valueMember="value" displayMember="label" selectedValue={f[k] || ''} onSelectionChanged={(a) => a.value !== undefined && a.value !== f[k] && setRep(k)(a)} />), key);
+		const tb = (key, label, k) => cell(labeled(label, <TextBox rootStyle={{width: '100%'}} text={f[k] || ''} onTextChanged={setRep(k)} />), key);
+		const fields = [cell(labeled(tr.type, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(typeItems)} valueMember="value" displayMember="label" selectedValue={repType} onSelectionChanged={(a) => a.value && a.value !== repType && (setRepType(a.value), setReport(null))} />), 'r-type')];
+		if (repType === 'insurance' || repType === 'cost') fields.push(dd('r-month', tr.taxMonth, months, 'taxMonth'));
+		if (repType === 'insurance') fields.push(tb('r-c12', tr.c12, 'c12'));
+		if (repType === 'pitq' || repType === 'pita') fields.push(tb('r-year', tr.year, 'year'));
+		if (repType === 'pitq') fields.push(dd('r-q', tr.quarter, ['1', '2', '3', '4'].map((q) => ({value: q, label: `Q${q}`})), 'quarter'));
+		if (repType === 'pita') fields.push(dd('r-s', tr.schedule, [{value: '', label: '05-1/BK + 05-2/BK'}, {value: '05-1', label: '05-1/BK'}, {value: '05-2', label: '05-2/BK'}], 'schedule'));
+		fields.push(dd('r-rel', tr.releasedOnly, yn, 'releasedOnly'));
+		items.push(
+			item(
+				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(230px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+					{fields}
+				</GridPanel>,
+				'r-form'
+			)
+		);
+		const params = () => {
+			const v = repRef.current;
+			const p = {action: 'report', type: repType, subsidiary, releasedOnly: v.releasedOnly || 'F'};
+			if (repType === 'insurance' || repType === 'cost') p.taxMonth = v.taxMonth || (months[0] && months[0].value) || '';
+			if (repType === 'insurance' && v.c12) p.c12 = v.c12;
+			if (repType === 'pitq' || repType === 'pita') p.year = v.year;
+			if (repType === 'pitq') p.quarter = v.quarter;
+			if (repType === 'pita') p.schedule = v.schedule || '';
+			return p;
+		};
+		const toCsv = (table) => {
+			const esc = (x) => `"${String(x === null || x === undefined ? '' : x).replace(/"/g, '""')}"`;
+			const head = table.columns.map((c) => esc(c[lang] || c.vi)).join(',');
+			const body = table.rows.map((r) => table.columns.map((c) => esc(r[c.key])).join(','));
+			return '﻿' + [head].concat(body).join('\r\n');
+		};
+		const buttons = [<Button label={tr.run} hierarchy={Button.Hierarchy.PRIMARY} enabled={!busy && !!subsidiary} action={() => run(t.loading, call(params()), (r) => setReport(r))} />];
+		if (report) buttons.push(<Button label={tr.csv} action={() => download(`${repType}_${params().taxMonth || params().year || ''}.csv`, toCsv(report))} />);
+		if (report && report.d02) buttons.push(<Button label={`${tr.csv} D02-LT`} action={() => download(`D02-LT_${params().taxMonth}.csv`, toCsv(report.d02))} />);
+		const extra = messages.slice();
+		for (const w of (report && report.warnings) || []) extra.push({text: lang === 'vi' ? w.vi : w.en, strong: true});
+		if (report && report.c12Amount !== null && report.c12Amount !== undefined) extra.push({text: tr.c12Diff(report.c12Amount, report.c12Difference)});
+		items.push(item(actionRow(buttons, extra), 'r-actions'));
+		if (!report) return;
+		const grid = (table, key, height) => {
+			const cols = table.columns.map((c) => (c.type === 'money' ? moneyCol(c.key, c[lang] || c.vi, 120) : textCol(c.key, c[lang] || c.vi, c.key.toLowerCase().includes('name') ? 200 : 110, (r) => (r[c.key] === null || r[c.key] === undefined ? '' : typeof r[c.key] === 'number' ? num(r[c.key]) : String(r[c.key])))));
+			const rows = table.totals ? table.rows.concat([Object.assign({bold: true}, table.totals, {[table.columns[0].key]: '∑'})]) : table.rows;
+			return item(<DataGrid dataSource={new ArrayDataSource(rows)} columns={cols} columnStretch={true} placeholder={t.empty} rootStyle={{width: '100%', flexShrink: 0, height: height || '420px'}} />, key);
+		};
+		if (report.indicators) {
+			items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{tr.indicators}</Heading>, 'r-ind-title'));
+			items.push(
+				item(
+					<DataGrid
+						dataSource={new ArrayDataSource(report.indicators)}
+						columns={[textCol('code', tr.code, 70, (r) => r.code), textCol('vi', tr.item, 420, (r) => r[lang] || r.vi), textCol('value', tr.value, 160, (r) => (Number(r.value) >= 1000 ? money(r.value) : num(r.value)))]}
+						columnStretch={true}
+						rootStyle={{width: '100%', flexShrink: 0, height: '420px'}}
+					/>,
+					'r-ind'
+				)
+			);
+		}
+		items.push(grid(report, 'r-grid'));
+		if (report.d02) {
+			items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{tr.d02}</Heading>, 'r-d02-title'));
+			items.push(grid(report.d02, 'r-d02', '240px'));
+		}
 	}
 }
