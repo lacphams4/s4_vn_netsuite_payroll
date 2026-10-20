@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_wp_doc_type">
+  <name>S4VP wp_doc_type</name>
+  <description>S4 VN Payroll code list wp_doc_type; values keep the Acumatica codes (P, E).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_wp_doc_type_p">
+      <value>P - Giấy phép</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_wp_doc_type_e">
+      <value>E - Giấy xác nhận miễn</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -174,5 +174,45 @@
       <permkey>[customrecord_s4vp_leave_tran]</permkey>
       <permlevel>VIEW</permlevel>
     </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_rate_table]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_rate_line]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_team]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_team_member]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_output]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_output_line]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_output_member]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_work_permit]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_alloc_version]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_alloc_line]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
   </permissions>
 </role>

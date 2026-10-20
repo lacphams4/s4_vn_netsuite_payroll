@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_rate_table_type">
+  <name>S4VP rate_table_type</name>
+  <description>S4 VN Payroll code list rate_table_type; values keep the Acumatica codes (W, O, P, S).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_rate_table_type_w">
+      <value>W - Hạng mục khoán</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_table_type_o">
+      <value>O - Công đoạn</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_table_type_p">
+      <value>P - Sản phẩm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_rate_table_type_s">
+      <value>S - Thang hoa hồng doanh số</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

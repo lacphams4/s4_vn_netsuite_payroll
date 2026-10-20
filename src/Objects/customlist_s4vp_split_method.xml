@@ -1,0 +1,28 @@
+<customlist scriptid="customlist_s4vp_split_method">
+  <name>S4VP split_method</name>
+  <description>S4 VN Payroll code list split_method; values keep the Acumatica codes (D, F, H, P, E).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_split_method_d">
+      <value>D - Ngày công</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_split_method_f">
+      <value>F - Ngày công x hệ số</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_split_method_h">
+      <value>H - Giờ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_split_method_p">
+      <value>P - Tỷ lệ cố định</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_split_method_e">
+      <value>E - Chia đều</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

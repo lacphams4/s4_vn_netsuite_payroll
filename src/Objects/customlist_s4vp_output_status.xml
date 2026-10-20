@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_output_status">
+  <name>S4VP output_status</name>
+  <description>S4 VN Payroll code list output_status; values keep the Acumatica codes (H, P, A, C).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_output_status_h">
+      <value>H - Tạm giữ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_output_status_p">
+      <value>P - Chờ duyệt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_output_status_a">
+      <value>A - Đã duyệt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_output_status_c">
+      <value>C - Đã vào bảng lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

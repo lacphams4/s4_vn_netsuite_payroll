@@ -42,6 +42,16 @@ export const lists = {
 	exception_type: ["Loại ngoại lệ chấm công", { L: "L - Đi trễ", E: "E - Về sớm", A: "A - Điều chỉnh công" }],
 	day_half: ["Buổi", { A: "A - Buổi sáng", P: "P - Buổi chiều" }],
 	leave_source: ["Nguồn giao dịch phép", { A: "A - Cấp phép", C: "C - Chuyển phép", X: "X - Hết hạn", R: "R - Đơn nghỉ", J: "J - Điều chỉnh" }],
+	rate_table_type: ["Loại bảng đơn giá", { W: "W - Hạng mục khoán", O: "O - Công đoạn", P: "P - Sản phẩm", S: "S - Thang hoa hồng doanh số" }],
+	team_type: ["Loại tổ", { C: "C - Tổ đội", L: "L - Chuyền", S: "S - Cửa hàng" }],
+	split_method: ["Cách chia tiền tổ", { D: "D - Ngày công", F: "F - Ngày công x hệ số", H: "H - Giờ", P: "P - Tỷ lệ cố định", E: "E - Chia đều" }],
+	output_type: ["Loại phiếu sản lượng", { I: "I - Cá nhân", T: "T - Tổ" }],
+	output_status: ["Trạng thái phiếu sản lượng", { H: "H - Tạm giữ", P: "P - Chờ duyệt", A: "A - Đã duyệt", C: "C - Đã vào bảng lương" }],
+	wp_doc_type: ["Loại giấy phép lao động", { P: "P - Giấy phép", E: "E - Giấy xác nhận miễn" }],
+	wp_issue_type: ["Loại cấp giấy phép", { N: "N - Cấp mới", X: "X - Gia hạn", R: "R - Cấp lại" }],
+	wp_status: ["Trạng thái giấy phép", { D: "D - Đang chuẩn bị", S: "S - Đã nộp", A: "A - Còn hiệu lực", E: "E - Hết hạn", V: "V - Thu hồi" }],
+	wp_job: ["Vị trí công việc", { M: "M - Nhà quản lý", D: "D - Giám đốc điều hành", E: "E - Chuyên gia", T: "T - Lao động kỹ thuật", O: "O - Khác" }],
+	alloc_status: ["Trạng thái phiên bản phân bổ", { D: "D - Nháp", A: "A - Hiệu lực", S: "S - Đã thay thế" }],
 };
 
 // ---------------------------------------------------------------- kiểu trường
@@ -595,6 +605,99 @@ export const records = [
 			["source", "Nguồn", "select:list:leave_source", { req: true }],
 			["ref", "Chứng từ", "text"],
 			["note", "Ghi chú", "text"],
+		],
+	},
+	{
+		id: "rate_table", prefix: "rt", name: "Bảng đơn giá", screen: "VP102040", perms: SETUP, includeName: true,
+		desc: "Rate table (VPRateTable): contract work items, operations, products or sales commission tiers. Record name = rate table ID.",
+		fields: [["description", "Diễn giải", "text"], ["type", "Loại bảng", "select:list:rate_table_type", { req: true }], ["allow_override", "Cho sửa đơn giá trên phiếu", "check"]],
+	},
+	{
+		id: "rate_line", prefix: "rl", name: "Dòng bảng đơn giá", screen: "VP102040", perms: SETUP, includeName: false, child: true,
+		desc: "Rate table line (VPRateTableLine) by effective date and optional project; sales tiers use FromAmount and Rate as percent.",
+		fields: [
+			["table", "Bảng đơn giá", "select:rec:rate_table", { req: true, parent: true }],
+			["item", "Mã hạng mục", "text", { req: true }], ["description", "Diễn giải", "text"], ["uom", "Đơn vị tính", "text"],
+			["rate", "Đơn giá / phần trăm", "float", { req: true }], ["from_amount", "Từ doanh số (bậc thang)", "currency"],
+			["effective", "Hiệu lực từ", "date", { req: true }], ["expiration", "Hiệu lực đến", "date"], ["project", "Dự án", "select:project"],
+		],
+	},
+	{
+		id: "team", prefix: "tm", name: "Tổ đội", screen: "VP207000", perms: PROFILE, includeName: true,
+		desc: "Team / production line / store (VPTeam). Record name = team ID.",
+		fields: [
+			["description", "Diễn giải", "text"], ["subsidiary", "Công ty con", "select:subsidiary"], ["type", "Loại tổ", "select:list:team_type"],
+			["leader", "Tổ trưởng", "select:employee"], ["split_method", "Cách chia mặc định", "select:list:split_method"],
+			["project", "Dự án", "select:project"], ["location", "Chi nhánh (địa điểm)", "select:location"], ["work_center", "Work center (lớp)", "select:class"],
+		],
+	},
+	{
+		id: "team_member", prefix: "tb", name: "Thành viên tổ", screen: "VP207000", perms: PROFILE, includeName: false, child: true,
+		desc: "Team member by effective date (VPTeamMember) with split factor and fixed percent.",
+		fields: [
+			["team", "Tổ", "select:rec:team", { req: true, parent: true }], ["employee", "Nhân viên", "select:employee", { req: true }],
+			["factor", "Hệ số chia", "float"], ["percent", "Tỷ lệ cố định (%)", "float"], ["effective", "Hiệu lực từ", "date"], ["expiration", "Hiệu lực đến", "date"],
+		],
+	},
+	{
+		id: "output", prefix: "oe", name: "Phiếu sản lượng", screen: "VP308000", perms: PROFILE, includeName: false, numbering: "SL",
+		desc: "Output / acceptance entry (VPOutputEntry): individual or team output priced by a rate table; team amounts are split to members.",
+		fields: [
+			["subsidiary", "Công ty con", "select:subsidiary", { req: true }], ["doc_date", "Ngày phiếu", "date", { req: true }], ["period", "Kỳ lương", "select:rec:period"],
+			["type", "Loại phiếu", "select:list:output_type", { req: true }], ["rate_table", "Bảng đơn giá", "select:rec:rate_table", { req: true }],
+			["team", "Tổ", "select:rec:team"], ["split_method", "Cách chia", "select:list:split_method"], ["project", "Dự án", "select:project"],
+			["location", "Chi nhánh (địa điểm)", "select:location"], ["work_center", "Work center (lớp)", "select:class"], ["description", "Diễn giải", "text"],
+			["status", "Trạng thái", "select:list:output_status", { display: "LOCKED" }], ["approved_by", "Người duyệt", "select:employee", { display: "LOCKED" }],
+			["approved_date", "Ngày duyệt", "date", { display: "LOCKED" }], ["batch", "Bảng lương", "select:rec:batch", { display: "LOCKED" }],
+			["total", "Thành tiền", "currency", { display: "LOCKED" }], ["split_total", "Tổng tiền chia", "currency", { display: "LOCKED" }],
+		],
+	},
+	{
+		id: "output_line", prefix: "ol", name: "Dòng sản lượng", screen: "VP308000", perms: PROFILE, includeName: false, child: true,
+		desc: "Output line (VPOutputLine): item, quantity, rate, amount = Round(Qty x Rate); employee for individual entries.",
+		fields: [
+			["entry", "Phiếu sản lượng", "select:rec:output", { req: true, parent: true }], ["employee", "Nhân viên (phiếu cá nhân)", "select:employee"],
+			["item", "Mã hạng mục", "text"], ["description", "Diễn giải", "text"], ["uom", "Đơn vị tính", "text"],
+			["qty", "Số lượng", "float"], ["rate", "Đơn giá", "float"], ["amount", "Thành tiền", "currency", { display: "LOCKED" }],
+		],
+	},
+	{
+		id: "output_member", prefix: "om", name: "Thành viên phiếu tổ", screen: "VP308000", perms: PROFILE, includeName: false, child: true,
+		desc: "Team entry member (VPOutputMember): work days, hours, factor, percent and the split amount.",
+		fields: [
+			["entry", "Phiếu sản lượng", "select:rec:output", { req: true, parent: true }], ["employee", "Nhân viên", "select:employee", { req: true }],
+			["work_days", "Ngày công", "float"], ["hours", "Giờ", "float"], ["factor", "Hệ số", "float"], ["percent", "Tỷ lệ (%)", "float"],
+			["amount", "Số tiền được chia", "currency"], ["manual", "Sửa tay số tiền", "check"],
+		],
+	},
+	{
+		id: "work_permit", prefix: "wp", name: "Giấy phép lao động", screen: "VP204000", perms: PROFILE, includeName: false, numbering: "WP",
+		desc: "Work permit / exemption certificate for foreign workers (VPWorkPermit) with the extension chain.",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }], ["doc_type", "Loại giấy", "select:list:wp_doc_type", { req: true }],
+			["issue_type", "Loại cấp", "select:list:wp_issue_type", { req: true }], ["previous", "Giấy trước", "select:rec:work_permit"],
+			["status", "Trạng thái", "select:list:wp_status", { display: "LOCKED" }], ["permit_no", "Số giấy phép", "text"], ["authority", "Cơ quan cấp", "text"],
+			["submitted", "Ngày nộp", "date"], ["issued", "Ngày cấp", "date"], ["effective", "Hiệu lực từ", "date", { req: true }], ["expiry", "Hết hạn", "date", { req: true }],
+			["job", "Vị trí công việc", "select:list:wp_job"], ["title", "Chức danh", "text"], ["work_location", "Địa điểm làm việc", "text"],
+			["passport", "Số hộ chiếu", "text"], ["passport_expiry", "Hộ chiếu hết hạn", "date"],
+		],
+	},
+	{
+		id: "alloc_version", prefix: "av", name: "Phiên bản bảng tỷ lệ phân bổ", screen: "VP205000", perms: PROFILE, includeName: false,
+		desc: "Project allocation plan version of an employee (VPAllocationPlanVersion): effective dates, status, lines totalling 100%.",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }], ["version", "Phiên bản", "int"], ["effective", "Hiệu lực từ", "date"], ["expiration", "Hiệu lực đến", "date"],
+			["status", "Trạng thái", "select:list:alloc_status", { display: "LOCKED" }], ["reason", "Lý do thay đổi", "text"], ["activated_by", "Người kích hoạt", "select:employee", { display: "LOCKED" }],
+			["activated_date", "Ngày kích hoạt", "date", { display: "LOCKED" }], ["used", "Đã dùng bởi bảng lương ghi sổ", "check", { display: "LOCKED" }], ["total", "Tổng %", "float", { display: "LOCKED" }],
+		],
+	},
+	{
+		id: "alloc_line", prefix: "al", name: "Dòng bảng tỷ lệ phân bổ", screen: "VP205000", perms: PROFILE, includeName: false, child: true,
+		desc: "Allocation plan line (VPAllocationPlanLine): project, department, location, class and percent.",
+		fields: [
+			["version", "Phiên bản", "select:rec:alloc_version", { req: true, parent: true }], ["project", "Dự án", "select:project"],
+			["department", "Phòng ban", "select:department"], ["location", "Chi nhánh (địa điểm)", "select:location"], ["work_center", "Work center (lớp)", "select:class"],
+			["percent", "Tỷ lệ (%)", "float", { req: true }],
 		],
 	},
 ];

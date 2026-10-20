@@ -2182,6 +2182,531 @@ define([], () => {
 					"target": null
 				}
 			}
+		},
+		"rate_table": {
+			"type": "customrecord_s4vp_rate_table",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"description": {
+					"id": "custrecord_s4vp_rt_description",
+					"type": "text",
+					"target": null
+				},
+				"type": {
+					"id": "custrecord_s4vp_rt_type",
+					"type": "select",
+					"target": "list:rate_table_type"
+				},
+				"allow_override": {
+					"id": "custrecord_s4vp_rt_allow_override",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
+		"rate_line": {
+			"type": "customrecord_s4vp_rate_line",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"table": {
+					"id": "custrecord_s4vp_rl_table",
+					"type": "select",
+					"target": "rec:rate_table"
+				},
+				"item": {
+					"id": "custrecord_s4vp_rl_item",
+					"type": "text",
+					"target": null
+				},
+				"description": {
+					"id": "custrecord_s4vp_rl_description",
+					"type": "text",
+					"target": null
+				},
+				"uom": {
+					"id": "custrecord_s4vp_rl_uom",
+					"type": "text",
+					"target": null
+				},
+				"rate": {
+					"id": "custrecord_s4vp_rl_rate",
+					"type": "float",
+					"target": null
+				},
+				"from_amount": {
+					"id": "custrecord_s4vp_rl_from_amount",
+					"type": "currency",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_rl_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiration": {
+					"id": "custrecord_s4vp_rl_expiration",
+					"type": "date",
+					"target": null
+				},
+				"project": {
+					"id": "custrecord_s4vp_rl_project",
+					"type": "select",
+					"target": "project"
+				}
+			}
+		},
+		"team": {
+			"type": "customrecord_s4vp_team",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"description": {
+					"id": "custrecord_s4vp_tm_description",
+					"type": "text",
+					"target": null
+				},
+				"subsidiary": {
+					"id": "custrecord_s4vp_tm_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"type": {
+					"id": "custrecord_s4vp_tm_type",
+					"type": "select",
+					"target": "list:team_type"
+				},
+				"leader": {
+					"id": "custrecord_s4vp_tm_leader",
+					"type": "select",
+					"target": "employee"
+				},
+				"split_method": {
+					"id": "custrecord_s4vp_tm_split_method",
+					"type": "select",
+					"target": "list:split_method"
+				},
+				"project": {
+					"id": "custrecord_s4vp_tm_project",
+					"type": "select",
+					"target": "project"
+				},
+				"location": {
+					"id": "custrecord_s4vp_tm_location",
+					"type": "select",
+					"target": "location"
+				},
+				"work_center": {
+					"id": "custrecord_s4vp_tm_work_center",
+					"type": "select",
+					"target": "class"
+				}
+			}
+		},
+		"team_member": {
+			"type": "customrecord_s4vp_team_member",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"team": {
+					"id": "custrecord_s4vp_tb_team",
+					"type": "select",
+					"target": "rec:team"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_tb_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"factor": {
+					"id": "custrecord_s4vp_tb_factor",
+					"type": "float",
+					"target": null
+				},
+				"percent": {
+					"id": "custrecord_s4vp_tb_percent",
+					"type": "float",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_tb_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiration": {
+					"id": "custrecord_s4vp_tb_expiration",
+					"type": "date",
+					"target": null
+				}
+			}
+		},
+		"output": {
+			"type": "customrecord_s4vp_output",
+			"includeName": false,
+			"numbering": "SL",
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_oe_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"doc_date": {
+					"id": "custrecord_s4vp_oe_doc_date",
+					"type": "date",
+					"target": null
+				},
+				"period": {
+					"id": "custrecord_s4vp_oe_period",
+					"type": "select",
+					"target": "rec:period"
+				},
+				"type": {
+					"id": "custrecord_s4vp_oe_type",
+					"type": "select",
+					"target": "list:output_type"
+				},
+				"rate_table": {
+					"id": "custrecord_s4vp_oe_rate_table",
+					"type": "select",
+					"target": "rec:rate_table"
+				},
+				"team": {
+					"id": "custrecord_s4vp_oe_team",
+					"type": "select",
+					"target": "rec:team"
+				},
+				"split_method": {
+					"id": "custrecord_s4vp_oe_split_method",
+					"type": "select",
+					"target": "list:split_method"
+				},
+				"project": {
+					"id": "custrecord_s4vp_oe_project",
+					"type": "select",
+					"target": "project"
+				},
+				"location": {
+					"id": "custrecord_s4vp_oe_location",
+					"type": "select",
+					"target": "location"
+				},
+				"work_center": {
+					"id": "custrecord_s4vp_oe_work_center",
+					"type": "select",
+					"target": "class"
+				},
+				"description": {
+					"id": "custrecord_s4vp_oe_description",
+					"type": "text",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_oe_status",
+					"type": "select",
+					"target": "list:output_status"
+				},
+				"approved_by": {
+					"id": "custrecord_s4vp_oe_approved_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"approved_date": {
+					"id": "custrecord_s4vp_oe_approved_date",
+					"type": "date",
+					"target": null
+				},
+				"batch": {
+					"id": "custrecord_s4vp_oe_batch",
+					"type": "select",
+					"target": "rec:batch"
+				},
+				"total": {
+					"id": "custrecord_s4vp_oe_total",
+					"type": "currency",
+					"target": null
+				},
+				"split_total": {
+					"id": "custrecord_s4vp_oe_split_total",
+					"type": "currency",
+					"target": null
+				}
+			}
+		},
+		"output_line": {
+			"type": "customrecord_s4vp_output_line",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"entry": {
+					"id": "custrecord_s4vp_ol_entry",
+					"type": "select",
+					"target": "rec:output"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_ol_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"item": {
+					"id": "custrecord_s4vp_ol_item",
+					"type": "text",
+					"target": null
+				},
+				"description": {
+					"id": "custrecord_s4vp_ol_description",
+					"type": "text",
+					"target": null
+				},
+				"uom": {
+					"id": "custrecord_s4vp_ol_uom",
+					"type": "text",
+					"target": null
+				},
+				"qty": {
+					"id": "custrecord_s4vp_ol_qty",
+					"type": "float",
+					"target": null
+				},
+				"rate": {
+					"id": "custrecord_s4vp_ol_rate",
+					"type": "float",
+					"target": null
+				},
+				"amount": {
+					"id": "custrecord_s4vp_ol_amount",
+					"type": "currency",
+					"target": null
+				}
+			}
+		},
+		"output_member": {
+			"type": "customrecord_s4vp_output_member",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"entry": {
+					"id": "custrecord_s4vp_om_entry",
+					"type": "select",
+					"target": "rec:output"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_om_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"work_days": {
+					"id": "custrecord_s4vp_om_work_days",
+					"type": "float",
+					"target": null
+				},
+				"hours": {
+					"id": "custrecord_s4vp_om_hours",
+					"type": "float",
+					"target": null
+				},
+				"factor": {
+					"id": "custrecord_s4vp_om_factor",
+					"type": "float",
+					"target": null
+				},
+				"percent": {
+					"id": "custrecord_s4vp_om_percent",
+					"type": "float",
+					"target": null
+				},
+				"amount": {
+					"id": "custrecord_s4vp_om_amount",
+					"type": "currency",
+					"target": null
+				},
+				"manual": {
+					"id": "custrecord_s4vp_om_manual",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
+		"work_permit": {
+			"type": "customrecord_s4vp_work_permit",
+			"includeName": false,
+			"numbering": "WP",
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_wp_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"doc_type": {
+					"id": "custrecord_s4vp_wp_doc_type",
+					"type": "select",
+					"target": "list:wp_doc_type"
+				},
+				"issue_type": {
+					"id": "custrecord_s4vp_wp_issue_type",
+					"type": "select",
+					"target": "list:wp_issue_type"
+				},
+				"previous": {
+					"id": "custrecord_s4vp_wp_previous",
+					"type": "select",
+					"target": "rec:work_permit"
+				},
+				"status": {
+					"id": "custrecord_s4vp_wp_status",
+					"type": "select",
+					"target": "list:wp_status"
+				},
+				"permit_no": {
+					"id": "custrecord_s4vp_wp_permit_no",
+					"type": "text",
+					"target": null
+				},
+				"authority": {
+					"id": "custrecord_s4vp_wp_authority",
+					"type": "text",
+					"target": null
+				},
+				"submitted": {
+					"id": "custrecord_s4vp_wp_submitted",
+					"type": "date",
+					"target": null
+				},
+				"issued": {
+					"id": "custrecord_s4vp_wp_issued",
+					"type": "date",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_wp_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiry": {
+					"id": "custrecord_s4vp_wp_expiry",
+					"type": "date",
+					"target": null
+				},
+				"job": {
+					"id": "custrecord_s4vp_wp_job",
+					"type": "select",
+					"target": "list:wp_job"
+				},
+				"title": {
+					"id": "custrecord_s4vp_wp_title",
+					"type": "text",
+					"target": null
+				},
+				"work_location": {
+					"id": "custrecord_s4vp_wp_work_location",
+					"type": "text",
+					"target": null
+				},
+				"passport": {
+					"id": "custrecord_s4vp_wp_passport",
+					"type": "text",
+					"target": null
+				},
+				"passport_expiry": {
+					"id": "custrecord_s4vp_wp_passport_expiry",
+					"type": "date",
+					"target": null
+				}
+			}
+		},
+		"alloc_version": {
+			"type": "customrecord_s4vp_alloc_version",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_av_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"version": {
+					"id": "custrecord_s4vp_av_version",
+					"type": "int",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_av_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiration": {
+					"id": "custrecord_s4vp_av_expiration",
+					"type": "date",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_av_status",
+					"type": "select",
+					"target": "list:alloc_status"
+				},
+				"reason": {
+					"id": "custrecord_s4vp_av_reason",
+					"type": "text",
+					"target": null
+				},
+				"activated_by": {
+					"id": "custrecord_s4vp_av_activated_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"activated_date": {
+					"id": "custrecord_s4vp_av_activated_date",
+					"type": "date",
+					"target": null
+				},
+				"used": {
+					"id": "custrecord_s4vp_av_used",
+					"type": "check",
+					"target": null
+				},
+				"total": {
+					"id": "custrecord_s4vp_av_total",
+					"type": "float",
+					"target": null
+				}
+			}
+		},
+		"alloc_line": {
+			"type": "customrecord_s4vp_alloc_line",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"version": {
+					"id": "custrecord_s4vp_al_version",
+					"type": "select",
+					"target": "rec:alloc_version"
+				},
+				"project": {
+					"id": "custrecord_s4vp_al_project",
+					"type": "select",
+					"target": "project"
+				},
+				"department": {
+					"id": "custrecord_s4vp_al_department",
+					"type": "select",
+					"target": "department"
+				},
+				"location": {
+					"id": "custrecord_s4vp_al_location",
+					"type": "select",
+					"target": "location"
+				},
+				"work_center": {
+					"id": "custrecord_s4vp_al_work_center",
+					"type": "select",
+					"target": "class"
+				},
+				"percent": {
+					"id": "custrecord_s4vp_al_percent",
+					"type": "float",
+					"target": null
+				}
+			}
 		}
 	};
 	const lists = {
@@ -2481,6 +3006,92 @@ define([], () => {
 				"X": "val_s4vp_leave_source_x",
 				"R": "val_s4vp_leave_source_r",
 				"J": "val_s4vp_leave_source_j"
+			}
+		},
+		"rate_table_type": {
+			"type": "customlist_s4vp_rate_table_type",
+			"values": {
+				"W": "val_s4vp_rate_table_type_w",
+				"O": "val_s4vp_rate_table_type_o",
+				"P": "val_s4vp_rate_table_type_p",
+				"S": "val_s4vp_rate_table_type_s"
+			}
+		},
+		"team_type": {
+			"type": "customlist_s4vp_team_type",
+			"values": {
+				"C": "val_s4vp_team_type_c",
+				"L": "val_s4vp_team_type_l",
+				"S": "val_s4vp_team_type_s"
+			}
+		},
+		"split_method": {
+			"type": "customlist_s4vp_split_method",
+			"values": {
+				"D": "val_s4vp_split_method_d",
+				"F": "val_s4vp_split_method_f",
+				"H": "val_s4vp_split_method_h",
+				"P": "val_s4vp_split_method_p",
+				"E": "val_s4vp_split_method_e"
+			}
+		},
+		"output_type": {
+			"type": "customlist_s4vp_output_type",
+			"values": {
+				"I": "val_s4vp_output_type_i",
+				"T": "val_s4vp_output_type_t"
+			}
+		},
+		"output_status": {
+			"type": "customlist_s4vp_output_status",
+			"values": {
+				"H": "val_s4vp_output_status_h",
+				"P": "val_s4vp_output_status_p",
+				"A": "val_s4vp_output_status_a",
+				"C": "val_s4vp_output_status_c"
+			}
+		},
+		"wp_doc_type": {
+			"type": "customlist_s4vp_wp_doc_type",
+			"values": {
+				"P": "val_s4vp_wp_doc_type_p",
+				"E": "val_s4vp_wp_doc_type_e"
+			}
+		},
+		"wp_issue_type": {
+			"type": "customlist_s4vp_wp_issue_type",
+			"values": {
+				"N": "val_s4vp_wp_issue_type_n",
+				"X": "val_s4vp_wp_issue_type_x",
+				"R": "val_s4vp_wp_issue_type_r"
+			}
+		},
+		"wp_status": {
+			"type": "customlist_s4vp_wp_status",
+			"values": {
+				"D": "val_s4vp_wp_status_d",
+				"S": "val_s4vp_wp_status_s",
+				"A": "val_s4vp_wp_status_a",
+				"E": "val_s4vp_wp_status_e",
+				"V": "val_s4vp_wp_status_v"
+			}
+		},
+		"wp_job": {
+			"type": "customlist_s4vp_wp_job",
+			"values": {
+				"M": "val_s4vp_wp_job_m",
+				"D": "val_s4vp_wp_job_d",
+				"E": "val_s4vp_wp_job_e",
+				"T": "val_s4vp_wp_job_t",
+				"O": "val_s4vp_wp_job_o"
+			}
+		},
+		"alloc_status": {
+			"type": "customlist_s4vp_alloc_status",
+			"values": {
+				"D": "val_s4vp_alloc_status_d",
+				"A": "val_s4vp_alloc_status_a",
+				"S": "val_s4vp_alloc_status_s"
 			}
 		}
 	};
