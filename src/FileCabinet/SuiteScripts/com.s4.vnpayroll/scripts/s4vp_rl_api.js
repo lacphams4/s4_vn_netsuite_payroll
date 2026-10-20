@@ -11,7 +11,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData) => {
+define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	const ACCOUNTANT_ONLY = ["release", "reverse", "agencyBills"];
@@ -86,6 +86,8 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return Payroll.journalPreview(params.id);
 				case "bankfile":
 					return Payroll.bankFile(params.id);
+				case "report":
+					return Reports.run(params);
 				case "txinfo":
 					return Payroll.transactionsInfo(String(params.ids || "").split(",").slice(0, 50));
 				case "advances":

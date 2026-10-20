@@ -1740,6 +1740,448 @@ define([], () => {
 					"target": null
 				}
 			}
+		},
+		"leave_request": {
+			"type": "customrecord_s4vp_leave_request",
+			"includeName": false,
+			"numbering": "NP",
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_lr_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"subsidiary": {
+					"id": "custrecord_s4vp_lr_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"leave_type": {
+					"id": "custrecord_s4vp_lr_leave_type",
+					"type": "select",
+					"target": "rec:leave_type"
+				},
+				"from": {
+					"id": "custrecord_s4vp_lr_from",
+					"type": "date",
+					"target": null
+				},
+				"from_half": {
+					"id": "custrecord_s4vp_lr_from_half",
+					"type": "select",
+					"target": "list:day_half"
+				},
+				"to": {
+					"id": "custrecord_s4vp_lr_to",
+					"type": "date",
+					"target": null
+				},
+				"to_half": {
+					"id": "custrecord_s4vp_lr_to_half",
+					"type": "select",
+					"target": "list:day_half"
+				},
+				"days": {
+					"id": "custrecord_s4vp_lr_days",
+					"type": "float",
+					"target": null
+				},
+				"reason": {
+					"id": "custrecord_s4vp_lr_reason",
+					"type": "textarea",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_lr_status",
+					"type": "select",
+					"target": "list:request_status"
+				},
+				"approved_by": {
+					"id": "custrecord_s4vp_lr_approved_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"approved_date": {
+					"id": "custrecord_s4vp_lr_approved_date",
+					"type": "date",
+					"target": null
+				},
+				"reject_reason": {
+					"id": "custrecord_s4vp_lr_reject_reason",
+					"type": "text",
+					"target": null
+				},
+				"period": {
+					"id": "custrecord_s4vp_lr_period",
+					"type": "select",
+					"target": "rec:period"
+				},
+				"summary_locked": {
+					"id": "custrecord_s4vp_lr_summary_locked",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
+		"ot_request": {
+			"type": "customrecord_s4vp_ot_request",
+			"includeName": false,
+			"numbering": "OT",
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_ot_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"subsidiary": {
+					"id": "custrecord_s4vp_ot_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"work_date": {
+					"id": "custrecord_s4vp_ot_work_date",
+					"type": "date",
+					"target": null
+				},
+				"day_type": {
+					"id": "custrecord_s4vp_ot_day_type",
+					"type": "select",
+					"target": "list:day_type"
+				},
+				"hours": {
+					"id": "custrecord_s4vp_ot_hours",
+					"type": "float",
+					"target": null
+				},
+				"is_night": {
+					"id": "custrecord_s4vp_ot_is_night",
+					"type": "check",
+					"target": null
+				},
+				"earning_type": {
+					"id": "custrecord_s4vp_ot_earning_type",
+					"type": "select",
+					"target": "rec:earning_type"
+				},
+				"project": {
+					"id": "custrecord_s4vp_ot_project",
+					"type": "select",
+					"target": "project"
+				},
+				"reason": {
+					"id": "custrecord_s4vp_ot_reason",
+					"type": "textarea",
+					"target": null
+				},
+				"from_punches": {
+					"id": "custrecord_s4vp_ot_from_punches",
+					"type": "check",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_ot_status",
+					"type": "select",
+					"target": "list:request_status"
+				},
+				"approved_by": {
+					"id": "custrecord_s4vp_ot_approved_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"approved_date": {
+					"id": "custrecord_s4vp_ot_approved_date",
+					"type": "date",
+					"target": null
+				},
+				"reject_reason": {
+					"id": "custrecord_s4vp_ot_reject_reason",
+					"type": "text",
+					"target": null
+				},
+				"period": {
+					"id": "custrecord_s4vp_ot_period",
+					"type": "select",
+					"target": "rec:period"
+				},
+				"summary_locked": {
+					"id": "custrecord_s4vp_ot_summary_locked",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
+		"business_trip": {
+			"type": "customrecord_s4vp_business_trip",
+			"includeName": false,
+			"numbering": "CT",
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_bt_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"subsidiary": {
+					"id": "custrecord_s4vp_bt_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"from": {
+					"id": "custrecord_s4vp_bt_from",
+					"type": "date",
+					"target": null
+				},
+				"to": {
+					"id": "custrecord_s4vp_bt_to",
+					"type": "date",
+					"target": null
+				},
+				"days": {
+					"id": "custrecord_s4vp_bt_days",
+					"type": "float",
+					"target": null
+				},
+				"destination": {
+					"id": "custrecord_s4vp_bt_destination",
+					"type": "text",
+					"target": null
+				},
+				"purpose": {
+					"id": "custrecord_s4vp_bt_purpose",
+					"type": "textarea",
+					"target": null
+				},
+				"project": {
+					"id": "custrecord_s4vp_bt_project",
+					"type": "select",
+					"target": "project"
+				},
+				"advance_amount": {
+					"id": "custrecord_s4vp_bt_advance_amount",
+					"type": "currency",
+					"target": null
+				},
+				"advance": {
+					"id": "custrecord_s4vp_bt_advance",
+					"type": "select",
+					"target": "rec:advance"
+				},
+				"status": {
+					"id": "custrecord_s4vp_bt_status",
+					"type": "select",
+					"target": "list:request_status"
+				},
+				"approved_by": {
+					"id": "custrecord_s4vp_bt_approved_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"approved_date": {
+					"id": "custrecord_s4vp_bt_approved_date",
+					"type": "date",
+					"target": null
+				},
+				"reject_reason": {
+					"id": "custrecord_s4vp_bt_reject_reason",
+					"type": "text",
+					"target": null
+				},
+				"period": {
+					"id": "custrecord_s4vp_bt_period",
+					"type": "select",
+					"target": "rec:period"
+				},
+				"summary_locked": {
+					"id": "custrecord_s4vp_bt_summary_locked",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
+		"att_exception": {
+			"type": "customrecord_s4vp_att_exception",
+			"includeName": false,
+			"numbering": "NL",
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_ae_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"subsidiary": {
+					"id": "custrecord_s4vp_ae_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"work_date": {
+					"id": "custrecord_s4vp_ae_work_date",
+					"type": "date",
+					"target": null
+				},
+				"exception_type": {
+					"id": "custrecord_s4vp_ae_exception_type",
+					"type": "select",
+					"target": "list:exception_type"
+				},
+				"minutes": {
+					"id": "custrecord_s4vp_ae_minutes",
+					"type": "int",
+					"target": null
+				},
+				"deduct_days": {
+					"id": "custrecord_s4vp_ae_deduct_days",
+					"type": "float",
+					"target": null
+				},
+				"adjust_days": {
+					"id": "custrecord_s4vp_ae_adjust_days",
+					"type": "float",
+					"target": null
+				},
+				"reason": {
+					"id": "custrecord_s4vp_ae_reason",
+					"type": "textarea",
+					"target": null
+				},
+				"from_punches": {
+					"id": "custrecord_s4vp_ae_from_punches",
+					"type": "check",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_ae_status",
+					"type": "select",
+					"target": "list:request_status"
+				},
+				"approved_by": {
+					"id": "custrecord_s4vp_ae_approved_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"approved_date": {
+					"id": "custrecord_s4vp_ae_approved_date",
+					"type": "date",
+					"target": null
+				},
+				"reject_reason": {
+					"id": "custrecord_s4vp_ae_reject_reason",
+					"type": "text",
+					"target": null
+				},
+				"period": {
+					"id": "custrecord_s4vp_ae_period",
+					"type": "select",
+					"target": "rec:period"
+				},
+				"summary_locked": {
+					"id": "custrecord_s4vp_ae_summary_locked",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
+		"leave_balance": {
+			"type": "customrecord_s4vp_leave_balance",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_lb_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"leave_type": {
+					"id": "custrecord_s4vp_lb_leave_type",
+					"type": "select",
+					"target": "rec:leave_type"
+				},
+				"year": {
+					"id": "custrecord_s4vp_lb_year",
+					"type": "int",
+					"target": null
+				},
+				"entitled": {
+					"id": "custrecord_s4vp_lb_entitled",
+					"type": "float",
+					"target": null
+				},
+				"carried": {
+					"id": "custrecord_s4vp_lb_carried",
+					"type": "float",
+					"target": null
+				},
+				"carry_expiry": {
+					"id": "custrecord_s4vp_lb_carry_expiry",
+					"type": "date",
+					"target": null
+				},
+				"adjusted": {
+					"id": "custrecord_s4vp_lb_adjusted",
+					"type": "float",
+					"target": null
+				},
+				"used": {
+					"id": "custrecord_s4vp_lb_used",
+					"type": "float",
+					"target": null
+				},
+				"pending": {
+					"id": "custrecord_s4vp_lb_pending",
+					"type": "float",
+					"target": null
+				},
+				"key": {
+					"id": "custrecord_s4vp_lb_key",
+					"type": "text",
+					"target": null
+				}
+			}
+		},
+		"leave_tran": {
+			"type": "customrecord_s4vp_leave_tran",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_lx_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"leave_type": {
+					"id": "custrecord_s4vp_lx_leave_type",
+					"type": "select",
+					"target": "rec:leave_type"
+				},
+				"year": {
+					"id": "custrecord_s4vp_lx_year",
+					"type": "int",
+					"target": null
+				},
+				"tran_date": {
+					"id": "custrecord_s4vp_lx_tran_date",
+					"type": "date",
+					"target": null
+				},
+				"qty": {
+					"id": "custrecord_s4vp_lx_qty",
+					"type": "float",
+					"target": null
+				},
+				"source": {
+					"id": "custrecord_s4vp_lx_source",
+					"type": "select",
+					"target": "list:leave_source"
+				},
+				"ref": {
+					"id": "custrecord_s4vp_lx_ref",
+					"type": "text",
+					"target": null
+				},
+				"note": {
+					"id": "custrecord_s4vp_lx_note",
+					"type": "text",
+					"target": null
+				}
+			}
 		}
 	};
 	const lists = {
@@ -2004,6 +2446,41 @@ define([], () => {
 				"S": "val_s4vp_symbol_category_s",
 				"T": "val_s4vp_symbol_category_t",
 				"N": "val_s4vp_symbol_category_n"
+			}
+		},
+		"request_status": {
+			"type": "customlist_s4vp_request_status",
+			"values": {
+				"H": "val_s4vp_request_status_h",
+				"P": "val_s4vp_request_status_p",
+				"A": "val_s4vp_request_status_a",
+				"R": "val_s4vp_request_status_r",
+				"C": "val_s4vp_request_status_c"
+			}
+		},
+		"exception_type": {
+			"type": "customlist_s4vp_exception_type",
+			"values": {
+				"L": "val_s4vp_exception_type_l",
+				"E": "val_s4vp_exception_type_e",
+				"A": "val_s4vp_exception_type_a"
+			}
+		},
+		"day_half": {
+			"type": "customlist_s4vp_day_half",
+			"values": {
+				"A": "val_s4vp_day_half_a",
+				"P": "val_s4vp_day_half_p"
+			}
+		},
+		"leave_source": {
+			"type": "customlist_s4vp_leave_source",
+			"values": {
+				"A": "val_s4vp_leave_source_a",
+				"C": "val_s4vp_leave_source_c",
+				"X": "val_s4vp_leave_source_x",
+				"R": "val_s4vp_leave_source_r",
+				"J": "val_s4vp_leave_source_j"
 			}
 		}
 	};

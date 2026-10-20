@@ -38,6 +38,10 @@ export const lists = {
 	input_kind: ["Loại dòng nhập", { E: "Thu nhập", D: "Khấu trừ sau thuế" }],
 	accrual_method: ["Cách cấp phép", { Y: "Y - Cấp đầu năm", M: "M - Cấp theo tháng" }],
 	symbol_category: ["Nhóm ký hiệu công", { W: "W - Làm việc", P: "P - Nghỉ có lương", U: "U - Không lương", S: "S - BHXH trả", T: "T - Công tác", N: "N - Không tính" }],
+	request_status: ["Trạng thái đơn", { H: "H - Tạm giữ", P: "P - Chờ duyệt", A: "A - Đã duyệt", R: "R - Từ chối", C: "C - Đã hủy" }],
+	exception_type: ["Loại ngoại lệ chấm công", { L: "L - Đi trễ", E: "E - Về sớm", A: "A - Điều chỉnh công" }],
+	day_half: ["Buổi", { A: "A - Buổi sáng", P: "P - Buổi chiều" }],
+	leave_source: ["Nguồn giao dịch phép", { A: "A - Cấp phép", C: "C - Chuyển phép", X: "X - Hết hạn", R: "R - Đơn nghỉ", J: "J - Điều chỉnh" }],
 };
 
 // ---------------------------------------------------------------- kiểu trường
@@ -51,6 +55,16 @@ const ROLE_ACCT = "customrole_s4vp_accountant";
 // Quyền theo ma trận 1.4.1: HR thiết lập, hồ sơ, bảng lương (không ghi sổ); kế toán xem thiết lập, toàn quyền bảng lương, tạm ứng
 const SETUP = { [ROLE_HR]: "FULL", [ROLE_ACCT]: "VIEW" };
 const PAYROLL = { [ROLE_HR]: "FULL", [ROLE_ACCT]: "FULL" };
+const PROFILE = { [ROLE_HR]: "FULL", [ROLE_ACCT]: "VIEW" };
+// Trường chung của chứng từ có duyệt (đơn nghỉ, OT, công tác, ngoại lệ), mục 3.4
+const DOC_COMMON = [
+	["status", "Trạng thái", "select:list:request_status", { display: "LOCKED" }],
+	["approved_by", "Người duyệt", "select:employee", { display: "LOCKED" }],
+	["approved_date", "Ngày duyệt", "date", { display: "LOCKED" }],
+	["reject_reason", "Lý do từ chối", "text"],
+	["period", "Kỳ lương", "select:rec:period", { display: "LOCKED" }],
+	["summary_locked", "Đã khóa theo kỳ công", "check", { display: "LOCKED" }],
+];
 
 export const records = [
 	{
@@ -486,6 +500,101 @@ export const records = [
 			["balance", "Số dư", "currency", { display: "LOCKED" }],
 			["journal", "Bút toán", "select:transaction", { display: "LOCKED" }],
 			["history", "Lịch sử cấn trừ (JSON)", "clob", { display: "HIDDEN" }],
+		],
+	},	{
+		id: "leave_request", prefix: "lr", name: "Đơn nghỉ phép", screen: "VP303000", perms: PROFILE, includeName: false, numbering: "NP",
+		desc: "Leave request (VPLeaveRequest): On Hold -> Pending Approval -> Approved / Rejected; Cancelled.",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }],
+			["subsidiary", "Công ty con", "select:subsidiary"],
+			["leave_type", "Loại nghỉ", "select:rec:leave_type", { req: true }],
+			["from", "Từ ngày", "date", { req: true }],
+			["from_half", "Bắt đầu buổi", "select:list:day_half"],
+			["to", "Đến ngày", "date", { req: true }],
+			["to_half", "Kết thúc buổi", "select:list:day_half"],
+			["days", "Số ngày", "float", { display: "LOCKED" }],
+			["reason", "Lý do", "textarea"],
+			...DOC_COMMON,
+		],
+	},
+	{
+		id: "ot_request", prefix: "ot", name: "Đơn làm thêm giờ", screen: "VP304000", perms: PROFILE, includeName: false, numbering: "OT",
+		desc: "Overtime request (VPOvertimeRequest); the day type is derived from the weekly days off and holidays.",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }],
+			["subsidiary", "Công ty con", "select:subsidiary"],
+			["work_date", "Ngày làm thêm", "date", { req: true }],
+			["day_type", "Loại ngày", "select:list:day_type", { display: "LOCKED" }],
+			["hours", "Số giờ", "float", { req: true }],
+			["is_night", "Làm đêm", "check"],
+			["earning_type", "Loại thu nhập OT", "select:rec:earning_type"],
+			["project", "Dự án", "select:project"],
+			["reason", "Lý do", "textarea"],
+			["from_punches", "Sinh từ chấm công", "check", { display: "LOCKED" }],
+			...DOC_COMMON,
+		],
+	},
+	{
+		id: "business_trip", prefix: "bt", name: "Đơn công tác", screen: "VP305000", perms: PROFILE, includeName: false, numbering: "CT",
+		desc: "Business trip (VPBusinessTrip): does not reduce work days; an approved advance amount creates an on-hold payroll advance.",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }],
+			["subsidiary", "Công ty con", "select:subsidiary"],
+			["from", "Từ ngày", "date", { req: true }],
+			["to", "Đến ngày", "date", { req: true }],
+			["days", "Số ngày", "float", { display: "LOCKED" }],
+			["destination", "Nơi công tác", "text"],
+			["purpose", "Mục đích", "textarea"],
+			["project", "Dự án", "select:project"],
+			["advance_amount", "Số tiền tạm ứng", "currency"],
+			["advance", "Phiếu tạm ứng", "select:rec:advance", { display: "LOCKED" }],
+			...DOC_COMMON,
+		],
+	},
+	{
+		id: "att_exception", prefix: "ae", name: "Phiếu ngoại lệ chấm công", screen: "VP306000", perms: PROFILE, includeName: false, numbering: "NL",
+		desc: "Attendance exception (VPAttendanceException): late arrival / early departure (minutes, deducted days by rule) or attendance adjustment (-1 to 1 day).",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }],
+			["subsidiary", "Công ty con", "select:subsidiary"],
+			["work_date", "Ngày", "date", { req: true }],
+			["exception_type", "Loại ngoại lệ", "select:list:exception_type", { req: true }],
+			["minutes", "Số phút", "int"],
+			["deduct_days", "Ngày bị trừ", "float", { display: "LOCKED" }],
+			["adjust_days", "Điều chỉnh công (ngày)", "float"],
+			["reason", "Lý do", "textarea", { req: true }],
+			["from_punches", "Sinh từ chấm công", "check", { display: "LOCKED" }],
+			...DOC_COMMON,
+		],
+	},
+	{
+		id: "leave_balance", prefix: "lb", name: "Số dư phép", screen: "VP206000", perms: PROFILE, includeName: false,
+		desc: "Leave balance by employee, leave type and year (VPLeaveBalance); Available = Entitled + CarriedOver + Adjusted - Used - Pending.",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }],
+			["leave_type", "Loại nghỉ", "select:rec:leave_type", { req: true }],
+			["year", "Năm", "int", { req: true }],
+			["entitled", "Được cấp", "float", { display: "LOCKED" }],
+			["carried", "Chuyển từ năm trước", "float", { display: "LOCKED" }],
+			["carry_expiry", "Hạn phép chuyển", "date", { display: "LOCKED" }],
+			["adjusted", "Điều chỉnh", "float", { display: "LOCKED" }],
+			["used", "Đã dùng", "float", { display: "LOCKED" }],
+			["pending", "Đang chờ duyệt", "float", { display: "LOCKED" }],
+			["key", "Khóa", "text", { display: "HIDDEN" }],
+		],
+	},
+	{
+		id: "leave_tran", prefix: "lx", name: "Giao dịch phép", screen: "VP206000", perms: PROFILE, includeName: false,
+		desc: "Leave ledger transaction (VPLeaveTransaction): positive quantity grants, negative uses.",
+		fields: [
+			["employee", "Nhân viên", "select:employee", { req: true }],
+			["leave_type", "Loại nghỉ", "select:rec:leave_type", { req: true }],
+			["year", "Năm", "int", { req: true }],
+			["tran_date", "Ngày", "date", { req: true }],
+			["qty", "Số ngày", "float", { req: true }],
+			["source", "Nguồn", "select:list:leave_source", { req: true }],
+			["ref", "Chứng từ", "text"],
+			["note", "Ghi chú", "text"],
 		],
 	},
 ];

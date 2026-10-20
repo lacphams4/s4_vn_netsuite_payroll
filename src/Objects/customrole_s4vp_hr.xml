@@ -138,5 +138,29 @@
       <permkey>[customrecord_s4vp_advance]</permkey>
       <permlevel>FULL</permlevel>
     </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_leave_request]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_ot_request]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_business_trip]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_att_exception]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_leave_balance]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_leave_tran]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
   </permissions>
 </role>
