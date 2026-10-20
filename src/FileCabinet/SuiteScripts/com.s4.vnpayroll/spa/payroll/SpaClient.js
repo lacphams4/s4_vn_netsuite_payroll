@@ -90,6 +90,10 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 accrue: 'Cấp phép năm', expire: 'Hết hạn phép chuyển', balances: 'Số dư phép', year: 'Năm',
                 cols: { std: 'Công chuẩn', paid: 'Nghỉ có lương', unpaid: 'Không lương', si: 'BHXH', trip: 'Công tác', late: 'Trừ trễ sớm', adj: 'Điều chỉnh', work: 'Công hưởng lương', ot: 'Giờ OT', status: 'Trạng thái',
                     entitled: 'Được cấp', carried: 'Chuyển', adjusted: 'Điều chỉnh', used: 'Đã dùng', pending: 'Chờ duyệt', available: 'Còn lại' },
+                punches: 'Chấm công máy', punchHint: 'Mỗi dòng: mã nhân viên, thời điểm YYYY-MM-DD HH:mm, thiết bị (cách nhau dấu phẩy). Xử lý chấm công sinh phiếu trễ / sớm / vắng và đơn OT gợi ý ở trạng thái Tạm giữ, không tự trừ lương.',
+                importPunches: 'Nạp lượt chấm', processPunches: 'Xử lý chấm công kỳ đang chọn',
+                punchResult: (r) => `Nạp ${r.created} lượt, bỏ qua ${r.skipped}${r.errors && r.errors.length ? `, lỗi: ${r.errors.slice(0, 3).map((e) => e.message || e).join('; ')}` : ''}`,
+                processResult: (r) => `Đã xử lý ${r.employees} người: ${r.exceptions} phiếu ngoại lệ, ${r.overtime} đơn OT gợi ý (thay ${r.deleted} chứng từ của lần trước, giữ ${r.kept})`,
                 accrued: (rows) => `Đã cấp phép: ${rows.filter((r) => r.accrued).length} người${rows.some((r) => r.message) ? ` · ${rows.filter((r) => r.message).map((r) => r.message).join('; ')}` : ''}`,
             },
             out: {
@@ -756,6 +760,20 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                         });
                     } }),
             ]), 'a-new-save'));
+            // Chấm công máy (VP310000, VP502000)
+            items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: ta.punches }), 'a-p-title'));
+            items.push(item(jsxRuntime.jsx(component.Text, { size: component.Text.Size.S, type: component.Text.Type.WEAK, rootStyle: { whiteSpace: 'normal' }, children: ta.punchHint }), 'a-p-hint'));
+            items.push(item(jsxRuntime.jsx(component.TextArea, { rootStyle: { width: '100%', maxWidth: '720px', flexShrink: 0 }, text: docForm.__punches || '', onTextChanged: setDoc('__punches') }), 'a-p-text'));
+            items.push(item(actionRow([
+                jsxRuntime.jsx(component.Button, { label: ta.importPunches, enabled: !busy && boot.user.canAttendance, action: () => {
+                        const rows = String(docRef.current.__punches || '').split(/\r?\n/).map((l) => l.split(',').map((x) => x.trim())).filter((x) => x[0] && x[1]).map((x) => ({ employee: x[0], time: x[1], device: x[2] || '' }));
+                        return run(t.working, post({ action: 'importPunches', rows, source: 'I' }), (r) => setNotice(ta.punchResult(r)));
+                    } }),
+                jsxRuntime.jsx(component.Button, { label: ta.processPunches, enabled: !busy && boot.user.canAttendance && !!per && per.attStatus !== 'L', action: () => run(t.working, post({ action: 'processPunches', id: attPeriod }), (r) => {
+                        setNotice(ta.processResult(r));
+                        loadDocs(docType);
+                    }) }),
+            ]), 'a-p-actions'));
             // Phép năm
             items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: ta.balances }), 'a-bal-title'));
             items.push(item(actionRow([

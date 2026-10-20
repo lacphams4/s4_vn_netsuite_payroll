@@ -24,7 +24,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		"saveProfile", "saveSetup", "saveCompany", "setInsuranceAccount", "saveDoc", "docAction", "accrueLeave", "expireLeave", "adjustLeave",
 		"saveOutput", "outputAction", "loadTeamMembers", "splitOutput", "saveRateLine", "saveTeam", "saveWorkPermit", "workPermitAction", "updateExpiredPermits",
 		"newAllocVersion", "saveAllocLines", "activateAllocVersion", "deleteAllocVersion",
-		"generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
+		"saveShift", "savePattern", "generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
 	]);
 	const ACCOUNTANT_ACTIONS = BATCH_ACTIONS.concat(ACCOUNTANT_ONLY);
 	const ADMIN_ONLY = ["generateTestData", "clearJob"];
@@ -244,6 +244,13 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return AllocationPlans.removeDraft(body.id);
 				case "clearJob":
 					return Payroll.clearJob(body.id) || { ok: true };
+				case "saveShift": {
+					const v = body.values || {};
+					if (!/^\d{1,2}:\d{2}$/.test(String(v.start_time || "")) || !/^\d{1,2}:\d{2}$/.test(String(v.end_time || ""))) return { error: "Times must be HH:mm", errorVi: "Giờ vào, giờ ra dạng HH:mm" };
+					return { id: body.id ? (Store.update("shift", body.id, v), body.id) : Store.create("shift", v) };
+				}
+				case "savePattern":
+					return { id: body.id ? (Store.update("shift_pattern", body.id, body.values || {}), body.id) : Store.create("shift_pattern", body.values || {}) };
 				case "generateRoster":
 					return Shifts.generateRoster(body);
 				case "setRosterCell":
