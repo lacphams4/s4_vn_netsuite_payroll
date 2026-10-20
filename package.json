@@ -1,0 +1,42 @@
+{
+  "name": "s4-vn-netsuite-payroll",
+  "version": "0.1.0",
+  "private": true,
+  "description": "S4 VN Payroll cho Oracle NetSuite: lương, BHXH, thuế TNCN, chấm công theo luật Việt Nam, tương đương S4 eSuite Payroll for Acumatica (SuiteCloud Development Framework)",
+  "license": "UNLICENSED",
+  "author": "S4 Consulting",
+  "scripts": {
+    "test": "jest",
+    "gen:objects": "node tools/gen_objects.mjs",
+    "build:spa": "node tools/build_spa.mjs",
+    "validate": "npm run build:spa && suitecloud project:validate",
+    "deploy": "npm run build:spa && suitecloud project:deploy"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "babel-jest": "^29.7.0",
+    "babel-plugin-transform-amd-to-commonjs": "^1.6.0",
+    "decimal.js": "10.6.0",
+    "jest": "^29.7.0",
+    "rollup": "^4.24.0",
+    "typescript": "^5.6.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/",
+      "/lib/"
+    ]
+  },
+  "babel": {
+    "plugins": [
+      "transform-amd-to-commonjs"
+    ]
+  }
+}

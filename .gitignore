@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+# SuiteCloud CLI: auth ID và file tạm theo máy
+project.json
+.attach/
+*.zip
+.DS_Store
+# Worktree của các phiên Claude Code
+.claude/worktrees/
+build/
+__pycache__/
