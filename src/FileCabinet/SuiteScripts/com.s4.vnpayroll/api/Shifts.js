@@ -1,7 +1,7 @@
 /**
  * Ca, mẫu xoay ca, phân ca (VP102050, VP102060, VP309000), dữ liệu chấm công và xử lý chấm công (VP310000, VP502000),
  * bảng công ký hiệu (VP311000) - đặc tả 3.2, 3.3. Logic khớp ca nằm ở core/ShiftMatcher, core/RosterPlan; ở đây chỉ
- * đọc ghi record theo lô (findIn), lọc ngày trong bộ nhớ.
+ * đọc ghi record theo lô (findIn) có điều kiện khoảng ngày trong SQL (không đọc toàn bộ lịch sử của nhân viên).
  *
  * Hệ thống chỉ đề xuất (Điều 127 BLLĐ cấm phạt tiền): chứng từ sinh từ chấm công luôn ở trạng thái Tạm giữ, chờ duyệt.
  *
@@ -17,6 +17,13 @@ define([
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	// Xử lý đồng bộ trong RESTlet tối đa số nhân viên x ngày này; lớn hơn thì chạy nền
 	const SYNC_CELLS = 3000;
+
+	// Điều kiện ngày trong SQL (QC lượt 2 #11): tham số chuỗi 'YYYY-MM-DD'
+	const DATE = "TO_DATE(?, 'YYYY-MM-DD')";
+	const between = (field) => `{${field}} >= ${DATE} AND {${field}} <= ${DATE}`;
+	const OVERLAP = `{from} <= ${DATE} AND {to} >= ${DATE}`;
+	// Một lần nạp lượt chấm tối đa (governance RESTlet); file lớn chia nhiều lần
+	const MAX_PUNCH_ROWS = 500;
 
 	function fail(en, vi) {
 		const e = new Error(`${en} / ${vi}`);
@@ -90,7 +97,7 @@ define([
 		const generated = Plan.generate({ cycle: pattern.cycle, anchor: Dates.iso(input.anchor || from), from, to, members, location: team.location || "", workCenter: team.work_center || "", patternId: pattern.id });
 		const shiftCodeById = {};
 		for (const s of Object.values(shiftByCode)) shiftCodeById[s.id] = s.code;
-		const existing = Store.findIn("roster", "employee", [...new Set(generated.map((g) => g.employee))])
+		const existing = Store.findIn("roster", "employee", [...new Set(generated.map((g) => g.employee))], between("work_date"), [from, to])
 			.filter((r) => Dates.within(r.work_date, from, to))
 			.map((r) => ({ id: r.id, employee: r.employee, workDate: r.work_date, shiftCode: r.shift ? shiftCodeById[r.shift] || "" : "", source: r.source || "G", location: r.location || "", workCenter: r.work_center || "", patternId: r.pattern || "" }));
 		const p = Plan.plan(existing, generated);
@@ -116,7 +123,7 @@ define([
 	}
 
 	function roster(employeeIds, from, to) {
-		return Store.findIn("roster", "employee", employeeIds).filter((r) => Dates.within(r.work_date, from, to));
+		return Store.findIn("roster", "employee", employeeIds, between("work_date"), [Dates.iso(from), Dates.iso(to)]).filter((r) => Dates.within(r.work_date, from, to));
 	}
 
 	// ------------------------------------------------------------------ lượt chấm
@@ -129,6 +136,9 @@ define([
 	 */
 	function importPunches(rows, source) {
 		const src = ["I", "A", "M"].includes(source) ? source : "I";
+		if ((rows || []).length > MAX_PUNCH_ROWS) {
+			throw fail(`At most ${MAX_PUNCH_ROWS} punches per import (${rows.length} given); split the file`, `Mỗi lần nạp tối đa ${MAX_PUNCH_ROWS} lượt chấm (đang có ${rows.length}), hãy chia file`);
+		}
 		const parsed = (rows || []).map((r, i) => Object.assign({ line: i + 1 }, Plan.parsePunch(r)));
 		const codes = [...new Set(parsed.filter((p) => !p.error).map((p) => p.employee))];
 		const byCode = {};
@@ -145,7 +155,10 @@ define([
 		const periods = periodsCore();
 		// Chống trùng: lượt chấm đã có của cùng nhân viên, cùng thời điểm
 		const empIds = [...new Set(parsed.filter((p) => !p.error).map((p) => resolve(p.employee)).filter(Boolean))];
-		const seen = new Set(Store.findIn("punch", "employee", empIds).map((x) => `${x.employee}|${x.punch_time}`));
+		const dates = parsed.filter((p) => !p.error && p.date).map((p) => p.date).sort();
+		const seen = new Set(
+			dates.length ? Store.findIn("punch", "employee", empIds, between("punch_date"), [dates[0], dates[dates.length - 1]]).map((x) => `${x.employee}|${x.punch_time}`) : []
+		);
 		let created = 0;
 		let skipped = 0;
 		const errors = [];
@@ -182,7 +195,7 @@ define([
 	function excusedDays(employeeIds, from, to) {
 		const out = [];
 		for (const name of ["leave_request", "business_trip"]) {
-			for (const d of Store.findIn(name, "employee", employeeIds)) {
+			for (const d of Store.findIn(name, "employee", employeeIds, OVERLAP, [Dates.iso(to), Dates.iso(from)])) {
 				if (d.status !== "A" || !d.from) continue;
 				const s = Dates.max(d.from, from);
 				const e = Dates.min(d.to || d.from, to);
@@ -217,7 +230,7 @@ define([
 		const kept = [];
 		let deleted = 0;
 		for (const [name, kind] of [["att_exception", "exception"], ["ot_request", "overtime"]]) {
-			for (const d of Store.findIn(name, "employee", empIds).filter(inPeriod)) {
+			for (const d of Store.findIn(name, "employee", empIds, between("work_date"), [from, to]).filter(inPeriod)) {
 				if (d.from_punches && (d.status || "H") === "H") {
 					Store.remove(name, d.id);
 					deleted++;
@@ -234,7 +247,7 @@ define([
 		const rosterCells = roster(empIds, from, to).map((r) => ({ employee: r.employee, workDate: r.work_date, shiftCode: r.shift ? shiftCodeById[r.shift] || null : null }));
 		const lo = Dates.addDays(from, -1);
 		const hi = Dates.addDays(to, 2);
-		const punches = Store.findIn("punch", "employee", empIds).filter((p) => Dates.within(p.punch_date, lo, hi)).map((p) => ({ employee: p.employee, time: p.punch_time }));
+		const punches = Store.findIn("punch", "employee", empIds, between("punch_date"), [lo, hi]).filter((p) => Dates.within(p.punch_date, lo, hi)).map((p) => ({ employee: p.employee, time: p.punch_time }));
 		const results = Matcher.match({ roster: rosterCells, shifts: shiftList, punches, excused: excusedDays(empIds, from, to), from, to });
 		const proposal = Matcher.processPunches(results, { startDate: from, endDate: to, shifts: shiftList, kept });
 
@@ -337,7 +350,7 @@ define([
 		const weeklyOff = Settings.tenant().weekly_off;
 		const holidays = Settings.holidays().map((h) => h.date);
 		const ot = {};
-		for (const o of Store.findIn("ot_request", "employee", ids)) {
+		for (const o of Store.findIn("ot_request", "employee", ids, between("work_date"), [period.start, period.end])) {
 			if (o.status !== "A" || !Dates.within(o.work_date, period.start, period.end)) continue;
 			(ot[o.employee] = ot[o.employee] || []).push({ refNbr: o.name, workDate: o.work_date, hours: o.hours || 0, earningType: o.earning_type || "" });
 		}

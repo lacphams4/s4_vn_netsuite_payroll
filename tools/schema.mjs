@@ -643,7 +643,7 @@ export const records = [
 		],
 	},
 	{
-		id: "output", prefix: "oe", name: "Phiếu sản lượng", screen: "VP308000", perms: PROFILE, includeName: false, numbering: "SL",
+		id: "output", prefix: "oe", name: "Phiếu sản lượng", screen: "VP308000", perms: { [ROLE_HR]: "FULL", [ROLE_ACCT]: "EDIT" }, includeName: false, numbering: "SL",
 		desc: "Output / acceptance entry (VPOutputEntry): individual or team output priced by a rate table; team amounts are split to members.",
 		fields: [
 			["subsidiary", "Công ty con", "select:subsidiary", { req: true }], ["doc_date", "Ngày phiếu", "date", { req: true }], ["period", "Kỳ lương", "select:rec:period"],
@@ -686,7 +686,7 @@ export const records = [
 		],
 	},
 	{
-		id: "alloc_version", prefix: "av", name: "Phiên bản bảng tỷ lệ phân bổ", screen: "VP205000", perms: PROFILE, includeName: false,
+		id: "alloc_version", prefix: "av", name: "Phiên bản bảng tỷ lệ phân bổ", screen: "VP205000", perms: { [ROLE_HR]: "FULL", [ROLE_ACCT]: "EDIT" }, includeName: false,
 		desc: "Project allocation plan version of an employee (VPAllocationPlanVersion): effective dates, status, lines totalling 100%.",
 		fields: [
 			["employee", "Nhân viên", "select:employee", { req: true }], ["version", "Phiên bản", "int"], ["effective", "Hiệu lực từ", "date"], ["expiration", "Hiệu lực đến", "date"],

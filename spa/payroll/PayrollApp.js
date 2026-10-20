@@ -49,7 +49,9 @@ const TEXT = {
 			loadEmployees: 'Nạp nhân viên', calculate: 'Tính lương', removeHold: 'Bỏ tạm giữ', hold: 'Tạm giữ', approve: 'Duyệt', reject: 'Từ chối', reopen: 'Mở lại',
 			release: 'Ghi sổ', reverse: 'Đảo', agencyBills: 'Lập bill cơ quan thu', bankFile: 'File chi lương', payslips: 'In phiếu lương', paymentSheet: 'In bảng thanh toán',
 			contractor: 'In quyết toán CTV', journal: 'Xem bút toán', refresh: 'Tải lại',
+			completeRelease: 'Hoàn tất ghi sổ', completeReverse: 'Hoàn tất đảo', clearJob: 'Gỡ khóa tác vụ (admin)',
 		},
+		resumed: 'Đã hoàn tất các bước còn thiếu',
 		confirm: {release: 'Ghi sổ bảng lương này? Hệ thống tạo bút toán và cấn trừ tạm ứng.', reverse: 'Đảo bảng lương này? Hệ thống tạo bút toán đảo và hoàn số dư tạm ứng.', agencyBills: 'Lập bill nộp cơ quan BHXH, công đoàn, thuế?'},
 		detailOf: (c, n) => `Chi tiết ${c} ${n}`,
 		earnings: 'Thu nhập',
@@ -144,7 +146,9 @@ TEXT.en = Object.assign({}, TEXT.vi, {
 		loadEmployees: 'Load Employees', calculate: 'Calculate', removeHold: 'Remove Hold', hold: 'Hold', approve: 'Approve', reject: 'Reject', reopen: 'Reopen', release: 'Release',
 		reverse: 'Reverse', agencyBills: 'Create Agency Bills', bankFile: 'Export Bank File', payslips: 'Print Payslips', paymentSheet: 'Print Payment Sheet',
 		contractor: 'Print Contractor Settlement', journal: 'Preview Journal', refresh: 'Refresh',
+		completeRelease: 'Complete Release', completeReverse: 'Complete Reversal', clearJob: 'Clear job lock (admin)',
 	},
+	resumed: 'Remaining steps completed',
 	notReady: 'Payroll preferences are missing. Open Setup and click Load VN Defaults.', loadDefaults: 'Load VN Defaults', generate: 'Generate Periods', year: 'Year', paygroup: 'Pay group',
 });
 
@@ -402,7 +406,8 @@ export default function PayrollApp() {
 	const act = (action, extra, message) => {
 		const id = batch.batch.id;
 		return run(t.working, post(Object.assign({action, id}, extra || {})), (r) => {
-			openBatch(id).then(() => setNotice(message ? message(r) : t.done));
+			const warn = ((r && r.warnings) || []).map((w) => (language() === 'vi' ? w.messageVi || w.message : w.message || w.messageVi)).filter(Boolean);
+			openBatch(id).then(() => setNotice([message ? message(r) : t.done].concat(warn).join(' · ')));
 		});
 	};
 
@@ -559,7 +564,11 @@ export default function PayrollApp() {
 		add(['A', 'J', 'P', 'C', 'B'].includes(s), t.actions.reopen, () => act('reopen'));
 		add(!isHr && (s === 'A' || s === 'C') && b.calculated, t.actions.release, () => setConfirm({text: t.confirm.release, go: () => act('release', null, (r) => t.jeCreated(r.journal))}), s === 'A');
 		add(!isHr && s === 'R', t.actions.reverse, () => setConfirm({text: t.confirm.reverse, go: () => act('reverse', null, (r) => t.jeCreated(r.journal))}));
-		add(!isHr && s === 'R' && !(b.bills && b.bills.length), t.actions.agencyBills, () => setConfirm({text: t.confirm.agencyBills, go: () => act('agencyBills', null, t.billsCreated)}));
+		// Hoàn tất khi lần trước dừng giữa chừng (sau khi tạo JE / bill): máy chủ chỉ làm phần còn thiếu
+		add(!isHr && s === 'R', t.actions.completeRelease, () => act('release', null, (r) => (r.resumed ? t.resumed : t.jeCreated(r.journal))));
+		add(!isHr && s === 'V', t.actions.completeReverse, () => act('reverse', null, (r) => (r.resumed ? t.resumed : t.jeCreated(r.journal))));
+		add(boot.user.role === 'administrator' && !!b.job, t.actions.clearJob, () => act('clearJob'));
+		add(!isHr && s === 'R', t.actions.agencyBills, () => setConfirm({text: t.confirm.agencyBills, go: () => act('agencyBills', null, t.billsCreated)}));
 		add(['A', 'R'].includes(s), t.actions.bankFile, () => run(t.working, call({action: 'bankfile', id: b.id}), (r) => download(r.fileName, r.content)));
 		add(b.calculated, t.actions.journal, () => run(t.loading, call({action: 'journal', id: b.id}), (r) => setJournal(r)));
 		add(b.calculated, t.actions.payslips, () => window.open(printUrl('payslip'), '_blank'));
@@ -1060,7 +1069,15 @@ export default function PayrollApp() {
 				actionRow([
 					<Button label={ta.importPunches} enabled={!busy && boot.user.canAttendance} action={() => {
 						const rows = String(docRef.current.__punches || '').split(/\r?\n/).map((l) => l.split(',').map((x) => x.trim())).filter((x) => x[0] && x[1]).map((x) => ({employee: x[0], time: x[1], device: x[2] || ''}));
-						return run(t.working, post({action: 'importPunches', rows, source: 'I'}), (r) => setNotice(ta.punchResult(r)));
+						const chunks = [];
+						for (let i = 0; i < rows.length; i += 500) chunks.push(rows.slice(i, i + 500));
+						const total = {created: 0, skipped: 0, errors: []};
+						const sendAll = chunks.reduce((p, c) => p.then(() => post({action: 'importPunches', rows: c, source: 'I'}).then((r) => {
+							total.created += r.created || 0;
+							total.skipped += r.skipped || 0;
+							total.errors = total.errors.concat(r.errors || []);
+						})), Promise.resolve());
+						return run(t.working, sendAll, () => setNotice(ta.punchResult(total)));
 					}} />,
 					<Button label={ta.processPunches} enabled={!busy && boot.user.canAttendance && !!per && per.attStatus !== 'L'} action={() => run(t.working, post({action: 'processPunches', id: attPeriod}), (r) => {
 						setNotice(ta.processResult(r));

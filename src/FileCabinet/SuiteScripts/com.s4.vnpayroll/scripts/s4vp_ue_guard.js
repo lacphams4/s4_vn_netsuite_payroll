@@ -9,7 +9,8 @@
  * @NModuleScope SameAccount
  */
 define(["N/runtime", "../api/Store"], (runtime, Store) => {
-	const LOCKED_TYPES = ["customrecord_s4vp_batch", "customrecord_s4vp_batch_emp", "customrecord_s4vp_leave_balance", "customrecord_s4vp_leave_tran"];
+	// Dòng nhập tay cũng chỉ sửa qua màn hình (QC2 #8): sửa trên giao diện thì không đưa được bảng lương về "chưa tính"
+	const LOCKED_TYPES = ["customrecord_s4vp_batch", "customrecord_s4vp_batch_emp", "customrecord_s4vp_batch_input", "customrecord_s4vp_leave_balance", "customrecord_s4vp_leave_tran"];
 	const ADVANCE = "customrecord_s4vp_advance";
 	const PERIOD = "customrecord_s4vp_period";
 	const ADVANCE_CONTROLLED = ["custrecord_s4vp_ad_status", "custrecord_s4vp_ad_offset", "custrecord_s4vp_ad_balance", "custrecord_s4vp_ad_journal", "custrecord_s4vp_ad_history"];

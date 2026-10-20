@@ -48,5 +48,12 @@
       <status>RELEASED</status>
       <allroles>T</allroles>
     </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_guard_batch_input">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_batch_input]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
   </scriptdeployments>
 </usereventscript>

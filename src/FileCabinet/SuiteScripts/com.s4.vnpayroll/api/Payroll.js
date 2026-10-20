@@ -24,9 +24,22 @@ define([
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
 
-	/** Bảng lương đang tính nền / đang ghi sổ / đang đảo thì không thao tác khác. */
-	function assertNoJob(b) {
-		if (!blank(b.job)) {
+	const STALE_MS = 15 * 60 * 1000;
+
+	/** Token khóa "release:<ms>:..." / "reverse:<ms>:..." cùng loại đã quá 15 phút (script chết giữa chừng). */
+	function staleJob(job, kind) {
+		const parts = String(job || "").split(":");
+		if (!kind || parts[0] !== kind) return false;
+		const ts = Number(parts[1]);
+		return ts > 0 && Date.now() - ts > STALE_MS;
+	}
+
+	/**
+	 * Bảng lương đang tính nền / đang ghi sổ / đang đảo thì không thao tác khác.
+	 * @param {string} [kind] release | reverse: khóa cùng loại đã treo quá 15 phút thì cho chạy tiếp (chiếm lại khóa)
+	 */
+	function assertNoJob(b, kind) {
+		if (!blank(b.job) && !staleJob(b.job, kind)) {
 			throw fail(`The batch is being processed in the background (${String(b.job).split(":")[0]}); refresh later`, "Bảng lương đang được xử lý nền (tính lương / ghi sổ / đảo), hãy tải lại sau");
 		}
 	}
@@ -440,11 +453,34 @@ define([
 		return { ok, partial, errors, totals, status };
 	}
 
-	/** Đưa bảng lương vào hàng đợi tính nền: chưa tính, ghi id tác vụ (khóa các thao tác khác tới khi summarize xong). */
+	/** Kiểm tra trước khi đưa bảng lương vào hàng đợi tính nền (gọi TRƯỚC khi submit tác vụ). */
+	function assertQueueable(batchId) {
+		const b = getBatch(batchId);
+		if (["P", "J", "A", "R", "V"].includes(b.status)) throw fail(`The batch is in status ${b.status}; reopen it first`, `Bảng lương đang ở trạng thái ${b.status}, cần mở lại trước`);
+		assertEditable(b);
+		assertNoJob(b);
+		assertPeriodOpen(Store.get("period", b.period));
+		return b;
+	}
+
+	/**
+	 * Đưa bảng lương vào hàng đợi tính nền: chưa tính, ghi khóa job (mặc định "queued" trước khi có id tác vụ; sau khi
+	 * submit gọi setJobId). Chỉ bảng H / B / C.
+	 */
 	function markQueued(batchId, jobId) {
 		const b = getBatch(batchId);
+		if (!["H", "B", "C"].includes(b.status)) throw fail(`The batch is in status ${b.status}; it cannot be recalculated`, `Bảng lương đang ở trạng thái ${b.status}, không tính lại được`);
 		assertNoJob(b);
 		Store.submit("batch", batchId, { job: String(jobId || "queued"), calculated: false, status: b.status === "H" ? "H" : "B" });
+		if (getBatch(batchId).job !== String(jobId || "queued")) throw fail("Another user is processing this batch", "Bảng lương đang được người khác xử lý");
+	}
+
+	/** Ghi id tác vụ Map/Reduce vào khóa job sau khi submit (giữ khóa đã đặt bởi markQueued). */
+	function setJobId(batchId, taskId) {
+		const b = getBatch(batchId);
+		// summarize đã chạy xong và gỡ khóa trước khi kịp ghi id: không đặt lại khóa
+		if (blank(b.job)) return;
+		Store.submit("batch", batchId, { job: String(taskId) });
 	}
 
 	/** Gỡ khóa tác vụ nền (summarize của Map/Reduce, hoặc khi ghi sổ / đảo xong). */
@@ -485,20 +521,41 @@ define([
 		parts.push(...ls.map((l) => [l.id, l.employee, l.work_days, l.std_days, l.absence_days, l.other_tax_ded].join(":")));
 		const empIds = ls.map((l) => l.employee);
 		const profIds = ls.map((l) => l.profile).filter(Boolean);
-		try {
-			parts.push(
-				`em=${maxModified("employee", "employee", empIds)}`,
-				`cp=${maxModified("compensation", "profile", profIds)}`,
-				`dp=${maxModified("dependent", "profile", profIds)}`,
-				`pa=${maxModified("param")}`, `pb=${maxModified("pit_bracket")}`, `ic=${maxModified("ins_comp")}`,
-				`ot=${maxModified("ot_request", "employee", empIds)}`,
-				`oe=${maxModified("output", "period", [batch.period])}`,
-				`ad=${maxModified("advance", "employee", empIds)}`
-			);
-		} catch (e) {
-			// Thiếu quyền đọc một bảng: dấu chỉ còn phần dòng nhập và công
-		}
+		// Mỗi phần bọc riêng: một bảng thiếu quyền đọc chỉ thay phần đó bằng "na" cố định (dấu không đổi theo role)
+		const part = (key, fn) => {
+			try {
+				parts.push(`${key}=${fn()}`);
+			} catch (e) {
+				parts.push(`${key}=na`);
+			}
+		};
+		part("em", () => maxModified("employee", "employee", empIds));
+		part("cp", () => maxModified("compensation", "profile", profIds));
+		part("dp", () => maxModified("dependent", "profile", profIds));
+		part("pa", () => maxModified("param"));
+		part("pb", () => maxModified("pit_bracket"));
+		part("ic", () => maxModified("ins_comp"));
+		part("ot", () => maxModified("ot_request", "employee", empIds));
+		// Phiếu sản lượng: chỉ các phiếu bảng này đã dùng, theo số tiền (không theo lastmodified: ghi sổ bảng khác cùng kỳ đổi
+		// trạng thái / bảng lương của phiếu nhưng không đổi số liệu)
+		part("oe", () => outputStamp(ls));
+		part("ad", () => maxModified("advance", "employee", empIds));
 		return String(hash(parts.sort().join("|")));
+	}
+
+	/** Dấu các phiếu sản lượng đã dùng: số phiếu, thành tiền, tiền chia, số dòng sản lượng / thành viên. */
+	function outputStamp(ls) {
+		const refs = [...new Set(ls.flatMap((l) => parseDetail(l).outputRefs || []))].sort();
+		if (!refs.length) return "";
+		const entries = Store.findIn("output", "name", refs);
+		const ids = entries.map((e) => e.id);
+		const count = {};
+		for (const l of Store.findIn("output_line", "entry", ids)) count[l.entry] = (count[l.entry] || 0) + 1;
+		for (const m of Store.findIn("output_member", "entry", ids)) count[m.entry] = (count[m.entry] || 0) + 1;
+		return entries
+			.map((e) => `${e.name}:${e.total || 0}:${e.split_total || 0}:${count[e.id] || 0}`)
+			.sort()
+			.join(",");
 	}
 
 	function hash(s) {
@@ -692,11 +749,11 @@ define([
 		return offsets;
 	}
 
-	function advanceRecords(offsets) {
+	function advanceRecords(offsets, subsidiary) {
 		const list = Object.values(offsets);
 		const byId = Store.findIn("advance", "id", list.map((o) => o.id).filter(Boolean));
-		const missing = list.filter((o) => !o.id).map((o) => o.refNbr);
-		const byName = missing.length ? Store.find("advance").filter((a) => missing.includes(a.name)) : [];
+		const missing = list.filter((o) => !o.id).map((o) => o.refNbr).filter(Boolean);
+		const byName = missing.length ? Store.findIn("advance", "name", missing, subsidiary ? "{subsidiary} = ?" : null, subsidiary ? [subsidiary] : null) : [];
 		const out = {};
 		for (const a of byId.concat(byName)) out[a.id] = a;
 		return out;
@@ -738,11 +795,16 @@ define([
 		const b = getBatch(batchId);
 		// Đã ghi sổ: chạy lại các bước sau JE còn thiếu (idempotent)
 		if (b.status === "R" && b.journal) {
-			assertNoJob(b);
-			return Object.assign(finishRelease(batchId), { resumed: true });
+			assertNoJob(b, "release");
+			claim(batchId, "release");
+			try {
+				return Object.assign(finishRelease(batchId), { resumed: true });
+			} finally {
+				clearJob(batchId);
+			}
 		}
 		if (b.journal) throw fail("The batch already has a journal entry", "Bảng lương đã có bút toán");
-		assertNoJob(b);
+		assertNoJob(b, "release");
 		if (b.status === "H") throw fail("Remove the hold first", "Bảng lương đang tạm giữ");
 		if (!b.calculated) throw fail("Calculate the batch first", "Hãy tính bảng lương trước");
 		const c = context(b);
@@ -754,7 +816,7 @@ define([
 		if (!model.employees.length) throw fail("The batch has no employees", "Bảng lương không có nhân viên");
 		// Số dư tạm ứng không đổi kể từ lúc tính
 		const offsets = advanceOffsetsOf(model);
-		const advRecs = advanceRecords(offsets);
+		const advRecs = advanceRecords(offsets, b.subsidiary);
 		for (const a of Object.values(advRecs)) {
 			if ((a.balance || 0) < offsetFor(offsets, a).amount) throw fail(`Advance ${a.name} balance changed; recalculate`, `Số dư tạm ứng ${a.name} đã thay đổi, cần tính lại`);
 		}
@@ -786,7 +848,7 @@ define([
 		const model = releaseModel(c);
 		const warnings = [];
 		const offsets = advanceOffsetsOf(model);
-		for (const a of Object.values(advanceRecords(offsets))) {
+		for (const a of Object.values(advanceRecords(offsets, b.subsidiary))) {
 			const hist = safeJson(a.history, []);
 			if (hist.some((h) => String(h.batch) === String(batchId))) continue;
 			const amount = offsetFor(offsets, a).amount;
@@ -862,11 +924,17 @@ define([
 		const b = getBatch(batchId);
 		// Đã đảo: chạy lại các bước sau JE đảo còn thiếu
 		if (b.status === "V" && b.reversal) {
-			assertNoJob(b);
-			return Object.assign(finishReverse(batchId), { resumed: true });
+			assertNoJob(b, "reverse");
+			claim(batchId, "reverse");
+			try {
+				return Object.assign(finishReverse(batchId), { resumed: true });
+			} finally {
+				clearJob(batchId);
+			}
 		}
 		if (b.status !== "R" || !b.journal) throw fail("Only released batches can be reversed", "Chỉ đảo bảng lương đã ghi sổ");
-		assertNoJob(b);
+		// Bảng R còn khóa "release" treo (ghi sổ chết sau khi có JE) cũng không chặn đảo mãi
+		assertNoJob(b, staleJob(b.job, "release") ? "release" : "reverse");
 		const bills = safeJson(b.bills, []);
 		const active = bills.filter((x) => isActiveBill(x.id));
 		if (active.length) throw fail(`Void the agency bills first: ${active.map((x) => x.tranid || x.id).join(", ")}`, `Còn bill cơ quan thu hiệu lực: ${active.map((x) => x.tranid || x.id).join(", ")}`);
@@ -911,9 +979,10 @@ define([
 	function finishReverse(batchId) {
 		const b = getBatch(batchId);
 		Output.unmarkIncluded(batchId);
-		const ids = [];
-		for (const l of lines(batchId)) for (const o of parseDetail(l).advanceOffsets || []) if (o.id) ids.push(o.id);
-		for (const a of Store.findIn("advance", "id", ids)) {
+		// Cùng cách tra như khi ghi sổ (id, thiếu id thì số phiếu) để phiếu đã cấn trừ đều được hoàn
+		const offsets = {};
+		for (const l of lines(batchId)) for (const o of parseDetail(l).advanceOffsets || []) offsets[String(o.id || o.refNbr)] = { id: o.id, refNbr: o.refNbr, amount: 0 };
+		for (const a of Object.values(advanceRecords(offsets, b.subsidiary))) {
 			const hist = safeJson(a.history, []);
 			const mine = hist.filter((h) => String(h.batch) === String(batchId));
 			if (!mine.length) continue;
@@ -1048,6 +1117,6 @@ define([
 	return {
 		create, loadEmployees, calculate, finishCalculation, removeHold, hold, approve, reject, reopen, release, reverse, agencyBills, bankFile,
 		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine, transactionsInfo,
-		markQueued, clearJob, finishRelease, finishReverse,
+		markQueued, setJobId, assertQueueable, clearJob, finishRelease, finishReverse,
 	};
 });

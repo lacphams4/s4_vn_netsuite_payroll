@@ -59,6 +59,15 @@ define(["N/runtime", "N/log", "../api/Attendance", "../api/Store"], (runtime, lo
 	function summarize(summary) {
 		const op = param("custscript_s4vp_mra_op");
 		const period = param("custscript_s4vp_mra_period");
+		try {
+			finish(summary, op, period);
+		} finally {
+			// Gỡ cờ tác vụ nền của kỳ (hoặc cấp phép năm) để thao tác đồng bộ chạy lại được
+			Attendance.clearQueued(op === "accrue" ? null : period);
+		}
+	}
+
+	function finish(summary, op, period) {
 		const errors = [];
 		if (summary.inputSummary.error) errors.push(String(summary.inputSummary.error));
 		summary.mapSummary.errors.iterator().each((key, error) => {

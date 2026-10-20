@@ -4,7 +4,7 @@ Cập nhật 21/10/2026. Hai lớp kiểm thử: (1) unit test lõi trên Node t
 
 ## 1. Unit test lõi
 
-Chạy: `npm test`. Kết quả: **830 / 830 đạt**, 28 bộ, không có `test.todo`.
+Chạy: `npm test`. Kết quả: **833 / 833 đạt**, 29 bộ, không có `test.todo`.
 
 | Bộ test | Số test | Ca vàng của đặc tả |
 | --- | --- | --- |
@@ -93,7 +93,17 @@ Hồi quy trên account sau khi sửa (BL000005, 12/2026): tính, duyệt, ghi s
 
 Ca HC 08:00 - 17:00 nghỉ 60', ân hạn 5', OT tối thiểu 30'; mẫu HC6; sinh phân ca tổ nề 15 - 17/02/2027 (9 ô); nạp 11 lượt chấm. Xử lý chấm công: E012 trễ 20' -> phiếu L, trừ 0,25; E012 ra 18:30 -> đơn OT 1,5 giờ; E013 chỉ chấm vào 16/02 -> phiếu điều chỉnh 0 (thiếu lượt chấm); E015 không chấm 3 ngày -> 3 phiếu điều chỉnh -1; còn lại đúng giờ. Chạy lại: xóa 6 chứng từ Tạm giữ của lần trước, sinh lại đúng 6, không trùng.
 
-### 2.7 Báo cáo
+### 2.7 Review lượt 2
+
+Review thứ hai trên phần mã đã sửa báo 14 điểm, đã sửa: tính nền kiểm tra trạng thái và giữ khóa trước khi gửi tác vụ (bảng đã duyệt / ghi sổ không bị đưa về "chờ tính"); dấu dữ liệu không còn bị bảng lương khác cùng kỳ làm thay đổi; khóa ghi sổ / đảo quá 15 phút được chiếm lại; SPA có nút Hoàn tất ghi sổ, Hoàn tất đảo, Lập bill khi lần trước dừng giữa chừng và hiện cảnh báo trả về (JE chưa duyệt...); kế toán có quyền sửa phiếu sản lượng, phiên bản phân bổ (bước sau JE); dòng nhập tay chỉ sửa qua màn hình; cấp phép năm tự đối soát số dư với giao dịch (chạy lại sau lỗi không mất ngày phép); cờ chạy nền cho bảng công; truy vấn chấm công lọc theo ngày; nạp lượt chấm theo lô 500 dòng.
+
+Hồi quy sau sửa: mở lại, tính, duyệt BL000006; xử lý chấm công kỳ 02/2027 cho kết quả như cũ; cấp phép năm 2027 (CTV bị loại), chạy lại không cấp trùng; lập bảng công kỳ 02/2027.
+
+Điểm cần quyết: cấp phép năm chỉ lọc hồ sơ "đang hoạt động" (đúng đặc tả 3.6), nên NV05 đã nghỉ việc 31/12/2026 vẫn được cấp phép 2027 vì hồ sơ chưa ngừng hoạt động. Đề xuất: bỏ qua người có ngày làm việc cuối trước năm cấp (sửa cả hai bản).
+
+Chưa kiểm được trên account: tính lương bằng Map/Reduce (cần bảng trên 120 người), lập bảng công / cấp phép chạy nền (trên 150 người), phiếu lương tự phục vụ với tài khoản Employee Center, thao tác bằng role HR / Kế toán (đang thử bằng Administrator).
+
+### 2.8 Báo cáo
 
 BH tháng 12/2026: 3 người, tổng 28.108.000, chênh lệch C12 tính đúng; D02-LT tháng 12 không có biến động (khớp tháng 11). 05/KK-TNCN quý 4/2026: [16] = 5, [17] = 3, [21] = 349.172.285 (bảng lương đã đảo bị loại). Quyết toán năm 2026: E012, E013, E015 vào 05-1/BK; E014, E016 vào 05-2/BK.
 

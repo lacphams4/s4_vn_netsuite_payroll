@@ -11,10 +11,10 @@
  * @NModuleScope SameAccount
  */
 define([
-	"N/runtime", "N/log", "N/task", "./Store", "./Shifts", "./Settings", "./Advances", "./Clock",
+	"N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Shifts", "./Settings", "./Advances", "./Clock",
 	"../core/Dates", "../core/Money", "../core/AttendanceDocRules", "../core/AttendanceSummaryCalculator", "../core/EmploymentDays",
-	"../core/LeaveLedger", "../core/LeaveAccrualCalculator",
-], (runtime, log, task, Store, Shifts, Settings, Advances, Clock, Dates, Money, Rules, Summary, EmploymentDays, Ledger, Accrual) => {
+	"../core/LeaveLedger", "../core/LeaveAccrualCalculator", "../core/LeaveReconcile",
+], (runtime, log, task, cache, Store, Shifts, Settings, Advances, Clock, Dates, Money, Rules, Summary, EmploymentDays, Ledger, Accrual, LeaveReconcile) => {
 	const RECORD = { leave: "leave_request", ot: "ot_request", trip: "business_trip", exception: "att_exception" };
 	// Trường người dùng được nhập (QC #4): trạng thái, người duyệt, khóa, số ngày, kỳ... chỉ do gói tính / đặt
 	const INPUT = {
@@ -168,6 +168,7 @@ define([
 		if (!doc) throw fail("Document not found", "Không tìm thấy chứng từ");
 		const to = Rules.nextStatus(doc.status || "H", action);
 		if (!to) throw fail(`Action ${action} is not allowed in status ${doc.status}`, `Không thực hiện được ${action} ở trạng thái ${doc.status}`);
+		if (doc.period && action !== "reject") assertNotQueued(doc.period);
 		const ref = reference();
 		const range = Rules.range(type, docToCore(type, doc));
 		if (action !== "reject") {
@@ -296,6 +297,48 @@ define([
 		});
 	}
 
+	// Tác vụ nền đang chạy theo kỳ (QC lượt 2 #13): kỳ không có trường job, lưu id tác vụ trong N/cache 1 giờ
+	const JOB_CACHE = "s4vp_att_jobs";
+
+	function jobCache() {
+		return cache.getCache({ name: JOB_CACHE, scope: cache.Scope.PUBLIC });
+	}
+
+	function jobKey(periodId) {
+		return periodId ? `period_${periodId}` : "accrue";
+	}
+
+	/** Từ chối khi tác vụ nền của kỳ (hoặc cấp phép năm) còn PENDING / PROCESSING; tác vụ đã xong thì xóa cờ. */
+	function assertNotQueued(periodId) {
+		const key = jobKey(periodId);
+		let taskId = null;
+		try {
+			taskId = jobCache().get({ key });
+		} catch (e) {
+			return;
+		}
+		if (!taskId) return;
+		let status = "";
+		try {
+			status = String(task.checkStatus({ taskId }).status || "");
+		} catch (e) {
+			status = "";
+		}
+		if (status === String(task.TaskStatus.PENDING) || status === String(task.TaskStatus.PROCESSING)) {
+			throw fail("The attendance of this period is being processed in the background; refresh later", "Bảng công của kỳ đang được xử lý nền, hãy tải lại sau");
+		}
+		clearQueued(periodId);
+	}
+
+	/** Xóa cờ tác vụ nền (summarize của Map/Reduce gọi khi xong). */
+	function clearQueued(periodId) {
+		try {
+			jobCache().remove({ key: jobKey(periodId) });
+		} catch (e) {
+			// cache không dùng được: bỏ qua
+		}
+	}
+
 	/** Số nhân viên của bảng công kỳ: RESTlet quyết định chạy đồng bộ hay Map/Reduce. */
 	function sizeOf(periodId) {
 		const ctx = buildContext(periodId, { allowLocked: true });
@@ -367,6 +410,7 @@ define([
 
 	/** Lập lại bảng tổng hợp công của kỳ (3.5 Build) - đồng bộ, cho kỳ đến SYNC_LIMIT nhân viên. */
 	function build(periodId) {
+		assertNotQueued(periodId);
 		const ctx = buildContext(periodId);
 		const ids = eligibleProfiles(ctx).map((p) => p.employee);
 		if (ids.length > SYNC_LIMIT) throw fail(`The period has ${ids.length} employees; run it in the background`, `Kỳ có ${ids.length} nhân viên, hãy chạy nền (Map/Reduce)`);
@@ -402,6 +446,7 @@ define([
 
 	/** Khóa công: lập lại ngay trước khi khóa, khóa dòng tổng hợp, kỳ, chứng từ nguồn (đồng bộ). */
 	function lock(periodId) {
+		assertNotQueued(periodId);
 		const ref = reference();
 		const period = ref.periods.find((p) => p.id === String(periodId));
 		if (!period) throw fail("Pay period not found", "Không tìm thấy kỳ lương");
@@ -430,6 +475,12 @@ define([
 		return [...new Set(Store.find("attendance", { where: "{period} = ?", params: [String(periodId)] }).map((a) => a.employee))];
 	}
 
+	/** Số nhân viên cần mở khóa (dòng tổng hợp công của kỳ) sau khi kiểm tra điều kiện mở khóa. */
+	function unlockSize(periodId) {
+		unlockContext(periodId);
+		return unlockEmployees(periodId).length;
+	}
+
 	function unlockChunk(periodId, employeeIds, ctx) {
 		const c = ctx || unlockContext(periodId);
 		for (const a of Store.findIn("attendance", "employee", employeeIds, "{period} = ?", [c.period.id])) if (a.status !== "O") Store.submit("attendance", a.id, { status: "O" });
@@ -439,6 +490,7 @@ define([
 
 	/** Mở khóa công (đồng bộ). */
 	function unlock(periodId) {
+		assertNotQueued(periodId);
 		const c = unlockContext(periodId);
 		const ids = unlockEmployees(periodId);
 		if (ids.length > SYNC_LIMIT) throw fail(`The period has ${ids.length} employees; run it in the background`, `Kỳ có ${ids.length} nhân viên, hãy chạy nền (Map/Reduce)`);
@@ -463,8 +515,15 @@ define([
 			params.custscript_s4vp_mra_rundate = String(extra.runDate || Clock.today());
 			params.custscript_s4vp_mra_subsidiary = String(extra.subsidiary || "");
 		}
+		assertNotQueued(op === "accrue" ? null : periodId);
 		const t = task.create({ taskType: task.TaskType.MAP_REDUCE, scriptId: MR.scriptId, deploymentId: MR.deploymentId, params });
-		return { queued: true, job: t.submit() };
+		const job = t.submit();
+		try {
+			jobCache().put({ key: jobKey(op === "accrue" ? null : periodId), value: String(job), ttl: 3600 });
+		} catch (e) {
+			log.error({ title: "s4vp attendance job cache", details: String(e.message || e) });
+		}
+		return { queued: true, job };
 	}
 
 	// ------------------------------------------------------------------ sổ phép
@@ -538,6 +597,12 @@ define([
 		const trans = {};
 		for (const t of Store.findIn("leave_tran", "employee", ids, "{year} = ?", [y])) (trans[`${t.employee}|${t.leave_type}`] = trans[`${t.employee}|${t.leave_type}`] || []).push(t);
 		const dirty = new Map();
+		const flush = () => {
+			for (const rec of dirty.values()) {
+				Store.submit("leave_balance", rec.id, { entitled: rec.entitled, carried: rec.carried, carry_expiry: rec.carry_expiry || null, adjusted: rec.adjusted, used: rec.used, pending: rec.pending });
+			}
+			dirty.clear();
+		};
 		// Số dư trong bộ nhớ: tạo bản ghi khi lần đầu cần
 		const bal = (employee, lt, yr) => {
 			const key = `${employee}|${lt}|${yr}`;
@@ -568,6 +633,16 @@ define([
 			}
 			if (policyCode && pol.code !== norm(policyCode)) continue;
 			const lt = pol.leaveType;
+			// Đối soát với giao dịch năm y (lần chạy trước dừng giữa ghi giao dịch và ghi số dư)
+			const cur = balances[`${prof.employee}|${lt}|${y}`];
+			if (cur) {
+				const fix = LeaveReconcile.reconcile(toBalance(cur), trans[`${prof.employee}|${lt}`] || []);
+				if (fix.changed) {
+					log.audit({ title: "s4vp leave balance reconciled", details: `${cur.key}` });
+					Object.assign(cur, { entitled: fix.entitled, carried: fix.carriedOver });
+					dirty.set(cur.id, cur);
+				}
+			}
 			const prev = balances[`${prof.employee}|${lt}|${y - 1}`];
 			const prevRemaining = prev ? Math.max(0, Ledger.available(toBalance(prev))) : 0;
 			const calc = Accrual.calculate(pol, y, prof.seniority_date || null, run, prevRemaining);
@@ -581,10 +656,10 @@ define([
 				if (step.source === "C" && calc.carryOverExpiryDate) rec.carry_expiry = calc.carryOverExpiryDate;
 			}
 			rows.push({ employee: prof.employee, policy: pol.code, accrued: delta, carriedOver: plan.length ? calc.carriedOver : 0, message: delta > 0 || plan.length ? "" : "Already accrued / Đã cấp trong năm" });
+			// Ghi số dư của nhân viên này ngay (không dồn tới cuối lô): lỗi ở nhân viên sau không làm mất số dư nhân viên trước
+			flush();
 		}
-		for (const rec of dirty.values()) {
-			Store.submit("leave_balance", rec.id, { entitled: rec.entitled, carried: rec.carried, carry_expiry: rec.carry_expiry || null, adjusted: rec.adjusted, used: rec.used, pending: rec.pending });
-		}
+		flush();
 		return { rows };
 	}
 
@@ -667,6 +742,5 @@ define([
 		RECORD, INPUT, SYNC_LIMIT, reference, derive, save, act, build, lock, unlock, accrue, expire, adjust, balances, remainingPaidLeave, available, list,
 		// Chạy theo lô (Map/Reduce s4vp_mr_attendance)
 		sizeOf, queue, buildContext, eligibleProfiles, cleanupStale, buildChunk, lockChunk, unlockContext, unlockEmployees, unlockChunk, setSummaryLocked,
-		accrualProfiles, accrueFor,
-	};
+		accrualProfiles, accrueFor, unlockSize, assertNotQueued, clearQueued };
 });

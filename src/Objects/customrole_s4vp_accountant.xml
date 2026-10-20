@@ -192,7 +192,7 @@
     </permission>
     <permission>
       <permkey>[customrecord_s4vp_output]</permkey>
-      <permlevel>VIEW</permlevel>
+      <permlevel>EDIT</permlevel>
     </permission>
     <permission>
       <permkey>[customrecord_s4vp_output_line]</permkey>
@@ -208,7 +208,7 @@
     </permission>
     <permission>
       <permkey>[customrecord_s4vp_alloc_version]</permkey>
-      <permlevel>VIEW</permlevel>
+      <permlevel>EDIT</permlevel>
     </permission>
     <permission>
       <permkey>[customrecord_s4vp_alloc_line]</permkey>

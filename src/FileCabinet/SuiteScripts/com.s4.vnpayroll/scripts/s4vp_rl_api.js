@@ -148,9 +148,18 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 	function calculate(id) {
 		const lines = Payroll.lines(id);
 		if (lines.length <= SYNC_LIMIT) return Payroll.calculate(id);
-		const t = task.create({ taskType: task.TaskType.MAP_REDUCE, scriptId: "customscript_s4vp_mr_calculate", deploymentId: "customdeploy_s4vp_mr_calculate", params: { custscript_s4vp_mr_batch: id } });
-		const jobId = t.submit();
-		Payroll.markQueued(id, jobId);
+		// Kiểm tra và giữ khóa trước khi gửi tác vụ (QC2 #1, #2); gửi lỗi thì gỡ khóa
+		Payroll.assertQueueable(id);
+		Payroll.markQueued(id);
+		let jobId;
+		try {
+			const t = task.create({ taskType: task.TaskType.MAP_REDUCE, scriptId: "customscript_s4vp_mr_calculate", deploymentId: "customdeploy_s4vp_mr_calculate", params: { custscript_s4vp_mr_batch: id } });
+			jobId = t.submit();
+		} catch (e) {
+			Payroll.clearJob(id);
+			throw e;
+		}
+		Payroll.setJobId(id, jobId);
 		return { queued: true, job: jobId };
 	}
 
@@ -175,7 +184,8 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "buildAttendance": {
 					// Kỳ lớn chạy nền (Map/Reduce theo lô 50 nhân viên)
 					const op = { lockAttendance: "lock", unlockAttendance: "unlock", buildAttendance: "build" }[a];
-					if (Attendance.sizeOf(body.id) > Attendance.SYNC_LIMIT) return Attendance.queue(body.id, op);
+					const size = op === "unlock" ? Attendance.unlockSize(body.id) : Attendance.sizeOf(body.id);
+					if (size > Attendance.SYNC_LIMIT) return Attendance.queue(body.id, op);
 					return Attendance[op](body.id) || { ok: true };
 				}
 				case "saveDoc":

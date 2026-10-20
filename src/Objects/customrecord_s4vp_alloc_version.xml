@@ -141,7 +141,7 @@
       <permittedrole>[customrole_s4vp_hr]</permittedrole>
     </permission>
     <permission>
-      <permittedlevel>VIEW</permittedlevel>
+      <permittedlevel>EDIT</permittedlevel>
       <permittedrole>[customrole_s4vp_accountant]</permittedrole>
     </permission>
   </permissions>
