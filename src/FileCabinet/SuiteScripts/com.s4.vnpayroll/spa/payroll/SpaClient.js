@@ -184,6 +184,11 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
     const num = (n) => (n === null || n === undefined || n === '' ? '' : Number(n).toLocaleString('vi-VN', { maximumFractionDigits: 2 }));
     const pct = (n) => (n === null || n === undefined || n === '' ? '' : `${(Number(n) * 100).toLocaleString('vi-VN', { maximumFractionDigits: 2 })}%`);
     const item = (child, key) => (jsxRuntime.jsx(component.StackPanel.Item, { shrink: 0, children: child }, key));
+    // Ngày hôm nay theo giờ máy người dùng (toISOString là UTC, lệch ngày vào buổi sáng ở Việt Nam)
+    const localToday = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
     function actionRow(buttons, messages) {
         const parts = [];
         buttons.forEach((b, i) => parts.push(item(b, `btn-${i}`)));
@@ -777,7 +782,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             // Phép năm
             items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: ta.balances }), 'a-bal-title'));
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: `${ta.accrue} ${year}`, enabled: !busy && boot.user.canAttendance && /^\d{4}$/.test(year), action: () => run(t.working, post({ action: 'accrueLeave', year: Number(year), subsidiary, runDate: new Date().toISOString().slice(0, 10) }), (r) => {
+                jsxRuntime.jsx(component.Button, { label: `${ta.accrue} ${year}`, enabled: !busy && boot.user.canAttendance && /^\d{4}$/.test(year), action: () => run(t.working, post({ action: 'accrueLeave', year: Number(year), subsidiary, runDate: localToday() }), (r) => {
                         setNotice(ta.accrued(r.rows || []));
                         return run(t.loading, call({ action: 'leaveBalances', subsidiary, year }), (x) => setBalances(x.balances));
                     }) }),

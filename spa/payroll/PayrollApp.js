@@ -200,6 +200,12 @@ const item = (child, key) => (
 	</StackPanel.Item>
 );
 
+// Ngày hôm nay theo giờ máy người dùng (toISOString là UTC, lệch ngày vào buổi sáng ở Việt Nam)
+const localToday = () => {
+	const d = new Date();
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 function actionRow(buttons, messages) {
 	const parts = [];
 	buttons.forEach((b, i) => parts.push(item(b, `btn-${i}`)));
@@ -1070,7 +1076,7 @@ export default function PayrollApp() {
 		items.push(
 			item(
 				actionRow([
-					<Button label={`${ta.accrue} ${year}`} enabled={!busy && boot.user.canAttendance && /^\d{4}$/.test(year)} action={() => run(t.working, post({action: 'accrueLeave', year: Number(year), subsidiary, runDate: new Date().toISOString().slice(0, 10)}), (r) => {
+					<Button label={`${ta.accrue} ${year}`} enabled={!busy && boot.user.canAttendance && /^\d{4}$/.test(year)} action={() => run(t.working, post({action: 'accrueLeave', year: Number(year), subsidiary, runDate: localToday()}), (r) => {
 						setNotice(ta.accrued(r.rows || []));
 						return run(t.loading, call({action: 'leaveBalances', subsidiary, year}), (x) => setBalances(x.balances));
 					})} />,
