@@ -8,7 +8,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "./Settings", "../core/Dates", "../core/Money", "../core/OutputRules", "../core/OutputEntries"], (runtime, Store, Settings, Dates, Money, Rules, Entries) => {
+define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../core/Money", "../core/OutputRules", "../core/OutputEntries"], (runtime, Store, Settings, Clock, Dates, Money, Rules, Entries) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 
@@ -170,12 +170,23 @@ define(["N/runtime", "./Store", "./Settings", "../core/Dates", "../core/Money", 
 
 	// ------------------------------------------------------------------ duyệt
 
-	function coreEntry(e, table) {
+	/** Dòng sản lượng, thành viên của nhiều phiếu: một truy vấn mỗi loại (QC #20). */
+	function childrenOf(entryIds) {
+		const lines = {};
+		const members = {};
+		for (const l of Store.findIn("output_line", "entry", entryIds)) (lines[l.entry] = lines[l.entry] || []).push(l);
+		for (const m of Store.findIn("output_member", "entry", entryIds)) (members[m.entry] = members[m.entry] || []).push(m);
+		return { lines, members };
+	}
+
+	function coreEntry(e, table, kids) {
+		const ls = kids ? kids.lines[e.id] || [] : linesOf(e.id);
+		const ms = kids ? kids.members[e.id] || [] : membersOf(e.id);
 		return {
 			refNbr: e.name, status: e.status, batchNbr: e.batch || "", entryType: e.type, rateTable: table ? table.code : "", rateTableType: table ? table.type : "",
 			project: e.project || "", branch: e.location || "", workCenter: e.work_center || "",
-			lines: linesOf(e.id).map((l) => ({ employee: l.employee || "", itemCode: l.item, qty: l.qty, rate: l.rate, amount: l.amount || 0 })),
-			members: membersOf(e.id).map((m) => ({ employee: m.employee, amount: m.amount || 0, manual: m.manual })),
+			lines: ls.map((l) => ({ employee: l.employee || "", itemCode: l.item, qty: l.qty, rate: l.rate, amount: l.amount || 0 })),
+			members: ms.map((m) => ({ employee: m.employee, amount: m.amount || 0, manual: m.manual })),
 		};
 	}
 
@@ -207,7 +218,7 @@ define(["N/runtime", "./Store", "./Settings", "../core/Dates", "../core/Money", 
 			refreshTotals(id);
 			validate(entryOf(id));
 		}
-		if (action === "approve") Object.assign(update, { approved_by: currentEmployee(), approved_date: Dates.iso(new Date()) });
+		if (action === "approve") Object.assign(update, { approved_by: currentEmployee(), approved_date: Clock.today() });
 		if (action === "hold") {
 			if (!blank(e.batch)) throw fail("The entry is included in a payroll batch", "Phiếu đã vào bảng lương");
 			const p = e.period ? Store.get("period", e.period) : null;
@@ -222,17 +233,22 @@ define(["N/runtime", "./Store", "./Settings", "../core/Dates", "../core/Money", 
 
 	/**
 	 * Dữ liệu sản lượng cho bảng lương (4.3.5): phiếu Approved của kỳ, hoặc Included của chính bảng lương.
-	 * @returns {{outputAmounts: {emp: {TABLE: number}}, salesAmount: {emp: number}, shares: {emp: Array}, rateTables: {TABLE: {type, lines}}}}
+	 * shares[emp][].refNbr cho biết phiếu nào đã dùng: lưu vào chi tiết dòng lương để khi ghi sổ chỉ khóa đúng các phiếu đó
+	 * (markIncludedRefs, QC #9). refNbrs: mọi phiếu có phần của nhân viên trong lô.
+	 * @param {string} [subsidiary] chỉ phiếu của công ty con của bảng lương
+	 * @returns {{outputAmounts: {emp: {TABLE: number}}, salesAmount: {emp: number}, shares: {emp: Array}, rateTables: {TABLE: {type, lines}}, refNbrs: string[]}}
 	 */
-	function forPayroll(periodId, batchId, employeeIds) {
+	function forPayroll(periodId, batchId, employeeIds, subsidiary) {
 		const want = employeeIds ? new Set(employeeIds.map(String)) : null;
 		const tables = {};
 		const entries = [];
-		for (const e of Store.find("output", { where: "{period} = ?", params: [periodId] })) {
-			const usable = e.status === "A" || (e.status === "C" && !blank(batchId) && String(e.batch) === String(batchId));
-			if (!usable) continue;
+		const usable = Store.find("output", { where: "{period} = ?", params: [periodId] }).filter(
+			(e) => (e.status === "A" || (e.status === "C" && !blank(batchId) && String(e.batch) === String(batchId))) && (blank(subsidiary) || e.subsidiary === String(subsidiary))
+		);
+		const kids = childrenOf(usable.map((e) => e.id));
+		for (const e of usable) {
 			if (!tables[e.rate_table]) tables[e.rate_table] = rateTable(e.rate_table);
-			entries.push(Object.assign(coreEntry(e, tables[e.rate_table]), { status: "A" }));
+			entries.push(Object.assign(coreEntry(e, tables[e.rate_table], kids), { status: "A" }));
 		}
 		// Bảng đơn giá cho quy tắc thang % (nguồn T): mọi bảng loại S đang hoạt động
 		for (const t of Store.find("rate_table")) if (t.type === "S" && !tables[t.id]) tables[t.id] = rateTable(t.id);
@@ -255,10 +271,30 @@ define(["N/runtime", "./Store", "./Settings", "../core/Dates", "../core/Money", 
 		for (const t of Object.values(tables)) {
 			rateTables[t.code] = { type: t.type, lines: t.lines.map((l) => ({ item: l.itemCode, itemCode: l.itemCode, rate: l.rate, fromAmount: l.fromAmount, effectiveDate: l.effectiveDate, expirationDate: l.expirationDate, project: l.project })) };
 		}
-		return { outputAmounts, salesAmount, shares, rateTables };
+		const refNbrs = [...new Set([].concat(...Object.values(shares).map((list) => list.map((x) => x.refNbr))).filter(Boolean))];
+		return { outputAmounts, salesAmount, shares, rateTables, refNbrs };
 	}
 
-	/** Ghi sổ bảng lương: phiếu Approved của kỳ -> Included in Payroll, ghi bảng lương. */
+	/**
+	 * Ghi sổ bảng lương: chỉ các phiếu Approved có số trong danh sách (đã dùng khi tính bảng lương này) -> Included in
+	 * Payroll, ghi bảng lương (QC #9: không khóa phiếu của nhân viên ở bảng lương khác hoặc duyệt sau khi tính).
+	 */
+	function markIncludedRefs(batchId, refNbrs) {
+		const want = new Set((refNbrs || []).map(String));
+		const done = [];
+		if (!want.size) return done;
+		for (const e of Store.findIn("output", "name", [...want])) {
+			if (e.status !== "A") continue;
+			Store.submit("output", e.id, { status: "C", batch: batchId });
+			done.push(e.name);
+		}
+		return done;
+	}
+
+	/**
+	 * Cũ: khóa mọi phiếu Approved của kỳ. Không dùng nữa (khóa nhầm phiếu của bảng lương khác cùng kỳ, QC #9);
+	 * giữ để tương thích, dùng markIncludedRefs.
+	 */
 	function markIncluded(periodId, batchId) {
 		const done = [];
 		for (const e of Store.find("output", { where: "{period} = ?", params: [periodId] })) {
@@ -279,11 +315,22 @@ define(["N/runtime", "./Store", "./Settings", "../core/Dates", "../core/Money", 
 		return done;
 	}
 
+	/** Danh sách cho màn hình: lọc công ty con, kỳ bằng SQL; dòng và thành viên một truy vấn (QC #20). */
 	function list(subsidiary, periodId) {
-		return Store.find("output", { order: "{id} DESC" })
-			.filter((e) => (!subsidiary || e.subsidiary === String(subsidiary)) && (!periodId || e.period === String(periodId)))
-			.map((e) => Object.assign({}, e, { lines: linesOf(e.id), members: membersOf(e.id) }));
+		const where = [];
+		const params = [];
+		if (!blank(subsidiary)) {
+			where.push("{subsidiary} = ?");
+			params.push(String(subsidiary));
+		}
+		if (!blank(periodId)) {
+			where.push("{period} = ?");
+			params.push(String(periodId));
+		}
+		const rows = Store.find("output", { where: where.length ? where.join(" AND ") : undefined, params, order: "{id} DESC" });
+		const kids = childrenOf(rows.map((e) => e.id));
+		return rows.map((e) => Object.assign({}, e, { lines: kids.lines[e.id] || [], members: kids.members[e.id] || [] }));
 	}
 
-	return { save, loadTeamMembers, splitAmount, act, forPayroll, markIncluded, unmarkIncluded, list, rateTable, refreshTotals };
+	return { save, loadTeamMembers, splitAmount, act, forPayroll, markIncluded, markIncludedRefs, unmarkIncluded, list, rateTable, refreshTotals };
 });

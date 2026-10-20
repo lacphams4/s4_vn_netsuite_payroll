@@ -4,7 +4,7 @@ Cập nhật 21/10/2026. Hai lớp kiểm thử: (1) unit test lõi trên Node t
 
 ## 1. Unit test lõi
 
-Chạy: `npm test`. Kết quả: **825 / 825 đạt**, 27 bộ, không có `test.todo`.
+Chạy: `npm test`. Kết quả: **830 / 830 đạt**, 28 bộ, không có `test.todo`.
 
 | Bộ test | Số test | Ca vàng của đặc tả |
 | --- | --- | --- |
@@ -77,7 +77,19 @@ Nạp gói ngành Xây dựng (loại thu nhập PCCT, PCXANHA, KHOAN; nhóm lư
 
 Bảng lương 01/2027: công chuẩn 20 (đã loại ngày lễ 01/01/2027 trong lịch mặc định); mỗi người trong tổ có dòng KHOAN đúng phần chia; E015 có cảnh báo "Giấy phép lao động WP000001 hết hạn ngày 15/02/2027 (còn 15 ngày sau cuối kỳ)"; E016 đã nghỉ việc 31/12/2026 không được nạp; thuế E012 672.692 (khớp tính tay).
 
-### 2.5 Báo cáo
+### 2.5 Review độc lập và kiểm thử hồi quy
+
+Một agent review đọc toàn bộ lớp NetSuite (không sửa mã) báo 21 điểm; đã sửa hết các điểm mức cao và trung bình:
+
+- Phân quyền: custom record chuyển sang USEPERMISSIONLIST (quyền theo role thật sự có tác dụng); RESTlet có allow-list thao tác theo role, POST mặc định từ chối; tạo dữ liệu test, gỡ khóa tác vụ chỉ Administrator; SPA ẩn nút ngoài quyền.
+- Chặn sửa trực tiếp: User Event bảo vệ bảng lương, dòng nhân viên, sổ phép (chỉ sửa qua màn hình Lương VN); tạm ứng, kỳ lương không đổi được trạng thái, số dư, bút toán trên giao diện; chứng từ công tạo từ giao diện luôn ở Tạm giữ; API chỉ nhận trường nhập (không nhận status...).
+- Tiền và trạng thái: Map/Reduce chỉ coi bảng là đã tính khi mọi lô xong, khóa thao tác khi đang tính nền; ghi sổ, đảo, lập bill có khóa trên bảng lương và externalid, chạy lại hoàn tất phần còn thiếu; chỉ khóa đúng các phiếu sản lượng đã dùng; chặn đảo kỳ tuần khi kỳ cuối tháng cùng tháng thuế đã ghi sổ; dấu dữ liệu khi tính gồm thay đổi hồ sơ, lương, tham số, đơn OT, sản lượng, tạm ứng; cảnh báo khi JE / bill chưa được duyệt.
+- Governance: lập / khóa bảng công, cấp phép năm chạy Map/Reduce khi trên 150 người; bỏ truy vấn lặp trong tính lương và danh sách phiếu.
+- Ngày làm việc (ngày duyệt, ngày JE đảo, ngày bill) lấy theo múi giờ người dùng (api/Clock.js).
+
+Hồi quy trên account sau khi sửa (BL000005, 12/2026): tính, duyệt, ghi sổ -> JE1809 (51726) **đã vào sổ cái** (tự duyệt); gọi ghi sổ lần hai -> `resumed`, không tạo JE thứ hai; bill cơ quan thu 51727 - 51729 (28.108.000; 1.820.000; 4.362.669); lập bill lần hai bị chặn; đảo bị chặn khi còn bill; ngày duyệt 21/10/2026 theo giờ Việt Nam (máy chủ lúc đó vẫn ngày 20/10). BL000006 (01/2027): ghi sổ bị NetSuite từ chối vì account chưa mở **kỳ thuế 01/2027** (Thiết lập > Quản lý các kỳ thuế) - việc cấu hình account, em không tự làm; khóa ghi sổ được gỡ đúng sau lỗi.
+
+### 2.6 Báo cáo
 
 BH tháng 12/2026: 3 người, tổng 28.108.000, chênh lệch C12 tính đúng; D02-LT tháng 12 không có biến động (khớp tháng 11). 05/KK-TNCN quý 4/2026: [16] = 5, [17] = 3, [21] = 349.172.285 (bảng lương đã đảo bị loại). Quyết toán năm 2026: E012, E013, E015 vào 05-1/BK; E014, E016 vào 05-2/BK.
 
@@ -105,4 +117,4 @@ Tạo trước khi sửa lỗi #3, vẫn chờ duyệt (chưa vào sổ cái); a
 
 Đã ghi sổ (sau khi sửa): JE1808 (51725) tạm ứng TU000002.
 
-Bảng lương đang tạm giữ để anh thử thao tác: BL000005 (12/2026), BL000006 (01/2027).
+Đã ghi sổ sau khi sửa: BL000005 JE1809 (51726) và bill 51727 - 51729. BL000006 (01/2027) đã duyệt, chờ mở kỳ thuế 01/2027 để ghi sổ.

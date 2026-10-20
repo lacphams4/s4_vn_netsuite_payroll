@@ -93,9 +93,12 @@ Toàn vẹn khi ghi sổ (đặc tả 5.4): NetSuite không có giao dịch nhi�
 | --- | --- | --- |
 | 0 | Lõi tính toán và toàn bộ ca vàng của đặc tả | Xong (xem docs/KIEM_THU.md) |
 | 1 | Thiết lập, tham số, hồ sơ, kỳ lương, bảng lương tháng (nạp, tính, duyệt, ghi sổ, đảo), tạm ứng, bill cơ quan thu, file ngân hàng, bản in, SPA | Xong, đã chạy trên td2937310 sub 13 |
-| 2 | Chứng từ công (nghỉ, OT, công tác, ngoại lệ), lập / khóa bảng công, sổ phép, cấp phép năm; báo cáo BH + D02-LT, 05/KK-TNCN, quyết toán năm, chi phí theo tài khoản | API xong, đang nối giao diện (xem docs/DOI_CHIEU_DAC_TA.md) |
-| 3 | Chấm công máy (lượt chấm, phân ca, xử lý chấm công), bảng công ký hiệu, Time Bill -> giờ công tính lương (VP312000), phiếu sản lượng và chia tổ, bảng tỷ lệ phân bổ có phiên bản, giấy phép lao động | Lõi đã có và đạt ca vàng; chưa có record, màn hình |
-| 4 | Tự phục vụ (phiếu lương của tôi, đơn của tôi), duyệt nhiều cấp SuiteFlow, phân quyền theo công ty, gói ngành, dashboard, bản dịch tiếng Anh nhãn record | Chưa làm |
+| 2 | Chứng từ công (nghỉ, OT, công tác, ngoại lệ), lập / khóa bảng công, sổ phép, cấp phép năm; báo cáo BH + D02-LT, 05/KK-TNCN, quyết toán năm, chi phí theo tài khoản | Xong, đã chạy trên account (kỳ 12/2026) |
+| 3 | Phiếu sản lượng và chia tổ, bảng đơn giá, gói ngành, giấy phép lao động, bảng tỷ lệ phân bổ có phiên bản, phiếu lương tự phục vụ | Xong, đã chạy trên account (kỳ 01/2027); ca, phân ca, lượt chấm công, bảng công ký hiệu: record xong, API đang hoàn thiện |
+| 3b | Time Bill NetSuite -> giờ công tính lương (VP312000), nguồn OT = timesheet | Lõi xong; chưa nối |
+| 4 | Duyệt nhiều cấp SuiteFlow, phân quyền dữ liệu theo công ty, dashboard / saved search, đơn của tôi (VP602000 - VP603030), mobile, bản dịch tiếng Anh nhãn record, xuất XML HTKK | Chưa làm |
+
+Kiểm soát chất lượng: sau khi chạy thử trên account, một lượt review độc lập lớp NetSuite (21 điểm) đã được xử lý: phân quyền record theo danh sách role (USEPERMISSIONLIST), allow-list thao tác theo role trên RESTlet (POST mặc định từ chối), User Event chặn sửa trực tiếp record kiểm soát, ghi sổ / đảo / lập bill chạy lại an toàn (khóa trên bảng lương, externalid), Map/Reduce cho bảng lương, bảng công, cấp phép năm cỡ lớn, ngày làm việc theo múi giờ người dùng.
 
 ## 7. Rủi ro và việc cần chủ dự án / KTT quyết
 

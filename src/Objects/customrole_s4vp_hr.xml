@@ -202,5 +202,25 @@
       <permkey>[customrecord_s4vp_alloc_line]</permkey>
       <permlevel>FULL</permlevel>
     </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_shift]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_shift_pattern]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_roster]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_punch]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_att_sheet]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
   </permissions>
 </role>

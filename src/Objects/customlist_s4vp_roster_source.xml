@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_roster_source">
+  <name>S4VP roster_source</name>
+  <description>S4 VN Payroll code list roster_source; values keep the Acumatica codes (G, M).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_roster_source_g">
+      <value>G - Từ mẫu xoay ca</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_roster_source_m">
+      <value>M - Sửa tay</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

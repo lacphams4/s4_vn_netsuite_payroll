@@ -56,7 +56,17 @@ define(["./Store", "./Settings"], (Store, Settings) => {
 			if (dup) Store.update("compensation", dup.id, cv);
 			else Store.create("compensation", cv);
 		}
-		for (const d of input.dependents || []) Store.create("dependent", Object.assign({ profile: id }, d));
+		// Người phụ thuộc: chỉ thêm khi chưa có (trùng tên và ngày giảm trừ từ), lưu lại nhiều lần không nhân đôi giảm trừ (QC #21)
+		if ((input.dependents || []).length) {
+			const norm = (x) => String(x || "").trim().toUpperCase();
+			const have = new Set(Store.find("dependent", { where: "{profile} = ?", params: [id], includeInactive: true }).map((d) => `${norm(d.name)}|${d.from || ""}`));
+			for (const d of input.dependents) {
+				const key = `${norm(d.name)}|${d.from || ""}`;
+				if (have.has(key)) continue;
+				have.add(key);
+				Store.create("dependent", Object.assign({ profile: id }, d));
+			}
+		}
 		return { id };
 	}
 

@@ -1,0 +1,52 @@
+<usereventscript scriptid="customscript_s4vp_ue_guard">
+  <name>S4VP Record Guard</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_ue_guard.js]</scriptfile>
+  <description>Blocks direct UI / CSV / web service changes to payroll batches, employee lines and the leave ledger, and to status, balance and journal fields of advances and pay periods. Package scripts are not affected.</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_guard_batch">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_batch]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_guard_batch_emp">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_batch_emp]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_guard_leave_balance">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_leave_balance]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_guard_leave_tran">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_leave_tran]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_guard_advance">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_advance]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_guard_period">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_period]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+  </scriptdeployments>
+</usereventscript>

@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_shift_kind">
+  <name>S4VP shift_kind</name>
+  <description>S4 VN Payroll code list shift_kind; values keep the Acumatica codes (D, E, N).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_shift_kind_d">
+      <value>D - Ca ngày</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_shift_kind_e">
+      <value>E - Ca chiều</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_shift_kind_n">
+      <value>N - Ca đêm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

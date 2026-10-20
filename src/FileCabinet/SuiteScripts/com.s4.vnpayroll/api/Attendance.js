@@ -11,11 +11,21 @@
  * @NModuleScope SameAccount
  */
 define([
-	"N/runtime", "./Store", "./Settings", "./Advances",
+	"N/runtime", "N/log", "N/task", "./Store", "./Shifts", "./Settings", "./Advances", "./Clock",
 	"../core/Dates", "../core/Money", "../core/AttendanceDocRules", "../core/AttendanceSummaryCalculator", "../core/EmploymentDays",
 	"../core/LeaveLedger", "../core/LeaveAccrualCalculator",
-], (runtime, Store, Settings, Advances, Dates, Money, Rules, Summary, EmploymentDays, Ledger, Accrual) => {
+], (runtime, log, task, Store, Shifts, Settings, Advances, Clock, Dates, Money, Rules, Summary, EmploymentDays, Ledger, Accrual) => {
 	const RECORD = { leave: "leave_request", ot: "ot_request", trip: "business_trip", exception: "att_exception" };
+	// Trường người dùng được nhập (QC #4): trạng thái, người duyệt, khóa, số ngày, kỳ... chỉ do gói tính / đặt
+	const INPUT = {
+		leave: ["employee", "subsidiary", "leave_type", "from", "from_half", "to", "to_half", "reason"],
+		ot: ["employee", "subsidiary", "work_date", "hours", "is_night", "earning_type", "project", "reason"],
+		trip: ["employee", "subsidiary", "from", "to", "destination", "purpose", "project", "advance_amount"],
+		exception: ["employee", "subsidiary", "work_date", "exception_type", "minutes", "adjust_days", "reason"],
+	};
+	// Kỳ có nhiều nhân viên hơn thì lập / khóa / cấp phép bằng Map/Reduce (governance RESTlet 5.000 đơn vị)
+	const SYNC_LIMIT = 150;
+	const MR = { scriptId: "customscript_s4vp_mr_attendance", deploymentId: "customdeploy_s4vp_mr_attendance" };
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 
@@ -46,7 +56,7 @@ define([
 				requiresAttachment: l.requires_attachment, allowHalfDay: l.allow_half !== false, maxDaysPerRequest: l.max_days || 0,
 			};
 		}
-		const periods = Store.find("period", { includeInactive: true }).map((p) => ({ id: p.id, code: p.name, paygroup: p.paygroup, startDate: p.start, endDate: p.end, standardWorkDays: p.std_days, attendanceStatus: p.att_status || "O" }));
+		const periods = Store.find("period", { includeInactive: true }).map((p) => ({ id: p.id, code: p.name, paygroup: p.paygroup, startDate: p.start, endDate: p.end, standardWorkDays: p.std_days, attendanceStatus: p.att_status || "O", status: p.status || "O" }));
 		return {
 			tenant,
 			weeklyOff: tenant.weekly_off,
@@ -127,9 +137,9 @@ define([
 	/** Tạo / sửa chứng từ ở trạng thái Tạm giữ (SPA). */
 	function save(type, values) {
 		const name = recName(type);
-		const v = Object.assign({}, values);
-		const id = v.id;
-		delete v.id;
+		const id = values && values.id;
+		const v = {};
+		for (const k of INPUT[type]) if (values && Object.prototype.hasOwnProperty.call(values, k)) v[k] = values[k];
 		if (id) {
 			const cur = Store.get(name, id);
 			if (!cur) throw fail("Document not found", "Không tìm thấy chứng từ");
@@ -173,7 +183,7 @@ define([
 		if (action === "submit") Object.assign(update, validateSubmit(type, doc, ref, warnings));
 		if (type === "leave") applyLeaveBalance(doc, action, ref, update);
 		if (type === "trip") applyTripAdvance(doc, action, update);
-		if (action === "approve") Object.assign(update, { approved_by: me, approved_date: Dates.iso(new Date()) });
+		if (action === "approve") Object.assign(update, { approved_by: me, approved_date: Clock.today() });
 		if (action === "reject") update.reject_reason = String(extra.rejectReason || doc.reject_reason || "").slice(0, 300);
 		Store.submit(name, id, update);
 		return { id, status: to, warnings };
@@ -222,7 +232,7 @@ define([
 		else if (action === "reject") b = Ledger.reject(b, days);
 		else if (action === "cancel") ({ balance: b, transaction: tran } = Ledger.cancel(b, days, doc.status));
 		saveBalance(rec, b);
-		if (tran) writeTran(doc.employee, lt.id, year, action === "cancel" ? Dates.iso(new Date()) : doc.from, tran, doc.name || doc.id, action);
+		if (tran) writeTran(doc.employee, lt.id, year, action === "cancel" ? Clock.today() : doc.from, tran, doc.name || doc.id, action);
 	}
 
 	/** Duyệt đơn công tác có tạm ứng: tạo phiếu tạm ứng Tạm giữ; hủy: phiếu đã ghi sổ thì chặn, chưa thì xóa. */
@@ -240,37 +250,100 @@ define([
 
 	// ------------------------------------------------------------------ bảng tổng hợp công
 
-	const approvedIn = (name, where, params) => Store.find(name, { where, params }).filter((d) => d.status === "A");
+	const OVERLAP = "{from} <= TO_DATE(?, 'YYYY-MM-DD') AND {to} >= TO_DATE(?, 'YYYY-MM-DD')";
+	const IN_PERIOD = "{work_date} >= TO_DATE(?, 'YYYY-MM-DD') AND {work_date} <= TO_DATE(?, 'YYYY-MM-DD')";
 
-	/** Lập lại bảng tổng hợp công của kỳ (3.5 Build, nhóm nguồn chứng từ ngoại lệ). */
-	function build(periodId) {
+	/** Chứng từ đã duyệt của các nhân viên giao kỳ, theo nhân viên (một truy vấn mỗi loại cho cả lô). */
+	function approvedDocs(name, where, params, employeeIds) {
+		const out = {};
+		for (const d of Store.findIn(name, "employee", employeeIds, where, params)) {
+			if (d.status !== "A") continue;
+			(out[d.employee] = out[d.employee] || []).push(d);
+		}
+		return out;
+	}
+
+	/**
+	 * Ngữ cảnh lập bảng công của kỳ và kiểm tra (3.5, QC #15): kỳ đóng, kỳ đã có bảng lương ghi sổ, kỳ công khóa,
+	 * nhóm dùng bảng công ký hiệu.
+	 * @param {{forLock?: boolean, allowLocked?: boolean}} [opt]
+	 */
+	function buildContext(periodId, opt = {}) {
 		const ref = reference();
 		const period = ref.periods.find((p) => p.id === String(periodId));
 		if (!period) throw fail("Pay period not found", "Không tìm thấy kỳ lương");
-		if (period.attendanceStatus === "L") throw fail("Attendance of the period is locked", "Kỳ công đã khóa");
+		if (period.status === "C") throw fail("The pay period is closed", "Kỳ lương đã đóng");
+		if (!opt.allowLocked && period.attendanceStatus === "L") throw fail("Attendance of the period is locked", "Kỳ công đã khóa");
+		const released = Store.find("batch", { where: "{period} = ?", params: [period.id] }).filter((b) => b.status === "R");
+		if (released.length) throw fail("The period has a released payroll batch; attendance cannot be rebuilt", "Kỳ đã có bảng lương ghi sổ, không lập lại bảng công được");
 		const group = Store.get("paygroup", period.paygroup) || {};
-		if (group.att_source === "S") throw fail("Attendance sheets are not supported yet; enter the summary directly", "Chưa hỗ trợ bảng công ký hiệu, hãy nhập bảng tổng hợp công trực tiếp");
-		const groupCode = norm(group.name || "DEFAULT");
 		const groups = {};
 		for (const g of Store.find("paygroup", { includeInactive: true })) groups[g.id] = norm(g.name);
+		return { ref, period, groupCode: norm(group.name || "DEFAULT"), groups, usesSheet: group.att_source === "S" };
+	}
+
+	/** Hồ sơ lương thuộc bảng công của kỳ (3.5): đang hoạt động hoặc nghỉ trong kỳ, có làm trong kỳ, cùng nhóm lương, CTV bị loại. */
+	function eligibleProfiles(ctx) {
+		const ps = ctx.period.startDate;
+		const pe = ctx.period.endDate;
+		return Store.find("employee", { includeInactive: true }).filter((prof) => {
+			const g = prof.paygroup ? ctx.groups[prof.paygroup] : "DEFAULT";
+			if ((g || "DEFAULT") !== ctx.groupCode) return false;
+			if (!(!prof.isInactive || EmploymentDays.terminatesIn(prof.termination_date, ps, pe))) return false;
+			if (!EmploymentDays.employedIn(prof.hire_date, prof.termination_date, ps, pe)) return false;
+			// CTV chỉ vào bảng công khi thuộc tổ (chưa có tổ trên NetSuite) hoặc nhóm dùng bảng công ký hiệu (BUG-51, BUG-54)
+			return EmploymentDays.inAttendanceSummary(prof.employment_type === "C", !!ctx.usesSheet, false);
+		});
+	}
+
+	/** Số nhân viên của bảng công kỳ: RESTlet quyết định chạy đồng bộ hay Map/Reduce. */
+	function sizeOf(periodId) {
+		const ctx = buildContext(periodId, { allowLocked: true });
+		return eligibleProfiles(ctx).length;
+	}
+
+	/** Xóa dòng tổng hợp công của nhân viên không còn thuộc kỳ (trước khi lập theo lô). */
+	function cleanupStale(periodId, eligibleIds) {
+		const keep = new Set(eligibleIds.map(String));
+		let removed = 0;
+		for (const old of Store.find("attendance", { where: "{period} = ?", params: [String(periodId)], includeInactive: true })) {
+			if (keep.has(old.employee)) continue;
+			Store.remove("attendance", old.id);
+			removed++;
+		}
+		return removed;
+	}
+
+	/**
+	 * Lập bảng công cho một lô nhân viên của kỳ: xóa dòng cũ của chính các nhân viên này rồi tạo lại.
+	 * @param {string} periodId
+	 * @param {string[]} employeeIds id nhân viên (Employee)
+	 * @param {object} [ctx] ngữ cảnh dựng sẵn (Map/Reduce truyền lại để không đọc lại)
+	 */
+	function buildChunk(periodId, employeeIds, ctx) {
+		const c = ctx || buildContext(periodId);
+		const ref = c.ref;
+		const period = c.period;
 		const ps = period.startDate;
 		const pe = period.endDate;
-		const overlap = "{from} <= TO_DATE(?, 'YYYY-MM-DD') AND {to} >= TO_DATE(?, 'YYYY-MM-DD')";
-		const inPeriod = "{work_date} >= TO_DATE(?, 'YYYY-MM-DD') AND {work_date} <= TO_DATE(?, 'YYYY-MM-DD')";
-		const by = (rows) => rows.reduce((m, r) => ((m[r.employee] = m[r.employee] || []).push(r), m), {});
-		const leaves = by(approvedIn("leave_request", overlap, [pe, ps]));
-		const trips = by(approvedIn("business_trip", overlap, [pe, ps]));
-		const exceptions = by(approvedIn("att_exception", inPeriod, [ps, pe]));
-		const overtime = by(approvedIn("ot_request", inPeriod, [ps, pe]));
-		for (const old of Store.find("attendance", { where: "{period} = ?", params: [period.id], includeInactive: true })) Store.remove("attendance", old.id);
+		const want = new Set(employeeIds.map(String));
+		const profiles = eligibleProfiles(c).filter((p) => want.has(p.employee));
+		const ids = profiles.map((p) => p.employee);
+		const leaves = approvedDocs("leave_request", OVERLAP, [pe, ps], ids);
+		const trips = approvedDocs("business_trip", OVERLAP, [pe, ps], ids);
+		const exceptions = approvedDocs("att_exception", IN_PERIOD, [ps, pe], ids);
+		const overtime = approvedDocs("ot_request", IN_PERIOD, [ps, pe], ids);
+		for (const old of Store.findIn("attendance", "employee", [...want], "{period} = ?", [period.id])) Store.remove("attendance", old.id);
 		const created = [];
-		for (const prof of Store.find("employee", { includeInactive: true })) {
-			const g = prof.paygroup ? groups[prof.paygroup] : "DEFAULT";
-			if ((g || "DEFAULT") !== groupCode) continue;
-			if (!(!prof.isInactive || EmploymentDays.terminatesIn(prof.termination_date, ps, pe))) continue;
-			if (!EmploymentDays.employedIn(prof.hire_date, prof.termination_date, ps, pe)) continue;
-			// CTV chỉ vào bảng công khi thuộc tổ (chưa có tổ trên NetSuite) hoặc nhóm dùng bảng công ký hiệu (BUG-51, BUG-54)
-			if (!EmploymentDays.inAttendanceSummary(prof.employment_type === "C", false, false)) continue;
+		// Nhóm lương nguồn công S: tổng hợp từ bảng công ký hiệu (3.2) cộng đơn OT
+		if (c.usesSheet) {
+			for (const r of Shifts.sheetSummaries(period.id, profiles.map((p) => p.employee))) {
+				Store.create("attendance", Object.assign({}, r.values, { period: period.id, employee: r.employee, late_count: 0, status: "O", key: `${period.id}|${r.employee}` }));
+				created.push(r.employee);
+			}
+			return { employees: created.length, created };
+		}
+		for (const prof of profiles) {
 			const e = prof.employee;
 			const t = Summary.buildExceptions({
 				period: { startDate: ps, endDate: pe, standardWorkDays: period.standardWorkDays || 0 },
@@ -289,16 +362,26 @@ define([
 			});
 			created.push(e);
 		}
-		return { period: period.code, employees: created.length };
+		return { employees: created.length, created };
 	}
 
-	function setSummaryLocked(period, value, otherLocked) {
+	/** Lập lại bảng tổng hợp công của kỳ (3.5 Build) - đồng bộ, cho kỳ đến SYNC_LIMIT nhân viên. */
+	function build(periodId) {
+		const ctx = buildContext(periodId);
+		const ids = eligibleProfiles(ctx).map((p) => p.employee);
+		if (ids.length > SYNC_LIMIT) throw fail(`The period has ${ids.length} employees; run it in the background`, `Kỳ có ${ids.length} nhân viên, hãy chạy nền (Map/Reduce)`);
+		cleanupStale(ctx.period.id, ids);
+		const r = buildChunk(periodId, ids, ctx);
+		return { period: ctx.period.code, employees: r.employees };
+	}
+
+	/** Đặt / gỡ cờ SummaryLocked cho chứng từ đã duyệt giao kỳ của các nhân viên (3.4). */
+	function setSummaryLocked(period, value, otherLocked, employeeIds) {
 		const ps = period.startDate;
 		const pe = period.endDate;
-		const overlap = "{from} <= TO_DATE(?, 'YYYY-MM-DD') AND {to} >= TO_DATE(?, 'YYYY-MM-DD')";
-		const inPeriod = "{work_date} >= TO_DATE(?, 'YYYY-MM-DD') AND {work_date} <= TO_DATE(?, 'YYYY-MM-DD')";
-		for (const [name, where, params, ranged] of [["leave_request", overlap, [pe, ps], true], ["business_trip", overlap, [pe, ps], true], ["att_exception", inPeriod, [ps, pe], false], ["ot_request", inPeriod, [ps, pe], false]]) {
-			for (const d of Store.find(name, { where, params })) {
+		for (const [name, where, params, ranged] of [["leave_request", OVERLAP, [pe, ps], true], ["business_trip", OVERLAP, [pe, ps], true], ["att_exception", IN_PERIOD, [ps, pe], false], ["ot_request", IN_PERIOD, [ps, pe], false]]) {
+			const docs = employeeIds ? Store.findIn(name, "employee", employeeIds, where, params) : Store.find(name, { where, params });
+			for (const d of docs) {
 				if (value && d.status !== "A") continue;
 				if (!!d.summary_locked === value) continue;
 				// Mở khóa: đơn nghỉ, công tác chỉ gỡ khi không còn giao kỳ công khóa khác
@@ -308,39 +391,90 @@ define([
 		}
 	}
 
-	/** Khóa công: lập lại ngay trước khi khóa, khóa dòng tổng hợp, kỳ, chứng từ nguồn. */
+	/** Khóa một lô: lập lại, khóa dòng tổng hợp, chứng từ nguồn của lô. Trạng thái kỳ do lock / Map/Reduce đặt sau cùng. */
+	function lockChunk(periodId, employeeIds, ctx) {
+		const c = ctx || buildContext(periodId);
+		const r = buildChunk(periodId, employeeIds, c);
+		for (const a of Store.findIn("attendance", "employee", employeeIds, "{period} = ?", [c.period.id])) if (a.status !== "L") Store.submit("attendance", a.id, { status: "L" });
+		setSummaryLocked(c.period, true, [], employeeIds);
+		return { employees: r.employees };
+	}
+
+	/** Khóa công: lập lại ngay trước khi khóa, khóa dòng tổng hợp, kỳ, chứng từ nguồn (đồng bộ). */
 	function lock(periodId) {
 		const ref = reference();
 		const period = ref.periods.find((p) => p.id === String(periodId));
 		if (!period) throw fail("Pay period not found", "Không tìm thấy kỳ lương");
 		if (period.attendanceStatus === "L") return { locked: true, rebuilt: false };
-		const r = build(periodId);
-		for (const a of Store.find("attendance", { where: "{period} = ?", params: [period.id] })) Store.submit("attendance", a.id, { status: "L" });
-		Store.submit("period", period.id, { att_status: "L" });
-		setSummaryLocked(period, true, []);
+		const ctx = buildContext(periodId);
+		const ids = eligibleProfiles(ctx).map((p) => p.employee);
+		if (ids.length > SYNC_LIMIT) throw fail(`The period has ${ids.length} employees; run it in the background`, `Kỳ có ${ids.length} nhân viên, hãy chạy nền (Map/Reduce)`);
+		cleanupStale(ctx.period.id, ids);
+		const r = lockChunk(periodId, ids, ctx);
+		Store.submit("period", ctx.period.id, { att_status: "L" });
 		return { locked: true, rebuilt: true, employees: r.employees };
 	}
 
-	/** Mở khóa công: chặn khi kỳ có bảng lương đã ghi sổ (kể cả đã đảo, 3.11 #5). */
-	function unlock(periodId) {
+	/** Kiểm tra mở khóa: chặn khi kỳ có bảng lương đã ghi sổ (kể cả đã đảo, 3.11 #5). Trả ngữ cảnh. */
+	function unlockContext(periodId) {
 		const ref = reference();
 		const period = ref.periods.find((p) => p.id === String(periodId));
 		if (!period) throw fail("Pay period not found", "Không tìm thấy kỳ lương");
 		const released = Store.find("batch", { where: "{period} = ?", params: [period.id] }).filter((b) => b.status === "R" || b.status === "V");
 		if (released.length) throw fail("The period has a released payroll batch; attendance cannot be unlocked", "Kỳ đã có bảng lương ghi sổ, không mở khóa công được");
-		for (const a of Store.find("attendance", { where: "{period} = ?", params: [period.id] })) Store.submit("attendance", a.id, { status: "O" });
-		Store.submit("period", period.id, { att_status: "O" });
-		const otherLocked = ref.periods.filter((p) => p.id !== period.id && p.attendanceStatus === "L");
-		setSummaryLocked(period, false, otherLocked);
+		return { ref, period, otherLocked: ref.periods.filter((p) => p.id !== period.id && p.attendanceStatus === "L") };
+	}
+
+	/** Nhân viên cần mở khóa: có dòng tổng hợp công của kỳ. */
+	function unlockEmployees(periodId) {
+		return [...new Set(Store.find("attendance", { where: "{period} = ?", params: [String(periodId)] }).map((a) => a.employee))];
+	}
+
+	function unlockChunk(periodId, employeeIds, ctx) {
+		const c = ctx || unlockContext(periodId);
+		for (const a of Store.findIn("attendance", "employee", employeeIds, "{period} = ?", [c.period.id])) if (a.status !== "O") Store.submit("attendance", a.id, { status: "O" });
+		setSummaryLocked(c.period, false, c.otherLocked, employeeIds);
+		return { employees: employeeIds.length };
+	}
+
+	/** Mở khóa công (đồng bộ). */
+	function unlock(periodId) {
+		const c = unlockContext(periodId);
+		const ids = unlockEmployees(periodId);
+		if (ids.length > SYNC_LIMIT) throw fail(`The period has ${ids.length} employees; run it in the background`, `Kỳ có ${ids.length} nhân viên, hãy chạy nền (Map/Reduce)`);
+		unlockChunk(periodId, ids, c);
+		// Chứng từ của nhân viên không còn dòng tổng hợp (ví dụ đã nghỉ) vẫn được gỡ khóa
+		setSummaryLocked(c.period, false, c.otherLocked, null);
+		Store.submit("period", c.period.id, { att_status: "O" });
 		return { locked: false };
+	}
+
+	/**
+	 * Chạy nền bằng Map/Reduce: op build | lock | unlock (periodId) hoặc accrue (year, policyCode, runDate, subsidiary).
+	 * @returns {{queued: true, job: string}}
+	 */
+	function queue(periodId, op, extra = {}) {
+		if (!["build", "lock", "unlock", "accrue"].includes(op)) throw fail(`Unknown operation ${op}`, `Thao tác không hợp lệ ${op}`);
+		if (op !== "accrue") (op === "unlock" ? unlockContext(periodId) : buildContext(periodId, { allowLocked: op === "lock" }));
+		const params = { custscript_s4vp_mra_op: op, custscript_s4vp_mra_period: periodId ? String(periodId) : "" };
+		if (op === "accrue") {
+			params.custscript_s4vp_mra_year = String(extra.year || "");
+			params.custscript_s4vp_mra_policy = String(extra.policyCode || "");
+			params.custscript_s4vp_mra_rundate = String(extra.runDate || Clock.today());
+			params.custscript_s4vp_mra_subsidiary = String(extra.subsidiary || "");
+		}
+		const t = task.create({ taskType: task.TaskType.MAP_REDUCE, scriptId: MR.scriptId, deploymentId: MR.deploymentId, params });
+		return { queued: true, job: t.submit() };
 	}
 
 	// ------------------------------------------------------------------ sổ phép
 
+	/** Bản ghi số dư theo khóa nhân viên|loại|năm; trùng khóa (lưu đồng thời) thì dùng bản đầu và ghi log (QC #21). */
 	function balanceRecord(employee, leaveType, year) {
 		const key = `${employee}|${leaveType}|${year}`;
-		const hit = Store.find("leave_balance", { where: "{key} = ?", params: [key] })[0];
-		if (hit) return hit;
+		const hits = Store.find("leave_balance", { where: "{key} = ?", params: [key] });
+		if (hits.length > 1) log.audit({ title: "s4vp leave balance duplicate key", details: `${key}: ${hits.map((h) => h.id).join(",")}` });
+		if (hits.length) return hits[0];
 		const id = Store.create("leave_balance", { employee, leave_type: leaveType, year, entitled: 0, carried: 0, adjusted: 0, used: 0, pending: 0, key });
 		return Store.get("leave_balance", id);
 	}
@@ -380,23 +514,49 @@ define([
 		};
 	}
 
+	/** Hồ sơ thuộc phạm vi cấp phép (subsidiary); Map/Reduce chia lô theo danh sách này. */
+	function accrualProfiles(subsidiary) {
+		return Store.find("employee").filter((p) => !subsidiary || p.subsidiary === String(subsidiary));
+	}
+
 	/**
-	 * Cấp phép năm và chuyển phép năm trước (VP501000 tác vụ A).
-	 * @param {number} year
-	 * @param {string|null} policyCode chỉ chính sách này (null = tất cả)
-	 * @param {string} runDate 'YYYY-MM-DD'
-	 * @param {string|null} subsidiary chỉ hồ sơ của công ty con này
-	 * @returns {{rows: Array<{employee, policy, accrued, carriedOver, message}>}}
+	 * Cấp phép cho một lô hồ sơ (QC #18): nạp trước số dư năm trước / năm nay và giao dịch của năm bằng một truy vấn,
+	 * tính trong bộ nhớ, chỉ ghi phần thay đổi.
 	 */
-	function accrue(year, policyCode, runDate, subsidiary) {
+	function accrueFor(year, policyCode, runDate, profiles) {
 		const y = Number(year);
-		const run = Dates.iso(runDate || new Date());
+		const run = runDate ? Dates.iso(runDate) : Clock.today();
 		const tenant = Settings.tenant();
 		const policies = {};
 		for (const p of Store.find("leave_policy")) policies[p.id] = policyObject(p);
+		const ids = profiles.map((p) => p.employee);
+		const balances = {};
+		for (const b of Store.findIn("leave_balance", "employee", ids, "{year} >= ? AND {year} <= ?", [y - 1, y + 1])) {
+			if (!balances[b.key]) balances[b.key] = b;
+			else log.audit({ title: "s4vp leave balance duplicate key", details: `${b.key}: ${balances[b.key].id},${b.id}` });
+		}
+		const trans = {};
+		for (const t of Store.findIn("leave_tran", "employee", ids, "{year} = ?", [y])) (trans[`${t.employee}|${t.leave_type}`] = trans[`${t.employee}|${t.leave_type}`] || []).push(t);
+		const dirty = new Map();
+		// Số dư trong bộ nhớ: tạo bản ghi khi lần đầu cần
+		const bal = (employee, lt, yr) => {
+			const key = `${employee}|${lt}|${yr}`;
+			if (!balances[key]) {
+				const id = Store.create("leave_balance", { employee, leave_type: lt, year: yr, entitled: 0, carried: 0, adjusted: 0, used: 0, pending: 0, key });
+				balances[key] = { id, employee, leave_type: lt, year: yr, entitled: 0, carried: 0, adjusted: 0, used: 0, pending: 0, carry_expiry: null, key };
+			}
+			return balances[key];
+		};
+		const postMem = (employee, lt, yr, tran, refText, note) => {
+			const rec = bal(employee, lt, yr);
+			const b = Ledger.apply(toBalance(rec), tran);
+			Object.assign(rec, { entitled: b.entitled, carried: b.carriedOver, carry_expiry: b.carryOverExpiryDate || rec.carry_expiry || null, adjusted: b.adjusted, used: b.used, pending: b.pending });
+			dirty.set(rec.id, rec);
+			writeTran(employee, lt, yr, run, tran, refText, note);
+			return rec;
+		};
 		const rows = [];
-		for (const prof of Store.find("employee")) {
-			if (subsidiary && prof.subsidiary !== String(subsidiary)) continue;
+		for (const prof of profiles) {
 			if (!EmploymentDays.accruesLeave(prof.employment_type === "C")) {
 				rows.push({ employee: prof.employee, policy: "", accrued: 0, carriedOver: 0, message: "Contractor (service contract): no annual leave / Cộng tác viên (hợp đồng dịch vụ): không có phép năm" });
 				continue;
@@ -408,29 +568,43 @@ define([
 			}
 			if (policyCode && pol.code !== norm(policyCode)) continue;
 			const lt = pol.leaveType;
-			const prevKey = `${prof.employee}|${lt}|${y - 1}`;
-			const prev = Store.find("leave_balance", { where: "{key} = ?", params: [prevKey] })[0];
+			const prev = balances[`${prof.employee}|${lt}|${y - 1}`];
 			const prevRemaining = prev ? Math.max(0, Ledger.available(toBalance(prev))) : 0;
 			const calc = Accrual.calculate(pol, y, prof.seniority_date || null, run, prevRemaining);
-			const trans = Store.find("leave_tran", { where: "{employee} = ? AND {leave_type} = ? AND {year} = ?", params: [prof.employee, lt, y] });
-			const already = trans.filter((t) => t.source === "A").reduce((s, t) => s + (t.qty || 0), 0);
+			const mine = trans[`${prof.employee}|${lt}`] || [];
+			const already = mine.filter((t) => t.source === "A").reduce((sum, t) => sum + (t.qty || 0), 0);
 			const delta = Accrual.accrualDelta(calc.entitled, already, pol.accrualMethod);
-			if (delta > 0) post(prof.employee, lt, y, run, { source: "A", qty: delta }, `ACCRUE-${y}`, `Policy ${pol.code}`);
-			const plan = Ledger.carryOverPlan(calc.carriedOver, trans.some((t) => t.source === "C"), !!prev);
+			if (delta > 0) postMem(prof.employee, lt, y, { source: "A", qty: delta }, `ACCRUE-${y}`, `Policy ${pol.code}`);
+			const plan = Ledger.carryOverPlan(calc.carriedOver, mine.some((t) => t.source === "C"), !!prev);
 			for (const step of plan) {
-				const rec = post(prof.employee, lt, y + step.yearOffset, run, { source: step.source, qty: step.qty }, `CARRY-${y}`, "Carry over / Chuyển phép");
-				if (step.source === "C" && calc.carryOverExpiryDate) {
-					Store.submit("leave_balance", rec.id, { carry_expiry: calc.carryOverExpiryDate });
-				}
+				const rec = postMem(prof.employee, lt, y + step.yearOffset, { source: step.source, qty: step.qty }, `CARRY-${y}`, "Carry over / Chuyển phép");
+				if (step.source === "C" && calc.carryOverExpiryDate) rec.carry_expiry = calc.carryOverExpiryDate;
 			}
 			rows.push({ employee: prof.employee, policy: pol.code, accrued: delta, carriedOver: plan.length ? calc.carriedOver : 0, message: delta > 0 || plan.length ? "" : "Already accrued / Đã cấp trong năm" });
+		}
+		for (const rec of dirty.values()) {
+			Store.submit("leave_balance", rec.id, { entitled: rec.entitled, carried: rec.carried, carry_expiry: rec.carry_expiry || null, adjusted: rec.adjusted, used: rec.used, pending: rec.pending });
 		}
 		return { rows };
 	}
 
+	/**
+	 * Cấp phép năm và chuyển phép năm trước (VP501000 tác vụ A), đồng bộ đến SYNC_LIMIT hồ sơ; lớn hơn thì queue(null, 'accrue').
+	 * @param {number} year
+	 * @param {string|null} policyCode chỉ chính sách này (null = tất cả)
+	 * @param {string} runDate 'YYYY-MM-DD'
+	 * @param {string|null} subsidiary chỉ hồ sơ của công ty con này
+	 * @returns {{rows: Array<{employee, policy, accrued, carriedOver, message}>}}
+	 */
+	function accrue(year, policyCode, runDate, subsidiary) {
+		const profiles = accrualProfiles(subsidiary);
+		if (profiles.length > SYNC_LIMIT) throw fail(`${profiles.length} profiles; run leave accrual in the background`, `Có ${profiles.length} hồ sơ, hãy chạy cấp phép năm ở chế độ nền (Map/Reduce)`);
+		return accrueFor(year, policyCode, runDate, profiles);
+	}
+
 	/** Hết hạn phép chuyển (VP501000 tác vụ X). */
 	function expire(year, runDate) {
-		const run = Dates.iso(runDate || new Date());
+		const run = runDate ? Dates.iso(runDate) : Clock.today();
 		const out = [];
 		for (const rec of Store.find("leave_balance", { where: "{year} = ?", params: [Number(year)] })) {
 			const plan = Ledger.expiryPlan(toBalance(rec), run);
@@ -444,7 +618,7 @@ define([
 	/** Điều chỉnh tay (VP206000 Adjust, nguồn J). */
 	function adjust(employee, leaveType, year, qty, reason) {
 		if (blank(employee) || blank(leaveType) || !Number(year) || !Number(qty)) throw fail("Employee, leave type, year and a non-zero quantity are required", "Bắt buộc nhân viên, loại nghỉ, năm và số ngày khác 0");
-		const rec = post(employee, leaveType, Number(year), Dates.iso(new Date()), { source: "J", qty: Number(qty) }, "ADJUST", reason);
+		const rec = post(employee, leaveType, Number(year), Clock.today(), { source: "J", qty: Number(qty) }, "ADJUST", reason);
 		return { balance: Object.assign(toBalance(rec), { available: Ledger.available(toBalance(rec)) }) };
 	}
 
@@ -489,5 +663,10 @@ define([
 		});
 	}
 
-	return { RECORD, reference, derive, save, act, build, lock, unlock, accrue, expire, adjust, balances, remainingPaidLeave, available, list };
+	return {
+		RECORD, INPUT, SYNC_LIMIT, reference, derive, save, act, build, lock, unlock, accrue, expire, adjust, balances, remainingPaidLeave, available, list,
+		// Chạy theo lô (Map/Reduce s4vp_mr_attendance)
+		sizeOf, queue, buildContext, eligibleProfiles, cleanupStale, buildChunk, lockChunk, unlockContext, unlockEmployees, unlockChunk, setSummaryLocked,
+		accrualProfiles, accrueFor,
+	};
 });

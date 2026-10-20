@@ -2,6 +2,8 @@
  * Chứng từ công (đơn nghỉ, đơn OT, đơn công tác, phiếu ngoại lệ - đặc tả 3.4) khi sửa trên màn hình NetSuite, CSV
  * import hoặc web service: chỉ sửa / xóa được khi đang Tạm giữ và chưa khóa theo kỳ công; khi lưu ở Tạm giữ tự tính số
  * ngày, loại ngày, loại thu nhập OT, ngày bị trừ, kỳ. Thao tác duyệt đi qua api/Attendance (RESTlet), không qua script này.
+ * Chống lách luồng duyệt (QC #3): tạo mới ở ngữ cảnh người dùng luôn ở Tạm giữ, chưa khóa, chưa có người duyệt; sửa
+ * không được đổi trạng thái, người duyệt, ngày duyệt, cờ khóa, số ngày.
  * Lỗi ném chuỗi ngắn song ngữ để NetSuite hiện gọn.
  *
  * @NApiVersion 2.1
@@ -32,11 +34,38 @@ define(["N/runtime", "N/log", "../api/Schema", "../api/Store", "../api/Attendanc
 		return out;
 	}
 
+	// Trường điều khiển chỉ gói được đặt (qua RESTlet / Map/Reduce)
+	const CONTROLLED = ["status", "approved_by", "approved_date", "summary_locked", "days"];
+
+	function same(a, b) {
+		const n = (x) => (x === null || x === undefined || x === "" ? "" : x instanceof Date ? x.getTime() : String(x));
+		return n(a) === n(b);
+	}
+
 	function beforeSubmit(context) {
 		const rec = context.newRecord || context.oldRecord;
 		const map = TYPE_BY_RECORD[rec.type];
 		if (!map || !fromUser()) return;
 		const T = context.UserEventType;
+		const fields = Schema.records[map.name].fields;
+		if (context.type === T.CREATE || context.type === T.COPY) {
+			// Ép trạng thái ban đầu: không tạo sẵn chứng từ đã duyệt / đã khóa
+			context.newRecord.setValue({ fieldId: fields.status.id, value: Store.idOf("request_status", "H") });
+			context.newRecord.setValue({ fieldId: fields.summary_locked.id, value: false });
+			context.newRecord.setValue({ fieldId: fields.approved_by.id, value: "" });
+			context.newRecord.setValue({ fieldId: fields.approved_date.id, value: "" });
+		}
+		if (context.type === T.EDIT || context.type === T.XEDIT) {
+			for (const key of CONTROLLED) {
+				const f = fields[key];
+				if (!f) continue;
+				// XEDIT chỉ mang trường được gửi: trường không gửi giữ nguyên
+				if (context.type === T.XEDIT && context.newRecord.getFields().indexOf(f.id) < 0) continue;
+				if (!same(context.newRecord.getValue({ fieldId: f.id }), context.oldRecord.getValue({ fieldId: f.id }))) {
+					throw "Không được sửa trạng thái, người duyệt, ngày duyệt, cờ khóa hoặc số ngày của chứng từ; hãy dùng màn hình Lương VN. / Status, approval, lock and day fields can only be changed by the payroll screen.";
+				}
+			}
+		}
 		if (context.type === T.EDIT || context.type === T.XEDIT || context.type === T.DELETE) {
 			const old = readValues(context.oldRecord, map.name);
 			if ((old.status && old.status !== "H") || old.summary_locked) {

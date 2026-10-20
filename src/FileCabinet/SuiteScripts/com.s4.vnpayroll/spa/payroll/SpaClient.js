@@ -643,7 +643,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
         function renderSetup() {
             const groupItems = boot.paygroups.map((g) => ({ value: String(g.id), label: `${g.code}${g.description ? ` - ${g.description}` : ''}` }));
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: t.loadDefaults, hierarchy: boot.setupReady ? component.Button.Hierarchy.SECONDARY : component.Button.Hierarchy.PRIMARY, enabled: !busy, action: () => run(t.working, post({ action: 'loadDefaults' }), (r) => {
+                jsxRuntime.jsx(component.Button, { label: t.loadDefaults, hierarchy: boot.setupReady ? component.Button.Hierarchy.SECONDARY : component.Button.Hierarchy.PRIMARY, enabled: !busy && boot.user.canEditSetup, action: () => run(t.working, post({ action: 'loadDefaults' }), (r) => {
                         reloadBoot();
                         setNotice(t.created(Object.entries(r.created).map(([k, v]) => `${v} ${k}`).join(', ') || '0'));
                     }) }),
@@ -653,7 +653,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     cell(labeled(t.paygroup, jsxRuntime.jsx(component.Dropdown, { rootStyle: { width: '100%' }, dataSource: new core.ArrayDataSource(groupItems), valueMember: "value", displayMember: "label", selectedValue: paygroup, onSelectionChanged: (a) => a.value && a.value !== paygroup && setPaygroup(a.value) })), 'g-group'),
                 ] }), 's-gen-form'));
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: t.generate, enabled: !busy && boot.setupReady && /^\d{4}$/.test(year) && !!paygroup, action: () => run(t.working, post({ action: 'generatePeriods', year: Number(year), paygroup }), (r) => {
+                jsxRuntime.jsx(component.Button, { label: t.generate, enabled: !busy && boot.user.canEditSetup && boot.setupReady && /^\d{4}$/.test(year) && !!paygroup, action: () => run(t.working, post({ action: 'generatePeriods', year: Number(year), paygroup }), (r) => {
                         reloadBoot();
                         setNotice(t.created(`${r.created.length} ${t.period}`));
                     }) }),
@@ -680,9 +680,9 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 return r;
             };
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: ta.build, enabled: !busy && !!per && per.attStatus !== 'L', action: () => run(t.working, post({ action: 'buildAttendance', id: attPeriod }), after) }),
-                jsxRuntime.jsx(component.Button, { label: ta.lock, enabled: !busy && !!per && per.attStatus !== 'L', action: () => run(t.working, post({ action: 'lockAttendance', id: attPeriod }), after) }),
-                jsxRuntime.jsx(component.Button, { label: ta.unlock, enabled: !busy && !!per && per.attStatus === 'L', action: () => run(t.working, post({ action: 'unlockAttendance', id: attPeriod }), after) }),
+                jsxRuntime.jsx(component.Button, { label: ta.build, enabled: !busy && boot.user.canAttendance && !!per && per.attStatus !== 'L', action: () => run(t.working, post({ action: 'buildAttendance', id: attPeriod }), after) }),
+                jsxRuntime.jsx(component.Button, { label: ta.lock, enabled: !busy && boot.user.canAttendance && !!per && per.attStatus !== 'L', action: () => run(t.working, post({ action: 'lockAttendance', id: attPeriod }), after) }),
+                jsxRuntime.jsx(component.Button, { label: ta.unlock, enabled: !busy && boot.user.canAttendance && !!per && per.attStatus === 'L', action: () => run(t.working, post({ action: 'unlockAttendance', id: attPeriod }), after) }),
             ], messages), 'a-actions'));
             const empName = (id) => {
                 const e = employees.find((x) => x.employee === String(id));
@@ -711,7 +711,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 if (x.warnings && x.warnings.length)
                     setNotice(x.warnings.map((w) => (language() === 'vi' ? w.messageVi : w.message)).join('; '));
             });
-            const opsFor = (st, locked) => (locked ? [] : st === 'H' ? ['submit'] : st === 'P' ? ['approve', 'reject', 'cancel'] : st === 'A' ? ['cancel'] : []);
+            const opsFor = (st, locked) => (locked || !boot.user.canAttendance ? [] : st === 'H' ? ['submit'] : st === 'P' ? ['approve', 'reject', 'cancel'] : st === 'A' ? ['cancel'] : []);
             const range = (r) => (docType === 'leave' || docType === 'trip' ? `${r.from || ''} - ${r.to || ''}` : r.work_date || '');
             const qty = (r) => (docType === 'leave' || docType === 'trip' ? `${num(r.days)} ${ta.dayUnit}` : docType === 'ot' ? `${num(r.hours)} h ${r.day_type || ''}` : r.exception_type === 'A' ? num(r.adjust_days) : `${r.minutes || 0}' (-${num(r.deduct_days)})`);
             items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(docs), columns: [
@@ -744,7 +744,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             items.push(item(jsxRuntime.jsx(component.GridPanel, { rootStyle: { flexShrink: 0 }, columns: "repeat(auto-fill, minmax(200px, 1fr))", columnGap: component.GridPanel.GapSize.M, rowGap: component.GridPanel.GapSize.S, children: fields }), 'a-new-form'));
             const n = (v) => (v === undefined || String(v).trim() === '' ? null : Number(String(v).replace(',', '.')));
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: ta.save, enabled: !busy && !!f.employee, action: () => {
+                jsxRuntime.jsx(component.Button, { label: ta.save, enabled: !busy && boot.user.canAttendance && !!f.employee, action: () => {
                         const v = Object.assign({ subsidiary }, docRef.current);
                         ['hours', 'minutes', 'adjust_days', 'advance_amount'].forEach((k) => v[k] !== undefined && (v[k] = n(v[k])));
                         return run(t.working, post({ action: 'saveDoc', type: docType, values: v }), (x) => {
@@ -759,7 +759,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             // Phép năm
             items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: ta.balances }), 'a-bal-title'));
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: `${ta.accrue} ${year}`, enabled: !busy && /^\d{4}$/.test(year), action: () => run(t.working, post({ action: 'accrueLeave', year: Number(year), subsidiary, runDate: new Date().toISOString().slice(0, 10) }), (r) => {
+                jsxRuntime.jsx(component.Button, { label: `${ta.accrue} ${year}`, enabled: !busy && boot.user.canAttendance && /^\d{4}$/.test(year), action: () => run(t.working, post({ action: 'accrueLeave', year: Number(year), subsidiary, runDate: new Date().toISOString().slice(0, 10) }), (r) => {
                         setNotice(ta.accrued(r.rows || []));
                         return run(t.loading, call({ action: 'leaveBalances', subsidiary, year }), (x) => setBalances(x.balances));
                     }) }),

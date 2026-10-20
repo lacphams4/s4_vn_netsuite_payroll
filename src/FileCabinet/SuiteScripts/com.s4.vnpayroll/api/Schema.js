@@ -2707,6 +2707,356 @@ define([], () => {
 					"target": null
 				}
 			}
+		},
+		"shift": {
+			"type": "customrecord_s4vp_shift",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"description": {
+					"id": "custrecord_s4vp_sh_description",
+					"type": "text",
+					"target": null
+				},
+				"start_time": {
+					"id": "custrecord_s4vp_sh_start_time",
+					"type": "text",
+					"target": null
+				},
+				"end_time": {
+					"id": "custrecord_s4vp_sh_end_time",
+					"type": "text",
+					"target": null
+				},
+				"break_minutes": {
+					"id": "custrecord_s4vp_sh_break_minutes",
+					"type": "int",
+					"target": null
+				},
+				"kind": {
+					"id": "custrecord_s4vp_sh_kind",
+					"type": "select",
+					"target": "list:shift_kind"
+				},
+				"late_grace": {
+					"id": "custrecord_s4vp_sh_late_grace",
+					"type": "int",
+					"target": null
+				},
+				"early_grace": {
+					"id": "custrecord_s4vp_sh_early_grace",
+					"type": "int",
+					"target": null
+				},
+				"ot_min": {
+					"id": "custrecord_s4vp_sh_ot_min",
+					"type": "int",
+					"target": null
+				}
+			}
+		},
+		"shift_pattern": {
+			"type": "customrecord_s4vp_shift_pattern",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"description": {
+					"id": "custrecord_s4vp_sp_description",
+					"type": "text",
+					"target": null
+				},
+				"cycle": {
+					"id": "custrecord_s4vp_sp_cycle",
+					"type": "textarea",
+					"target": null
+				}
+			}
+		},
+		"roster": {
+			"type": "customrecord_s4vp_roster",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_ro_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"work_date": {
+					"id": "custrecord_s4vp_ro_work_date",
+					"type": "date",
+					"target": null
+				},
+				"shift": {
+					"id": "custrecord_s4vp_ro_shift",
+					"type": "select",
+					"target": "rec:shift"
+				},
+				"source": {
+					"id": "custrecord_s4vp_ro_source",
+					"type": "select",
+					"target": "list:roster_source"
+				},
+				"pattern": {
+					"id": "custrecord_s4vp_ro_pattern",
+					"type": "select",
+					"target": "rec:shift_pattern"
+				},
+				"location": {
+					"id": "custrecord_s4vp_ro_location",
+					"type": "select",
+					"target": "location"
+				},
+				"work_center": {
+					"id": "custrecord_s4vp_ro_work_center",
+					"type": "select",
+					"target": "class"
+				},
+				"key": {
+					"id": "custrecord_s4vp_ro_key",
+					"type": "text",
+					"target": null
+				}
+			}
+		},
+		"punch": {
+			"type": "customrecord_s4vp_punch",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_pu_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"punch_date": {
+					"id": "custrecord_s4vp_pu_punch_date",
+					"type": "date",
+					"target": null
+				},
+				"punch_time": {
+					"id": "custrecord_s4vp_pu_punch_time",
+					"type": "text",
+					"target": null
+				},
+				"device": {
+					"id": "custrecord_s4vp_pu_device",
+					"type": "text",
+					"target": null
+				},
+				"source": {
+					"id": "custrecord_s4vp_pu_source",
+					"type": "select",
+					"target": "list:punch_source"
+				}
+			}
+		},
+		"att_sheet": {
+			"type": "customrecord_s4vp_att_sheet",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"period": {
+					"id": "custrecord_s4vp_ash_period",
+					"type": "select",
+					"target": "rec:period"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_ash_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"d01": {
+					"id": "custrecord_s4vp_ash_d01",
+					"type": "text",
+					"target": null
+				},
+				"d02": {
+					"id": "custrecord_s4vp_ash_d02",
+					"type": "text",
+					"target": null
+				},
+				"d03": {
+					"id": "custrecord_s4vp_ash_d03",
+					"type": "text",
+					"target": null
+				},
+				"d04": {
+					"id": "custrecord_s4vp_ash_d04",
+					"type": "text",
+					"target": null
+				},
+				"d05": {
+					"id": "custrecord_s4vp_ash_d05",
+					"type": "text",
+					"target": null
+				},
+				"d06": {
+					"id": "custrecord_s4vp_ash_d06",
+					"type": "text",
+					"target": null
+				},
+				"d07": {
+					"id": "custrecord_s4vp_ash_d07",
+					"type": "text",
+					"target": null
+				},
+				"d08": {
+					"id": "custrecord_s4vp_ash_d08",
+					"type": "text",
+					"target": null
+				},
+				"d09": {
+					"id": "custrecord_s4vp_ash_d09",
+					"type": "text",
+					"target": null
+				},
+				"d10": {
+					"id": "custrecord_s4vp_ash_d10",
+					"type": "text",
+					"target": null
+				},
+				"d11": {
+					"id": "custrecord_s4vp_ash_d11",
+					"type": "text",
+					"target": null
+				},
+				"d12": {
+					"id": "custrecord_s4vp_ash_d12",
+					"type": "text",
+					"target": null
+				},
+				"d13": {
+					"id": "custrecord_s4vp_ash_d13",
+					"type": "text",
+					"target": null
+				},
+				"d14": {
+					"id": "custrecord_s4vp_ash_d14",
+					"type": "text",
+					"target": null
+				},
+				"d15": {
+					"id": "custrecord_s4vp_ash_d15",
+					"type": "text",
+					"target": null
+				},
+				"d16": {
+					"id": "custrecord_s4vp_ash_d16",
+					"type": "text",
+					"target": null
+				},
+				"d17": {
+					"id": "custrecord_s4vp_ash_d17",
+					"type": "text",
+					"target": null
+				},
+				"d18": {
+					"id": "custrecord_s4vp_ash_d18",
+					"type": "text",
+					"target": null
+				},
+				"d19": {
+					"id": "custrecord_s4vp_ash_d19",
+					"type": "text",
+					"target": null
+				},
+				"d20": {
+					"id": "custrecord_s4vp_ash_d20",
+					"type": "text",
+					"target": null
+				},
+				"d21": {
+					"id": "custrecord_s4vp_ash_d21",
+					"type": "text",
+					"target": null
+				},
+				"d22": {
+					"id": "custrecord_s4vp_ash_d22",
+					"type": "text",
+					"target": null
+				},
+				"d23": {
+					"id": "custrecord_s4vp_ash_d23",
+					"type": "text",
+					"target": null
+				},
+				"d24": {
+					"id": "custrecord_s4vp_ash_d24",
+					"type": "text",
+					"target": null
+				},
+				"d25": {
+					"id": "custrecord_s4vp_ash_d25",
+					"type": "text",
+					"target": null
+				},
+				"d26": {
+					"id": "custrecord_s4vp_ash_d26",
+					"type": "text",
+					"target": null
+				},
+				"d27": {
+					"id": "custrecord_s4vp_ash_d27",
+					"type": "text",
+					"target": null
+				},
+				"d28": {
+					"id": "custrecord_s4vp_ash_d28",
+					"type": "text",
+					"target": null
+				},
+				"d29": {
+					"id": "custrecord_s4vp_ash_d29",
+					"type": "text",
+					"target": null
+				},
+				"d30": {
+					"id": "custrecord_s4vp_ash_d30",
+					"type": "text",
+					"target": null
+				},
+				"d31": {
+					"id": "custrecord_s4vp_ash_d31",
+					"type": "text",
+					"target": null
+				},
+				"worked": {
+					"id": "custrecord_s4vp_ash_worked",
+					"type": "float",
+					"target": null
+				},
+				"paid_leave": {
+					"id": "custrecord_s4vp_ash_paid_leave",
+					"type": "float",
+					"target": null
+				},
+				"unpaid_leave": {
+					"id": "custrecord_s4vp_ash_unpaid_leave",
+					"type": "float",
+					"target": null
+				},
+				"si_leave": {
+					"id": "custrecord_s4vp_ash_si_leave",
+					"type": "float",
+					"target": null
+				},
+				"trip": {
+					"id": "custrecord_s4vp_ash_trip",
+					"type": "float",
+					"target": null
+				},
+				"paid_days": {
+					"id": "custrecord_s4vp_ash_paid_days",
+					"type": "float",
+					"target": null
+				},
+				"warnings": {
+					"id": "custrecord_s4vp_ash_warnings",
+					"type": "text",
+					"target": null
+				}
+			}
 		}
 	};
 	const lists = {
@@ -3092,6 +3442,29 @@ define([], () => {
 				"D": "val_s4vp_alloc_status_d",
 				"A": "val_s4vp_alloc_status_a",
 				"S": "val_s4vp_alloc_status_s"
+			}
+		},
+		"shift_kind": {
+			"type": "customlist_s4vp_shift_kind",
+			"values": {
+				"D": "val_s4vp_shift_kind_d",
+				"E": "val_s4vp_shift_kind_e",
+				"N": "val_s4vp_shift_kind_n"
+			}
+		},
+		"roster_source": {
+			"type": "customlist_s4vp_roster_source",
+			"values": {
+				"G": "val_s4vp_roster_source_g",
+				"M": "val_s4vp_roster_source_m"
+			}
+		},
+		"punch_source": {
+			"type": "customlist_s4vp_punch_source",
+			"values": {
+				"I": "val_s4vp_punch_source_i",
+				"M": "val_s4vp_punch_source_m",
+				"A": "val_s4vp_punch_source_a"
 			}
 		}
 	};

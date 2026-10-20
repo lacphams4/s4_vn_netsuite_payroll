@@ -4,8 +4,13 @@
  *
  * Ánh xạ chiều phân tích: tiểu khoản (cost center) -> Department, chi nhánh -> Location, work center -> Class,
  * dự án -> Customer:Project (entity của dòng JE). Một bảng lương thuộc một subsidiary; không bút toán liên công ty.
- * NetSuite không có giao dịch nhiều record: ghi sổ lưu id JE lên bảng lương ngay sau khi tạo rồi mới cập nhật tạm ứng,
- * chạy lại được (idempotent theo trường journal).
+ * NetSuite không có giao dịch nhiều record (đặc tả 5.4 "Toàn vẹn giao dịch"):
+ * - Trường job của bảng lương là khóa mềm: "release:..." / "reverse:..." khi đang ghi sổ / đảo, id tác vụ khi đang tính
+ *   bằng Map/Reduce; mọi thao tác đổi trạng thái từ chối khi job còn giá trị.
+ * - JE, bill mang externalid theo bảng lương (s4vp-rel-, s4vp-rev-, s4vp-bill-) nên NetSuite chặn tạo trùng; lần chạy
+ *   lại tìm lại giao dịch đã tạo theo externalid.
+ * - Các bước sau JE (cấn trừ tạm ứng, khóa phiếu sản lượng, đánh dấu bảng tỷ lệ) idempotent: gọi Ghi sổ / Đảo lại khi
+ *   bảng đã R / V sẽ hoàn tất phần còn thiếu.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
@@ -13,11 +18,29 @@
 define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
-	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords) => {
+	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock",
+], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
+
+	/** Bảng lương đang tính nền / đang ghi sổ / đang đảo thì không thao tác khác. */
+	function assertNoJob(b) {
+		if (!blank(b.job)) {
+			throw fail(`The batch is being processed in the background (${String(b.job).split(":")[0]}); refresh later`, "Bảng lương đang được xử lý nền (tính lương / ghi sổ / đảo), hãy tải lại sau");
+		}
+	}
+
+	function assertPeriodOpen(period) {
+		if (period && period.status === "C") throw fail("The pay period is closed", "Kỳ lương đã đóng");
+	}
+
+	/** Dòng nhân viên của nhiều bảng lương trong một truy vấn (tránh N+1). */
+	function linesOf(batchIds) {
+		const out = {};
+		for (const l of Store.findIn("batch_emp", "batch", batchIds)) (out[l.batch] = out[l.batch] || []).push(l);
+		return out;
+	}
 
 	function fail(en, vi) {
 		const e = new Error(`${en} / ${vi}`);
@@ -132,8 +155,10 @@ define([
 	function loadEmployees(batchId) {
 		const batch = getBatch(batchId);
 		assertEditable(batch);
+		assertNoJob(batch);
 		const c = context(batch);
 		const p = c.period;
+		assertPeriodOpen(p);
 		if (c.settings.requireAttendanceLock && p.att_status !== "L") throw fail("Attendance of the period must be locked first", "Kỳ công chưa khóa (thiết lập bắt buộc khóa công)");
 		const groupCode = c.settings.payGroupCode;
 		const groupsByName = {};
@@ -144,10 +169,9 @@ define([
 		const have = new Set(existing.map((l) => l.employee));
 		// Nhân viên đã ở bảng lương khác chưa đảo của cùng kỳ
 		const others = new Set();
-		for (const b of Store.find("batch", { where: "{period} = ? AND {id} <> ?", params: [p.id, batchId] })) {
-			if (b.status === "V") continue;
-			for (const l of lines(b.id)) others.add(l.employee);
-		}
+		const otherBatches = Store.find("batch", { where: "{period} = ? AND {id} <> ?", params: [p.id, batchId] }).filter((b) => b.status !== "V");
+		const otherLines = linesOf(otherBatches.map((b) => b.id));
+		for (const b of otherBatches) for (const l of otherLines[b.id] || []) others.add(l.employee);
 		const attendance = {};
 		for (const a of Store.find("attendance", { where: "{period} = ?", params: [p.id] })) attendance[a.employee] = a;
 		const weeklyOff = c.settings.weeklyOffDays;
@@ -205,10 +229,9 @@ define([
 		const end = c.period.end;
 		const adv = Store.findIn("advance", "employee", employeeIds).filter((a) => a.status === "O" && (a.balance || 0) > 0 && Dates.cmp(a.doc_date, end) <= 0 && a.subsidiary === c.batch.subsidiary);
 		const pending = {};
-		for (const b of Store.find("batch", { where: "{id} <> ?", params: [c.batch.id] })) {
-			if (["R", "V"].includes(b.status) || !b.calculated) continue;
-			for (const l of lines(b.id)) for (const o of parseDetail(l).advanceOffsets || []) pending[o.refNbr] = (pending[o.refNbr] || 0) + o.amount;
-		}
+		const open = Store.find("batch", { where: "{id} <> ? AND {subsidiary} = ?", params: [c.batch.id, c.batch.subsidiary] }).filter((b) => !["R", "V"].includes(b.status) && b.calculated);
+		const byBatch = linesOf(open.map((b) => b.id));
+		for (const b of open) for (const l of byBatch[b.id] || []) for (const o of parseDetail(l).advanceOffsets || []) pending[o.refNbr] = (pending[o.refNbr] || 0) + o.amount;
 		const out = {};
 		for (const a of adv) {
 			const balance = (a.balance || 0) - (pending[a.name] || 0);
@@ -222,11 +245,13 @@ define([
 		const p = c.period;
 		if (!p.frequency || p.frequency === "M") return {};
 		const out = {};
-		for (const b of Store.find("batch", { where: "{tax_month} = ? AND {id} <> ?", params: [c.batch.tax_month, c.batch.id] })) {
-			if (b.status === "V" || !b.calculated) continue;
-			const bp = Store.get("period", b.period);
-			if (!bp || Dates.cmp(bp.end, p.start) >= 0) continue;
-			for (const l of lines(b.id)) {
+		const cands = Store.find("batch", { where: "{tax_month} = ? AND {id} <> ? AND {subsidiary} = ?", params: [c.batch.tax_month, c.batch.id, c.batch.subsidiary] }).filter((b) => b.status !== "V" && b.calculated);
+		const periods = {};
+		for (const x of Store.findIn("period", "id", cands.map((b) => b.period))) periods[x.id] = x;
+		const prior = cands.filter((b) => periods[b.period] && Dates.cmp(periods[b.period].end, p.start) < 0);
+		const byBatch = linesOf(prior.map((b) => b.id));
+		for (const b of prior) {
+			for (const l of byBatch[b.id] || []) {
 				const d = parseDetail(l);
 				const o = (out[l.employee] = out[l.employee] || { earnings: [], absenceWorkingDays: 0, otherTaxDeductions: 0 });
 				for (const e of d.earnings || []) {
@@ -244,10 +269,9 @@ define([
 		const year = String(c.batch.tax_month || "").slice(0, 4);
 		const out = {};
 		if (!year) return out;
-		for (const b of Store.find("batch", { where: "{tax_month} LIKE ?", params: [`${year}%`] })) {
-			if (b.status !== "R" || b.id === c.batch.id) continue;
-			for (const l of lines(b.id)) out[l.employee] = (out[l.employee] || 0) + (l.ot_hours || 0);
-		}
+		const released = Store.find("batch", { where: "{tax_month} LIKE ? AND {subsidiary} = ?", params: [`${year}%`, c.batch.subsidiary] }).filter((b) => b.status === "R" && b.id !== c.batch.id);
+		const byBatch = linesOf(released.map((b) => b.id));
+		for (const b of released) for (const l of byBatch[b.id] || []) out[l.employee] = (out[l.employee] || 0) + (l.ot_hours || 0);
 		return out;
 	}
 
@@ -292,11 +316,13 @@ define([
 	/**
 	 * Tính bảng lương. Lỗi một nhân viên không dừng cả bảng: dòng đó về 0 và ghi lỗi (4.6.9).
 	 * @param {string} batchId
-	 * @param {{lineIds?: string[]}} [opt] chỉ tính một phần (Map/Reduce chia lô); tổng luôn cộng lại toàn bảng
+	 * @param {{lineIds?: string[], skipFinish?: boolean, fromJob?: boolean}} [opt] lineIds: chỉ tính một phần (Map/Reduce chia
+	 *   lô); skipFinish: chỉ ghi dòng, không cộng tổng / đặt trạng thái (summarize của Map/Reduce làm); fromJob: gọi từ tác vụ nền
 	 */
 	function calculate(batchId, opt = {}) {
 		const batch = getBatch(batchId);
 		assertEditable(batch);
+		if (!opt.fromJob) assertNoJob(batch);
 		if (LOCK_AFTER.includes(batch.status) || batch.status === "P" || batch.status === "J") throw fail("Reopen the batch before recalculating", "Mở lại bảng lương trước khi tính lại");
 		const c = context(batch);
 		if (c.period.status === "C") throw fail("The pay period is closed", "Kỳ lương đã đóng");
@@ -320,7 +346,7 @@ define([
 		const ytd = ytdOvertime(c);
 		const otLines = overtimeLines(c, empIds);
 		// Sản lượng / doanh số (4.3.5), giấy phép lao động (3.9), bảng tỷ lệ phân bổ (4.5.3): đọc một lần cho cả lô
-		const outputs = Output.forPayroll(c.period.id, batchId, empIds);
+		const outputs = Output.forPayroll(c.period.id, batchId, empIds, c.batch.subsidiary);
 		ectx.rateTables = outputs.rateTables || {};
 		const permits = WorkPermits.forPayroll(empIds, c.period.start, c.period.end);
 		const plans = AllocationPlans.forPayroll(empIds);
@@ -379,6 +405,8 @@ define([
 						insurance: r.insurance, advanceOffsets: r.advanceOffsets.map((o) => Object.assign({}, o, { id: ((advances[line.employee] || []).find((a) => a.refNbr === o.refNbr) || {}).id })),
 						allocations: r.allocations, deductions: ded, hourlyRate: r.hourlyRate, employeeCompulsoryInsurance: r.employeeCompulsoryInsurance,
 						employmentType: emp.employmentType, expenseAccount: prof.expense_account || "", expenseSub: prof.department || e.department || "",
+						// Phiếu sản lượng đã dùng: ghi sổ chỉ khóa đúng các phiếu này (không khóa phiếu của bảng khác cùng kỳ)
+						outputRefs: [...new Set(emp.outputShares.map((s) => s.refNbr).filter(Boolean))],
 					}),
 				});
 			} catch (err) {
@@ -389,11 +417,15 @@ define([
 				Store.submit("batch_emp", line.id, Object.assign(zero, { error: msg.slice(0, 1000), warnings: "", detail: "" }));
 			}
 		}
+		if (opt.skipFinish) return { ok: !errors.length, partial: true, errors };
 		return finishCalculation(batchId, errors, !!opt.lineIds);
 	}
 
-	/** Cộng tổng toàn bảng từ dòng nhân viên, đặt trạng thái. */
-	function finishCalculation(batchId, errors, partial) {
+	/**
+	 * Cộng tổng toàn bảng từ dòng nhân viên, đặt trạng thái.
+	 * @param {number} [failedChunks] số lô Map/Reduce lỗi: có lô lỗi thì dòng của lô đó còn số cũ, không coi là đã tính
+	 */
+	function finishCalculation(batchId, errors, partial, failedChunks) {
 		const batch = getBatch(batchId);
 		const all = lines(batchId);
 		const sum = (k, f) => all.filter(f || (() => true)).reduce((s, l) => s + (l[k] || 0), 0);
@@ -402,17 +434,71 @@ define([
 			emp_count: all.length, gross: sum("gross"), ee_ins: sum("ee_ins"), er_ins: sum("er_ins"), pit: sum("pit"), other_ded: sum("other_ded"), advance: sum("advance"),
 			net: sum("net"), ee_net: sum("net", (l) => l.employment_type !== "C"), ctr_net: sum("net", (l) => l.employment_type === "C"), accrued13: sum("accrued13"),
 		};
-		const ok = !anyError && all.length > 0;
+		const ok = !anyError && !failedChunks && all.length > 0;
 		const status = batch.status === "H" ? "H" : ok ? "C" : "B";
 		Store.submit("batch", batchId, Object.assign(totals, { calculated: ok, status, messages: errors.join("\n").slice(0, 100000), calc_stamp: stamp(batchId) }));
 		return { ok, partial, errors, totals, status };
 	}
 
-	/** Dấu dữ liệu đầu vào lúc tính: đổi dòng nhập tay hoặc số dư tạm ứng thì phải tính lại. */
+	/** Đưa bảng lương vào hàng đợi tính nền: chưa tính, ghi id tác vụ (khóa các thao tác khác tới khi summarize xong). */
+	function markQueued(batchId, jobId) {
+		const b = getBatch(batchId);
+		assertNoJob(b);
+		Store.submit("batch", batchId, { job: String(jobId || "queued"), calculated: false, status: b.status === "H" ? "H" : "B" });
+	}
+
+	/** Gỡ khóa tác vụ nền (summarize của Map/Reduce, hoặc khi ghi sổ / đảo xong). */
+	function clearJob(batchId) {
+		Store.submit("batch", batchId, { job: "" });
+	}
+
+	/** MAX(lastmodified) của một custom record lọc theo trường (IN ...) hoặc cả bảng; 'YYYYMMDDHH24MISS'. */
+	function maxModified(name, field, ids) {
+		const def = Store.rec(name);
+		const col = (f) => def.fields[f].id;
+		let best = "";
+		const run = (where, params) => {
+			const r = Store.run(`SELECT TO_CHAR(MAX(t.lastmodified), 'YYYYMMDDHH24MISS') AS m, COUNT(*) AS n FROM ${def.type} t${where ? ` WHERE ${where}` : ""}`, params || [], `s4vp_stamp_${name}`)[0] || {};
+			const v = `${r.m || ""}#${r.n || 0}`;
+			if (v > best) best = v;
+			return v;
+		};
+		if (!field) return run("", []);
+		const list = [...new Set((ids || []).filter((x) => !blank(x)).map(String))];
+		const parts = [];
+		for (let i = 0; i < list.length; i += 900) {
+			const chunk = list.slice(i, i + 900);
+			parts.push(run(`t.${col(field)} IN (${chunk.map(() => "?").join(",")})`, chunk));
+		}
+		return parts.join(",");
+	}
+
+	/**
+	 * Dấu dữ liệu đầu vào lúc tính (4.2.9, 4.6.9): dòng nhập tay, công trên dòng, và thời điểm sửa cuối của hồ sơ, lịch sử
+	 * lương, người phụ thuộc, tham số pháp lý, đơn OT, phiếu sản lượng của kỳ, tạm ứng của nhân viên. Đổi bất kỳ thứ gì sau
+	 * khi tính thì duyệt / ghi sổ đòi tính lại. Chỉ vài truy vấn tổng, không đọc từng record.
+	 */
 	function stamp(batchId) {
+		const batch = getBatch(batchId);
+		const ls = lines(batchId);
 		const parts = inputs(batchId).map((i) => [i.id, i.employee, i.kind, i.earning_type, i.qty, i.rate, i.multiplier, i.amount, i.manual_amount].join(":"));
-		const ls = lines(batchId).map((l) => [l.id, l.work_days, l.std_days, l.absence_days, l.other_tax_ded].join(":"));
-		return String(hash(parts.concat(ls).sort().join("|")));
+		parts.push(...ls.map((l) => [l.id, l.employee, l.work_days, l.std_days, l.absence_days, l.other_tax_ded].join(":")));
+		const empIds = ls.map((l) => l.employee);
+		const profIds = ls.map((l) => l.profile).filter(Boolean);
+		try {
+			parts.push(
+				`em=${maxModified("employee", "employee", empIds)}`,
+				`cp=${maxModified("compensation", "profile", profIds)}`,
+				`dp=${maxModified("dependent", "profile", profIds)}`,
+				`pa=${maxModified("param")}`, `pb=${maxModified("pit_bracket")}`, `ic=${maxModified("ins_comp")}`,
+				`ot=${maxModified("ot_request", "employee", empIds)}`,
+				`oe=${maxModified("output", "period", [batch.period])}`,
+				`ad=${maxModified("advance", "employee", empIds)}`
+			);
+		} catch (e) {
+			// Thiếu quyền đọc một bảng: dấu chỉ còn phần dòng nhập và công
+		}
+		return String(hash(parts.sort().join("|")));
 	}
 
 	function hash(s) {
@@ -431,14 +517,33 @@ define([
 	}
 
 	/** Thêm / sửa dòng nhập tay (thu nhập nguồn M hoặc khấu trừ sau thuế); bảng lương về "chưa tính". */
-	function saveInput(values) {
-		const batch = getBatch(values.batch);
+	const INPUT_FIELDS = ["employee", "kind", "earning_type", "code", "description", "qty", "rate", "multiplier", "amount", "manual_amount", "account", "project", "department", "class", "location"];
+
+	function assertBatchEditable(batch) {
 		assertEditable(batch);
-		const v = Object.assign({}, values);
-		delete v.id;
-		if (v.kind === "E" && blank(v.earning_type)) throw fail("Earning type is required", "Chưa chọn loại thu nhập");
-		const id = values.id ? (Store.update("batch_input", values.id, v), values.id) : Store.create("batch_input", v);
-		markUncalculated(getBatch(values.batch));
+		assertNoJob(batch);
+		assertPeriodOpen(Store.get("period", batch.period));
+	}
+
+	function saveInput(values) {
+		// Dòng đã có: bảng lương của dòng (không phải giá trị client gửi) phải sửa được, và không chuyển dòng sang bảng khác
+		const existing = values.id ? Store.get("batch_input", values.id) : null;
+		if (values.id && !existing) throw fail("Input line not found", "Không tìm thấy dòng nhập tay");
+		const batchId = existing ? existing.batch : values.batch;
+		if (existing && !blank(values.batch) && String(values.batch) !== String(existing.batch)) throw fail("An input line cannot be moved to another batch", "Không chuyển dòng nhập tay sang bảng lương khác");
+		const batch = getBatch(batchId);
+		assertBatchEditable(batch);
+		const v = {};
+		for (const k of INPUT_FIELDS) if (values[k] !== undefined) v[k] = values[k];
+		const kind = v.kind !== undefined ? v.kind : existing && existing.kind;
+		const et = v.earning_type !== undefined ? v.earning_type : existing && existing.earning_type;
+		if (kind === "E" && blank(et)) throw fail("Earning type is required", "Chưa chọn loại thu nhập");
+		if (existing && v.employee !== undefined && String(v.employee) !== String(existing.employee)) {
+			if (!lines(batchId).some((l) => l.employee === String(v.employee))) throw fail("The employee is not on this batch", "Nhân viên không có trong bảng lương");
+		}
+		if (!existing && !lines(batchId).some((l) => l.employee === String(v.employee))) throw fail("The employee is not on this batch", "Nhân viên không có trong bảng lương");
+		const id = existing ? (Store.update("batch_input", existing.id, v), existing.id) : Store.create("batch_input", Object.assign({ batch: batchId }, v));
+		markUncalculated(getBatch(batchId));
 		return { id };
 	}
 
@@ -446,7 +551,7 @@ define([
 		const i = Store.get("batch_input", id);
 		if (!i) return { ok: true };
 		const batch = getBatch(i.batch);
-		assertEditable(batch);
+		assertBatchEditable(batch);
 		Store.remove("batch_input", id);
 		markUncalculated(getBatch(i.batch));
 		return { ok: true };
@@ -457,7 +562,7 @@ define([
 		const l = Store.get("batch_emp", lineId);
 		if (!l) throw fail("Line not found", "Không tìm thấy dòng");
 		const batch = getBatch(l.batch);
-		assertEditable(batch);
+		assertBatchEditable(batch);
 		const v = {};
 		if (values.work_days !== undefined) {
 			const w = Number(values.work_days);
@@ -478,7 +583,7 @@ define([
 		const l = Store.get("batch_emp", lineId);
 		if (!l) return { ok: true };
 		const batch = getBatch(l.batch);
-		assertEditable(batch);
+		assertBatchEditable(batch);
 		for (const i of inputs(l.batch).filter((x) => x.employee === l.employee)) Store.remove("batch_input", i.id);
 		Store.remove("batch_emp", lineId);
 		markUncalculated(batch);
@@ -489,12 +594,14 @@ define([
 
 	function removeHold(batchId) {
 		const b = getBatch(batchId);
+		assertNoJob(b);
 		if (b.status !== "H") throw fail("Only on-hold batches", "Chỉ áp dụng cho bảng lương đang tạm giữ");
 		Store.submit("batch", batchId, { status: b.calculated ? "C" : "B" });
 	}
 
 	function hold(batchId) {
 		const b = getBatch(batchId);
+		assertNoJob(b);
 		if (!["B", "C"].includes(b.status)) throw fail("Only pending or calculated batches", "Chỉ áp dụng cho bảng lương chờ tính hoặc đã tính");
 		Store.submit("batch", batchId, { status: "H" });
 	}
@@ -506,19 +613,23 @@ define([
 
 	function approve(batchId) {
 		const b = getBatch(batchId);
+		assertNoJob(b);
 		if (!["C", "P"].includes(b.status) || !b.calculated) throw fail("Only calculated batches can be approved", "Chỉ duyệt bảng lương đã tính");
+		assertPeriodOpen(Store.get("period", b.period));
 		if (b.calc_stamp && b.calc_stamp !== stamp(batchId)) throw fail("Data changed after calculation; recalculate first", "Dữ liệu đã đổi sau khi tính, cần tính lại");
-		Store.submit("batch", batchId, { status: "A", approved_by: currentEmployee(), approved_date: Dates.iso(new Date()) });
+		Store.submit("batch", batchId, { status: "A", approved_by: currentEmployee(), approved_date: Clock.today() });
 	}
 
 	function reject(batchId) {
 		const b = getBatch(batchId);
+		assertNoJob(b);
 		if (!["C", "P"].includes(b.status)) throw fail("Only batches pending approval", "Chỉ từ chối bảng lương chờ duyệt");
 		Store.submit("batch", batchId, { status: "J" });
 	}
 
 	function reopen(batchId) {
 		const b = getBatch(batchId);
+		assertNoJob(b);
 		if (["R", "V"].includes(b.status)) throw fail("Released batches cannot be reopened; reverse instead", "Bảng lương đã ghi sổ, hãy dùng Đảo");
 		Store.submit("batch", batchId, { status: "H", approved_by: null, approved_date: null });
 	}
@@ -567,41 +678,140 @@ define([
 		return je;
 	}
 
+	/** Cấn trừ tạm ứng theo phiếu: khóa = id phiếu (dự phòng số phiếu), cộng dồn nhiều dòng cùng phiếu. */
+	function advanceOffsetsOf(model) {
+		const offsets = {};
+		for (const e of model.employees) {
+			for (const o of e.advanceOffsets) {
+				const key = String(o.id || o.refNbr);
+				const cur = offsets[key] || { amount: 0, refNbr: o.refNbr, id: o.id };
+				cur.amount += o.amount;
+				offsets[key] = cur;
+			}
+		}
+		return offsets;
+	}
+
+	function advanceRecords(offsets) {
+		const list = Object.values(offsets);
+		const byId = Store.findIn("advance", "id", list.map((o) => o.id).filter(Boolean));
+		const missing = list.filter((o) => !o.id).map((o) => o.refNbr);
+		const byName = missing.length ? Store.find("advance").filter((a) => missing.includes(a.name)) : [];
+		const out = {};
+		for (const a of byId.concat(byName)) out[a.id] = a;
+		return out;
+	}
+
+	function offsetFor(offsets, a) {
+		return offsets[String(a.id)] || offsets[String(a.name)] || { amount: 0 };
+	}
+
+	/** Khóa mềm bằng trường job; đọc lại để phát hiện hai yêu cầu đồng thời. */
+	function claim(batchId, kind) {
+		const token = `${kind}:${Date.now()}:${Math.floor(Math.random() * 1e9)}`;
+		Store.submit("batch", batchId, { job: token });
+		if (getBatch(batchId).job !== token) throw fail("Another user is processing this batch", "Bảng lương đang được người khác xử lý");
+		return token;
+	}
+
+	/** Id giao dịch theo externalid (lần trước đã tạo nhưng chưa kịp ghi lên bảng lương). */
+	function findByExternalId(externalId) {
+		try {
+			const r = Store.run("SELECT t.id FROM transaction t WHERE t.externalid = ?", [externalId], "s4vp_tran_extid")[0];
+			return r ? String(r.id) : null;
+		} catch (e) {
+			return null;
+		}
+	}
+
+	/** Giao dịch chưa ghi sổ (account bật duyệt mà không tự duyệt được) -> cảnh báo. */
+	function approvalWarnings(ids) {
+		const info = transactionsInfo(ids);
+		return ids.filter((id) => info[id] && !info[id].posting && !info[id].voided).map((id) => ({
+			code: "approvalPending", tranid: info[id].tranid || id,
+			message: `Transaction ${info[id].tranid || id} was created pending approval; it does not post until approved.`,
+			messageVi: `Giao dịch ${info[id].tranid || id} đang chờ duyệt, chưa vào sổ cái cho tới khi được duyệt.`,
+		}));
+	}
+
 	function release(batchId) {
 		const b = getBatch(batchId);
+		// Đã ghi sổ: chạy lại các bước sau JE còn thiếu (idempotent)
+		if (b.status === "R" && b.journal) {
+			assertNoJob(b);
+			return Object.assign(finishRelease(batchId), { resumed: true });
+		}
 		if (b.journal) throw fail("The batch already has a journal entry", "Bảng lương đã có bút toán");
+		assertNoJob(b);
 		if (b.status === "H") throw fail("Remove the hold first", "Bảng lương đang tạm giữ");
 		if (!b.calculated) throw fail("Calculate the batch first", "Hãy tính bảng lương trước");
 		const c = context(b);
 		if (c.settings.requirePayrollApproval ? b.status !== "A" : !["A", "C"].includes(b.status)) throw fail("The batch must be approved", "Bảng lương phải được duyệt trước khi ghi sổ");
-		if (c.period.status === "C") throw fail("The pay period is closed", "Kỳ lương đã đóng");
+		assertPeriodOpen(c.period);
 		if (b.calc_stamp && b.calc_stamp !== stamp(batchId)) throw fail("Data changed after calculation; recalculate first", "Dữ liệu đã đổi sau khi tính, cần tính lại");
 		if (!c.settings.accounts.acc_payable) throw fail("Wages payable account (334) is not configured", "Chưa khai TK phải trả người lao động (334)");
 		const model = releaseModel(c);
 		if (!model.employees.length) throw fail("The batch has no employees", "Bảng lương không có nhân viên");
 		// Số dư tạm ứng không đổi kể từ lúc tính
-		const offsets = {};
-		for (const e of model.employees) for (const o of e.advanceOffsets) offsets[o.id || o.refNbr] = { amount: (offsets[o.id] ? offsets[o.id].amount : 0) + o.amount, refNbr: o.refNbr, id: o.id };
-		const advRecs = Store.findIn("advance", "id", Object.values(offsets).map((o) => o.id).filter(Boolean));
-		for (const a of advRecs) if ((a.balance || 0) < offsets[a.id].amount) throw fail(`Advance ${a.name} balance changed; recalculate`, `Số dư tạm ứng ${a.name} đã thay đổi, cần tính lại`);
+		const offsets = advanceOffsetsOf(model);
+		const advRecs = advanceRecords(offsets);
+		for (const a of Object.values(advRecs)) {
+			if ((a.balance || 0) < offsetFor(offsets, a).amount) throw fail(`Advance ${a.name} balance changed; recalculate`, `Số dư tạm ứng ${a.name} đã thay đổi, cần tính lại`);
+		}
 		const je = Journal.buildRelease(model, journalConfig(c));
-		const jeId = createJournal(c.batch.subsidiary, je.date, je.memo, je.lines, c.settings.location);
-		Store.submit("batch", batchId, { journal: jeId, status: "R" });
-		Output.markIncluded(c.period.id, batchId);
+		claim(batchId, "release");
+		let jeId;
+		try {
+			const ext = `s4vp-rel-${batchId}`;
+			jeId = findByExternalId(ext) || createJournal(c.batch.subsidiary, je.date, je.memo, je.lines, c.settings.location, ext);
+			Store.submit("batch", batchId, { journal: jeId, status: "R" });
+		} catch (e) {
+			clearJob(batchId);
+			throw e;
+		}
+		try {
+			return finishRelease(batchId);
+		} finally {
+			clearJob(batchId);
+		}
+	}
+
+	/**
+	 * Các bước sau JE ghi sổ, chạy lại được: cấn trừ tạm ứng (chỉ phiếu chưa có lịch sử của bảng này), khóa đúng các phiếu
+	 * sản lượng đã dùng, đánh dấu phiên bản bảng tỷ lệ đã dùng.
+	 */
+	function finishRelease(batchId) {
+		const b = getBatch(batchId);
+		const c = context(b);
+		const model = releaseModel(c);
+		const warnings = [];
+		const offsets = advanceOffsetsOf(model);
+		for (const a of Object.values(advanceRecords(offsets))) {
+			const hist = safeJson(a.history, []);
+			if (hist.some((h) => String(h.batch) === String(batchId))) continue;
+			const amount = offsetFor(offsets, a).amount;
+			if (!amount) continue;
+			if ((a.balance || 0) < amount) {
+				warnings.push({ code: "advanceBalance", message: `Advance ${a.name} balance is lower than the offset; check it.`, messageVi: `Số dư tạm ứng ${a.name} nhỏ hơn số cấn trừ, cần kiểm tra.` });
+			}
+			const off = (a.offset || 0) + amount;
+			const bal = (a.amount || 0) - off;
+			hist.push({ batch: batchId, batchNbr: b.name, amount });
+			Store.submit("advance", a.id, { offset: off, balance: bal, status: bal <= 0 ? "C" : "O", history: JSON.stringify(hist) });
+		}
+		const refs = [...new Set(lines(batchId).flatMap((l) => parseDetail(l).outputRefs || []))];
+		if (typeof Output.markIncludedRefs === "function") {
+			if (refs.length) Output.markIncludedRefs(batchId, refs);
+		} else {
+			Output.markIncluded(c.period.id, batchId);
+		}
 		const used = {};
 		for (const e of model.employees) {
 			const nbrs = PlanRecords.usedVersions(e.allocations);
 			if (nbrs.length) used[e.employee] = nbrs;
 		}
 		AllocationPlans.markUsed(used);
-		for (const a of advRecs) {
-			const off = (a.offset || 0) + offsets[a.id].amount;
-			const bal = (a.amount || 0) - off;
-			const hist = safeJson(a.history, []);
-			hist.push({ batch: batchId, batchNbr: b.name, amount: offsets[a.id].amount });
-			Store.submit("advance", a.id, { offset: off, balance: bal, status: bal <= 0 ? "C" : "O", history: JSON.stringify(hist) });
-		}
-		return { journal: jeId };
+		return { journal: b.journal, warnings: warnings.concat(approvalWarnings([b.journal])) };
 	}
 
 	function safeJson(s, def) {
@@ -626,9 +836,11 @@ define([
 		}
 	}
 
-	function createJournal(subsidiary, date, memo, jeLines, defaultLocation) {
+	function createJournal(subsidiary, date, memo, jeLines, defaultLocation, externalId) {
 		const je = record.create({ type: record.Type.JOURNAL_ENTRY, isDynamic: false });
 		approveOnCreate(je);
+		// externalid duy nhất theo bảng lương: NetSuite từ chối JE thứ hai khi bấm hai lần / chạy lại
+		if (externalId) je.setValue({ fieldId: "externalid", value: externalId });
 		if (subsidiary) je.setValue({ fieldId: "subsidiary", value: subsidiary });
 		je.setValue({ fieldId: "trandate", value: Store.toNsDate(date) });
 		je.setValue({ fieldId: "memo", value: String(memo).slice(0, 999) });
@@ -648,11 +860,29 @@ define([
 
 	function reverse(batchId) {
 		const b = getBatch(batchId);
+		// Đã đảo: chạy lại các bước sau JE đảo còn thiếu
+		if (b.status === "V" && b.reversal) {
+			assertNoJob(b);
+			return Object.assign(finishReverse(batchId), { resumed: true });
+		}
 		if (b.status !== "R" || !b.journal) throw fail("Only released batches can be reversed", "Chỉ đảo bảng lương đã ghi sổ");
+		assertNoJob(b);
 		const bills = safeJson(b.bills, []);
 		const active = bills.filter((x) => isActiveBill(x.id));
 		if (active.length) throw fail(`Void the agency bills first: ${active.map((x) => x.tranid || x.id).join(", ")}`, `Còn bill cơ quan thu hiệu lực: ${active.map((x) => x.tranid || x.id).join(", ")}`);
 		const c = context(b);
+		// Kỳ tuần / nửa tháng: không đảo khi bảng lương kỳ sau cùng tháng thuế đã ghi sổ (đặc tả 1.2.5 #5) - thuế, BH của
+		// tháng đã tính gộp cả thu nhập của bảng này; phải đảo bảng kỳ sau trước
+		const later = Store.find("batch", { where: "{tax_month} = ? AND {id} <> ? AND {subsidiary} = ?", params: [b.tax_month, batchId, b.subsidiary] }).filter((x) => x.status === "R");
+		if (later.length) {
+			const periods = {};
+			for (const p of Store.findIn("period", "id", later.map((x) => x.period))) periods[p.id] = p;
+			const blocking = later.filter((x) => periods[x.period] && Dates.cmp(periods[x.period].end, c.period.end) > 0);
+			if (blocking.length) {
+				const names = blocking.map((x) => x.name).join(", ");
+				throw fail(`Reverse the later batch of the same tax month first: ${names}`, `Phải đảo bảng lương kỳ sau cùng tháng thuế trước: ${names}`);
+			}
+		}
 		const orig = record.load({ type: record.Type.JOURNAL_ENTRY, id: b.journal });
 		const out = [];
 		const n = orig.getLineCount({ sublistId: "line" });
@@ -661,22 +891,38 @@ define([
 			out.push({ account: g("account"), debit: Number(g("credit") || 0), credit: Number(g("debit") || 0), memo: g("memo"), sub: g("department"), branch: g("location"), workCenter: g("class"), project: g("entity") });
 		}
 		const memo = lang() === "vi" ? `Đảo bảng lương ${b.name} (kỳ ${c.period.name})` : `Reversal of payroll batch ${b.name} (period ${c.period.name})`;
-		const jeId = createJournal(b.subsidiary, Dates.iso(new Date()), memo, out, c.settings.location);
-		Store.submit("batch", batchId, { reversal: jeId, status: "V" });
-		Output.unmarkIncluded(batchId);
-		// Hoàn số dư tạm ứng
-		for (const l of lines(batchId)) {
-			for (const o of parseDetail(l).advanceOffsets || []) {
-				if (!o.id) continue;
-				const a = Store.get("advance", o.id);
-				if (!a) continue;
-				const off = Math.max(0, (a.offset || 0) - o.amount);
-				const bal = (a.amount || 0) - off;
-				const hist = safeJson(a.history, []).filter((h) => h.batch !== batchId);
-				Store.submit("advance", a.id, { offset: off, balance: bal, status: bal > 0 ? "O" : "C", history: JSON.stringify(hist) });
-			}
+		claim(batchId, "reverse");
+		try {
+			const ext = `s4vp-rev-${batchId}`;
+			const jeId = findByExternalId(ext) || createJournal(b.subsidiary, Clock.today(), memo, out, c.settings.location, ext);
+			Store.submit("batch", batchId, { reversal: jeId, status: "V" });
+		} catch (e) {
+			clearJob(batchId);
+			throw e;
 		}
-		return { journal: jeId };
+		try {
+			return finishReverse(batchId);
+		} finally {
+			clearJob(batchId);
+		}
+	}
+
+	/** Sau JE đảo, chạy lại được: phiếu sản lượng của bảng về Approved; hoàn tạm ứng theo lịch sử cấn trừ của bảng này. */
+	function finishReverse(batchId) {
+		const b = getBatch(batchId);
+		Output.unmarkIncluded(batchId);
+		const ids = [];
+		for (const l of lines(batchId)) for (const o of parseDetail(l).advanceOffsets || []) if (o.id) ids.push(o.id);
+		for (const a of Store.findIn("advance", "id", ids)) {
+			const hist = safeJson(a.history, []);
+			const mine = hist.filter((h) => String(h.batch) === String(batchId));
+			if (!mine.length) continue;
+			const amount = mine.reduce((s, h) => s + (Number(h.amount) || 0), 0);
+			const off = Math.max(0, (a.offset || 0) - amount);
+			const bal = (a.amount || 0) - off;
+			Store.submit("advance", a.id, { offset: off, balance: bal, status: bal > 0 ? "O" : "C", history: JSON.stringify(hist.filter((h) => String(h.batch) !== String(batchId))) });
+		}
+		return { journal: b.reversal, warnings: approvalWarnings([b.reversal]) };
 	}
 
 	function isActiveBill(id) {
@@ -689,7 +935,10 @@ define([
 	function agencyBills(batchId) {
 		const b = getBatch(batchId);
 		if (b.status !== "R") throw fail("Only released batches", "Chỉ lập bill cho bảng lương đã ghi sổ");
-		if (safeJson(b.bills, []).length) throw fail("Agency bills were already created", "Đã lập bill cơ quan thu cho bảng lương này");
+		assertNoJob(b);
+		// Lập lại được khi lần trước lỗi giữa chừng: bỏ qua cơ quan thu đã có bill
+		const created = safeJson(b.bills, []);
+		const doneVendors = new Set(created.map((x) => String(x.vendor)));
 		const c = context(b);
 		const totals = {};
 		for (const l of lines(batchId)) {
@@ -703,13 +952,23 @@ define([
 			components: components(c), pitVendor: c.settings.pitVendor, pitPayableAccount: c.settings.accounts.acc_pit, lang: lang(),
 		});
 		if (!plan.bills.length) throw fail("No agency bill to create (vendors not configured?)", "Không có bill nào để lập (chưa khai cơ quan thu?)");
-		const created = [];
-		for (const bill of plan.bills) {
+		const todo = plan.bills.filter((bill) => !doneVendors.has(String(bill.vendor)));
+		if (!todo.length) throw fail("Agency bills were already created", "Đã lập bill cơ quan thu cho bảng lương này");
+		const newIds = [];
+		for (const bill of todo) {
+			const ext = `s4vp-bill-${batchId}-${bill.vendor}`;
+			const found = findByExternalId(ext);
+			if (found) {
+				created.push({ id: found, vendor: bill.vendor, amount: bill.total, memo: bill.memo });
+				Store.submit("batch", batchId, { bills: JSON.stringify(created) });
+				continue;
+			}
 			const r = record.create({ type: record.Type.VENDOR_BILL, isDynamic: false });
 			r.setValue({ fieldId: "entity", value: bill.vendor });
 			approveOnCreate(r);
+			r.setValue({ fieldId: "externalid", value: ext });
 			if (b.subsidiary) r.setValue({ fieldId: "subsidiary", value: b.subsidiary });
-			r.setValue({ fieldId: "trandate", value: Store.toNsDate(Dates.iso(new Date())) });
+			r.setValue({ fieldId: "trandate", value: Store.toNsDate(Clock.today()) });
 			r.setValue({ fieldId: "tranid", value: String(bill.refNo || b.name).slice(0, 45) });
 			r.setValue({ fieldId: "memo", value: String(bill.memo).slice(0, 255) });
 			if (c.settings.location) r.setValue({ fieldId: "location", value: c.settings.location });
@@ -721,9 +980,10 @@ define([
 			});
 			const id = String(r.save({ enableSourcing: true, ignoreMandatoryFields: false }));
 			created.push({ id, vendor: bill.vendor, amount: bill.total, memo: bill.memo });
+			newIds.push(id);
 			Store.submit("batch", batchId, { bills: JSON.stringify(created) });
 		}
-		return { created, skipped: plan.skipped };
+		return { created, skipped: plan.skipped, warnings: approvalWarnings(newIds) };
 	}
 
 	function bankFile(batchId) {
@@ -745,8 +1005,13 @@ define([
 		const list = ids.filter((x) => !blank(x)).map(String);
 		if (!list.length) return {};
 		const out = {};
-		for (const r of Store.run(`SELECT t.id, t.tranid, t.approvalstatus, BUILTIN.DF(t.approvalstatus) AS approval, t.posting, t.voided FROM transaction t WHERE t.id IN (${list.map(() => "?").join(",")})`, list, "s4vp_tran_info")) {
-			out[String(r.id)] = { tranid: r.tranid, approvalStatus: r.approvalstatus, approval: r.approval, posting: r.posting === "T", voided: r.voided === "T" };
+		try {
+			for (const r of Store.run(`SELECT t.id, t.tranid, t.approvalstatus, BUILTIN.DF(t.approvalstatus) AS approval, t.posting, t.voided FROM transaction t WHERE t.id IN (${list.map(() => "?").join(",")})`, list, "s4vp_tran_info")) {
+				out[String(r.id)] = { tranid: r.tranid, approvalStatus: r.approvalstatus, approval: r.approval, posting: r.posting === "T", voided: r.voided === "T" };
+			}
+		} catch (e) {
+			// Role không có quyền xem giao dịch (HR): bỏ thông tin giao dịch, màn hình vẫn mở được
+			return {};
 		}
 		return out;
 	}
@@ -783,5 +1048,6 @@ define([
 	return {
 		create, loadEmployees, calculate, finishCalculation, removeHold, hold, approve, reject, reopen, release, reverse, agencyBills, bankFile,
 		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine, transactionsInfo,
+		markQueued, clearJob, finishRelease, finishReverse,
 	};
 });

@@ -847,7 +847,7 @@ export default function PayrollApp() {
 			item(
 				actionRow(
 					[
-						<Button label={t.loadDefaults} hierarchy={boot.setupReady ? Button.Hierarchy.SECONDARY : Button.Hierarchy.PRIMARY} enabled={!busy} action={() =>
+						<Button label={t.loadDefaults} hierarchy={boot.setupReady ? Button.Hierarchy.SECONDARY : Button.Hierarchy.PRIMARY} enabled={!busy && boot.user.canEditSetup} action={() =>
 							run(t.working, post({action: 'loadDefaults'}), (r) => {
 								reloadBoot();
 								setNotice(t.created(Object.entries(r.created).map(([k, v]) => `${v} ${k}`).join(', ') || '0'));
@@ -873,7 +873,7 @@ export default function PayrollApp() {
 		items.push(
 			item(
 				actionRow([
-					<Button label={t.generate} enabled={!busy && boot.setupReady && /^\d{4}$/.test(year) && !!paygroup} action={() =>
+					<Button label={t.generate} enabled={!busy && boot.user.canEditSetup && boot.setupReady && /^\d{4}$/.test(year) && !!paygroup} action={() =>
 						run(t.working, post({action: 'generatePeriods', year: Number(year), paygroup}), (r) => {
 							reloadBoot();
 							setNotice(t.created(`${r.created.length} ${t.period}`));
@@ -918,9 +918,9 @@ export default function PayrollApp() {
 			item(
 				actionRow(
 					[
-						<Button label={ta.build} enabled={!busy && !!per && per.attStatus !== 'L'} action={() => run(t.working, post({action: 'buildAttendance', id: attPeriod}), after)} />,
-						<Button label={ta.lock} enabled={!busy && !!per && per.attStatus !== 'L'} action={() => run(t.working, post({action: 'lockAttendance', id: attPeriod}), after)} />,
-						<Button label={ta.unlock} enabled={!busy && !!per && per.attStatus === 'L'} action={() => run(t.working, post({action: 'unlockAttendance', id: attPeriod}), after)} />,
+						<Button label={ta.build} enabled={!busy && boot.user.canAttendance && !!per && per.attStatus !== 'L'} action={() => run(t.working, post({action: 'buildAttendance', id: attPeriod}), after)} />,
+						<Button label={ta.lock} enabled={!busy && boot.user.canAttendance && !!per && per.attStatus !== 'L'} action={() => run(t.working, post({action: 'lockAttendance', id: attPeriod}), after)} />,
+						<Button label={ta.unlock} enabled={!busy && boot.user.canAttendance && !!per && per.attStatus === 'L'} action={() => run(t.working, post({action: 'unlockAttendance', id: attPeriod}), after)} />,
 					],
 					messages
 				),
@@ -972,7 +972,7 @@ export default function PayrollApp() {
 			loadDocs(docType);
 			if (x.warnings && x.warnings.length) setNotice(x.warnings.map((w) => (language() === 'vi' ? w.messageVi : w.message)).join('; '));
 		});
-		const opsFor = (st, locked) => (locked ? [] : st === 'H' ? ['submit'] : st === 'P' ? ['approve', 'reject', 'cancel'] : st === 'A' ? ['cancel'] : []);
+		const opsFor = (st, locked) => (locked || !boot.user.canAttendance ? [] : st === 'H' ? ['submit'] : st === 'P' ? ['approve', 'reject', 'cancel'] : st === 'A' ? ['cancel'] : []);
 		const range = (r) => (docType === 'leave' || docType === 'trip' ? `${r.from || ''} - ${r.to || ''}` : r.work_date || '');
 		const qty = (r) => (docType === 'leave' || docType === 'trip' ? `${num(r.days)} ${ta.dayUnit}` : docType === 'ot' ? `${num(r.hours)} h ${r.day_type || ''}` : r.exception_type === 'A' ? num(r.adjust_days) : `${r.minutes || 0}' (-${num(r.deduct_days)})`);
 		items.push(
@@ -1026,7 +1026,7 @@ export default function PayrollApp() {
 		items.push(
 			item(
 				actionRow([
-					<Button label={ta.save} enabled={!busy && !!f.employee} action={() => {
+					<Button label={ta.save} enabled={!busy && boot.user.canAttendance && !!f.employee} action={() => {
 						const v = Object.assign({subsidiary}, docRef.current);
 						['hours', 'minutes', 'adjust_days', 'advance_amount'].forEach((k) => v[k] !== undefined && (v[k] = n(v[k])));
 						return run(t.working, post({action: 'saveDoc', type: docType, values: v}), (x) => {
@@ -1046,7 +1046,7 @@ export default function PayrollApp() {
 		items.push(
 			item(
 				actionRow([
-					<Button label={`${ta.accrue} ${year}`} enabled={!busy && /^\d{4}$/.test(year)} action={() => run(t.working, post({action: 'accrueLeave', year: Number(year), subsidiary, runDate: new Date().toISOString().slice(0, 10)}), (r) => {
+					<Button label={`${ta.accrue} ${year}`} enabled={!busy && boot.user.canAttendance && /^\d{4}$/.test(year)} action={() => run(t.working, post({action: 'accrueLeave', year: Number(year), subsidiary, runDate: new Date().toISOString().slice(0, 10)}), (r) => {
 						setNotice(ta.accrued(r.rows || []));
 						return run(t.loading, call({action: 'leaveBalances', subsidiary, year}), (x) => setBalances(x.balances));
 					})} />,

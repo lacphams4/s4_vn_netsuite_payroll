@@ -5,7 +5,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["./Store", "./Settings", "../core/Dates", "../core/WorkPermitEvaluator", "../core/PlanRecords"], (Store, Settings, Dates, Evaluator, Plan) => {
+define(["./Store", "./Settings", "./Clock", "../core/Dates", "../core/WorkPermitEvaluator", "../core/PlanRecords"], (Store, Settings, Clock, Dates, Evaluator, Plan) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 
 	function fail(en, vi) {
@@ -35,7 +35,7 @@ define(["./Store", "./Settings", "../core/Dates", "../core/WorkPermitEvaluator",
 	}
 
 	function today() {
-		return Dates.iso(new Date());
+		return Clock.today();
 	}
 
 	function chainOf(employee) {
@@ -55,10 +55,13 @@ define(["./Store", "./Settings", "../core/Dates", "../core/WorkPermitEvaluator",
 	}
 
 	/** Lưu giấy ở trạng thái Đang chuẩn bị (D); kiểm tra thời hạn và chuỗi gia hạn. Trả {id, warnings}. */
+	// Trường người dùng được nhập (QC #4); trạng thái, ngày cấp, số giấy chỉ đặt qua submit / markIssued / revoke
+	const INPUT = ["employee", "doc_type", "issue_type", "previous", "authority", "effective", "expiry", "job", "title", "work_location", "passport", "passport_expiry"];
+
 	function save(values) {
-		const v = Object.assign({}, values);
-		const id = v.id;
-		delete v.id;
+		const id = values && values.id;
+		const v = {};
+		for (const k of INPUT) if (values && Object.prototype.hasOwnProperty.call(values, k)) v[k] = values[k];
 		if (id) {
 			const cur = get(id);
 			if (cur.status && cur.status !== "D") throw fail("Only permits in preparation can be edited", "Chỉ sửa được giấy đang chuẩn bị");

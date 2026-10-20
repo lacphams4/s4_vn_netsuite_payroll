@@ -11,10 +11,32 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans) => {
+define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
-	const ACCOUNTANT_ONLY = ["release", "reverse", "agencyBills"];
+	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
+	// HR: thiết lập, hồ sơ, chứng từ công, bảng lương (không ghi sổ, không đảo, không lập bill, không ghi sổ tạm ứng).
+	// Kế toán: bảng lương và tạm ứng đầy đủ; thiết lập, hồ sơ chỉ xem; không làm chứng từ công.
+	const BATCH_ACTIONS = ["createBatch", "loadEmployees", "calculate", "jobStatus", "removeHold", "hold", "approve", "reject", "reopen", "saveInput", "deleteInput", "updateLine", "removeLine", "createAdvance", "removeHoldAdvance"];
+	const ACCOUNTANT_ONLY = ["release", "reverse", "agencyBills", "releaseAdvance"];
+	const HR_ACTIONS = BATCH_ACTIONS.concat([
+		"loadDefaults", "loadIndustryPack", "generatePeriods", "closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance",
+		"saveProfile", "saveSetup", "saveCompany", "setInsuranceAccount", "saveDoc", "docAction", "accrueLeave", "expireLeave", "adjustLeave",
+		"saveOutput", "outputAction", "loadTeamMembers", "splitOutput", "saveRateLine", "saveTeam", "saveWorkPermit", "workPermitAction", "updateExpiredPermits",
+		"newAllocVersion", "saveAllocLines", "activateAllocVersion", "deleteAllocVersion",
+		"generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
+	]);
+	const ACCOUNTANT_ACTIONS = BATCH_ACTIONS.concat(ACCOUNTANT_ONLY);
+	const ADMIN_ONLY = ["generateTestData", "clearJob"];
+
+	function allowed(action) {
+		const r = role();
+		if (r === "administrator") return true;
+		if (ADMIN_ONLY.includes(action)) return false;
+		if (r === "customrole_s4vp_hr") return HR_ACTIONS.includes(action);
+		if (r === "customrole_s4vp_accountant") return ACCOUNTANT_ACTIONS.includes(action);
+		return false;
+	}
 
 	function role() {
 		return String(runtime.getCurrentUser().roleId || "");
@@ -61,7 +83,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		const enabled = new Set(companies.filter((c) => c.enabled !== false).map((c) => c.subsidiary));
 		const u = runtime.getCurrentUser();
 		return {
-			user: { id: u.id, name: u.name, role: role(), isHr: isHr(), lang: /^vi/i.test(String(u.getPreference({ name: "LANGUAGE" }) || "")) ? "vi" : "en" },
+			user: { id: u.id, name: u.name, role: role(), isHr: isHr(), isAccountant: role() === "customrole_s4vp_accountant", canEditSetup: allowed("saveSetup"), canAttendance: allowed("saveDoc"), lang: /^vi/i.test(String(u.getPreference({ name: "LANGUAGE" }) || "")) ? "vi" : "en" },
 			setupReady: setup.length > 0,
 			subsidiaries: subsidiaries.map((s) => Object.assign(s, { enabled: !companies.length || enabled.has(s.id) })),
 			paygroups: Store.find("paygroup").map((g) => ({ id: g.id, code: g.name, description: g.description, frequency: g.frequency, subsidiary: g.subsidiary })),
@@ -101,6 +123,12 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return { permits: WorkPermits.list(params.subsidiary) };
 				case "allocVersions":
 					return { versions: AllocationPlans.list(params.employee) };
+				case "shifts":
+					return { shifts: Shifts.shifts(), patterns: Shifts.patterns() };
+				case "roster":
+					return { roster: Shifts.roster(String(params.employee || "").split(",").filter(Boolean), params.from, params.to) };
+				case "attSheet":
+					return { rows: Store.find("att_sheet", { where: "{period} = ?", params: [params.period] }) };
 				case "report":
 					return Reports.run(params);
 				case "txinfo":
@@ -122,14 +150,17 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		if (lines.length <= SYNC_LIMIT) return Payroll.calculate(id);
 		const t = task.create({ taskType: task.TaskType.MAP_REDUCE, scriptId: "customscript_s4vp_mr_calculate", deploymentId: "customdeploy_s4vp_mr_calculate", params: { custscript_s4vp_mr_batch: id } });
 		const jobId = t.submit();
-		Store.submit("batch", id, { job: jobId });
+		Payroll.markQueued(id, jobId);
 		return { queued: true, job: jobId };
 	}
 
 	function post(body) {
 		return wrap(() => {
 			const a = body && body.action;
-			if (ACCOUNTANT_ONLY.includes(a) && isHr()) return { error: "Payroll HR cannot perform this action", errorVi: "HR không có quyền thực hiện thao tác này (chỉ kế toán)" };
+			if (!allowed(a)) {
+				log.audit({ title: "s4vp_rl_api denied", details: `${role()} ${a}` });
+				return { error: "Your role is not allowed to perform this action", errorVi: "Vai trò của bạn không được thực hiện thao tác này" };
+			}
 			switch (a) {
 				case "loadDefaults":
 					return Defaults.load({});
@@ -140,16 +171,19 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "reopenPeriod":
 					return Periods.reopen(body.id) || { ok: true };
 				case "lockAttendance":
-					return Attendance.lock(body.id) || { ok: true };
 				case "unlockAttendance":
-					return Attendance.unlock(body.id) || { ok: true };
-				case "buildAttendance":
-					return Attendance.build(body.id);
+				case "buildAttendance": {
+					// Kỳ lớn chạy nền (Map/Reduce theo lô 50 nhân viên)
+					const op = { lockAttendance: "lock", unlockAttendance: "unlock", buildAttendance: "build" }[a];
+					if (Attendance.sizeOf(body.id) > Attendance.SYNC_LIMIT) return Attendance.queue(body.id, op);
+					return Attendance[op](body.id) || { ok: true };
+				}
 				case "saveDoc":
 					return Attendance.save(body.type, body.values || {});
 				case "docAction":
 					return Attendance.act(body.type, body.id, body.op, { rejectReason: body.rejectReason || "" });
 				case "accrueLeave":
+					if (body.background) return Attendance.queue(null, "accrue", { year: Number(body.year), policyCode: body.policy || null, runDate: body.runDate, subsidiary: body.subsidiary || null });
 					return Attendance.accrue(Number(body.year), body.policy || null, body.runDate, body.subsidiary || null);
 				case "expireLeave":
 					return Attendance.expire(Number(body.year), body.runDate);
@@ -170,7 +204,6 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "removeHoldAdvance":
 					return Advances.removeHold(body.id) || { ok: true };
 				case "releaseAdvance":
-					if (isHr()) return { error: "Payroll HR cannot release advances", errorVi: "HR không có quyền ghi sổ tạm ứng" };
 					return Advances.release(body.id);
 				case "loadIndustryPack":
 					return Defaults.loadIndustryPack(body.code, body.subsidiary);
@@ -209,6 +242,20 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return AllocationPlans.activate(body.id, body.effective);
 				case "deleteAllocVersion":
 					return AllocationPlans.removeDraft(body.id);
+				case "clearJob":
+					return Payroll.clearJob(body.id) || { ok: true };
+				case "generateRoster":
+					return Shifts.generateRoster(body);
+				case "setRosterCell":
+					return Shifts.setRosterCell(body.employee, body.workDate, body.shift, body.location, body.workCenter);
+				case "importPunches":
+					return Shifts.importPunches(body.rows || [], body.source || "I");
+				case "processPunches":
+					return Shifts.processPunches(body.id);
+				case "loadSheetEmployees":
+					return Shifts.loadSheetEmployees(body.id);
+				case "saveSheet":
+					return Shifts.saveSheet(body.period, body.employee, body.cells || []);
 				case "createBatch":
 					return { id: Payroll.create(body) };
 				case "saveInput":
