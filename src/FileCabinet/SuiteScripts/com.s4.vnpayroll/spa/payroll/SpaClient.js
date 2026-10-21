@@ -92,6 +92,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             txVoided: 'đã hủy',
             reversalLabel: 'đảo',
             billsLabel: 'Bill cơ quan thu',
+            billsSummary: (n, posted) => `Bill cơ quan thu: ${n} bill (${posted ? 'đã ghi sổ' : 'có bill chưa ghi sổ'}, xem tab Bill cơ quan thu)`,
             att: {
                 build: 'Lập bảng công', lock: 'Khóa công', unlock: 'Mở khóa công', summary: 'Bảng tổng hợp công', docs: 'Chứng từ', docType: 'Loại chứng từ',
                 types: { leave: 'Đơn nghỉ', ot: 'Đơn làm thêm giờ', trip: 'Đơn công tác', exception: 'Phiếu ngoại lệ chấm công' },
@@ -245,7 +246,12 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
     };
     const plain = (v, strong) => jsxRuntime.jsx(component.Text, { weight: strong ? component.Text.Weight.BOLD : component.Text.Weight.NORMAL, children: v === null || v === undefined ? '' : String(v) });
     const textCol = (name, label, width, fn) => ({ name, label, width, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => plain(fn(r), r.bold)) });
-    const moneyCol = (name, label, width) => textCol(name, label, width || 125, (r) => money(r[name]));
+    // Cột tiền căn phải (cả tiêu đề) để số thẳng hàng, không dính vào chữ của cột bên trái (GridColumn chỉ có qua DataGrid.Column)
+    const RIGHT = component.DataGrid.Column && component.DataGrid.Column.HorizontalAlignment ? { horizontalAlignment: component.DataGrid.Column.HorizontalAlignment.RIGHT, headerHorizontalAlignment: component.DataGrid.Column.HorizontalAlignment.RIGHT } : {};
+    const rightCol = (name, label, width, fn) => Object.assign({ name, label, width, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => jsxRuntime.jsx(component.Text, { weight: r.bold ? component.Text.Weight.BOLD : component.Text.Weight.NORMAL, rootStyle: { paddingRight: '28px' }, children: fn(r) })) }, RIGHT);
+    const moneyCol = (name, label, width) => rightCol(name, label, width || 125, (r) => money(r[name]));
+    // Cột số (công, số lượng, đơn giá, hệ số, giờ) căn phải như cột tiền
+    const numCol = (name, label, width, fn) => rightCol(name, label, width, fn);
     // Ngày lưu dạng yyyy-mm-dd, hiển thị dd/mm/yyyy; ô nhập nhận cả hai dạng
     const fmtDate = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v).split('-').reverse().join('/') : v || '');
     const toIso = (v) => {
@@ -255,7 +261,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
     // columnStretch không giãn cột khi tổng bề rộng nhỏ hơn khung: nhân bề rộng cột theo bề ngang cửa sổ để lưới phủ hết trang
     const fitCols = (columns) => {
         const sum = columns.reduce((a, c) => a + (c.width || 0), 0);
-        const factor = sum ? Math.max(1, (window.innerWidth - 120) / sum) : 1;
+        const factor = sum ? Math.max(1, (window.innerWidth - 130) / sum) : 1;
         return factor === 1 ? columns : columns.map((c) => Object.assign({}, c, { width: Math.floor((c.width || 0) * factor) }));
     };
     // Chiều cao lưới theo số dòng (không để khoảng trắng lớn khi ít dòng), tối đa max px
@@ -296,6 +302,15 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
         }, 1000);
     }
     const EMPTY_INPUT = { earning_type: '', code: '', qty: '1', rate: '', multiplier: '', amount: '', description: '' };
+    // DataGrid giữ thanh cuộn ngang "nổi" ở mép dưới cửa sổ khi đáy lưới nằm ngoài màn hình, và chỉ tính lại vị trí khi cửa sổ
+    // đổi cỡ: cuộn trang hoặc lưới đổi chiều cao thì thanh cuộn kẹt giữa lưới, đè lên dòng. Phát resize (gộp lần liền nhau) sau mỗi
+    // lần vẽ và khi trang cuộn; resize không đổi state nên không lặp vẽ. Lần đầu lưới đo muộn hơn nên phát thêm lần sau 800 ms.
+    let relayoutTimers = [];
+    function scheduleRelayout(delays) {
+        relayoutTimers.forEach(clearTimeout);
+        relayoutTimers = (delays || [200, 800]).map((ms) => setTimeout(() => window.dispatchEvent(new Event('resize')), ms));
+    }
+    window.addEventListener('scroll', () => scheduleRelayout([80]), { capture: true, passive: true });
     let renders = 0;
     let windowStart = Date.now();
     function PayrollApp() {
@@ -306,6 +321,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
         renders += 1;
         if (renders > 60)
             throw new Error('S4VP payroll: render loop detected');
+        scheduleRelayout();
         const t = core.useRef(TEXT[language()]).current;
         const [boot, setBoot] = core.useState(null);
         const [view, setView] = core.useState('batches');
@@ -498,7 +514,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             renderPermits();
         else
             renderSetup();
-        return (jsxRuntime.jsx(component.StackPanel, { orientation: component.StackPanel.Orientation.VERTICAL, itemGap: component.StackPanel.GapSize.M, outerGap: component.StackPanel.GapSize.L, children: items }));
+        return (jsxRuntime.jsx(component.StackPanel, { orientation: component.StackPanel.Orientation.VERTICAL, itemGap: component.StackPanel.GapSize.M, outerGap: component.StackPanel.GapSize.L, rootStyle: { paddingRight: '64px' }, children: items }));
         // ------------------------------------------------------------------ danh sách bảng lương
         function renderBatchList() {
             items.push(item(actionRow([
@@ -566,7 +582,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 extra.push({ text: `${t.cols.journal}: ${txText(b.journal)}${b.reversal ? ` / ${t.reversalLabel} ${txText(b.reversal)}` : ''}` });
             const bills = Array.isArray(b.bills) ? b.bills : [];
             if (bills.length)
-                extra.push({ text: `${t.billsLabel}: ${bills.map((x) => txText(x.id)).join(', ')}` });
+                extra.push({ text: t.billsSummary(bills.length, bills.every((x) => (tx[x.id] || {}).posting)) });
             if (b.messages)
                 extra.push({ text: b.messages.split('\n').slice(0, 3).join('; '), strong: true });
             items.push(item(actionRow(buttons, messages), 'b-actions'));
@@ -583,13 +599,13 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     { name: 'code', label: t.cols.code, width: 100, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.id ? jsxRuntime.jsx(component.Button, { label: `${current && r.id === current.id ? '▸ ' : ''}${r.code || r.employee}`, type: component.Button.Type.LINK, action: () => setSelected(r.id) }) : plain(''))) },
                     textCol('name', t.cols.name, 190, (r) => r.name),
                     textCol('employment_type', t.cols.employment, 60, (r) => r.employment_type || ''),
-                    textCol('std_days', t.cols.std, 70, (r) => num(r.std_days)),
-                    textCol('work_days', t.cols.work, 70, (r) => num(r.work_days)),
+                    numCol('std_days', t.cols.std, 70, (r) => num(r.std_days)),
+                    numCol('work_days', t.cols.work, 70, (r) => num(r.work_days)),
                     moneyCol('gross', t.cols.gross, 120),
                     moneyCol('exempt', t.cols.exempt, 105),
                     moneyCol('ee_ins', t.cols.eeIns, 100),
                     moneyCol('er_ins', t.cols.erInsShort, 100),
-                    textCol('dependents', t.cols.deps, 45, (r) => (r.id ? r.dependents || 0 : '')),
+                    numCol('dependents', t.cols.deps, 50, (r) => (r.id ? r.dependents || 0 : '')),
                     moneyCol('family_ded', t.cols.family, 110),
                     moneyCol('assessable', t.cols.assessable, 110),
                     moneyCol('pit', t.cols.pit, 100),
@@ -686,9 +702,9 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             items.push(detailGrid(rows, [
                 textCol('type', t.cols.earningType, 110, (r) => r.type),
                 textCol('memo', t.cols.memo, 220, (r) => r.memo),
-                textCol('quantity', t.cols.qty, 80, (r) => num(r.quantity)),
-                textCol('rate', t.cols.rate, 110, (r) => num(r.rate)),
-                textCol('multiplier', t.cols.mult, 60, (r) => num(r.multiplier)),
+                numCol('quantity', t.cols.qty, 80, (r) => num(r.quantity)),
+                numCol('rate', t.cols.rate, 110, (r) => num(r.rate)),
+                numCol('multiplier', t.cols.mult, 60, (r) => num(r.multiplier)),
                 moneyCol('amount', t.cols.amount, 120),
                 moneyCol('exempt', t.cols.exemptAmt, 110),
                 textCol('src', t.cols.source, 140, (r) => r.src),
@@ -784,7 +800,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 textCol('branch', t.cols.branch, 100, (r) => r.branch || ''),
                 textCol('workCenter', t.cols.workCenter, 100, (r) => r.workCenter || ''),
                 textCol('source', t.cols.source, 110, (r) => (r.source ? t.allocSrc[r.source] || r.source : '')),
-                textCol('hours', t.cols.hours, 70, (r) => num(r.hours)),
+                numCol('hours', t.cols.hours, 70, (r) => num(r.hours)),
                 textCol('ratio', t.cols.ratio, 80, (r) => pct(r.ratio)),
                 moneyCol('amount', t.cols.amount, 120),
             ], 'd-alloc'));
@@ -823,7 +839,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     moneyCol('debit', t.cols.debit, 140),
                     moneyCol('credit', t.cols.credit, 140),
                     textCol('sub', t.cols.dimension, 160, (r) => [r.sub, r.branch, r.workCenter, r.project].filter(Boolean).join(' / ')),
-                ]), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '320px' } }), 'j-grid'));
+                ]), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: autoH(journal.lines.length + 1, 560) } }), 'j-grid'));
         }
         // ------------------------------------------------------------------ hồ sơ lương
         function renderProfiles() {
@@ -849,7 +865,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     moneyCol('salary', t.cols.salary, 130),
                     moneyCol('insWage', t.cols.insWage, 130),
                     textCol('effective', t.cols.effective, 100, (r) => fmtDate(r.effective)),
-                    textCol('dependents', t.cols.deps, 60, (r) => r.dependents || 0),
+                    numCol('dependents', t.cols.deps, 60, (r) => r.dependents || 0),
                     { name: 'profile', label: t.cols.profile, width: 130, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.profile ? jsxRuntime.jsx(component.Button, { label: t.openRecord, type: component.Button.Type.LINK, action: () => openRecord(boot.recordTypes.employee, r.profile.id) }) : plain(t.noProfile))) },
                 ]), columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: autoH(filtered.rows.length, 520) } }), 'p-grid'));
         }
@@ -866,14 +882,14 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(filtered.rows), columns: fitCols([
                     { name: 'name', label: t.cols.number, width: 110, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => jsxRuntime.jsx(component.Button, { label: r.name, type: component.Button.Type.LINK, action: () => openRecord('customrecord_s4vp_advance', r.id) })) },
                     textCol('doc_date', t.cols.docDate, 100, (r) => fmtDate(r.doc_date)),
-                    textCol('empText', t.employee, 220, (r) => r.empText),
+                    textCol('empText', t.employee, 200, (r) => r.empText),
                     textCol('statusText', t.cols.status, 130, (r) => r.statusText),
                     moneyCol('amount', t.cols.amount, 130),
                     moneyCol('offset', t.cols.offset, 130),
                     moneyCol('balance', t.cols.balance, 130),
-                    textCol('memo', t.cols.memo, 240, (r) => r.memo || ''),
+                    textCol('memo', t.cols.memo, 250, (r) => r.memo || ''),
                     { name: 'journal', label: t.cols.journal, width: 100, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.journal ? jsxRuntime.jsx(component.Button, { label: r.journalNo || `JE ${r.journal}`, type: component.Button.Type.LINK, action: () => openJournal(r.journal) }) : plain(''))) },
-                    { name: 'ops', label: '', width: 120, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (jsxRuntime.jsx(component.StackPanel, { orientation: component.StackPanel.Orientation.HORIZONTAL, itemGap: component.StackPanel.GapSize.S, children: opsFor(r).map(([a, label]) => jsxRuntime.jsx(component.StackPanel.Item, { children: jsxRuntime.jsx(component.Button, { label: label, type: component.Button.Type.LINK, action: () => (a === 'releaseAdvance' ? setConfirm({ text: ta.confirmRelease, go: () => advOp(r, a) }) : advOp(r, a)) }) }, a)).concat([jsxRuntime.jsx(component.StackPanel.Item, { children: plain('') }, "none")]) }))) },
+                    { name: 'ops', label: '', width: 100, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (jsxRuntime.jsx(component.StackPanel, { orientation: component.StackPanel.Orientation.HORIZONTAL, itemGap: component.StackPanel.GapSize.S, children: opsFor(r).map(([a, label]) => jsxRuntime.jsx(component.StackPanel.Item, { children: jsxRuntime.jsx(component.Button, { label: label, type: component.Button.Type.LINK, action: () => (a === 'releaseAdvance' ? setConfirm({ text: ta.confirmRelease, go: () => advOp(r, a) }) : advOp(r, a)) }) }, a)).concat([jsxRuntime.jsx(component.StackPanel.Item, { children: plain('') }, "none")]) }))) },
                 ]), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: autoH(filtered.rows.length, 360) } }), 'a-grid'));
             // Lập phiếu tạm ứng mới (VP301000): tạo ở trạng thái tạm giữ
             const setAdv = (k) => (a) => {
@@ -967,15 +983,15 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: ta.summary }), 'a-sum-title'));
                 items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(attRows), columns: fitCols([
                         textCol('employee', t.employee, 220, (r) => empName(r.employee)),
-                        textCol('std_days', ta.cols.std, 80, (r) => num(r.std_days)),
-                        textCol('paid_leave', ta.cols.paid, 90, (r) => num(r.paid_leave)),
-                        textCol('unpaid_leave', ta.cols.unpaid, 90, (r) => num(r.unpaid_leave)),
-                        textCol('si_leave', ta.cols.si, 70, (r) => num(r.si_leave)),
-                        textCol('trip_days', ta.cols.trip, 80, (r) => num(r.trip_days)),
-                        textCol('late_days', ta.cols.late, 90, (r) => num(r.late_days)),
-                        textCol('adjust_days', ta.cols.adj, 80, (r) => num(r.adjust_days)),
-                        textCol('work_days', ta.cols.work, 100, (r) => num(r.work_days)),
-                        textCol('ot_hours', ta.cols.ot, 70, (r) => num(r.ot_hours)),
+                        numCol('std_days', ta.cols.std, 80, (r) => num(r.std_days)),
+                        numCol('paid_leave', ta.cols.paid, 90, (r) => num(r.paid_leave)),
+                        numCol('unpaid_leave', ta.cols.unpaid, 90, (r) => num(r.unpaid_leave)),
+                        numCol('si_leave', ta.cols.si, 70, (r) => num(r.si_leave)),
+                        numCol('trip_days', ta.cols.trip, 80, (r) => num(r.trip_days)),
+                        numCol('late_days', ta.cols.late, 90, (r) => num(r.late_days)),
+                        numCol('adjust_days', ta.cols.adj, 80, (r) => num(r.adjust_days)),
+                        numCol('work_days', ta.cols.work, 100, (r) => num(r.work_days)),
+                        numCol('ot_hours', ta.cols.ot, 70, (r) => num(r.ot_hours)),
                         textCol('status', ta.cols.status, 90, (r) => (r.status === 'L' ? '🔒' : '')),
                     ]), columnStretch: true, placeholder: ta.noSummary, rootStyle: { width: '100%', flexShrink: 0, height: autoH(attRows.length, 420) } }), 'a-sum'));
             }
@@ -1074,12 +1090,12 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(balances), columns: fitCols([
                         textCol('employee', t.employee, 220, (r) => empName(r.employee)),
                         textCol('leaveTypeCode', ta.leaveType, 80, (r) => r.leaveTypeCode || ''),
-                        textCol('entitled', ta.cols.entitled, 80, (r) => num(r.entitled)),
-                        textCol('carried', ta.cols.carried, 80, (r) => num(r.carried)),
-                        textCol('adjusted', ta.cols.adjusted, 80, (r) => num(r.adjusted)),
-                        textCol('used', ta.cols.used, 80, (r) => num(r.used)),
-                        textCol('pending', ta.cols.pending, 80, (r) => num(r.pending)),
-                        textCol('available', ta.cols.available, 80, (r) => num(r.available)),
+                        numCol('entitled', ta.cols.entitled, 80, (r) => num(r.entitled)),
+                        numCol('carried', ta.cols.carried, 80, (r) => num(r.carried)),
+                        numCol('adjusted', ta.cols.adjusted, 80, (r) => num(r.adjusted)),
+                        numCol('used', ta.cols.used, 80, (r) => num(r.used)),
+                        numCol('pending', ta.cols.pending, 80, (r) => num(r.pending)),
+                        numCol('available', ta.cols.available, 80, (r) => num(r.available)),
                     ]), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: autoH(balances.length, 420) } }), 'a-bal'));
             }
         }
@@ -1146,16 +1162,16 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             const grid = (table, key, height) => {
                 const cols = table.columns.map((c) => (c.type === 'money' ? moneyCol(c.key, c[lang] || c.vi, 120) : textCol(c.key, c[lang] || c.vi, c.key.toLowerCase().includes('name') ? 200 : 110, (r) => (r[c.key] === null || r[c.key] === undefined ? '' : typeof r[c.key] === 'number' ? num(r[c.key]) : String(r[c.key])))));
                 const rows = table.totals ? table.rows.concat([Object.assign({ bold: true }, table.totals, { [table.columns[0].key]: '∑' })]) : table.rows;
-                return item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(rows), columns: fitCols(cols), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: height || '420px' } }), key);
+                return item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(rows), columns: fitCols(cols), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: autoH(rows.length, height || 420) } }), key);
             };
             if (report.indicators) {
                 items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: tr.indicators }), 'r-ind-title'));
-                items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(report.indicators), columns: fitCols([textCol('code', tr.code, 70, (r) => r.code), textCol('vi', tr.item, 420, (r) => r[lang] || r.vi), textCol('value', tr.value, 160, (r) => (Number(r.value) >= 1000 ? money(r.value) : num(r.value)))]), columnStretch: true, rootStyle: { width: '100%', flexShrink: 0, height: '420px' } }), 'r-ind'));
+                items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(report.indicators), columns: fitCols([textCol('code', tr.code, 70, (r) => r.code), textCol('vi', tr.item, 420, (r) => r[lang] || r.vi), numCol('value', tr.value, 160, (r) => (Number(r.value) >= 1000 ? money(r.value) : num(r.value)))]), columnStretch: true, rootStyle: { width: '100%', flexShrink: 0, height: '420px' } }), 'r-ind'));
             }
             items.push(grid(report, 'r-grid'));
             if (report.d02) {
                 items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: tr.d02 }), 'r-d02-title'));
-                items.push(grid(report.d02, 'r-d02', '240px'));
+                items.push(grid(report.d02, 'r-d02', 240));
             }
         }
         // ------------------------------------------------------------------ sản lượng, khoán tổ
@@ -1209,8 +1225,8 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 items.push(detailGrid(ls, [
                     textCol('employee', t.employee, 240, (r) => r.label || empName(r.employee)),
                     textCol('item', to.item, 200, (r) => r.item || ''),
-                    textCol('qty', t.cols.qty, 90, (r) => num(r.qty)),
-                    textCol('rate', t.cols.rate, 110, (r) => num(r.rate)),
+                    numCol('qty', t.cols.qty, 90, (r) => num(r.qty)),
+                    numCol('rate', t.cols.rate, 110, (r) => num(r.rate)),
                     moneyCol('amount', t.cols.amount, 130),
                 ], 'o-d-lines', '220px'));
             }
