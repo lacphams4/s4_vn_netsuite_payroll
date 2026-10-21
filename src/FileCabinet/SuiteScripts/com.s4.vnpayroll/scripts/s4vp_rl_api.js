@@ -69,6 +69,17 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		return out;
 	}
 
+	// Số chứng từ bút toán (tranid) thay cho id nội bộ trên lưới
+	function withJournalNo(rows) {
+		const tx = Payroll.transactionsInfo(rows.map((r) => r.journal).filter(Boolean));
+		return rows.map((r) => Object.assign(r, { journalNo: r.journal ? (tx[String(r.journal)] || {}).tranid || "" : "" }));
+	}
+
+	function advancesView(rows) {
+		const info = Payroll.employeesInfo(rows.map((r) => r.employee));
+		return withJournalNo(rows).map((r) => Object.assign(r, { employeeCode: (info[r.employee] || {}).code || "", employeeName: (info[r.employee] || {}).name || "" }));
+	}
+
 	function bootstrap() {
 		let subsidiaries = [];
 		try {
@@ -78,7 +89,8 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		}
 		const setup = Store.find("setup");
 		let unverified = [];
-		if (setup.length) unverified = Store.find("param").filter((p) => p.verified === false).map((p) => `${p.name} (${p.effective})`);
+		// Tên dễ đọc (diễn giải) trước, mã tham số và ngày hiệu lực dd/mm/yyyy sau
+		if (setup.length) unverified = Store.find("param").filter((p) => p.verified === false).map((p) => `${p.description ? `${p.description} - ` : ""}${p.name} (${String(p.effective || "").split("-").reverse().join("/")})`);
 		const companies = Store.find("company");
 		const enabled = new Set(companies.filter((c) => c.enabled !== false).map((c) => c.subsidiary));
 		const u = runtime.getCurrentUser();
@@ -102,7 +114,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "bootstrap":
 					return bootstrap();
 				case "batches":
-					return { batches: Payroll.list({ subsidiary: params.subsidiary, period: params.period }) };
+					return { batches: withJournalNo(Payroll.list({ subsidiary: params.subsidiary, period: params.period })) };
 				case "batch":
 					return Payroll.detail(params.id);
 				case "journal":
@@ -134,7 +146,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "txinfo":
 					return Payroll.transactionsInfo(String(params.ids || "").split(",").slice(0, 50));
 				case "advances":
-					return { advances: Advances.list({ subsidiary: params.subsidiary }) };
+					return { advances: advancesView(Advances.list({ subsidiary: params.subsidiary })) };
 				case "profiles":
 					return { employees: Profiles.list(params.subsidiary) };
 				case "lookups":

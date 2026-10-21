@@ -1117,6 +1117,6 @@ define([
 	return {
 		create, loadEmployees, calculate, finishCalculation, removeHold, hold, approve, reject, reopen, release, reverse, agencyBills, bankFile,
 		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine, transactionsInfo,
-		markQueued, setJobId, assertQueueable, clearJob, finishRelease, finishReverse,
+		markQueued, setJobId, assertQueueable, clearJob, finishRelease, finishReverse, employeesInfo,
 	};
 });
