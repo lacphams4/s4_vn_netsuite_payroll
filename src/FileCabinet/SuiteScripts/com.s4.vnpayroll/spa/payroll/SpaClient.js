@@ -541,8 +541,21 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                     moneyCol('advance', t.cols.advance, 100),
                     moneyCol('net', t.cols.net, 120),
                     textCol('note', t.cols.warn, 240, (r) => r.note || ''),
-                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '300px' } }), 'grid-lines'));
+                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, on: { [component.DataGrid.Event.CURSOR_UPDATED]: pickLine }, rootStyle: { width: '100%', flexShrink: 0, height: '300px' } }), 'grid-lines'));
             renderDetailTabs(current, editable, bills, txText);
+        }
+        // Bấm ô bất kỳ trên dòng nhân viên (con trỏ lưới đổi dòng) thì các tab bên dưới chuyển sang nhân viên đó
+        // UIF gọi (args, sender): sender là lưới, con trỏ của lưới cho dòng vừa bấm
+        function pickLine(args, grid) {
+            try {
+                const row = (grid && grid.cursor && grid.cursor.row) || (args && (args.row || (args.cell && args.cell.row))) || null;
+                const r = row && row.dataItem;
+                if (r && r.id)
+                    setSelected(r.id);
+            }
+            catch (err) {
+                // bỏ qua: vẫn chọn được bằng mã nhân viên
+            }
         }
         function sumRow(list, keys, base) {
             return list.reduce((acc, r) => {
