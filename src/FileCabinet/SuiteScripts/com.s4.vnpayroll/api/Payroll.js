@@ -18,8 +18,8 @@
 define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
-	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock) => {
+	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines",
+], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -211,7 +211,8 @@ define([
 			added.push(emp.code || prof.employee);
 		}
 		markUncalculated(batch);
-		return { added, skipped, updated: existing.length };
+		const time = syncTimeCore(batch, p, c.settings);
+		return { added, skipped, updated: existing.length, time };
 	}
 
 	/** ApplyLeave (3.5): từ bảng tổng hợp công nếu có, ngược lại công chuẩn trừ ngày ngoài hợp đồng. */
@@ -358,6 +359,7 @@ define([
 		const prior = priorEarnings(c);
 		const ytd = ytdOvertime(c);
 		const otLines = overtimeLines(c, empIds);
+		const regular = TimeLines.forPayroll(batchId, c.period.end);
 		// Sản lượng / doanh số (4.3.5), giấy phép lao động (3.9), bảng tỷ lệ phân bổ (4.5.3): đọc một lần cho cả lô
 		const outputs = Output.forPayroll(c.period.id, batchId, empIds, c.batch.subsidiary);
 		ectx.rateTables = outputs.rateTables || {};
@@ -384,7 +386,7 @@ define([
 					compensation: comp ? { effectiveDate: comp.effective, baseSalary: comp.base_salary, insuranceWage: comp.insurance_wage || 0, fixedAllowance: comp.allowance || 0, package: comp.package ? c.packageNames[comp.package] : "" } : null,
 					dependents: (prof.pit_method || "P") === "P" ? deps[prof.id] || [] : [],
 					line: { standardDays: line.std_days, workDays: line.work_days, absenceDays: line.absence_days || 0, unpaidLeaveDays: line.unpaid_leave || 0, otherTaxDeductions: line.other_tax_ded || 0 },
-					timeLines: otLines[line.employee] || [],
+					timeLines: (otLines[line.employee] || []).concat(regular[line.employee] || []),
 					manualEarnings: myInputs.filter((i) => i.kind === "E").map((i) => ({
 						earningType: etById[i.earning_type] ? etById[i.earning_type].code : "", description: i.description, quantity: blank(i.qty) ? 1 : i.qty, rate: i.rate || 0,
 						multiplier: i.multiplier, amount: i.amount || 0, amountLocked: i.manual_amount, project: i.project || "", branch: i.location || "", workCenter: i.class || "", sub: i.department || "",
@@ -398,7 +400,11 @@ define([
 					salesAmount: (outputs.salesAmount || {})[line.employee] || 0,
 					outputShares: (outputs.shares || {})[line.employee] || [],
 					allocationVersions: plans[line.employee] || [],
-					extraWarnings: wp && wp.warning ? [wp.warning] : [],
+					extraWarnings: (wp && wp.warning ? [wp.warning] : []).concat(
+						(prof.salary_type || "M") === "H" && !(regular[line.employee] || []).length && !myInputs.some((i) => i.kind === "E")
+							? [{ code: "NO_HOURS", message: "Hourly employee without payroll hours: click Load Time", messageVi: "Nhân viên lương giờ chưa có giờ công: bấm Nạp giờ công" }]
+							: []
+					),
 					defaults: { project: prof.project || "", task: "", branch: prof.location || e.location || "", workCenter: prof.class || e.cls || "" },
 					accounts: {
 						employeeAccount: prof.expense_account || "", employeeSub: prof.department || e.department || "", defaultAccount: c.settings.accounts.acc_expense || "",
@@ -636,12 +642,46 @@ define([
 		return { ok: true };
 	}
 
+	/** Nạp giờ công (VP302000 Import Time): đồng bộ giờ Time của NetSuite vào giờ công tính lương; bảng lương về "chưa tính" khi có thay đổi. */
+	function syncTimeCore(batch, period, settings) {
+		const empIds = lines(batch.id).map((l) => l.employee);
+		if (!empIds.length) return { entries: 0, accepted: 0, inserted: 0, updated: 0, deleted: 0, pending: 0 };
+		const r = TimeLines.sync(batch.id, period, empIds, settings.requireTimeApproval);
+		if (r.inserted || r.updated || r.deleted) markUncalculated(getBatch(batch.id));
+		return r;
+	}
+
+	function syncTime(batchId) {
+		const batch = getBatch(batchId);
+		assertBatchEditable(batch);
+		return syncTimeCore(batch, Store.get("period", batch.period), context(batch).settings);
+	}
+
+	function saveTime(id, values) {
+		const l = Store.get("batch_time", id);
+		if (!l) throw fail("Time line not found", "Không tìm thấy dòng giờ công");
+		const batch = getBatch(l.batch);
+		assertBatchEditable(batch);
+		TimeLines.save(l, values.hours, values.reason);
+		markUncalculated(getBatch(l.batch));
+		return { ok: true };
+	}
+
+	/** Chi tiết timesheet từng ngày của một nhân viên trong cửa sổ kết công (chỉ xem). */
+	function timesheet(batchId, employee) {
+		const batch = getBatch(batchId);
+		if (!lines(batchId).some((l) => l.employee === String(employee))) throw fail("The employee is not on this batch", "Nhân viên không có trong bảng lương");
+		const w = TimeLines.windowOf(Store.get("period", batch.period));
+		return { from: w.from, to: w.to, requireApproval: context(batch).settings.requireTimeApproval, entries: TimeLines.entries([employee], w.from, w.to) };
+	}
+
 	function removeLine(lineId) {
 		const l = Store.get("batch_emp", lineId);
 		if (!l) return { ok: true };
 		const batch = getBatch(l.batch);
 		assertBatchEditable(batch);
 		for (const i of inputs(l.batch).filter((x) => x.employee === l.employee)) Store.remove("batch_input", i.id);
+		TimeLines.removeFor(l.batch, l.employee);
 		Store.remove("batch_emp", lineId);
 		markUncalculated(batch);
 		return { ok: true };
@@ -1103,6 +1143,7 @@ define([
 				});
 			}),
 			inputs: inputs(batchId),
+			time: TimeLines.forBatch(batchId),
 			transactions: transactionsInfo([b.journal, b.reversal].concat(safeJson(b.bills, []).map((x) => x.id))),
 		};
 	}
@@ -1117,6 +1158,6 @@ define([
 	return {
 		create, loadEmployees, calculate, finishCalculation, removeHold, hold, approve, reject, reopen, release, reverse, agencyBills, bankFile,
 		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine, transactionsInfo,
-		markQueued, setJobId, assertQueueable, clearJob, finishRelease, finishReverse, employeesInfo,
+		markQueued, setJobId, assertQueueable, clearJob, finishRelease, finishReverse, employeesInfo, syncTime, saveTime, timesheet,
 	};
 });

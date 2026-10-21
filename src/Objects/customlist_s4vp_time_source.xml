@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_time_source">
+  <name>S4VP time_source</name>
+  <description>S4 VN Payroll code list time_source; values keep the Acumatica codes (A, M).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_time_source_a">
+      <value>A - Timesheet</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_time_source_m">
+      <value>M - Nhập tay</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

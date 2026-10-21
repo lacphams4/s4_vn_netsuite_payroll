@@ -71,3 +71,32 @@ describe("nạp giờ công (3.7)", () => {
     expect(TI.defaultOvertimeEarningType(withHad, "N", true)).toBe("OTD150");
   });
 });
+
+describe("Gộp giờ Time NetSuite thành giờ công tính lương", () => {
+  test("đọc số giờ dạng thập phân và h:mm", () => {
+    expect(Sync.parseHours(8)).toBe(8);
+    expect(Sync.parseHours("7.5")).toBe(7.5);
+    expect(Sync.parseHours("7:30")).toBe(7.5);
+    expect(Sync.parseHours("0:20")).toBe(0.33);
+    expect(Sync.parseHours("")).toBe(0);
+    expect(Sync.parseHours("abc")).toBe(0);
+  });
+  test("gộp theo nhân viên, dự án, công việc; bỏ dòng 0 giờ", () => {
+    const g = Sync.aggregate([
+      { employee: "2684", project: "11", projectName: "DA A", task: "", hours: 8 },
+      { employee: "2684", project: "11", projectName: "DA A", task: "", hours: "4:30" },
+      { employee: "2684", project: "", task: "", hours: 6 },
+      { employee: "2684", project: "12", task: "5", taskName: "Lắp đặt", hours: 0 },
+      { employee: "2683", project: "", task: "", hours: 2 },
+    ]);
+    expect(g.map((x) => [x.key, x.hours, x.entries])).toEqual([["2683||", 2, 1], ["2684|11|", 12.5, 2], ["2684||", 6, 1]]);
+    expect(g[1].projectName).toBe("DA A");
+  });
+  test("kết hợp plan: giờ HR đã sửa được giữ khi đồng bộ lại", () => {
+    const src = {};
+    for (const x of Sync.aggregate([{ employee: "2684", hours: 80 }])) src[x.key] = x.hours;
+    const p = Sync.plan([{ lineId: 9, sourceId: "2684||", sourceHours: 76, hours: 78, source: "A" }], src);
+    expect(p.updates).toEqual([{ lineId: 9, sourceHours: 80, hours: 78 }]);
+    expect(p.inserts).toEqual([]);
+  });
+});

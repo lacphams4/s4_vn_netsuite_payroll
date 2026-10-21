@@ -138,6 +138,13 @@ for (const [id, def] of Object.entries(lists)) {
 	await fs.writeFile(path.join(OBJ, `${listId(id)}.xml`), listXml(id, def));
 	n++;
 }
+// Prefix trường phải duy nhất: trùng prefix thì scriptid trường trùng nhau, deploy báo "trường tùy chỉnh đã tồn tại"
+const seenPrefix = {};
+for (const rec of records) {
+	if (seenPrefix[rec.prefix]) throw new Error(`Field prefix ${rec.prefix} used by both ${seenPrefix[rec.prefix]} and ${rec.id}`);
+	seenPrefix[rec.prefix] = rec.id;
+}
+
 for (const rec of records) {
 	await fs.writeFile(path.join(OBJ, `${recId(rec.id)}.xml`), recordXml(rec));
 	n++;

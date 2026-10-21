@@ -1587,6 +1587,73 @@ define([], () => {
 				}
 			}
 		},
+		"batch_time": {
+			"type": "customrecord_s4vp_batch_time",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"batch": {
+					"id": "custrecord_s4vp_btl_batch",
+					"type": "select",
+					"target": "rec:batch"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_btl_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"source": {
+					"id": "custrecord_s4vp_btl_source",
+					"type": "select",
+					"target": "list:time_source"
+				},
+				"source_key": {
+					"id": "custrecord_s4vp_btl_source_key",
+					"type": "text",
+					"target": null
+				},
+				"project": {
+					"id": "custrecord_s4vp_btl_project",
+					"type": "text",
+					"target": null
+				},
+				"project_name": {
+					"id": "custrecord_s4vp_btl_project_name",
+					"type": "text",
+					"target": null
+				},
+				"task": {
+					"id": "custrecord_s4vp_btl_task",
+					"type": "text",
+					"target": null
+				},
+				"task_name": {
+					"id": "custrecord_s4vp_btl_task_name",
+					"type": "text",
+					"target": null
+				},
+				"entries": {
+					"id": "custrecord_s4vp_btl_entries",
+					"type": "int",
+					"target": null
+				},
+				"source_hours": {
+					"id": "custrecord_s4vp_btl_source_hours",
+					"type": "float",
+					"target": null
+				},
+				"hours": {
+					"id": "custrecord_s4vp_btl_hours",
+					"type": "float",
+					"target": null
+				},
+				"reason": {
+					"id": "custrecord_s4vp_btl_reason",
+					"type": "text",
+					"target": null
+				}
+			}
+		},
 		"batch_input": {
 			"type": "customrecord_s4vp_batch_input",
 			"includeName": false,
@@ -3465,6 +3532,13 @@ define([], () => {
 				"I": "val_s4vp_punch_source_i",
 				"M": "val_s4vp_punch_source_m",
 				"A": "val_s4vp_punch_source_a"
+			}
+		},
+		"time_source": {
+			"type": "customlist_s4vp_time_source",
+			"values": {
+				"A": "val_s4vp_time_source_a",
+				"M": "val_s4vp_time_source_m"
 			}
 		}
 	};

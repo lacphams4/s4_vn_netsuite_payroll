@@ -75,5 +75,45 @@ define(["N/record", "N/runtime", "./Store", "./Profiles"], (record, runtime, Sto
 		return out;
 	}
 
-	return { generate, TAG };
+	/**
+	 * Giờ Time thử cho CTV theo giờ (FL-05: 80 giờ = 10 ngày làm việc x 8 giờ, đã duyệt) và một dòng 4 giờ để chờ duyệt
+	 * (kiểm tra giờ chưa duyệt không vào lương). Chạy lại an toàn: ngày đã có dòng ghi chú S4VP TEST thì bỏ qua.
+	 * @returns {{created: number, skipped: number, approvalFailed: number}}
+	 */
+	function timeEntries(subsidiary, from, to) {
+		const emp = findEmployee("CTV03 Theo gio", subsidiary);
+		if (!emp) throw new Error("Test employee CTV03 not found; run generateTestData first / Chưa có nhân viên thử CTV03");
+		const days = [];
+		for (let d = new Date(`${from}T12:00:00Z`); d <= new Date(`${to}T12:00:00Z`) && days.length < 11; d.setUTCDate(d.getUTCDate() + 1)) {
+			if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) days.push(d.toISOString().slice(0, 10));
+		}
+		const existing = new Set(
+			Store.run(`SELECT TO_CHAR(t.trandate, 'YYYY-MM-DD') AS c_date FROM timebill t WHERE t.employee = ? AND t.memo LIKE ? AND t.trandate >= TO_DATE(?, 'YYYY-MM-DD') AND t.trandate <= TO_DATE(?, 'YYYY-MM-DD')`, [emp.id, `${TAG}%`, from, to], "s4vp_test_time").map((r) => r.c_date)
+		);
+		const out = { created: 0, skipped: 0, approvalFailed: 0 };
+		days.forEach((day, i) => {
+			if (existing.has(day)) {
+				out.skipped += 1;
+				return;
+			}
+			const pending = i === 10;
+			const r = record.create({ type: record.Type.TIME_BILL, isDynamic: true });
+			r.setValue({ fieldId: "employee", value: emp.id });
+			r.setValue({ fieldId: "trandate", value: new Date(`${day}T12:00:00Z`) });
+			r.setValue({ fieldId: "hours", value: pending ? 4 : 8 });
+			r.setValue({ fieldId: "memo", value: `${TAG} gio cong CTV${pending ? " (cho duyet)" : ""}` });
+			if (!pending) {
+				try {
+					r.setValue({ fieldId: "approvalstatus", value: 3 });
+				} catch (e) {
+					out.approvalFailed += 1;
+				}
+			}
+			r.save({ ignoreMandatoryFields: true });
+			out.created += 1;
+		});
+		return out;
+	}
+
+	return { generate, timeEntries, TAG };
 });

@@ -59,7 +59,7 @@ const TEXT = {
 		confirm: {release: 'Ghi sổ bảng lương này? Hệ thống tạo bút toán và cấn trừ tạm ứng.', reverse: 'Đảo bảng lương này? Hệ thống tạo bút toán đảo và hoàn số dư tạm ứng.', agencyBills: 'Lập bill nộp cơ quan BHXH, công đoàn, thuế?'},
 		detailOf: (c, n) => `Chi tiết ${c} ${n}`,
 		employeesTitle: (n) => `Nhân viên (${n})`,
-		tabs: {earn: 'Thu nhập', ded: 'Khấu trừ khác', ins: 'Bảo hiểm', att: 'Công', alloc: 'Phân bổ dự án', adv: 'Cấn trừ tạm ứng', journal: 'Bút toán', bills: 'Bill cơ quan thu'},
+		tabs: {earn: 'Thu nhập', ded: 'Khấu trừ khác', ins: 'Bảo hiểm', att: 'Công', time: 'Giờ công', alloc: 'Phân bổ dự án', adv: 'Cấn trừ tạm ứng', journal: 'Bút toán', bills: 'Bill cơ quan thu'},
 		batchTabs: 'Cả bảng lương:',
 		batchDetail: 'Cả bảng lương',
 		noLine: 'Chưa có nhân viên, bấm Nạp nhân viên',
@@ -93,7 +93,18 @@ const TEXT = {
 		newProfile: 'Tạo hồ sơ lương',
 		noProfile: 'Chưa có hồ sơ',
 		created: (n) => `Đã tạo ${n}`,
-		loaded: (r) => `Đã nạp ${r.added.length} người${r.skipped.length ? `, bỏ qua ${r.skipped.length} người đã ở bảng lương khác cùng kỳ: ${r.skipped.join(', ')}` : ''}`,
+		loaded: (r) => `Đã nạp ${r.added.length} người${r.skipped.length ? `, bỏ qua ${r.skipped.length} người đã ở bảng lương khác cùng kỳ: ${r.skipped.join(', ')}` : ''}${r.time ? `. ${TEXT.vi.timeSynced(r.time)}` : ''}`,
+		timeSynced: (r) => `Giờ công: ${r.accepted}/${r.entries} dòng timesheet được nhận${r.pending ? ` (${r.pending} dòng chưa duyệt hoặc bị từ chối)` : ''}; thêm ${r.inserted}, cập nhật ${r.updated}, bỏ ${r.deleted} dòng giờ công`,
+		time: {
+			title: 'Giờ công tính lương (gộp theo dự án, công việc trong kỳ)',
+			hint: 'Giờ lấy từ Time (timesheet) của NetSuite khi bấm Nạp giờ công hoặc Nạp nhân viên. Sửa giờ phải ghi lý do; nạp lại vẫn giữ giờ đã sửa. Giờ thường dùng cho lương giờ và phân bổ dự án; giờ OT lấy từ đơn OT đã duyệt.',
+			project: 'Dự án / khách hàng', task: 'Công việc', entries: 'Số dòng', sourceHours: 'Giờ timesheet', hours: 'Giờ tính lương', reason: 'Lý do sửa', edit: 'Sửa giờ',
+			none: '(không gắn dự án)', save: 'Lưu giờ', cancel: 'Hủy', editTitle: (n) => `Sửa giờ công: ${n}`,
+			detail: (f, to) => `Chi tiết timesheet trong kỳ (${f} - ${to}), đọc trực tiếp từ Time của NetSuite`,
+			date: 'Ngày', status: 'Trạng thái duyệt', memo: 'Ghi chú', counted: 'Tính lương',
+			approval: {A: 'Đã duyệt', P: 'Chờ duyệt / mở', R: 'Từ chối', N: 'Không dùng duyệt'},
+			load: 'Nạp giờ công', loadingSheet: 'Đang đọc timesheet...',
+		},
 		calcDone: (r) => (r.queued ? 'Đã đưa vào hàng đợi tính lương (bảng lớn), bấm Tải lại sau ít phút' : r.ok ? 'Đã tính xong, không có lỗi' : `Có ${r.errors.length} nhân viên lỗi: ${r.errors.slice(0, 3).join('; ')}`),
 		jeCreated: (id) => `Đã tạo bút toán ${id}`,
 		billsCreated: (r) => `Đã lập ${r.created.length} bill${r.skipped.length ? `; khoản chưa có cơ quan thu: ${r.skipped.map((s) => s.code).join(', ')}` : ''}`,
@@ -315,9 +326,23 @@ const autoH = (n, max) => `${Math.min(max, 84 + 44 * Math.max(n, 2))}px`;
 const tabStrip = (keys, labels, current, pick) =>
 	keys.map((k) => <Button label={labels[k]} hierarchy={current === k ? Button.Hierarchy.PRIMARY : Button.Hierarchy.SECONDARY} type={current === k ? Button.Type.PRIMARY : Button.Type.GHOST} action={() => pick(k)} />);
 
+// Lỗi từ N/https có thể không phải Error chuẩn (message rỗng, nội dung nằm ở details / cause): lấy chuỗi đầu tiên có nội dung
+function errorText(e) {
+	if (!e) return '';
+	const parts = [e.message, e.text, e.details, e.cause && (e.cause.message || e.cause.details), e.name, typeof e === 'string' ? e : ''];
+	const found = parts.find((x) => typeof x === 'string' && x.trim());
+	if (found) return found;
+	try {
+		return JSON.stringify(e).slice(0, 300);
+	} catch (x) {
+		return String(e);
+	}
+}
+
 function unwrap(response) {
 	const body = typeof response.body === 'string' ? JSON.parse(response.body || '{}') : response.body;
-	if (body && body.error) throw new Error(language() === 'vi' ? body.errorVi || body.error : body.error);
+	// Ném đối tượng thường: Error trong môi trường SPA của NetSuite bị bọc lại, mất message (chỉ còn {userFacing: false})
+	if (body && body.s4vpError) throw {message: language() === 'vi' ? body.s4vpErrorVi || body.s4vpError : body.s4vpError};
 	return body;
 }
 
@@ -392,6 +417,10 @@ export default function PayrollApp() {
 	const [error, setError] = useState('');
 	const [confirm, setConfirm] = useState(null);
 	const [tab, setTab] = useState('earn');
+	const [tsheet, setTsheet] = useState(null);
+	const tsReq = useRef('');
+	const [timeEdit, setTimeEdit] = useState(null);
+	const timeRef = useRef(null);
 	const [input, setInput] = useState(EMPTY_INPUT);
 	const inputRef = useRef(input);
 	const [year, setYear] = useState(String(new Date().getFullYear()));
@@ -430,7 +459,7 @@ export default function PayrollApp() {
 			})
 			.catch((e) => {
 				setBusy('');
-				setError(`${t.failed}: ${e.message}`);
+				setError(`${t.failed}: ${errorText(e)}`);
 			});
 	};
 
@@ -500,7 +529,8 @@ export default function PayrollApp() {
 		const id = batch.batch.id;
 		return run(t.working, post(Object.assign({action, id}, extra || {})), (r) => {
 			const warn = ((r && r.warnings) || []).map((w) => (language() === 'vi' ? w.messageVi || w.message : w.message || w.messageVi)).filter(Boolean);
-			return openBatch(id, keep).then(() => setNotice([message ? message(r) : t.done].concat(warn).join(' · ')));
+			// Thao tác trên cùng bảng lương: giữ nhân viên, tab đang chọn (keep = false mới về mặc định)
+			return openBatch(id, keep !== false).then(() => setNotice([message ? message(r) : t.done].concat(warn).join(' · ')));
 		});
 	};
 
@@ -651,7 +681,8 @@ export default function PayrollApp() {
 		const buttons = [<Button label={t.back} type={Button.Type.GHOST} action={() => (setBatch(null), loadBatches())} />, <Button label={t.actions.refresh} action={refresh} />];
 		const add = (cond, label, fn, primary) => cond && buttons.push(<Button label={label} hierarchy={primary ? Button.Hierarchy.PRIMARY : Button.Hierarchy.SECONDARY} enabled={!busy} action={fn} />);
 		const editable = ['H', 'B', 'C'].includes(s);
-		add(editable, t.actions.loadEmployees, () => act('loadEmployees', null, t.loaded));
+		add(editable, t.actions.loadEmployees, () => act('loadEmployees', null, t.loaded, true));
+		add(editable, t.time.load, () => act('syncTime', null, t.timeSynced, true));
 		add(editable, t.actions.calculate, () => act('calculate', null, t.calcDone), s === 'B');
 		add(s === 'H', t.actions.removeHold, () => act('removeHold'));
 		add(['B', 'C'].includes(s), t.actions.hold, () => act('hold'));
@@ -756,7 +787,7 @@ export default function PayrollApp() {
 
 	// Các tab con: sáu tab của nhân viên đang chọn, hai tab của cả bảng lương
 	function renderDetailTabs(line, editable, bills, txText) {
-		const lineTabs = ['earn', 'ded', 'ins', 'att', 'alloc', 'adv'];
+		const lineTabs = ['earn', 'ded', 'ins', 'att', 'time', 'alloc', 'adv'];
 		const strip = [];
 		const tabButton = (k) => <Button label={t.tabs[k]} hierarchy={tab === k ? Button.Hierarchy.PRIMARY : Button.Hierarchy.SECONDARY} type={tab === k ? Button.Type.PRIMARY : Button.Type.GHOST} action={() => pickTab(k)} />;
 		lineTabs.forEach((k) => strip.push(tabButton(k)));
@@ -772,6 +803,7 @@ export default function PayrollApp() {
 		else if (tab === 'ded') renderDeductions(line, editable);
 		else if (tab === 'ins') renderInsurance(line);
 		else if (tab === 'att') renderLineAttendance(line);
+		else if (tab === 'time') renderTime(line, editable);
 		else if (tab === 'alloc') renderAllocations(line);
 		else renderOffsets(line);
 	}
@@ -928,6 +960,84 @@ export default function PayrollApp() {
 			['si_leave', num(line.si_leave)], ['absence_days', num(line.absence_days)], ['ot_hours', num(line.ot_hours)], ['att_locked', t.rep.yesNo[line.att_locked ? 'T' : 'F']],
 		].map(([k, v]) => ({label: t.attCols[k], value: v}));
 		items.push(detailGrid(rows, [textCol('label', t.rep.item, 260, (r) => r.label), textCol('value', t.rep.value, 140, (r) => r.value)], 'd-att', '300px'));
+	}
+
+	// Giờ công (VP312000): dòng gộp theo dự án / công việc, sửa giờ có lý do; bên dưới là timesheet từng ngày đọc từ Time
+	function renderTime(line, editable) {
+		const tt = t.time;
+		const mine = (batch.time || []).filter((x) => x.employee === line.employee);
+		const rows = mine.map((x) => Object.assign({}, x, {projectText: x.project_name || x.project || tt.none, taskText: x.task_name || x.task || ''}));
+		if (rows.length > 1) rows.push(sumRow(rows, ['source_hours', 'hours'], {projectText: '∑', bold: true}));
+		items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{tt.title}</Heading>, 't-title'));
+		items.push(item(<Text size={Text.Size.S} type={Text.Type.WEAK} rootStyle={{whiteSpace: 'normal'}}>{tt.hint}</Text>, 't-hint'));
+		items.push(
+			detailGrid(rows, [
+				textCol('projectText', tt.project, 240, (r) => r.projectText),
+				textCol('taskText', tt.task, 180, (r) => r.taskText),
+				numCol('entries', tt.entries, 80, (r) => (r.id ? num(r.entries) : '')),
+				numCol('source_hours', tt.sourceHours, 110, (r) => num(r.source_hours)),
+				numCol('hours', tt.hours, 110, (r) => num(r.hours)),
+				textCol('reason', tt.reason, 220, (r) => r.reason || ''),
+				{name: 'edit', label: '', width: 90, type: DataGrid.ColumnType.TEMPLATED, content: safe((r) => (editable && r.id ? <Button label={tt.edit} type={Button.Type.LINK} action={() => {
+					timeRef.current = {id: r.id, hours: String(r.hours === null || r.hours === undefined ? '' : r.hours), reason: r.reason || '', label: `${r.projectText}${r.taskText ? ` / ${r.taskText}` : ''}`};
+					setTimeEdit(timeRef.current);
+				}} /> : plain('')))},
+			], 't-grid', autoH(rows.length, 300))
+		);
+		if (editable && timeEdit && mine.some((x) => x.id === timeEdit.id)) {
+			const setT = (k) => (a) => {
+				timeRef.current = Object.assign({}, timeRef.current, {[k]: String(a.text || '')});
+				setTimeEdit(timeRef.current);
+			};
+			items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{tt.editTitle(timeEdit.label)}</Heading>, 't-edit-title'));
+			items.push(
+				item(
+					<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(200px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+						{[
+							cell(labeled(tt.hours, <TextBox rootStyle={{width: '100%'}} text={timeEdit.hours} onTextChanged={setT('hours')} />), 't-e-h'),
+							cell(labeled(tt.reason, <TextBox rootStyle={{width: '100%'}} text={timeEdit.reason} onTextChanged={setT('reason')} />), 't-e-r'),
+						]}
+					</GridPanel>,
+					't-edit-form'
+				)
+			);
+			items.push(
+				item(
+					actionRow([
+						<Button label={tt.save} hierarchy={Button.Hierarchy.PRIMARY} enabled={!busy} action={() => {
+							const v = timeRef.current;
+							return act('saveTime', {lineId: v.id, values: {hours: String(v.hours).replace(',', '.'), reason: v.reason}}, null, true).then((r) => r && setTimeEdit(null));
+						}} />,
+						<Button label={tt.cancel} type={Button.Type.GHOST} action={() => setTimeEdit(null)} />,
+					]),
+					't-edit-actions'
+				)
+			);
+		}
+		// Timesheet từng ngày: tải một lần cho mỗi nhân viên đang chọn (tsReq chặn gọi lặp khi vẽ lại)
+		const key = `${batch.batch.id}|${line.employee}`;
+		if (tsReq.current !== key) {
+			tsReq.current = key;
+			call({action: 'timesheet', id: batch.batch.id, employee: line.employee}).then((r) => setTsheet(Object.assign({key}, r))).catch((e) => setTsheet({key, error: e.message, entries: []}));
+		}
+		if (!tsheet || tsheet.key !== key) return items.push(item(<Text type={Text.Type.WEAK}>{tt.loadingSheet}</Text>, 't-sheet-wait'));
+		if (tsheet.error) return items.push(item(<Text type={Text.Type.WEAK}>{`${t.failed}: ${tsheet.error}`}</Text>, 't-sheet-err'));
+		const usesApproval = tsheet.entries.some((e) => e.approval !== 'N');
+		const counted = (e) => !usesApproval || (tsheet.requireApproval ? e.approval === 'A' : e.approval !== 'R');
+		const days = tsheet.entries.map((e) => Object.assign({}, e, {dateText: fmtDate(e.date), projectText: e.projectName || tt.none, countedText: counted(e) ? t.rep.yesNo.T : t.rep.yesNo.F}));
+		if (days.length > 1) days.push(sumRow(days, ['hours'], {dateText: '∑', bold: true}));
+		items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{tt.detail(fmtDate(tsheet.from), fmtDate(tsheet.to))}</Heading>, 't-sheet-title'));
+		items.push(
+			detailGrid(days, [
+				textCol('dateText', tt.date, 100, (r) => r.dateText),
+				numCol('hours', tt.hours, 90, (r) => num(r.hours)),
+				textCol('projectText', tt.project, 220, (r) => (r.bold ? '' : r.projectText)),
+				textCol('taskName', tt.task, 160, (r) => r.taskName || ''),
+				textCol('approval', tt.status, 140, (r) => (r.bold ? '' : tt.approval[r.approval] || r.statusName || '')),
+				textCol('countedText', tt.counted, 90, (r) => (r.bold ? '' : r.countedText)),
+				textCol('memo', tt.memo, 220, (r) => r.memo || ''),
+			], 't-sheet', autoH(days.length, 420))
+		);
 	}
 
 	function renderAllocations(line) {

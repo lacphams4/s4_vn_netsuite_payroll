@@ -14,6 +14,7 @@
    - BL000004 (11/2026): lập hoàn toàn trên giao diện, đã ghi sổ.
    - BL000005 (12/2026, đã ghi sổ JE1809 và bill cơ quan thu): tính từ bảng công đã khóa, đơn OT, nghỉ việc.
    - BL000007 (03/2027, chờ tính): thử thêm / xóa dòng nhập tay ngay trong tab Thu nhập hoặc Khấu trừ khác của một nhân viên, rồi **Tính lương**.
+   - BL000007, nhân viên E014 CTV03 (lương giờ): tab **Giờ công** hiện giờ đã nạp và timesheet từng ngày đọc từ Time của NetSuite; bấm **Nạp giờ công** để đồng bộ lại, **Sửa giờ** (phải ghi lý do).
 2. Màn hình **Chấm công và phép**: chọn kỳ 202612, xem bảng tổng hợp công (đã khóa), chứng từ đơn nghỉ / OT / ngoại lệ; thử lập một đơn mới ở kỳ chưa khóa (ví dụ 202701 sau khi sinh kỳ 2027), Gửi duyệt, Duyệt; **Số dư phép 2026**.
 3. Màn hình **Báo cáo, tờ khai**: BH tháng 202612 (nhập số C12 để xem chênh lệch), 05/KK quý 4/2026, quyết toán 2026, chi phí theo tài khoản tháng 202610; **Xuất CSV**.
 4. Màn hình **Thiết lập**: Nạp mặc định VN (chạy lại không tạo trùng), Sinh kỳ lương (năm, nhóm lương), liên kết tới các danh mục.

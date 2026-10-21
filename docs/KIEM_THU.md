@@ -109,6 +109,15 @@ Chưa kiểm được trên account: hiệu năng 2.000 nhân viên, phiếu lư
 
 BH tháng 12/2026: 3 người, tổng 28.108.000, chênh lệch C12 tính đúng; D02-LT tháng 12 không có biến động (khớp tháng 11). 05/KK-TNCN quý 4/2026: [16] = 5, [17] = 3, [21] = 349.172.285 (bảng lương đã đảo bị loại). Quyết toán năm 2026: E012, E013, E015 vào 05-1/BK; E014, E016 vào 05-2/BK.
 
+### 2.9 Giờ công từ Time NetSuite (VP312000, BL000007, kỳ 03/2027)
+
+Dữ liệu: action admin `generateTestTime` tạo 11 dòng Time cho E014 CTV03 (10 ngày x 8 giờ đã duyệt, 1 dòng 4 giờ chờ duyệt, ghi chú "S4VP TEST").
+
+- Tab Giờ công đọc timesheet từng ngày: 10 dòng "Đã duyệt", tính lương "Có".
+- Nạp giờ công: "10/11 dòng timesheet được nhận (1 dòng chưa duyệt hoặc bị từ chối)", một dòng giờ công 80 giờ (không gắn dự án).
+- Tính lương: E014 thu nhập 15.680.000, khấu trừ 10% 1.568.000, thực lĩnh 14.112.000 (khớp FL-05).
+- Sửa 78 giờ không lý do: bị chặn "Cần ghi lý do khi giờ tính lương khác giờ timesheet"; có lý do: lưu được; nạp lại: giữ 78 giờ, giờ timesheet vẫn 80; tính lại ra 15.288.000 / 1.528.800. Trả về 80 giờ, tính lại khớp FL-05.
+
 ## 3. Lỗi phát hiện và đã sửa khi kiểm thử trên account
 
 | # | Hiện tượng | Nguyên nhân | Sửa |
@@ -121,6 +130,8 @@ BH tháng 12/2026: 3 người, tổng 28.108.000, chênh lệch C12 tính đúng
 | 6 | SPA: lưới bị bóp, thông báo tràn ngang | StackPanel co phần tử | shrink 0, flexShrink 0, thông báo dài xuống dòng riêng |
 | 7 | Bảng thanh toán: tiêu đề giãn chữ, số xuống dòng | BFO dàn đều chữ trong ô tiêu đề; cột hẹp | Bọc tiêu đề trong p align center, cỡ chữ 6pt, chỉnh độ rộng cột |
 | 8 | Deploy lỗi BEGIN_DEPLOYMENT khi thêm record | Role và record tham chiếu vòng | tools/deploy_two_pass.py |
+| 9 | SPA: báo "Lỗi:" không có nội dung với mọi lỗi nghiệp vụ | N/https phía trình duyệt coi JSON có khóa "error" là lỗi RESTlet, tự từ chối, mất nội dung | RESTlet trả s4vpError / s4vpErrorVi; SPA ném đối tượng thường |
+| 10 | Deploy record mới bước 1 báo thiếu role trong danh sách quyền; trường trùng | USEPERMISSIONLIST cần ít nhất một role; prefix "bt" trùng Đơn công tác | Bước 1 tạm dùng CUSTRECORDENTRYPERM; gen_objects kiểm prefix trùng |
 
 ## 4. Giao dịch thử còn chờ duyệt trên account
 

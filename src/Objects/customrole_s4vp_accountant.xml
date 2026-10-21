@@ -143,6 +143,10 @@
       <permlevel>FULL</permlevel>
     </permission>
     <permission>
+      <permkey>[customrecord_s4vp_batch_time]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
       <permkey>[customrecord_s4vp_batch_input]</permkey>
       <permlevel>FULL</permlevel>
     </permission>

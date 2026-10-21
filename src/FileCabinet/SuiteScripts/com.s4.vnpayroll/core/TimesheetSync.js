@@ -47,5 +47,33 @@ define(["./Money"], (Money) => {
 		return h2(line.hours) !== h2(line.sourceHours);
 	}
 
-	return { plan, requiresReason };
+	/** Số giờ từ bản ghi Time của NetSuite: số thập phân hoặc chuỗi thời lượng "h:mm". */
+	function parseHours(v) {
+		if (v === null || v === undefined || v === "") return 0;
+		const m = /^(-?\d+):(\d{1,2})$/.exec(String(v).trim());
+		if (m) return h2(Number(m[1]) + (Number(m[1]) < 0 ? -1 : 1) * Number(m[2]) / 60);
+		const n = Number(String(v).replace(",", "."));
+		return Number.isFinite(n) ? h2(n) : 0;
+	}
+
+	/**
+	 * Gộp giờ timesheet đã duyệt theo nhân viên + dự án + công việc trong kỳ (một dòng giờ công tính lương mỗi nhóm).
+	 * @param {Array<{employee, project?, projectName?, task?, taskName?, hours}>} entries
+	 * @returns {Array<{key, employee, project, projectName, task, taskName, hours, entries}>} theo thứ tự key
+	 */
+	function aggregate(entries) {
+		const groups = new Map();
+		for (const e of entries || []) {
+			const hours = parseHours(e.hours);
+			if (!(hours > 0)) continue;
+			const key = [e.employee, e.project || "", e.task || ""].map(String).join("|");
+			const g = groups.get(key) || { key, employee: String(e.employee), project: String(e.project || ""), projectName: e.projectName || "", task: String(e.task || ""), taskName: e.taskName || "", hours: 0, entries: 0 };
+			g.hours = h2(g.hours + hours);
+			g.entries += 1;
+			groups.set(key, g);
+		}
+		return [...groups.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+	}
+
+	return { plan, requiresReason, parseHours, aggregate };
 });

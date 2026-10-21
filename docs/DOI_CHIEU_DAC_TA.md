@@ -31,7 +31,7 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | VP308000 | Phiếu sản lượng | Xong (API) | Phiếu cá nhân / tổ, tra đơn giá, nạp thành viên, chia tổ, duyệt, khóa khi ghi sổ, mở khi đảo; vào bảng lương qua quy tắc nguồn O / S (đã chạy TC-TS-01). Chưa có màn hình SPA riêng |
 | VP309000, VP310000, VP502000 | Phân ca, lượt chấm, xử lý chấm công | Xong | Sinh phân ca từ mẫu theo tổ (giữ ô sửa tay), nạp lượt chấm (SPA dán CSV / API), xử lý chấm công sinh phiếu trễ / sớm / vắng / thiếu lượt chấm và đơn OT gợi ý ở Tạm giữ, chạy lại thay chứng từ lần trước (đã chạy trên account kỳ 02/2027). Trên 3.000 người x ngày cần chạy nền: chưa có Map/Reduce |
 | VP311000 | Bảng công ký hiệu | Xong (API) | Nạp nhân viên, lưu 31 ô, cộng ký hiệu; lập bảng công cho nhóm nguồn S (CTV vào bảng công). Chưa có lưới nhập trên SPA |
-| VP312000 | Giờ công tính lương | Lõi xong | TimesheetSync, TimeImport; chưa nối Time Bill NetSuite |
+| VP312000 | Giờ công tính lương | Xong | Nạp giờ đã duyệt từ Time (timesheet) NetSuite, gộp theo nhân viên + dự án + công việc; sửa giờ có lý do, nạp lại giữ giờ đã sửa; tab Giờ công xem timesheet từng ngày. Giờ OT vẫn lấy từ đơn OT |
 | VP501000 | Cấp phép năm | Xong | Cấp, chuyển phép, hết hạn; bỏ CTV |
 | VP301000 | Tạm ứng lương | Xong | Ghi sổ Nợ 141 / Có tiền; cấn trừ FIFO; hoàn khi đảo |
 | VP302000 | Bảng lương | Xong | Nạp nhân viên, tính, duyệt, ghi sổ, đảo, bill cơ quan thu, file ngân hàng, in; Map/Reduce cho bảng lớn. Bố cục cha - con như Acumatica: lưới nhân viên, tab Thu nhập, Khấu trừ khác (nhập tay ngay trong tab), Bảo hiểm, Công, Phân bổ dự án, Cấn trừ tạm ứng; tab Bút toán, Bill cơ quan thu cho cả bảng. Chưa có Lịch sử duyệt |
@@ -79,7 +79,7 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | 4 | Ghi sổ không có giao dịch nhiều record | NetSuite | Kiểm tra trước, lưu id JE trước khi cập nhật tạm ứng, không tạo JE thứ hai |
 | 5 | JE và bill tự duyệt theo thiết lập (tương đương AutoReleaseGL); account bật duyệt thì tắt được | Duyệt bút toán của NetSuite | |
 | 6 | Duyệt bảng lương một cấp (RequirePayrollApproval); chưa có Approval Map nhiều bước | SuiteFlow để giai đoạn sau | Trạng thái giữ nguyên mã H/B/C/P/A/J/R/V |
-| 7 | Giờ OT lấy từ đơn OT đã duyệt; giờ timesheet (nguồn OT = T) và VP312000 chưa nối Time Bill | Cần xác minh feature Timesheets trên account khách | Lõi TimeImport, TimesheetSync đã đạt ca vàng |
+| 7 | Giờ thường lấy từ Time NetSuite (đã duyệt, hoặc mọi dòng trừ bị từ chối khi tắt "Chỉ lấy giờ đã duyệt"); giờ OT lấy từ đơn OT đã duyệt, chưa đọc OT từ Time (nguồn OT = T) | Account khách cần bật Time Tracking | Đã chạy trên td2937310 (mục 2.9 KIEM_THU) |
 | 8 | Nhãn record, list là tiếng Việt; SPA và bản in song ngữ | Thị trường chính; Translation Collection để sau | |
 | 9 | Thuế phương pháp X: thu nhập tính thuế ghi 0; giảm trừ khác âm báo lỗi | Đặc tả không ghi rõ | Không ảnh hưởng số thuế |
 | 10 | Gói phúc lợi UAT: PL02 - PL06 coi là miễn thuế (E) | Suy ra từ số liệu UAT-2 vì đặc tả không ghi | Khớp UAT-1 đến UAT-5 và TC34 |

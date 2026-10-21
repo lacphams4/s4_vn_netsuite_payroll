@@ -2,8 +2,8 @@
  * API của màn hình Lương VN (SPA): danh mục, kỳ lương, bảng lương và thao tác. Mọi thao tác ghi đi qua api/Payroll,
  * kiểm tra trạng thái phía máy chủ; quyền theo role (HR không ghi sổ, không đảo, không lập bill - ma trận 1.4.1).
  *
- * GET  ?action=bootstrap | batches&subsidiary=&period= | batch&id= | journal&id= | bankfile&id=
- * POST {action: loadDefaults | generatePeriods | createBatch | loadEmployees | calculate | removeHold | hold | approve |
+ * GET  ?action=bootstrap | batches&subsidiary=&period= | batch&id= | journal&id= | timesheet&id=&employee= | bankfile&id=
+ * POST {action: loadDefaults | generatePeriods | createBatch | loadEmployees | syncTime | saveTime | calculate | removeHold | hold | approve |
  *       reject | reopen | release | reverse | agencyBills | closePeriod | reopenPeriod | lockAttendance | unlockAttendance, ...}
  * Lỗi trả {error, errorVi}; số tiền lương không ghi vào log.
  *
@@ -17,7 +17,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
 	// HR: thiết lập, hồ sơ, chứng từ công, bảng lương (không ghi sổ, không đảo, không lập bill, không ghi sổ tạm ứng).
 	// Kế toán: bảng lương và tạm ứng đầy đủ; thiết lập, hồ sơ chỉ xem; không làm chứng từ công.
-	const BATCH_ACTIONS = ["createBatch", "loadEmployees", "calculate", "jobStatus", "removeHold", "hold", "approve", "reject", "reopen", "saveInput", "deleteInput", "updateLine", "removeLine", "createAdvance", "removeHoldAdvance"];
+	const BATCH_ACTIONS = ["createBatch", "loadEmployees", "calculate", "jobStatus", "removeHold", "hold", "approve", "reject", "reopen", "saveInput", "deleteInput", "updateLine", "removeLine", "createAdvance", "removeHoldAdvance", "syncTime", "saveTime"];
 	const ACCOUNTANT_ONLY = ["release", "reverse", "agencyBills", "releaseAdvance"];
 	const HR_ACTIONS = BATCH_ACTIONS.concat([
 		"loadDefaults", "loadIndustryPack", "generatePeriods", "closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance",
@@ -27,7 +27,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		"saveShift", "savePattern", "generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
 	]);
 	const ACCOUNTANT_ACTIONS = BATCH_ACTIONS.concat(ACCOUNTANT_ONLY);
-	const ADMIN_ONLY = ["generateTestData", "clearJob"];
+	const ADMIN_ONLY = ["generateTestData", "generateTestTime", "clearJob"];
 
 	function allowed(action) {
 		const r = role();
@@ -52,7 +52,8 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		} catch (e) {
 			log.error({ title: "s4vp_rl_api", details: String(e.message || e).slice(0, 500) });
 			const m = e.userMessage;
-			return { error: m ? m.en : String(e.message || e), errorVi: m ? m.vi : String(e.messageVi || e.message || e) };
+			// Không dùng khóa "error": N/https phía trình duyệt coi đó là lỗi RESTlet, tự từ chối và bỏ mất nội dung
+			return { s4vpError: m ? m.en : String(e.message || e), s4vpErrorVi: m ? m.vi : String(e.messageVi || e.message || e) };
 		}
 	}
 
@@ -119,6 +120,8 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return Payroll.detail(params.id);
 				case "journal":
 					return Payroll.journalPreview(params.id);
+				case "timesheet":
+					return Payroll.timesheet(params.id, params.employee);
 				case "bankfile":
 					return Payroll.bankFile(params.id);
 				case "docs":
@@ -219,6 +222,8 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return Profiles.saveCompany(body.subsidiary, body.values || {});
 				case "setInsuranceAccount":
 					return Profiles.setInsuranceAccount(body.code, body.account, body.vendor);
+				case "generateTestTime":
+					return TestData.timeEntries(body.subsidiary, body.from, body.to);
 				case "generateTestData":
 					return TestData.generate(body.subsidiary);
 				case "createAdvance":
@@ -297,6 +302,10 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return Payroll.removeLine(body.id);
 				case "loadEmployees":
 					return Payroll.loadEmployees(body.id);
+				case "syncTime":
+					return Payroll.syncTime(body.id);
+				case "saveTime":
+					return Payroll.saveTime(body.lineId, body.values || {});
 				case "calculate":
 					return calculate(body.id, !!body.background);
 				case "jobStatus": {

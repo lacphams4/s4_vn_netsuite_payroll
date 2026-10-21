@@ -55,6 +55,7 @@ export const lists = {
 	shift_kind: ["Loại ca", { D: "D - Ca ngày", E: "E - Ca chiều", N: "N - Ca đêm" }],
 	roster_source: ["Nguồn phân ca", { G: "G - Từ mẫu xoay ca", M: "M - Sửa tay" }],
 	punch_source: ["Nguồn lượt chấm", { I: "I - Tải file", M: "M - Nhập tay", A: "A - API" }],
+	time_source: ["Nguồn giờ công", { A: "A - Timesheet", M: "M - Nhập tay" }],
 };
 
 // ---------------------------------------------------------------- kiểu trường
@@ -473,6 +474,24 @@ export const records = [
 			["warnings", "Cảnh báo", "textarea", { display: "LOCKED" }],
 			["error", "Lỗi", "textarea", { display: "LOCKED" }],
 			["detail", "Chi tiết (JSON)", "clob", { display: "HIDDEN" }],
+		],
+	},
+	{
+		id: "batch_time", prefix: "btl", name: "Giờ công tính lương", screen: "VP312000", perms: PAYROLL, includeName: false, child: true,
+		desc: "Payroll hours of a batch (VPPayrollTimeLine), one line per employee, project and task summed over the period from approved NetSuite time entries. HR may adjust hours with a reason; re-sync keeps adjusted hours (TimesheetSync).",
+		fields: [
+			["batch", "Bảng lương", "select:rec:batch", { req: true, parent: true }],
+			["employee", "Nhân viên", "select:employee", { req: true }],
+			["source", "Nguồn", "select:list:time_source"],
+			["source_key", "Khóa nguồn (nhân viên|dự án|công việc)", "text"],
+			["project", "Dự án / khách hàng", "text"],
+			["project_name", "Tên dự án", "text"],
+			["task", "Công việc", "text"],
+			["task_name", "Tên công việc", "text"],
+			["entries", "Số dòng timesheet", "int"],
+			["source_hours", "Giờ theo timesheet", "float"],
+			["hours", "Giờ tính lương", "float"],
+			["reason", "Lý do sửa giờ", "text"],
 		],
 	},
 	{
