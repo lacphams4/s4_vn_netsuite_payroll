@@ -8,11 +8,12 @@
 
 ## 2. Kiểm tra nhanh (dữ liệu thử đã có trên td2937310, subsidiary "S4VN TT99 Test")
 
-1. Màn hình **Bảng lương**: chọn công ty con S4VN TT99 Test, xem 5 bảng lương:
-   - BL000003 (10/2026, đã ghi sổ, có bill cơ quan thu): bấm số bảng, xem lưới nhân viên, bấm mã nhân viên để xem dòng thu nhập và BH từng khoản; **Xem bút toán**; **In phiếu lương**, **In bảng thanh toán**, **In quyết toán CTV**; **File chi lương**.
+1. Màn hình **Bảng lương**: chọn công ty con S4VN TT99 Test. Mở một bảng lương: phía trên là lưới nhân viên, phía dưới là các tab của nhân viên đang chọn (Thu nhập, Khấu trừ khác, Bảo hiểm, Công, Phân bổ dự án, Cấn trừ tạm ứng) và hai tab của cả bảng (Bút toán, Bill cơ quan thu), như VP302000 bên Acumatica. Các bảng lương thử:
+   - BL000003 (10/2026, đã ghi sổ, có bill cơ quan thu): bấm số bảng, xem lưới nhân viên, bấm mã nhân viên để xem các tab chi tiết; tab **Bút toán**; **In phiếu lương**, **In bảng thanh toán**, **In quyết toán CTV**; **File chi lương**.
    - BL000001, BL000002: đã đảo (thử nghiệp vụ đảo).
    - BL000004 (11/2026): lập hoàn toàn trên giao diện, đã ghi sổ.
-   - BL000005 (12/2026, tạm giữ): tính từ bảng công đã khóa, đơn OT, nghỉ việc. Thử: **Bỏ tạm giữ** > **Duyệt** > **Ghi sổ** (JE sẽ được tự duyệt, vào sổ cái ngay).
+   - BL000005 (12/2026, đã ghi sổ JE1809 và bill cơ quan thu): tính từ bảng công đã khóa, đơn OT, nghỉ việc.
+   - BL000007 (03/2027, chờ tính): thử thêm / xóa dòng nhập tay ngay trong tab Thu nhập hoặc Khấu trừ khác của một nhân viên, rồi **Tính lương**.
 2. Màn hình **Chấm công và phép**: chọn kỳ 202612, xem bảng tổng hợp công (đã khóa), chứng từ đơn nghỉ / OT / ngoại lệ; thử lập một đơn mới ở kỳ chưa khóa (ví dụ 202701 sau khi sinh kỳ 2027), Gửi duyệt, Duyệt; **Số dư phép 2026**.
 3. Màn hình **Báo cáo, tờ khai**: BH tháng 202612 (nhập số C12 để xem chênh lệch), 05/KK quý 4/2026, quyết toán 2026, chi phí theo tài khoản tháng 202610; **Xuất CSV**.
 4. Màn hình **Thiết lập**: Nạp mặc định VN (chạy lại không tạo trùng), Sinh kỳ lương (năm, nhóm lương), liên kết tới các danh mục.

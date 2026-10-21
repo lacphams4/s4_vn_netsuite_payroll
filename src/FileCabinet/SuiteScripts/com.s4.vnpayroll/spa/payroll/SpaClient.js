@@ -34,6 +34,8 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 source: 'Nguồn', component: 'Khoản trích', base: 'Căn cứ', eeRate: 'Tỷ lệ NLĐ', erRate: 'Tỷ lệ DN', account: 'Tài khoản', debit: 'Nợ', credit: 'Có',
                 memo: 'Diễn giải', dimension: 'Phòng ban / địa điểm', employment: 'Loại LĐ', salary: 'Lương HĐ', insWage: 'Lương đóng BH', effective: 'Hiệu lực',
                 pitMethod: 'Thuế', profile: 'Hồ sơ', docDate: 'Ngày', balance: 'Số dư', offset: 'Đã cấn trừ', del: '',
+                erInsShort: 'Trích theo lương DN', netBefore: 'Thực lĩnh trước tạm ứng', earningType: 'Loại thu nhập', project: 'Dự án', task: 'Công việc', branch: 'Địa điểm',
+                workCenter: 'Phòng ban', hours: 'Số giờ', ratio: 'Tỷ lệ', advanceNbr: 'Số tạm ứng', balanceAfter: 'Số dư còn lại', document: 'Chứng từ',
             },
             actions: {
                 loadEmployees: 'Nạp nhân viên', calculate: 'Tính lương', removeHold: 'Bỏ tạm giữ', hold: 'Tạm giữ', approve: 'Duyệt', reject: 'Từ chối', reopen: 'Mở lại',
@@ -44,9 +46,16 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             resumed: 'Đã hoàn tất các bước còn thiếu',
             confirm: { release: 'Ghi sổ bảng lương này? Hệ thống tạo bút toán và cấn trừ tạm ứng.', reverse: 'Đảo bảng lương này? Hệ thống tạo bút toán đảo và hoàn số dư tạm ứng.', agencyBills: 'Lập bill nộp cơ quan BHXH, công đoàn, thuế?' },
             detailOf: (c, n) => `Chi tiết ${c} ${n}`,
-            earnings: 'Thu nhập',
-            insurance: 'Bảo hiểm, kinh phí công đoàn',
-            inputs: 'Dòng nhập tay (thu nhập, khấu trừ sau thuế)',
+            employeesTitle: (n) => `Nhân viên (${n})`,
+            tabs: { earn: 'Thu nhập', ded: 'Khấu trừ khác', ins: 'Bảo hiểm', att: 'Công', alloc: 'Phân bổ dự án', adv: 'Cấn trừ tạm ứng', journal: 'Bút toán', bills: 'Bill cơ quan thu' },
+            batchTabs: 'Cả bảng lương:',
+            batchDetail: 'Cả bảng lương',
+            noLine: 'Chưa có nhân viên, bấm Nạp nhân viên',
+            src: { S: 'Hệ thống', T: 'Giờ công', M: 'Nhập tay', O: 'Sản lượng' },
+            allocSrc: { P: 'Bảng tỷ lệ', T: 'Giờ công', R: 'Theo tổ', D: 'Mặc định', S: 'Sản lượng' },
+            inputHint: { E: 'Thêm thu nhập nhập tay cho nhân viên đang chọn (số tiền = số lượng × đơn giá × hệ số), sau đó bấm Tính lương.', D: 'Thêm khoản khấu trừ sau thuế cho nhân viên đang chọn, sau đó bấm Tính lương.' },
+            attCols: { std_days: 'Công chuẩn', work_days: 'Công hưởng lương', paid_leave: 'Nghỉ có lương', unpaid_leave: 'Nghỉ không lương', si_leave: 'Nghỉ ốm, thai sản (BHXH)', absence_days: 'Ngày nghỉ xét đóng BH', ot_hours: 'Giờ làm thêm', att_locked: 'Công đã khóa' },
+            journalNotReady: 'Bảng lương chưa tính, chưa có bút toán dự kiến',
             addInput: 'Thêm dòng',
             kind: { E: 'Thu nhập', D: 'Khấu trừ sau thuế' },
             employee: 'Nhân viên',
@@ -54,6 +63,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             deductionCode: 'Mã khấu trừ',
             delete: 'Xóa',
             journalTitle: 'Bút toán dự kiến (chưa ghi sổ)',
+            journalTitleReleased: 'Bút toán theo bảng lương (đối chiếu với JE đã ghi sổ)',
             totals: (b) => `Tổng thu nhập ${money(b.gross || 0)} · BH NLĐ ${money(b.ee_ins || 0)} · BH DN ${money(b.er_ins || 0)} · Thuế ${money(b.pit || 0)} · Thực lĩnh ${money(b.net || 0)}`,
             netWords: (w) => `Thực lĩnh nhân viên bằng chữ: ${w}`,
             unverified: (list) => `Tham số chưa đối chiếu văn bản gốc, cần kế toán trưởng duyệt: ${list}`,
@@ -248,6 +258,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             a.remove();
         }, 1000);
     }
+    const EMPTY_INPUT = { earning_type: '', code: '', qty: '1', rate: '', multiplier: '', amount: '', description: '' };
     let renders = 0;
     let windowStart = Date.now();
     function PayrollApp() {
@@ -275,7 +286,8 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
         const [notice, setNotice] = core.useState('');
         const [error, setError] = core.useState('');
         const [confirm, setConfirm] = core.useState(null);
-        const [input, setInput] = core.useState({ kind: 'E', employee: '', earning_type: '', code: '', qty: '1', rate: '', multiplier: '', amount: '', description: '' });
+        const [tab, setTab] = core.useState('earn');
+        const [input, setInput] = core.useState(EMPTY_INPUT);
         const inputRef = core.useRef(input);
         const [year, setYear] = core.useState(String(new Date().getFullYear()));
         const [paygroup, setPaygroup] = core.useState('');
@@ -325,13 +337,17 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             reloadBoot();
         }, []);
         const loadBatches = (sub, per) => run(t.loading, call({ action: 'batches', subsidiary: sub || subsidiary, period: per === undefined ? period : per }), (r) => setBatches(r.batches));
-        const openBatch = (id) => run(t.loading, call({ action: 'batch', id }), (r) => {
+        // keep: giữ nhân viên, tab và ô lọc đang chọn khi tải lại sau một thao tác trên cùng bảng lương
+        const openBatch = (id, keep) => run(t.loading, call({ action: 'batch', id }), (r) => {
             setBatch(r);
-            setSelected(null);
             setJournal(null);
-            setQuick('');
+            if (!keep) {
+                setSelected(null);
+                setTab('earn');
+                setQuick('');
+            }
         });
-        const refresh = () => (batch ? openBatch(batch.batch.id) : loadBatches());
+        const refresh = () => (batch ? openBatch(batch.batch.id, true) : loadBatches());
         core.useEffect(() => {
             if (subsidiary && view === 'batches' && !batch)
                 loadBatches(subsidiary, period);
@@ -360,11 +376,11 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             repRef.current = Object.assign({}, repRef.current, { [k]: a.value !== undefined ? a.value : String(a.text || '') });
             setRepForm(repRef.current);
         };
-        const act = (action, extra, message) => {
+        const act = (action, extra, message, keep) => {
             const id = batch.batch.id;
             return run(t.working, post(Object.assign({ action, id }, extra || {})), (r) => {
                 const warn = ((r && r.warnings) || []).map((w) => (language() === 'vi' ? w.messageVi || w.message : w.message || w.messageVi)).filter(Boolean);
-                openBatch(id).then(() => setNotice([message ? message(r) : t.done].concat(warn).join(' · ')));
+                return openBatch(id, keep).then(() => setNotice([message ? message(r) : t.done].concat(warn).join(' · ')));
             });
         };
         const items = [];
@@ -476,7 +492,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
             add(boot.user.role === 'administrator' && !!b.job, t.actions.clearJob, () => act('clearJob'));
             add(!isHr && s === 'R', t.actions.agencyBills, () => setConfirm({ text: t.confirm.agencyBills, go: () => act('agencyBills', null, t.billsCreated) }));
             add(['A', 'R'].includes(s), t.actions.bankFile, () => run(t.working, call({ action: 'bankfile', id: b.id }), (r) => download(r.fileName, r.content)));
-            add(b.calculated, t.actions.journal, () => run(t.loading, call({ action: 'journal', id: b.id }), (r) => setJournal(r)));
+            add(b.calculated, t.actions.journal, () => run(t.loading, call({ action: 'journal', id: b.id }), (r) => (setJournal(r), setTab('journal'))));
             add(b.calculated, t.actions.payslips, () => window.open(printUrl('payslip'), '_blank'));
             add(b.calculated, t.actions.paymentSheet, () => window.open(printUrl('payment'), '_blank'));
             add(b.calculated && b.ctr_net, t.actions.contractor, () => window.open(printUrl('contractor'), '_blank'));
@@ -498,111 +514,241 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', '@uif-js/componen
                 extra.push({ text: b.messages.split('\n').slice(0, 3).join('; '), strong: true });
             items.push(item(actionRow(buttons, messages), 'b-actions'));
             items.push(item(jsxRuntime.jsx(component.Text, { size: component.Text.Size.S, rootStyle: { whiteSpace: 'normal' }, children: extra.map((m) => m.text).join('  ·  ') }), 'b-totals'));
+            // Lưới cha: mỗi nhân viên một dòng; bấm mã nhân viên để xem các tab chi tiết bên dưới (như VP302000)
+            const current = batch.lines.find((l) => l.id === selected) || batch.lines[0] || null;
             const rows = batch.lines.map((l) => Object.assign({}, l, { note: [l.error, l.warnings].filter(Boolean).join(' | ') }));
             const filtered = quickFilter(rows, quick);
-            const total = filtered.count === null ? null : filtered.rows.reduce((acc, r) => {
-                ['gross', 'exempt', 'taxable', 'ee_ins', 'er_ins', 'pit', 'other_ded', 'advance', 'net'].forEach((k) => (acc[k] = (acc[k] || 0) + (Number(r[k]) || 0)));
-                return acc;
-            }, { code: '', name: '∑', bold: true });
+            const sumKeys = ['gross', 'exempt', 'ee_ins', 'er_ins', 'family_ded', 'assessable', 'pit', 'other_ded', 'net_before', 'advance', 'net'];
+            const total = filtered.rows.length > 1 ? sumRow(filtered.rows, sumKeys, { code: '', name: '∑', bold: true }) : null;
+            items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: t.employeesTitle(batch.lines.length) }), 'e-title'));
             items.push(item(quickBox(filtered.count), 'quick'));
             items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(total ? filtered.rows.concat([total]) : filtered.rows), columns: [
-                    { name: 'code', label: t.cols.code, width: 90, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.id ? jsxRuntime.jsx(component.Button, { label: r.code || r.employee, type: component.Button.Type.LINK, action: () => setSelected(r.id) }) : plain(''))) },
-                    textCol('name', t.cols.name, 200, (r) => r.name),
-                    textCol('department', t.cols.dept, 120, (r) => r.department || ''),
+                    { name: 'code', label: t.cols.code, width: 100, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (r.id ? jsxRuntime.jsx(component.Button, { label: `${current && r.id === current.id ? '▸ ' : ''}${r.code || r.employee}`, type: component.Button.Type.LINK, action: () => setSelected(r.id) }) : plain(''))) },
+                    textCol('name', t.cols.name, 190, (r) => r.name),
                     textCol('employment_type', t.cols.employment, 60, (r) => r.employment_type || ''),
                     textCol('std_days', t.cols.std, 70, (r) => num(r.std_days)),
                     textCol('work_days', t.cols.work, 70, (r) => num(r.work_days)),
-                    moneyCol('gross', t.cols.gross, 130),
-                    moneyCol('exempt', t.cols.exempt, 110),
-                    moneyCol('ee_ins', t.cols.eeIns, 110),
-                    moneyCol('er_ins', t.cols.erIns, 110),
-                    textCol('dependents', t.cols.deps, 50, (r) => (r.id ? r.dependents || 0 : '')),
-                    moneyCol('assessable', t.cols.assessable, 120),
-                    moneyCol('pit', t.cols.pit, 110),
-                    moneyCol('other_ded', t.cols.otherDed, 110),
-                    moneyCol('advance', t.cols.advance, 110),
-                    moneyCol('net', t.cols.net, 130),
-                    textCol('note', t.cols.warn, 260, (r) => r.note || ''),
-                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: selected ? '300px' : '460px' } }), 'grid-lines'));
-            const line = selected && batch.lines.find((l) => l.id === selected);
-            if (line)
-                renderLineDetail(line);
-            renderInputs(editable);
-            if (journal)
-                renderJournal();
+                    moneyCol('gross', t.cols.gross, 120),
+                    moneyCol('exempt', t.cols.exempt, 105),
+                    moneyCol('ee_ins', t.cols.eeIns, 100),
+                    moneyCol('er_ins', t.cols.erInsShort, 100),
+                    textCol('dependents', t.cols.deps, 45, (r) => (r.id ? r.dependents || 0 : '')),
+                    moneyCol('family_ded', t.cols.family, 110),
+                    moneyCol('assessable', t.cols.assessable, 110),
+                    moneyCol('pit', t.cols.pit, 100),
+                    moneyCol('other_ded', t.cols.otherDed, 100),
+                    moneyCol('net_before', t.cols.netBefore, 120),
+                    moneyCol('advance', t.cols.advance, 100),
+                    moneyCol('net', t.cols.net, 120),
+                    textCol('note', t.cols.warn, 240, (r) => r.note || ''),
+                ], columnStretch: true, highlightRowsOnHover: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '300px' } }), 'grid-lines'));
+            renderDetailTabs(current, editable, bills, txText);
         }
-        function renderLineDetail(line) {
-            items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: t.detailOf(line.code, line.name) }), 'd-title'));
-            items.push(item(jsxRuntime.jsxs(component.GridPanel, { rootStyle: { flexShrink: 0 }, columns: "minmax(420px, 3fr) minmax(360px, 2fr)", columnGap: component.GridPanel.GapSize.L, children: [cell(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(line.earnings), columns: [
-                            textCol('name', t.cols.earning, 180, (r) => `${r.earningType} ${r.name || ''}`),
-                            textCol('quantity', t.cols.qty, 80, (r) => num(r.quantity)),
-                            textCol('rate', t.cols.rate, 100, (r) => num(r.rate)),
-                            textCol('multiplier', t.cols.mult, 60, (r) => num(r.multiplier)),
-                            moneyCol('amount', t.cols.amount, 120),
-                            moneyCol('taxExemptAmount', t.cols.exemptAmt, 110),
-                            textCol('source', t.cols.source, 70, (r) => `${r.source || ''} ${r.ruleCode || ''}`),
-                        ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '220px' } }), 'd-earn'), cell(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(line.insurance), columns: [
-                            textCol('code', t.cols.component, 90, (r) => r.code),
-                            moneyCol('wageBase', t.cols.base, 110),
-                            textCol('employeeRate', t.cols.eeRate, 70, (r) => pct(r.employeeRate)),
-                            moneyCol('employeeAmount', t.cols.eeIns, 100),
-                            textCol('employerRate', t.cols.erRate, 70, (r) => pct(r.employerRate)),
-                            moneyCol('employerAmount', t.cols.erIns, 100),
-                        ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '220px' } }), 'd-ins')] }), 'd-grids'));
+        function sumRow(list, keys, base) {
+            return list.reduce((acc, r) => {
+                keys.forEach((k) => (acc[k] = (acc[k] || 0) + (Number(r[k]) || 0)));
+                return acc;
+            }, Object.assign({}, base));
         }
-        function renderInputs(editable) {
+        // Các tab con: sáu tab của nhân viên đang chọn, hai tab của cả bảng lương
+        function renderDetailTabs(line, editable, bills, txText) {
+            const lineTabs = ['earn', 'ded', 'ins', 'att', 'alloc', 'adv'];
+            const strip = [];
+            const tabButton = (k) => jsxRuntime.jsx(component.Button, { label: t.tabs[k], hierarchy: tab === k ? component.Button.Hierarchy.PRIMARY : component.Button.Hierarchy.SECONDARY, type: tab === k ? component.Button.Type.PRIMARY : component.Button.Type.GHOST, action: () => pickTab(k) });
+            lineTabs.forEach((k) => strip.push(tabButton(k)));
+            strip.push(jsxRuntime.jsx(component.Text, { type: component.Text.Type.WEAK, children: t.batchTabs }));
+            ['journal', 'bills'].forEach((k) => strip.push(tabButton(k)));
+            const isLineTab = lineTabs.includes(tab);
+            items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: isLineTab ? (line ? t.detailOf(line.code, line.name) : t.noLine) : t.batchDetail }), 'd-title'));
+            items.push(item(actionRow(strip), 'd-tabs'));
+            if (tab === 'journal')
+                return renderJournalTab();
+            if (tab === 'bills')
+                return renderBills(bills, txText);
+            if (!line)
+                return;
+            if (tab === 'earn')
+                renderEarnings(line, editable);
+            else if (tab === 'ded')
+                renderDeductions(line, editable);
+            else if (tab === 'ins')
+                renderInsurance(line);
+            else if (tab === 'att')
+                renderLineAttendance(line);
+            else if (tab === 'alloc')
+                renderAllocations(line);
+            else
+                renderOffsets(line);
+        }
+        function pickTab(k) {
+            setTab(k);
+            if (k === 'journal' && !journal && batch.batch.calculated)
+                run(t.loading, call({ action: 'journal', id: batch.batch.id }), (r) => setJournal(r));
+        }
+        // columnStretch không giãn cột khi tổng bề rộng nhỏ hơn khung: nhân bề rộng cột theo bề ngang cửa sổ để lưới phủ hết trang
+        function detailGrid(rows, columns, key, height) {
+            const sum = columns.reduce((a, c) => a + (c.width || 0), 0);
+            const factor = sum ? Math.max(1, (window.innerWidth - 120) / sum) : 1;
+            return item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(rows), columns: columns.map((c) => Object.assign({}, c, { width: Math.floor((c.width || 0) * factor) })), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: height || '260px' } }), key);
+        }
+        function myInputs(line, kind) {
+            return (batch.inputs || []).filter((i) => i.employee === line.employee && i.kind === kind);
+        }
+        function delCol(editable) {
+            return { name: 'del', label: '', width: 60, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (editable && r.inputId ? jsxRuntime.jsx(component.Button, { label: t.delete, type: component.Button.Type.LINK, action: () => act('deleteInput', { id: r.inputId }, null, true) }) : plain(''))) };
+        }
+        function inputAmount(i) {
+            const blankV = (v) => v === null || v === undefined || v === '';
+            return !blankV(i.amount) ? Number(i.amount) : (Number(i.qty) || 0) * (Number(i.rate) || 0) * (blankV(i.multiplier) ? 1 : Number(i.multiplier));
+        }
+        // Thu nhập: dòng hệ thống sinh và dòng nhập tay chung một lưới, cột Nguồn phân biệt (như tab Thu nhập của VP302000)
+        function renderEarnings(line, editable) {
             const ets = boot.earningTypes || [];
-            const empItems = batch.lines.map((l) => ({ value: l.employee, label: `${l.code || l.employee} ${l.name || ''}` }));
-            const etItems = ets.map((e) => ({ value: e.id, label: `${e.code} ${e.name}` }));
-            const etName = (id) => (ets.find((e) => e.id === id) || {}).code || '';
-            const empName = (id) => (empItems.find((e) => e.value === id) || {}).label || id;
-            items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: t.inputs }), 'i-title'));
-            items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(batch.inputs), columns: [
-                    textCol('employee', t.employee, 220, (r) => empName(r.employee)),
-                    textCol('kind', t.cols.type, 120, (r) => t.kind[r.kind] || r.kind),
-                    textCol('earning_type', t.cols.earning, 120, (r) => (r.kind === 'E' ? etName(r.earning_type) : r.code || '')),
-                    textCol('description', t.cols.memo, 200, (r) => r.description || ''),
-                    textCol('qty', t.cols.qty, 80, (r) => num(r.qty)),
-                    textCol('rate', t.cols.rate, 100, (r) => num(r.rate)),
-                    textCol('multiplier', t.cols.mult, 60, (r) => num(r.multiplier)),
-                    moneyCol('amount', t.cols.amount, 110),
-                    { name: 'del', label: '', width: 70, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => (editable ? jsxRuntime.jsx(component.Button, { label: t.delete, type: component.Button.Type.LINK, action: () => act('deleteInput', { id: r.id }) }) : plain(''))) },
-                ], columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: '200px' } }), 'i-grid'));
+            const etOf = (id) => ets.find((e) => e.id === id) || {};
+            const calc = (line.earnings || []).filter((x) => x.source !== 'M');
+            const manualCalc = (line.earnings || []).filter((x) => x.source === 'M');
+            const inputs = myInputs(line, 'E');
+            const rows = calc.map((x) => ({ type: x.earningType, memo: x.name || '', quantity: x.quantity, rate: x.rate, multiplier: x.multiplier, amount: x.amount, exempt: x.taxExemptAmount, src: `${t.src[x.source] || x.source || ''}${x.ruleCode ? ` · ${x.ruleCode}` : ''}`, project: x.project || '' }));
+            inputs.forEach((i, n) => {
+                // Dòng nhập tay sau khi tính có phần miễn thuế; khớp theo thứ tự nạp vào bộ tính
+                const m = manualCalc.length === inputs.length ? manualCalc[n] : null;
+                rows.push({ inputId: i.id, type: etOf(i.earning_type).code || '', memo: i.description || etOf(i.earning_type).name || '', quantity: i.qty, rate: i.rate, multiplier: i.multiplier, amount: m ? m.amount : inputAmount(i), exempt: m ? m.taxExemptAmount : null, src: t.src.M, project: '' });
+            });
+            if (rows.length > 1)
+                rows.push(sumRow(rows, ['amount', 'exempt'], { type: '∑', bold: true }));
+            items.push(detailGrid(rows, [
+                textCol('type', t.cols.earningType, 110, (r) => r.type),
+                textCol('memo', t.cols.memo, 220, (r) => r.memo),
+                textCol('quantity', t.cols.qty, 80, (r) => num(r.quantity)),
+                textCol('rate', t.cols.rate, 110, (r) => num(r.rate)),
+                textCol('multiplier', t.cols.mult, 60, (r) => num(r.multiplier)),
+                moneyCol('amount', t.cols.amount, 120),
+                moneyCol('exempt', t.cols.exemptAmt, 110),
+                textCol('src', t.cols.source, 140, (r) => r.src),
+                textCol('project', t.cols.project, 100, (r) => r.project),
+                delCol(editable),
+            ], 'd-earn'));
             if (!editable)
                 return;
-            // Giá trị form giữ trong ref: hai ô cập nhật liền nhau (rời ô này, bấm nút) không ghi đè nhau bằng trạng thái cũ
-            const set = (k) => (a) => {
+            const etItems = ets.map((e) => ({ value: e.id, label: `${e.code} ${e.name}` }));
+            inputForm(line, 'E', [
+                cell(labeled(t.earningType, jsxRuntime.jsx(component.Dropdown, { rootStyle: { width: '100%' }, dataSource: new core.ArrayDataSource(etItems), valueMember: "value", displayMember: "label", selectedValue: input.earning_type, onSelectionChanged: (a) => a.value && a.value !== input.earning_type && setField('earning_type')(a) })), `in-et-${input.rev || 0}`),
+                cell(labeled(t.cols.memo, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.description, onTextChanged: setField('description') })), 'in-desc'),
+                cell(labeled(t.cols.qty, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.qty, onTextChanged: setField('qty') })), 'in-qty'),
+                cell(labeled(t.cols.rate, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.rate, onTextChanged: setField('rate') })), 'in-rate'),
+                cell(labeled(t.cols.mult, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.multiplier, placeholder: "1", onTextChanged: setField('multiplier') })), 'in-mult'),
+            ]);
+        }
+        // Khấu trừ khác (sau thuế): chỉ có dòng nhập tay
+        function renderDeductions(line, editable) {
+            const rows = myInputs(line, 'D').map((i) => ({ inputId: i.id, code: i.code || '', memo: i.description || '', amount: i.amount }));
+            if (rows.length > 1)
+                rows.push(sumRow(rows, ['amount'], { code: '∑', bold: true }));
+            items.push(detailGrid(rows, [
+                textCol('code', t.deductionCode, 120, (r) => r.code),
+                textCol('memo', t.cols.memo, 320, (r) => r.memo),
+                moneyCol('amount', t.cols.amount, 130),
+                delCol(editable),
+            ], 'd-ded', '200px'));
+            if (!editable)
+                return;
+            inputForm(line, 'D', [
+                cell(labeled(t.deductionCode, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.code, placeholder: "KHAC", onTextChanged: setField('code') })), 'in-code'),
+                cell(labeled(t.cols.memo, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.description, onTextChanged: setField('description') })), 'in-desc'),
+                cell(labeled(t.cols.amount, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.amount, onTextChanged: setField('amount') })), 'in-amt'),
+            ]);
+        }
+        // Form thêm dòng nhập tay cho đúng nhân viên đang chọn; giá trị giữ trong ref để hai ô cập nhật liền nhau không ghi đè nhau
+        function setField(k) {
+            return (a) => {
                 inputRef.current = Object.assign({}, inputRef.current, { [k]: a.value !== undefined ? a.value : String(a.text || '') });
                 setInput(inputRef.current);
             };
-            const kindItems = [{ value: 'E', label: t.kind.E }, { value: 'D', label: t.kind.D }];
-            const fields = [
-                cell(labeled(t.employee, jsxRuntime.jsx(component.Dropdown, { rootStyle: { width: '100%' }, dataSource: new core.ArrayDataSource(empItems), valueMember: "value", displayMember: "label", selectedValue: input.employee, onSelectionChanged: (a) => a.value && a.value !== input.employee && set('employee')(a) })), 'in-emp'),
-                cell(labeled(t.cols.type, jsxRuntime.jsx(component.Dropdown, { rootStyle: { width: '100%' }, dataSource: new core.ArrayDataSource(kindItems), valueMember: "value", displayMember: "label", selectedValue: input.kind, onSelectionChanged: (a) => a.value && a.value !== input.kind && set('kind')(a) })), 'in-kind'),
-                input.kind === 'E'
-                    ? cell(labeled(t.earningType, jsxRuntime.jsx(component.Dropdown, { rootStyle: { width: '100%' }, dataSource: new core.ArrayDataSource(etItems), valueMember: "value", displayMember: "label", selectedValue: input.earning_type, onSelectionChanged: (a) => a.value && a.value !== input.earning_type && set('earning_type')(a) })), 'in-et')
-                    : cell(labeled(t.deductionCode, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.code, onTextChanged: set('code') })), 'in-code'),
-                cell(labeled(t.cols.memo, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.description, onTextChanged: set('description') })), 'in-desc'),
-            ];
-            if (input.kind === 'E') {
-                fields.push(cell(labeled(t.cols.qty, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.qty, onTextChanged: set('qty') })), 'in-qty'));
-                fields.push(cell(labeled(t.cols.rate, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.rate, onTextChanged: set('rate') })), 'in-rate'));
-                fields.push(cell(labeled(t.cols.mult, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.multiplier, onTextChanged: set('multiplier') })), 'in-mult'));
-            }
-            else
-                fields.push(cell(labeled(t.cols.amount, jsxRuntime.jsx(component.TextBox, { rootStyle: { width: '100%' }, text: input.amount, onTextChanged: set('amount') })), 'in-amt'));
-            items.push(item(jsxRuntime.jsx(component.GridPanel, { rootStyle: { flexShrink: 0 }, columns: "repeat(auto-fill, minmax(200px, 1fr))", columnGap: component.GridPanel.GapSize.M, rowGap: component.GridPanel.GapSize.S, children: fields }), 'i-form'));
-            const numOrNull = (v) => (String(v).trim() === '' ? null : Number(String(v).replace(/\./g, '').replace(',', '.')));
+        }
+        function inputForm(line, kind, fields) {
+            items.push(item(jsxRuntime.jsx(component.Text, { size: component.Text.Size.S, type: component.Text.Type.WEAK, children: t.inputHint[kind] }), `i-hint-${kind}`));
+            items.push(item(jsxRuntime.jsx(component.GridPanel, { rootStyle: { flexShrink: 0 }, columns: "repeat(auto-fill, minmax(180px, 1fr))", columnGap: component.GridPanel.GapSize.M, rowGap: component.GridPanel.GapSize.S, children: fields }), `i-form-${kind}`));
+            const numOrNull = (v) => (String(v === undefined || v === null ? '' : v).trim() === '' ? null : Number(String(v).replace(/\./g, '').replace(',', '.')));
+            const ready = kind === 'D' || !!input.earning_type;
             items.push(item(actionRow([
-                jsxRuntime.jsx(component.Button, { label: t.addInput, enabled: !busy && !!input.employee && (input.kind === 'D' || !!input.earning_type), action: () => {
-                        const input = inputRef.current;
-                        return act('saveInput', { values: { batch: batch.batch.id, employee: input.employee, kind: input.kind, earning_type: input.kind === 'E' ? input.earning_type : null, code: input.kind === 'D' ? input.code || 'KHAC' : '', description: input.description,
-                                qty: input.kind === 'E' ? numOrNull(input.qty) : null, rate: input.kind === 'E' ? numOrNull(input.rate) : null, multiplier: input.kind === 'E' ? numOrNull(input.multiplier) : null, amount: input.kind === 'D' ? numOrNull(input.amount) : null } });
+                jsxRuntime.jsx(component.Button, { label: t.addInput, hierarchy: component.Button.Hierarchy.PRIMARY, enabled: !busy && ready, action: () => {
+                        const v = inputRef.current;
+                        const values = { batch: batch.batch.id, employee: line.employee, kind, earning_type: kind === 'E' ? v.earning_type : null, code: kind === 'D' ? v.code || 'KHAC' : '', description: v.description,
+                            qty: kind === 'E' ? numOrNull(v.qty) : null, rate: kind === 'E' ? numOrNull(v.rate) : null, multiplier: kind === 'E' ? numOrNull(v.multiplier) : null, amount: kind === 'D' ? numOrNull(v.amount) : null };
+                        // Chỉ xóa form khi lưu được; rev đổi khóa ô chọn để Dropdown dựng lại ở trạng thái trống
+                        return act('saveInput', { values }, null, true).then((r) => {
+                            if (!r)
+                                return;
+                            inputRef.current = Object.assign({}, EMPTY_INPUT, { rev: (v.rev || 0) + 1 });
+                            setInput(inputRef.current);
+                        });
                     } }),
-            ]), 'i-add'));
+            ]), `i-add-${kind}`));
+        }
+        function renderInsurance(line) {
+            const rows = (line.insurance || []).slice();
+            if (rows.length > 1)
+                rows.push(sumRow(rows, ['employeeAmount', 'employerAmount'], { code: '∑', bold: true }));
+            items.push(detailGrid(rows, [
+                textCol('code', t.cols.component, 110, (r) => r.code),
+                moneyCol('wageBase', t.cols.base, 130),
+                textCol('employeeRate', t.cols.eeRate, 80, (r) => pct(r.employeeRate)),
+                moneyCol('employeeAmount', t.cols.eeIns, 120),
+                textCol('employerRate', t.cols.erRate, 80, (r) => pct(r.employerRate)),
+                moneyCol('employerAmount', t.cols.erIns, 120),
+            ], 'd-ins'));
+        }
+        // Công: số liệu công của dòng (từ bảng tổng hợp công nếu đã lập, ngược lại công chuẩn trừ ngày ngoài hợp đồng)
+        function renderLineAttendance(line) {
+            const rows = [
+                ['std_days', num(line.std_days)], ['work_days', num(line.work_days)], ['paid_leave', num(line.paid_leave)], ['unpaid_leave', num(line.unpaid_leave)],
+                ['si_leave', num(line.si_leave)], ['absence_days', num(line.absence_days)], ['ot_hours', num(line.ot_hours)], ['att_locked', t.rep.yesNo[line.att_locked ? 'T' : 'F']],
+            ].map(([k, v]) => ({ label: t.attCols[k], value: v }));
+            items.push(detailGrid(rows, [textCol('label', t.rep.item, 260, (r) => r.label), textCol('value', t.rep.value, 140, (r) => r.value)], 'd-att', '300px'));
+        }
+        function renderAllocations(line) {
+            const rows = (line.allocations || []).slice();
+            if (rows.length > 1)
+                rows.push(sumRow(rows, ['amount'], { component: '∑', bold: true }));
+            items.push(detailGrid(rows, [
+                textCol('component', t.cols.component, 100, (r) => r.component),
+                textCol('project', t.cols.project, 120, (r) => r.project || ''),
+                textCol('task', t.cols.task, 100, (r) => r.task || ''),
+                textCol('branch', t.cols.branch, 100, (r) => r.branch || ''),
+                textCol('workCenter', t.cols.workCenter, 100, (r) => r.workCenter || ''),
+                textCol('source', t.cols.source, 110, (r) => (r.source ? t.allocSrc[r.source] || r.source : '')),
+                textCol('hours', t.cols.hours, 70, (r) => num(r.hours)),
+                textCol('ratio', t.cols.ratio, 80, (r) => pct(r.ratio)),
+                moneyCol('amount', t.cols.amount, 120),
+            ], 'd-alloc'));
+        }
+        function renderOffsets(line) {
+            const rows = (line.advanceOffsets || []).slice();
+            if (rows.length > 1)
+                rows.push(sumRow(rows, ['amount'], { refNbr: '∑', bold: true }));
+            items.push(detailGrid(rows, [
+                textCol('refNbr', t.cols.advanceNbr, 140, (r) => r.refNbr),
+                moneyCol('amount', t.cols.offset, 130),
+                moneyCol('remainingBalance', t.cols.balanceAfter, 130),
+            ], 'd-adv', '200px'));
+        }
+        function renderBills(bills, txText) {
+            const rows = bills.map((x) => ({ id: x.id, doc: txText(x.id), memo: x.memo || '', amount: x.amount }));
+            items.push(detailGrid(rows, [
+                { name: 'doc', label: t.cols.document, width: 220, type: component.DataGrid.ColumnType.TEMPLATED, content: safe((r) => jsxRuntime.jsx(component.Button, { label: r.doc, type: component.Button.Type.LINK, action: () => window.open(`/app/accounting/transactions/vendbill.nl?id=${encodeURIComponent(r.id)}`, '_blank') })) },
+                textCol('memo', t.cols.memo, 360, (r) => r.memo),
+                moneyCol('amount', t.cols.amount, 140),
+            ], 'd-bills', '220px'));
+        }
+        function renderJournalTab() {
+            if (!batch.batch.calculated)
+                return items.push(item(jsxRuntime.jsx(component.Text, { type: component.Text.Type.WEAK, children: t.journalNotReady }), 'j-none'));
+            if (!journal)
+                return items.push(item(actionRow([jsxRuntime.jsx(component.Button, { label: t.actions.journal, enabled: !busy, action: () => pickTab('journal') })]), 'j-wait'));
+            renderJournal();
         }
         function renderJournal() {
-            items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: `${t.journalTitle}: ${journal.memo}` }), 'j-title'));
+            items.push(item(jsxRuntime.jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: `${batch.batch.journal ? t.journalTitleReleased : t.journalTitle}: ${journal.memo}` }), 'j-title'));
             const sum = journal.lines.reduce((a, l) => ({ debit: a.debit + Number(l.debit || 0), credit: a.credit + Number(l.credit || 0) }), { debit: 0, credit: 0 });
             items.push(item(jsxRuntime.jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(journal.lines.concat([{ account: '', memo: '∑', debit: sum.debit, credit: sum.credit, bold: true }])), columns: [
                     textCol('account', t.cols.account, 100, (r) => r.accountNumber || r.account),

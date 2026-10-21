@@ -34,7 +34,7 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | VP312000 | Giờ công tính lương | Lõi xong | TimesheetSync, TimeImport; chưa nối Time Bill NetSuite |
 | VP501000 | Cấp phép năm | Xong | Cấp, chuyển phép, hết hạn; bỏ CTV |
 | VP301000 | Tạm ứng lương | Xong | Ghi sổ Nợ 141 / Có tiền; cấn trừ FIFO; hoàn khi đảo |
-| VP302000 | Bảng lương | Xong | Nạp nhân viên, tính, duyệt, ghi sổ, đảo, bill cơ quan thu, file ngân hàng, in; Map/Reduce cho bảng lớn |
+| VP302000 | Bảng lương | Xong | Nạp nhân viên, tính, duyệt, ghi sổ, đảo, bill cơ quan thu, file ngân hàng, in; Map/Reduce cho bảng lớn. Bố cục cha - con như Acumatica: lưới nhân viên, tab Thu nhập, Khấu trừ khác (nhập tay ngay trong tab), Bảo hiểm, Công, Phân bổ dự án, Cấn trừ tạm ứng; tab Bút toán, Bill cơ quan thu cho cả bảng. Chưa có Lịch sử duyệt |
 | VP402000 | Bảng BH phải nộp, D02-LT | Xong | SPA > Báo cáo, xuất CSV |
 | VP403000 | 05/KK-TNCN | Xong | Chỉ tiêu [16] - [32] + danh sách cá nhân |
 | VP404000 | Quyết toán TNCN năm | Xong | 05-1/BK, 05-2/BK |
