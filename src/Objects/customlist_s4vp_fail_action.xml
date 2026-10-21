@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_fail_action">
+  <name>S4VP fail_action</name>
+  <description>S4 VN Payroll code list fail_action; values keep the Acumatica codes (N, R).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_fail_action_n">
+      <value>N - Không trả</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_fail_action_r">
+      <value>R - Giảm theo đơn vị vi phạm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

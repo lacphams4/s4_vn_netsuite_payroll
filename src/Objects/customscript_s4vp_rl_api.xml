@@ -1,0 +1,17 @@
+<restlet scriptid="customscript_s4vp_rl_api">
+  <name>S4VP Payroll API (RESTlet)</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_rl_api.js]</scriptfile>
+  <description>Data and actions of the VN Payroll screen: defaults, pay periods, payroll batches (load employees, calculate, approve, release, reverse, agency bills, bank file).</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_rl_api">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <status>RELEASED</status>
+      <title>S4VP Payroll API</title>
+      <audslctrole>ADMINISTRATOR|[customrole_s4vp_hr]|[customrole_s4vp_accountant]</audslctrole>
+    </scriptdeployment>
+  </scriptdeployments>
+</restlet>

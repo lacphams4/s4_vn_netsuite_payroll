@@ -1,0 +1,32 @@
+<customlist scriptid="customlist_s4vp_condition_field">
+  <name>S4VP condition_field</name>
+  <description>S4 VN Payroll code list condition_field; values keep the Acumatica codes (D, U, L, A, T, P).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_condition_field_d">
+      <value>D - Ngày công</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_condition_field_u">
+      <value>U - Ngày nghỉ không lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_condition_field_l">
+      <value>L - Số lần trễ, sớm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_condition_field_a">
+      <value>A - Còn làm việc cuối kỳ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_condition_field_t">
+      <value>T - Thâm niên (tháng)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_condition_field_p">
+      <value>P - % đạt chỉ tiêu</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,40 @@
+<customlist scriptid="customlist_s4vp_quantity_source">
+  <name>S4VP quantity_source</name>
+  <description>S4 VN Payroll code list quantity_source; values keep the Acumatica codes (K, D, B, O, J, S, E, H).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_quantity_source_k">
+      <value>K - Hằng số 1</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_quantity_source_d">
+      <value>D - Ngày công</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_quantity_source_b">
+      <value>B - Theo loại lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_quantity_source_o">
+      <value>O - Thành tiền sản lượng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_quantity_source_j">
+      <value>J - Ngày có mặt dự án</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_quantity_source_s">
+      <value>S - Doanh số</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_quantity_source_e">
+      <value>E - Tiền của loại thu nhập cơ sở</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_quantity_source_h">
+      <value>H - Số ca đã làm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

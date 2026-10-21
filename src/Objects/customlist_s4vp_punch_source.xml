@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_punch_source">
+  <name>S4VP punch_source</name>
+  <description>S4 VN Payroll code list punch_source; values keep the Acumatica codes (I, M, A).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_punch_source_i">
+      <value>I - Tải file</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_punch_source_m">
+      <value>M - Nhập tay</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_punch_source_a">
+      <value>A - API</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

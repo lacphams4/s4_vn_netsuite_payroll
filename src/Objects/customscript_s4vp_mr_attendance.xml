@@ -1,0 +1,66 @@
+<mapreducescript scriptid="customscript_s4vp_mr_attendance">
+  <name>S4VP Attendance and Leave (Map/Reduce)</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_mr_attendance.js]</scriptfile>
+  <description>Builds, locks or unlocks the attendance summary of a pay period, or runs annual leave accrual, in chunks of 50 employees.</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_s4vp_mra_op">
+      <label>Operation</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>build, lock, unlock or accrue (set by the payroll screen).</description>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_s4vp_mra_period">
+      <label>Pay period internal ID</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Pay period for build, lock and unlock.</description>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_s4vp_mra_year">
+      <label>Accrual year</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Year for leave accrual.</description>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_s4vp_mra_policy">
+      <label>Leave policy code</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Only this leave policy (empty = all).</description>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_s4vp_mra_rundate">
+      <label>Run date</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Accrual run date YYYY-MM-DD.</description>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_s4vp_mra_subsidiary">
+      <label>Subsidiary internal ID</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Only payroll profiles of this subsidiary (empty = all).</description>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_mr_attendance">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <status>NOTSCHEDULED</status>
+      <title>S4VP Attendance and Leave</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>

@@ -1,0 +1,28 @@
+<customlist scriptid="customlist_s4vp_leave_source">
+  <name>S4VP leave_source</name>
+  <description>S4 VN Payroll code list leave_source; values keep the Acumatica codes (A, C, X, R, J).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_leave_source_a">
+      <value>A - Cấp phép</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_leave_source_c">
+      <value>C - Chuyển phép</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_leave_source_x">
+      <value>X - Hết hạn</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_leave_source_r">
+      <value>R - Đơn nghỉ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_leave_source_j">
+      <value>J - Điều chỉnh</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

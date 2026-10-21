@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_statutory_timing">
+  <name>S4VP statutory_timing</name>
+  <description>S4 VN Payroll code list statutory_timing; values keep the Acumatica codes (L, T, A).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_statutory_timing_l">
+      <value>L - Kỳ cuối tháng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_statutory_timing_t">
+      <value>T - Tạm khấu trừ từng kỳ (chưa hỗ trợ)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_statutory_timing_a">
+      <value>A - Kỳ giữa tháng là tạm ứng (chưa hỗ trợ)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

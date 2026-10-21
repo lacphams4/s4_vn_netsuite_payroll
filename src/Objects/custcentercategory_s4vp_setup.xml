@@ -1,0 +1,103 @@
+<centercategory scriptid="custcentercategory_s4vp_setup">
+  <center>BASIC</center>
+  <centertab>[scriptid=custcentertab_s4vp_payroll]</centertab>
+  <label>Thiết lập lương</label>
+  <links>
+    <link>
+      <linklabel>Thiết lập lương VN</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_setup]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Thiết lập lương theo công ty</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_company]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Nhóm lương</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_paygroup]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Kỳ lương</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_period]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Tham số pháp lý</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_param]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Biểu thuế TNCN</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_pit_bracket]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Khoản trích theo lương</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_ins_comp]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Ngày lễ</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_holiday]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Loại thu nhập</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_earning_type]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Quy tắc thu nhập</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_earning_rule]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Gói phúc lợi</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_benefit_pkg]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Bảng đơn giá</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_rate_table]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Tổ đội</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_team]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Loại nghỉ</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_leave_type]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Chính sách phép năm</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_leave_policy]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Ký hiệu bảng công</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_att_symbol]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

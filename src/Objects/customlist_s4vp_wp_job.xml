@@ -1,0 +1,28 @@
+<customlist scriptid="customlist_s4vp_wp_job">
+  <name>S4VP wp_job</name>
+  <description>S4 VN Payroll code list wp_job; values keep the Acumatica codes (M, D, E, T, O).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_wp_job_m">
+      <value>M - Nhà quản lý</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_wp_job_d">
+      <value>D - Giám đốc điều hành</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_wp_job_e">
+      <value>E - Chuyên gia</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_wp_job_t">
+      <value>T - Lao động kỹ thuật</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_wp_job_o">
+      <value>O - Khác</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,40 @@
+<customlist scriptid="customlist_s4vp_batch_status">
+  <name>S4VP batch_status</name>
+  <description>S4 VN Payroll code list batch_status; values keep the Acumatica codes (H, B, C, P, A, J, R, V).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_batch_status_h">
+      <value>H - Tạm giữ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_batch_status_b">
+      <value>B - Chờ tính</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_batch_status_c">
+      <value>C - Đã tính</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_batch_status_p">
+      <value>P - Chờ duyệt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_batch_status_a">
+      <value>A - Đã duyệt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_batch_status_j">
+      <value>J - Từ chối</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_batch_status_r">
+      <value>R - Đã ghi sổ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_batch_status_v">
+      <value>V - Đã đảo</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

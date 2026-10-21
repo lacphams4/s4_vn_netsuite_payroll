@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_tier_method">
+  <name>S4VP tier_method</name>
+  <description>S4 VN Payroll code list tier_method; values keep the Acumatica codes (P, W).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_tier_method_p">
+      <value>P - Lũy tiến theo bậc</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_tier_method_w">
+      <value>W - Toàn bộ theo bậc đạt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

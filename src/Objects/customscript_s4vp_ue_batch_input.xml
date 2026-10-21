@@ -1,0 +1,17 @@
+<usereventscript scriptid="customscript_s4vp_ue_batch_input">
+  <name>S4VP Payroll Input Control</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_ue_batch_input.js]</scriptfile>
+  <description>Blocks manual earning / deduction lines on approved, released or reversed payroll batches and marks the batch as not calculated after a change.</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_batch_input">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_batch_input]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+  </scriptdeployments>
+</usereventscript>

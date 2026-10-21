@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_team_type">
+  <name>S4VP team_type</name>
+  <description>S4 VN Payroll code list team_type; values keep the Acumatica codes (C, L, S).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_team_type_c">
+      <value>C - Tổ đội</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_team_type_l">
+      <value>L - Chuyền</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_team_type_s">
+      <value>S - Cửa hàng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_pit_method">
+  <name>S4VP pit_method</name>
+  <description>S4 VN Payroll code list pit_method; values keep the Acumatica codes (P, F, N, X).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_pit_method_p">
+      <value>P - Lũy tiến (HĐLĐ từ 3 tháng)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_pit_method_f">
+      <value>F - Khấu trừ 10%</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_pit_method_n">
+      <value>N - Không cư trú 20%</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_pit_method_x">
+      <value>X - Không khấu trừ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

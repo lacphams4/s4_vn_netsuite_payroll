@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_day_type">
+  <name>S4VP day_type</name>
+  <description>S4 VN Payroll code list day_type; values keep the Acumatica codes (N, W, H).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_day_type_n">
+      <value>N - Ngày thường</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_day_type_w">
+      <value>W - Nghỉ hằng tuần</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_day_type_h">
+      <value>H - Ngày lễ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_alloc_status">
+  <name>S4VP alloc_status</name>
+  <description>S4 VN Payroll code list alloc_status; values keep the Acumatica codes (D, A, S).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_alloc_status_d">
+      <value>D - Nháp</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_alloc_status_a">
+      <value>A - Hiệu lực</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_alloc_status_s">
+      <value>S - Đã thay thế</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

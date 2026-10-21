@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_input_kind">
+  <name>S4VP input_kind</name>
+  <description>S4 VN Payroll code list input_kind; values keep the Acumatica codes (E, D).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_input_kind_e">
+      <value>Thu nhập</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_input_kind_d">
+      <value>Khấu trừ sau thuế</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

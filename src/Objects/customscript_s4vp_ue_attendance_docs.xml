@@ -1,0 +1,38 @@
+<usereventscript scriptid="customscript_s4vp_ue_attendance_docs">
+  <name>S4VP Attendance Document Control</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_ue_attendance_docs.js]</scriptfile>
+  <description>Leave, overtime, business trip and attendance exception documents: only on-hold, unlocked documents can be changed or deleted by users; derived fields (days, day type, overtime earning type, deducted days, period) are calculated on save.</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_att_leave">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_leave_request]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_att_ot">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_ot_request]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_att_trip">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_business_trip]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_att_exception">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_att_exception]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+  </scriptdeployments>
+</usereventscript>

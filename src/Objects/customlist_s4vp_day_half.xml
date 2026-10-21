@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_day_half">
+  <name>S4VP day_half</name>
+  <description>S4 VN Payroll code list day_half; values keep the Acumatica codes (A, P).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_day_half_a">
+      <value>A - Buổi sáng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_day_half_p">
+      <value>P - Buổi chiều</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

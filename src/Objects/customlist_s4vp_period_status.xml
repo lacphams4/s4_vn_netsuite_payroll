@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_period_status">
+  <name>S4VP period_status</name>
+  <description>S4 VN Payroll code list period_status; values keep the Acumatica codes (O, C).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_period_status_o">
+      <value>Mở</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_period_status_c">
+      <value>Đóng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

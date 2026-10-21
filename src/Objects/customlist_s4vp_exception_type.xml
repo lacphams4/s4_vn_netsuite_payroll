@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_exception_type">
+  <name>S4VP exception_type</name>
+  <description>S4 VN Payroll code list exception_type; values keep the Acumatica codes (L, E, A).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_exception_type_l">
+      <value>L - Đi trễ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_exception_type_e">
+      <value>E - Về sớm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_exception_type_a">
+      <value>A - Điều chỉnh công</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

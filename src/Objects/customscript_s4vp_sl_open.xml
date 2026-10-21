@@ -1,0 +1,17 @@
+<suitelet scriptid="customscript_s4vp_sl_open">
+  <name>S4VP Open Payroll Screen (menu)</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_sl_open.js]</scriptfile>
+  <description>Opens the VN Payroll single page application from the menu (center categories cannot link a single page application directly).</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_sl_open">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <status>RELEASED</status>
+      <title>S4VP VN Payroll</title>
+      <audslctrole>ADMINISTRATOR|[customrole_s4vp_hr]|[customrole_s4vp_accountant]</audslctrole>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

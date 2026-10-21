@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_tax_treatment">
+  <name>S4VP tax_treatment</name>
+  <description>S4 VN Payroll code list tax_treatment; values keep the Acumatica codes (T, E, C, P).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_tax_treatment_t">
+      <value>T - Chịu thuế</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_tax_treatment_e">
+      <value>E - Miễn thuế</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_tax_treatment_c">
+      <value>C - Miễn đến trần</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_tax_treatment_p">
+      <value>P - Miễn phần chênh lệch (OT, đêm)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

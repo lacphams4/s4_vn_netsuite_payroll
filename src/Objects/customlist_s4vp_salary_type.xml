@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_salary_type">
+  <name>S4VP salary_type</name>
+  <description>S4 VN Payroll code list salary_type; values keep the Acumatica codes (M, D, H).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_salary_type_m">
+      <value>M - Lương tháng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_salary_type_d">
+      <value>D - Lương ngày</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_salary_type_h">
+      <value>H - Lương giờ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,31 @@
+<usereventscript scriptid="customscript_s4vp_ue_output">
+  <name>S4VP Output Entry Control</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_ue_output.js]</scriptfile>
+  <description>Blocks changes to output entries, their lines and members unless the entry is on hold; computes line amounts and entry totals.</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_output">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_output]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_output_line">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_output_line]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_s4vp_ue_output_member">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <recordtype>[customrecord_s4vp_output_member]</recordtype>
+      <status>RELEASED</status>
+      <allroles>T</allroles>
+    </scriptdeployment>
+  </scriptdeployments>
+</usereventscript>

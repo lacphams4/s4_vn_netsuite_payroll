@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_accrual_method">
+  <name>S4VP accrual_method</name>
+  <description>S4 VN Payroll code list accrual_method; values keep the Acumatica codes (Y, M).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_accrual_method_y">
+      <value>Y - Cấp đầu năm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_accrual_method_m">
+      <value>M - Cấp theo tháng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

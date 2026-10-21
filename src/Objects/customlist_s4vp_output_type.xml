@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_output_type">
+  <name>S4VP output_type</name>
+  <description>S4 VN Payroll code list output_type; values keep the Acumatica codes (I, T).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_output_type_i">
+      <value>I - Cá nhân</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_output_type_t">
+      <value>T - Tổ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

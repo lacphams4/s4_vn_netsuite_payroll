@@ -1,0 +1,20 @@
+<suitelet scriptid="customscript_s4vp_sl_my_payroll">
+  <name>S4VP My Payslips (self-service)</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_sl_my_payroll.js]</scriptfile>
+  <description>Self-service payslips: lists released payslips of the logged-in employee and prints them (VP601000, VP641100). All queries are filtered by the logged-in employee on the server.</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_sl_my_payroll">
+      <allemployees>T</allemployees>
+      <allroles>T</allroles>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>AUDIT</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>S4VP My Payslips</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

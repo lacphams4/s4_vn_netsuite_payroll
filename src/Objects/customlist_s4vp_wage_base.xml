@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_wage_base">
+  <name>S4VP wage_base</name>
+  <description>S4 VN Payroll code list wage_base; values keep the Acumatica codes (S, U).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_wage_base_s">
+      <value>S - Lương đóng BHXH</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_wage_base_u">
+      <value>U - Lương đóng BHTN</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>
