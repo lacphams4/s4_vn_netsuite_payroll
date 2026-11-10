@@ -238,11 +238,9 @@ const SUM_W = 56;
 const RECORD_OF = {leave: 'leave_request', ot: 'ot_request', trip: 'business_trip', exception: 'att_exception'};
 
 const CSS = `
-.s4vp-atd-aside{flex:1 1 340px;max-width:420px;min-width:0;display:flex;flex-direction:column;gap:12px}
-.s4vp-atd-aside .s4vp-side{flex:0 0 auto;max-width:none}
-.s4vp-atd-bar{padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.s4vp-atd-bar{padding:8px 12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
 .s4vp-atd-bar-l{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
-.s4vp-atd-legend{padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--s4vp-sub);align-items:center}
+.s4vp-atd-legend{padding:0 12px 8px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--s4vp-sub);align-items:center}
 .s4vp-atd-legend b{display:inline-block;min-width:20px;text-align:center;padding:1px 5px;border-radius:4px;color:var(--s4vp-text);font-weight:600;margin-right:4px}
 .s4vp-atd-wrap{overflow:auto;max-height:520px;max-height:max(300px,calc(100vh - 190px));max-width:100%;border-top:1px solid var(--s4vp-line);border-bottom:1px solid var(--s4vp-line)}
 .s4vp-atd{border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:100%}
@@ -1076,7 +1074,7 @@ export default function AttendanceView({app}) {
 			<div class="s4vp-cols">
 				<div class="s4vp-col-main">{gridCard}</div>
 				{panel || excCard ? (
-					<div class="s4vp-atd-aside">
+					<div class="s4vp-col-side">
 						{panel}
 						{excCard}
 					</div>

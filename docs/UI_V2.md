@@ -226,3 +226,15 @@ Bổ sung sau khi dựng (10/11/2026):
 - Không so sánh `language() === 'vi'` trong view: dùng `isVi()`, `serverText(en, vi)`, `localized({vi, en})`, `serverLanguage()` (máy chủ hiện chỉ có vi / en nên ngôn ngữ khác gửi 'en').
 - Mọi chữ hiển thị nằm trong TEXT với đủ khóa vi và en. `node tools/check_i18n.mjs` (và test `tests/tools/check_i18n.test.js`) báo khóa thiếu, chữ Việt trong bản en, chữ Việt viết cứng ngoài TEXT; phải thoát mã 0 trước khi commit.
 - Chưa đa ngôn ngữ (ngoài SPA): nhãn object SDF (tên record, trường, giá trị list, menu chỉ tiếng Việt), tên dữ liệu mặc định khi nạp (ghi một bản theo ngôn ngữ người nạp), diễn giải bút toán (chốt theo người ghi sổ), một số lỗi máy chủ ghép "English / Tiếng Việt" trong một chuỗi.
+
+## 11. Bố cục gọn và hiệu năng (10/11/2026)
+
+Bố cục (theo góp ý người dùng trên laptop 14 inch): lề trang 12 px trái, 52 px phải (chừa nút trợ giúp nổi), khoảng cách khối 12 px (biến `--s4vp-pad-l`, `--s4vp-pad-r`, `--s4vp-gap`); hai cột lưới chính : khung chi tiết = 6 : 4 (`s4vp-col-main` : `s4vp-col-side` / `s4vp-side`); không có hàng đường dẫn - `PageHeader` lấy mục `crumbs` cuối có `onClick` (hoặc prop `back`) làm nút "‹" trước tiêu đề; nút thao tác cùng hàng tiêu đề; dải "tham số pháp lý chưa đối chiếu" chỉ hiện ở Trang chủ.
+
+Hiệu năng (đo trên td2937310, bảng lương 4 nhân viên, lượt gọi nóng): bootstrap 0,7 -> 0,3 giây, runView (đã gồm danh sách cảnh báo) 1,2 + 1,0 -> 0,9 giây, homeSummary 1,3 -> 0,9, attendanceMonth 1,2 -> 0,6; từ lúc script SPA chạy đến lúc có dữ liệu màn Chạy lương khoảng 5,4 -> 0,9 giây.
+
+- `lib/api.js`: địa chỉ RESTlet hỏi một lần; `prefetch(params)` gửi lượt đọc song song với bootstrap, `call()` cùng tham số nhận lại kết quả đó (khung dùng cho `payrollRun`).
+- RESTlet: bootstrap nhớ trong N/cache theo người dùng (ttl 300 giây, mọi POST thành công làm mất hiệu lực, `fresh=1` để bỏ qua; `app.reloadBoot()` luôn gửi `fresh=1`). Sửa bản ghi bằng form chuẩn NetSuite thì tối đa 5 phút sau khung mới thấy.
+- `Store`: bảng mã custom list nhớ chung trong N/cache (ttl 1 giờ, mã lạ thì đọc lại); lượt GET gộp truy vấn trùng (`Store.memoize(true)`, thao tác ghi xóa bản nhớ).
+- `runView` trả kèm `checksList` (`{counts, items}`); giao diện không gọi `checksList` riêng nữa.
+- Đo: thêm `&timing=1` vào lượt GET (chỉ administrator) để nhận `_timing: {ms, queries: [{q, ms, rows}]}`.

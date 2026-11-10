@@ -193,11 +193,45 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
             throw { message: serverText(body.s4vpError, body.s4vpErrorVi) };
         return body;
     }
+    // Địa chỉ RESTlet chỉ hỏi máy chủ một lần (mỗi lần url.resolveScript là một lượt gọi đồng bộ khoảng 0,3 giây), tham số tự ghép
+    let restletBase = '';
+    function restletUrl(params) {
+        if (!restletBase)
+            restletBase = url.resolveScript(Object.assign({}, RESTLET));
+        const query = Object.keys(params || {})
+            .filter((k) => params[k] !== undefined && params[k] !== null)
+            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
+            .join('&');
+        return query ? `${restletBase}${restletBase.indexOf('?') >= 0 ? '&' : '?'}${query}` : restletBase;
+    }
+    const get = (params) => https.get.promise({ url: restletUrl(params), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
+    // Gọi trước: khung gửi lượt đọc của màn đang mở song song với bootstrap; view gọi call() cùng tham số sẽ nhận đúng kết quả đó
+    // (dùng một lần, trong 20 giây) thay vì chờ bootstrap xong mới bắt đầu gọi.
+    const early = {};
+    const keyOf = (params) => JSON.stringify(Object.keys(params || {}).sort().map((k) => [k, String(params[k])]));
+    function prefetch(params) {
+        try {
+            const promise = get(params);
+            // lỗi của lượt gọi trước không được thành "unhandled rejection"; view nhận lại lỗi khi dùng
+            promise.then(() => undefined, () => undefined);
+            early[keyOf(params)] = { promise, at: Date.now() };
+        }
+        catch (e) {
+            // không gọi trước được: view tự gọi như thường
+        }
+    }
     function call(params) {
-        return https.get.promise({ url: url.resolveScript(Object.assign({}, RESTLET, { params })), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
+        const key = keyOf(params);
+        const hit = early[key];
+        if (hit) {
+            delete early[key];
+            if (Date.now() - hit.at < 20000)
+                return hit.promise;
+        }
+        return get(params);
     }
     function post(body) {
-        return https.post.promise({ url: url.resolveScript(Object.assign({}, RESTLET)), body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
+        return https.post.promise({ url: restletUrl(), body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
     }
     // Mở bản ghi NetSuite ở tab mới
     function openRecord(type, id) {
@@ -230,11 +264,14 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
     /**
      * CSS chung của giao diện bản 2 (tiền tố lớp s4vp-), chèn một lần vào document.head bằng ensureCss().
      * Màu, bo góc, khoảng cách theo mẫu docs/design/*.dc.html; phông chữ kế thừa trang NetSuite.
-     * Vùng bấm cao tối thiểu 36 px; số tiền căn phải, tabular-nums.
+     * Vùng bấm cao tối thiểu 32 px (nút thường 36 px); số tiền căn phải, tabular-nums.
+     * Lề trang: --s4vp-pad-l / --s4vp-pad-r. Lề phải rộng hơn lề trái vì NetSuite có cột nút trợ giúp nổi (rộng khoảng 40 px)
+     * dính mép phải, đứng yên khi cuộn: mọi thứ nằm trong dải đó đều có lúc bị che, nên cả trang tránh dải này.
+     * Bố cục hai cột: s4vp-cols > s4vp-col-main (6 phần) + s4vp-col-side hoặc SidePanel (4 phần); hẹp hơn 812 px thì xếp dọc.
      */
     const CSS$1 = `
 .s4vp-app{--s4vp-bg:#F3F4F2;--s4vp-surface:#FFFFFF;--s4vp-text:#1D2730;--s4vp-sub:#55616B;--s4vp-accent:#24566B;--s4vp-accent-dark:#16394A;--s4vp-accent-soft:#E6EFF3;--s4vp-line:#E1E5E8;--s4vp-line-soft:#E8EBEE;--s4vp-ctl:#B8C1C8;
---s4vp-ok:#0F5132;--s4vp-ok-bg:#DDF1E4;--s4vp-warn:#6B3A00;--s4vp-warn-bg:#FFE9C7;--s4vp-warn-line:#C97A12;--s4vp-err:#8A1C14;--s4vp-err-bg:#FBE3E0;--s4vp-info:#16394A;--s4vp-info-bg:#E6EFF3;
+--s4vp-ok:#0F5132;--s4vp-ok-bg:#DDF1E4;--s4vp-warn:#6B3A00;--s4vp-warn-bg:#FFE9C7;--s4vp-warn-line:#C97A12;--s4vp-err:#8A1C14;--s4vp-err-bg:#FBE3E0;--s4vp-info:#16394A;--s4vp-info-bg:#E6EFF3;--s4vp-pad-l:12px;--s4vp-pad-r:52px;--s4vp-gap:12px;
 font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);background:var(--s4vp-bg);min-height:80vh;height:max-content;width:100%;flex:0 0 auto;box-sizing:border-box;text-align:left}
 .s4vp-app *,.s4vp-app *::before,.s4vp-app *::after{box-sizing:border-box}
 :where(.s4vp-app) button,:where(.s4vp-app) input,:where(.s4vp-app) select,:where(.s4vp-app) textarea{font:inherit;color:inherit;margin:0}
@@ -243,31 +280,37 @@ font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);backgr
 .s4vp-app button:focus-visible,.s4vp-app input:focus-visible,.s4vp-app select:focus-visible,.s4vp-app textarea:focus-visible{outline:2px solid var(--s4vp-accent);outline-offset:1px}
 .s4vp-app h1,.s4vp-app h2,.s4vp-app h3{margin:0;font-family:inherit;color:inherit}
 
-.s4vp-nav{background:var(--s4vp-surface);border-bottom:1px solid #D9DEE2;padding:0 28px;display:flex;flex-wrap:wrap;gap:2px 6px;align-items:center}
-.s4vp-brand{font-size:17px;font-weight:700;padding:0 18px 0 0;white-space:nowrap}
-.s4vp-navtab{background:none;border:0;border-bottom:3px solid transparent;color:#3A4650;padding:14px 12px 11px;font-size:14px;min-height:44px;white-space:nowrap}
+.s4vp-nav{background:var(--s4vp-surface);border-bottom:1px solid #D9DEE2;padding:0 var(--s4vp-pad-r) 0 var(--s4vp-pad-l);display:flex;flex-wrap:wrap;gap:2px 6px;align-items:center}
+.s4vp-brand{font-size:16px;font-weight:700;padding:0 14px 0 0;white-space:nowrap}
+.s4vp-navtab{background:none;border:0;border-bottom:3px solid transparent;color:#3A4650;padding:10px 12px 7px;font-size:14px;min-height:40px;white-space:nowrap}
 .s4vp-navtab:hover{color:var(--s4vp-accent-dark)}
 .s4vp-navtab.s4vp-on{color:var(--s4vp-accent-dark);border-bottom-color:var(--s4vp-accent);font-weight:700}
-.s4vp-navright{margin-left:auto;display:flex;align-items:center;gap:8px;padding:6px 0}
+.s4vp-navright{margin-left:auto;display:flex;align-items:center;gap:8px;padding:3px 0}
+.s4vp-navright .s4vp-in{min-height:32px}
 .s4vp-navright .s4vp-lbl{font-size:12px;color:var(--s4vp-sub);white-space:nowrap}
 .s4vp-busy{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--s4vp-sub);max-width:320px;overflow:hidden;white-space:nowrap}
-.s4vp-strip{margin:12px 28px 0;padding:10px 14px;border-radius:8px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;font-size:14px;border:1px solid transparent}
+.s4vp-strip{margin:8px var(--s4vp-pad-r) 0 var(--s4vp-pad-l);padding:4px 12px;border-radius:8px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;font-size:14px;border:1px solid transparent}
 .s4vp-strip-ok{color:var(--s4vp-ok);background:var(--s4vp-ok-bg);border-color:#B7DFC5}
 .s4vp-strip-warn{color:var(--s4vp-warn);background:var(--s4vp-warn-bg);border-color:#F0D3A6}
 .s4vp-strip-error{color:var(--s4vp-err);background:var(--s4vp-err-bg);border-color:#F1BDB7}
 .s4vp-strip-text{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap;align-self:center}
-.s4vp-x{background:none;border:0;min-width:36px;min-height:36px;border-radius:8px;font-size:18px;line-height:1;color:inherit;flex:0 0 auto}
+.s4vp-x{background:none;border:0;min-width:32px;min-height:32px;border-radius:8px;font-size:18px;line-height:1;color:inherit;flex:0 0 auto}
 .s4vp-x:hover{background:rgba(0,0,0,.07)}
 .s4vp-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--s4vp-ctl);border-top-color:var(--s4vp-accent);animation:s4vp-rot .8s linear infinite;flex:0 0 auto;align-self:center}
 @keyframes s4vp-rot{to{transform:rotate(360deg)}}
 
-.s4vp-page{padding:24px 76px 40px 28px;display:flex;flex-direction:column;gap:18px;min-width:0}
-.s4vp-ph{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;justify-content:space-between}
-.s4vp-ph-main{display:flex;flex-direction:column;gap:6px;min-width:0}
-.s4vp-crumbs{font-size:13px;color:var(--s4vp-sub);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
-.s4vp-ph-title{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.s4vp-ph-title h1{font-size:26px;font-weight:700;line-height:1.2}
-.s4vp-ph-sub{font-size:13px;color:var(--s4vp-sub)}
+.s4vp-page{padding:12px var(--s4vp-pad-r) 24px var(--s4vp-pad-l);display:flex;flex-direction:column;gap:var(--s4vp-gap);min-width:0}
+.s4vp-ph{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:space-between}
+.s4vp-ph-main{display:flex;gap:8px;align-items:flex-start;flex:1 1 320px;min-width:0}
+.s4vp-ph-text{display:flex;flex-direction:column;gap:1px;flex:1 1 auto;min-width:0}
+.s4vp-back{flex:0 0 auto;width:32px;height:32px;padding:0 0 2px;border-radius:8px;border:1px solid var(--s4vp-ctl);background:var(--s4vp-surface);color:var(--s4vp-accent);font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.s4vp-back:hover{background:var(--s4vp-accent-soft)}
+.s4vp-ph-title{display:flex;gap:10px;align-items:center;min-width:0;min-height:32px}
+.s4vp-ph-title h1{font-size:21px;font-weight:700;line-height:1.25;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s4vp-ph-title .s4vp-badge{flex:0 0 auto}
+.s4vp-ph-sub{font-size:12px;color:var(--s4vp-sub);min-width:0;overflow-wrap:anywhere}
+.s4vp-ph-sub .s4vp-btn-link{min-height:32px;font-size:12px}
+.s4vp-ph > .s4vp-actions{flex:0 1 auto;justify-content:flex-end;margin-left:auto}
 .s4vp-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 
 .s4vp-btn{font-size:14px;min-height:36px;padding:0 16px;border-radius:8px;border:1px solid var(--s4vp-ctl);background:var(--s4vp-surface);color:var(--s4vp-text);display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
@@ -290,8 +333,8 @@ font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);backgr
 .s4vp-menu-item{background:none;border:0;border-radius:6px;text-align:left;min-height:36px;padding:6px 10px;font-size:14px;color:var(--s4vp-text)}
 .s4vp-menu-item:hover{background:var(--s4vp-accent-soft)}
 
-.s4vp-steps{list-style:none;margin:0;padding:14px 18px;background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:12px;display:flex;flex-wrap:wrap;gap:10px 28px;font-size:14px}
-.s4vp-step{display:flex;gap:8px;align-items:center;color:var(--s4vp-sub);margin:0;padding:0}
+.s4vp-steps{list-style:none;margin:0;padding:4px 14px;background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:12px;display:flex;flex-wrap:wrap;gap:0 24px;font-size:14px}
+.s4vp-step{display:flex;gap:8px;align-items:center;color:var(--s4vp-sub);margin:0;padding:0;min-height:32px}
 .s4vp-step-n{width:24px;height:24px;border-radius:50%;border:1px solid var(--s4vp-ctl);display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 auto}
 .s4vp-step-note{font-size:12px;color:var(--s4vp-sub);font-weight:400}
 .s4vp-step-done{color:var(--s4vp-ok)}
@@ -301,12 +344,12 @@ font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);backgr
 .s4vp-step-note.s4vp-t-warn{color:#8A4B00;font-weight:600}
 .s4vp-step-note.s4vp-t-error{color:var(--s4vp-err);font-weight:600}
 .s4vp-step-note.s4vp-t-ok{color:var(--s4vp-ok)}
-.s4vp-step-btn{background:none;border:0;padding:0;min-height:36px;display:flex;gap:8px;align-items:center;color:inherit;font-weight:inherit}
+.s4vp-step-btn{background:none;border:0;padding:0;min-height:32px;display:flex;gap:8px;align-items:center;color:inherit;font-weight:inherit}
 
-.s4vp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.s4vp-stat{background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
-.s4vp-stat-l{font-size:13px;color:var(--s4vp-sub)}
-.s4vp-stat-v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.s4vp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s4vp-gap)}
+.s4vp-stat{background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:12px;padding:8px 14px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.s4vp-stat-l{font-size:12px;color:var(--s4vp-sub)}
+.s4vp-stat-v{font-size:20px;line-height:1.25;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .s4vp-stat-n{font-size:12px;color:var(--s4vp-sub)}
 .s4vp-stat.s4vp-t-warn{border-color:#F0D3A6}
 .s4vp-stat.s4vp-t-warn .s4vp-stat-v{color:var(--s4vp-warn)}
@@ -337,22 +380,24 @@ font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);backgr
 .s4vp-card.s4vp-t-warn{border-color:#F0D3A6}
 .s4vp-card.s4vp-t-error{border-color:#F1BDB7}
 .s4vp-card.s4vp-t-ok{border-color:#B7DFC5}
-.s4vp-card-h{padding:14px 16px 10px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.s4vp-card-h{padding:10px 14px 8px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
 .s4vp-card-t{font-size:16px;font-weight:700}
 .s4vp-card-s{font-size:13px;color:var(--s4vp-sub);font-weight:400}
-.s4vp-card-b{padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.s4vp-card-b{padding:12px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .s4vp-card-h + .s4vp-card-b{padding-top:4px}
 .s4vp-card-flush{padding:0;gap:0}
 .s4vp-card-h + .s4vp-card-flush{padding-top:0}
 
-.s4vp-tbl-bar{padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.s4vp-tbl-bar{padding:8px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 .s4vp-tbl-bar-l{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .s4vp-tbl-bar-r{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:auto}
 .s4vp-tbl-count{font-size:12px;color:var(--s4vp-sub)}
 .s4vp-tbl-wrap{overflow-x:auto;max-width:100%}
 .s4vp-tbl{border-collapse:collapse;width:100%}
-.s4vp-tbl th{font-size:12px;font-weight:600;color:var(--s4vp-sub);text-align:left;padding:10px 12px;border-bottom:1px solid #D9DEE2;white-space:nowrap;background:#F7F8F9}
-.s4vp-tbl td{font-size:14px;padding:12px;border-bottom:1px solid var(--s4vp-line-soft);text-align:left;vertical-align:middle;font-variant-numeric:tabular-nums;color:var(--s4vp-text)}
+.s4vp-tbl th{font-size:12px;font-weight:600;color:var(--s4vp-sub);text-align:left;padding:7px 8px;border-bottom:1px solid #D9DEE2;white-space:nowrap;background:#F7F8F9}
+.s4vp-tbl td{font-size:14px;padding:8px;border-bottom:1px solid var(--s4vp-line-soft);text-align:left;vertical-align:middle;font-variant-numeric:tabular-nums;color:var(--s4vp-text)}
+.s4vp-tbl th:first-child,.s4vp-tbl td:first-child{padding-left:12px}
+.s4vp-tbl th:last-child,.s4vp-tbl td:last-child{padding-right:12px}
 .s4vp-tbl .s4vp-r{text-align:right}
 .s4vp-tbl .s4vp-c{text-align:center}
 .s4vp-tbl .s4vp-nw{white-space:nowrap}
@@ -385,9 +430,11 @@ select.s4vp-in{padding-right:28px}
 .s4vp-dialog-b{padding:16px 18px;display:flex;flex-direction:column;gap:14px;overflow:auto;font-size:14px}
 .s4vp-dialog-f{padding:12px 18px 16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;border-top:1px solid var(--s4vp-line)}
 
-.s4vp-cols{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
-.s4vp-col-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:18px}
-.s4vp-side{flex:1 1 340px;max-width:420px;min-width:0;background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.s4vp-cols{display:flex;flex-wrap:wrap;gap:var(--s4vp-gap);align-items:flex-start}
+.s4vp-col-main{flex:6 1 480px;min-width:0;display:flex;flex-direction:column;gap:var(--s4vp-gap)}
+.s4vp-col-side{flex:4 1 320px;min-width:0;display:flex;flex-direction:column;gap:var(--s4vp-gap)}
+.s4vp-side{flex:4 1 320px;min-width:0;background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.s4vp-col-side > .s4vp-side{flex:0 0 auto}
 .s4vp-side-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .s4vp-side-t{font-size:17px;font-weight:700}
 .s4vp-side-s{font-size:13px;color:var(--s4vp-sub)}
@@ -479,8 +526,8 @@ select.s4vp-in{padding-right:28px}
     }
 
     const TEXT$7 = {
-        vi: { search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', crumbs: 'Đường dẫn' },
-        en: { search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', crumbs: 'Breadcrumb' },
+        vi: { search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}` },
+        en: { search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', back: 'Back', backTo: (name) => `Back to ${name}` },
     };
     const cx$1 = (...names) => names.filter(Boolean).join(' ');
     const px = (v) => (typeof v === 'number' ? `${v}px` : v);
@@ -516,10 +563,18 @@ select.s4vp-in{padding-right:28px}
     function Page({ children }) {
         return jsx("div", { class: "s4vp-page", children: children });
     }
-    function PageHeader({ crumbs, title, status, sub, actions }) {
+    /**
+     * Đầu trang một hàng: nút quay lại + tiêu đề + trạng thái bên trái (dòng phụ ngay dưới), nút thao tác bên phải.
+     * Không có hàng đường dẫn riêng: `crumbs` [{label, onClick}] chỉ dùng để lấy mục cha gần nhất (mục cuối cùng có onClick)
+     * làm nút quay lại; hoặc truyền thẳng `back` {label, onClick}. Tiêu đề dài bị cắt bằng dấu ba chấm, có title đầy đủ.
+     */
+    function PageHeader({ crumbs, back, title, status, sub, actions }) {
         const t = pick(TEXT$7);
-        const trail = (crumbs || []).filter(Boolean);
-        return (jsxs("div", { class: "s4vp-ph", children: [jsxs("div", { class: "s4vp-ph-main", children: [trail.length ? (jsx("div", { class: "s4vp-crumbs", "aria-label": t.crumbs, children: trail.map((c, i) => (jsxs("span", { style: { display: 'inline-flex', gap: '4px', alignItems: 'center' }, children: [i ? jsx("span", { children: "/" }) : null, c.onClick ? Button({ label: c.label, onClick: c.onClick, kind: 'link' }) : jsx("span", { children: text(c.label) })] }, `c${i}`))) })) : null, jsxs("div", { class: "s4vp-ph-title", children: [jsx("h1", { children: text(title) }), status && status.text ? Badge({ text: status.text, tone: status.tone, large: true }) : null] }), blank$1(sub) || sub === '' ? null : jsx("div", { class: "s4vp-ph-sub", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] }));
+        const parents = (crumbs || []).filter((c) => c && c.onClick);
+        const up = back && back.onClick ? back : parents.length ? parents[parents.length - 1] : null;
+        const upLabel = up ? (blank$1(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
+        const acts = keyed(actions);
+        return (jsxs("div", { class: "s4vp-ph", children: [jsxs("div", { class: "s4vp-ph-main", children: [up ? (jsx("button", { type: "button", class: "s4vp-back", "aria-label": upLabel, title: upLabel, onClick: () => up.onClick(), children: '‹' })) : null, jsxs("div", { class: "s4vp-ph-text", children: [jsxs("div", { class: "s4vp-ph-title", children: [jsx("h1", { title: text(title), children: text(title) }), status && status.text ? Badge({ text: status.text, tone: status.tone, large: true }) : null] }), blank$1(sub) || sub === '' ? null : jsx("div", { class: "s4vp-ph-sub", children: sub })] })] }), acts.length ? jsx("div", { class: "s4vp-actions", children: acts }) : null] }));
     }
     // ------------------------------------------------------------------ nút, menu
     /** kind: 'primary' | 'default' | 'ghost' | 'link' | 'danger' | 'dashed'; small, block: tùy chọn kích thước. */
@@ -825,7 +880,7 @@ select.s4vp-in{padding-right:28px}
             panel.style = { width: px(width) };
         return (jsx("div", { class: "s4vp-overlay", onKeyUp: (m) => keyOfMessage(m) === 'Escape' && onClose && onClose(), children: jsxs("div", { ...panel, children: [jsxs("div", { class: "s4vp-dialog-h", children: [jsx("div", { class: "s4vp-dialog-t", children: text(title) }), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] }), jsx("div", { class: "s4vp-dialog-b", children: children }), actions ? jsx("div", { class: "s4vp-dialog-f", children: keyed(actions) }) : null] }) }));
     }
-    /** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols">. */
+    /** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols"> (tỷ lệ 6:4), hoặc trong <div class="s4vp-col-side"> khi cột phải có nhiều khối. */
     function SidePanel({ title, sub, onClose, children, actions }) {
         const t = pick(TEXT$7);
         return (jsxs("aside", { class: "s4vp-side", "aria-label": text(title), children: [jsxs("div", { class: "s4vp-side-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-side-t", children: text(title) }), blank$1(sub) || sub === '' ? null : jsx("div", { class: "s4vp-side-s", children: sub })] }), jsxs("div", { class: "s4vp-actions", children: [keyed(actions), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] })] }), children] }));
@@ -1584,11 +1639,9 @@ select.s4vp-in{padding-right:28px}
     const SUM_W = 56;
     const RECORD_OF = { leave: 'leave_request', ot: 'ot_request', trip: 'business_trip', exception: 'att_exception' };
     const CSS = `
-.s4vp-atd-aside{flex:1 1 340px;max-width:420px;min-width:0;display:flex;flex-direction:column;gap:12px}
-.s4vp-atd-aside .s4vp-side{flex:0 0 auto;max-width:none}
-.s4vp-atd-bar{padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.s4vp-atd-bar{padding:8px 12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
 .s4vp-atd-bar-l{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
-.s4vp-atd-legend{padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--s4vp-sub);align-items:center}
+.s4vp-atd-legend{padding:0 12px 8px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--s4vp-sub);align-items:center}
 .s4vp-atd-legend b{display:inline-block;min-width:20px;text-align:center;padding:1px 5px;border-radius:4px;color:var(--s4vp-text);font-weight:600;margin-right:4px}
 .s4vp-atd-wrap{overflow:auto;max-height:520px;max-height:max(300px,calc(100vh - 190px));max-width:100%;border-top:1px solid var(--s4vp-line);border-bottom:1px solid var(--s4vp-line)}
 .s4vp-atd{border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:100%}
@@ -2151,7 +2204,7 @@ select.s4vp-in{padding-right:28px}
                 symbolOptions.unshift({ value: v.symbol, label: `${v.symbol} - ${t.kinds['?']}` });
             dialog = (jsxs(Dialog, { title: sheetMode ? t.edit.titleS(when) : t.edit.titleE(when), onClose: () => setEdit(null), actions: [jsx(Button, { label: t.edit.cancel, onClick: () => setEdit(null) }), jsx(Button, { label: sheetMode ? t.edit.save : t.edit.saveSubmit, kind: "primary", disabled: !valid || busy, onClick: saveEdit })], children: [sheetMode ? (jsx(Field, { label: t.edit.symbol, children: jsx(Select, { value: v.symbol || '', onInput: setEditField('symbol'), options: symbolOptions, placeholder: t.edit.empty, ariaLabel: t.edit.symbol }) })) : (jsx(Field, { label: t.edit.adjust, hint: t.edit.adjustHint, children: jsx(NumberInput, { value: v.adjust || '', onInput: setEditField('adjust'), ariaLabel: t.edit.adjust }) })), sheetMode ? null : (jsx(Field, { label: t.edit.reason, children: jsx(TextInput, { value: v.reason || '', onInput: setEditField('reason'), onEnter: () => valid && !busy && saveEdit(), ariaLabel: t.edit.reason }) })), jsx("div", { class: "s4vp-small", children: sheetMode ? t.edit.noteS : t.edit.noteE })] }));
         }
-        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb }, { label: t.periodCrumb(period.code) }], title: t.title(period.code), status: status, sub: subLine, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: menuItems }), showRebuild ? jsx(Button, { label: t.act.rebuild, disabled: !canEdit || busy, title: editTitle, onClick: build }) : null, primary] }), jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: gridCard }), panel || excCard ? (jsxs("div", { class: "s4vp-atd-aside", children: [panel, excCard] })) : null] }), dialog] }));
+        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb }, { label: t.periodCrumb(period.code) }], title: t.title(period.code), status: status, sub: subLine, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: menuItems }), showRebuild ? jsx(Button, { label: t.act.rebuild, disabled: !canEdit || busy, title: editTitle, onClick: build }) : null, primary] }), jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: gridCard }), panel || excCard ? (jsxs("div", { class: "s4vp-col-side", children: [panel, excCard] })) : null] }), dialog] }));
     }
 
     const TEXT$4 = {
@@ -2706,7 +2759,8 @@ select.s4vp-in{padding-right:28px}
                 return Promise.resolve();
             request.current += 1;
             const mine = request.current;
-            const work = Promise.all([call({ action: 'runView', id }), loadChecks(id)]);
+            // runView trả kèm danh sách cảnh báo (một lượt gọi); máy chủ bản cũ không trả thì mới gọi checksList
+            const work = call({ action: 'runView', id }).then((v) => v && v.checksList && Array.isArray(v.checksList.items) ? [v, { counts: v.checksList.counts || null, items: v.checksList.items }] : loadChecks(id).then((c) => [v, c]));
             const apply = (r) => {
                 if (!alive.current || mine !== request.current)
                     return undefined;
@@ -3262,7 +3316,7 @@ select.s4vp-in{padding-right:28px}
         const kindOfJob = jobKind(job);
         const panel = renderPanel();
         const tableRows = shown;
-        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('payrollList') }, { label: b.name || id }], title: b.description || t.batchOf(b.periodName || ''), status: { text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted' }, sub: subParts.join(' · '), actions: headerActions }), docLinks.length || bills.length ? (jsxs("div", { class: "s4vp-actions s4vp-small", children: [docLinks.map((x, i) => (jsx("span", { children: x }, `d${i}`))), bills.length ? jsx("span", { children: t.docs.bills(bills.length) }) : null] })) : null, job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job[kindOfJob] || t.job.calc }), kindOfJob === 'calc' && jobInfo ? jsx("span", { children: t.job.stage(jobInfo.stage, jobInfo.status) }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), openRows.length || doneRows.length ? (jsx(Card, { flush: true, tone: hasErrors ? 'error' : openRows.length ? 'warn' : 'ok', label: t.checks.title, children: jsx(Table, { columns: checkColumns, rows: checkTab === 'done' ? doneRows : openRows, onRowClick: openCheck, empty: checkTab === 'done' ? t.checks.noneDone : t.checks.none, search: true, searchPlaceholder: t.checks.search, maxHeight: 260, label: t.checks.title, toolbar: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx("span", { class: "s4vp-card-t", style: { paddingRight: '8px' }, children: t.checks.title }), jsx(Chips, { items: [{ value: 'open', label: t.checks.open, count: openRows.length, tone: hasErrors ? 'error' : 'warn' }, { value: 'done', label: t.checks.done, count: doneRows.length }], value: checkTab, onPick: setCheckTab, label: t.checks.title })] }) }) })) : (jsx(Card, { tone: calculated ? 'ok' : undefined, label: t.checks.title, children: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center' }, children: [jsx("span", { class: "s4vp-card-t", children: t.checks.title }), jsx("span", { class: "s4vp-muted", children: t.checks.none })] }) })), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsxs(Card, { flush: true, label: t.emp.title, children: [jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: jsx(Chips, { items: filterItems, value: filter, onPick: pickFilter, label: t.emp.filterLabel }) }), jsxs("div", { class: "s4vp-tbl-bar-r", children: [found.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.emp.matches(found.count) }), jsx(SearchBox, { value: query, onInput: (v) => (setQuery(v), setLimit(PAGE_SIZE)), placeholder: t.emp.search, label: t.emp.searchLabel, width: 220 })] })] }), jsx("div", { class: "s4vp-small", style: { padding: '0 16px 10px' }, children: empSub }), jsx(Table, { columns: empColumns, rows: tableRows, onRowClick: (r) => selectLine(r.id), selectedKey: selected, total: totalRow, empty: rows.length || filter === 'left' ? t.emp.emptyFilter : t.emp.empty, maxHeight: tableRows.length > 10 ? 480 : undefined, label: t.emp.title }), found.rows.length > shown.length ? (jsxs("div", { class: "s4vp-actions", style: { padding: '10px 16px' }, children: [jsx("span", { class: "s4vp-small", children: t.emp.showing(shown.length, found.rows.length) }), jsx(Button, { small: true, label: t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length)), onClick: () => setLimit(limit + PAGE_SIZE) })] })) : null] }) }), panel ? jsx("div", { style: { flex: '1 1 340px', maxWidth: '420px', minWidth: '0', position: 'sticky', top: '8px', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 16px)', overflowY: 'auto', borderRadius: '12px' }, children: panel }) : null] }), renderDialog()] }));
+        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('payrollList') }, { label: b.name || id }], title: b.description || t.batchOf(b.periodName || ''), status: { text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted' }, sub: docLinks.length || bills.length ? (jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '0 12px', alignItems: 'center' }, children: [jsx("span", { children: subParts.join(' · ') }), docLinks.map((x, i) => (jsx("span", { children: x }, `d${i}`))), bills.length ? jsx("span", { children: t.docs.bills(bills.length) }) : null] })) : (subParts.join(' · ')), actions: headerActions }), job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job[kindOfJob] || t.job.calc }), kindOfJob === 'calc' && jobInfo ? jsx("span", { children: t.job.stage(jobInfo.stage, jobInfo.status) }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), openRows.length || doneRows.length ? (jsx(Card, { flush: true, tone: hasErrors ? 'error' : openRows.length ? 'warn' : 'ok', label: t.checks.title, children: jsx(Table, { columns: checkColumns, rows: checkTab === 'done' ? doneRows : openRows, onRowClick: openCheck, empty: checkTab === 'done' ? t.checks.noneDone : t.checks.none, search: true, searchPlaceholder: t.checks.search, maxHeight: 260, label: t.checks.title, toolbar: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx("span", { class: "s4vp-card-t", style: { paddingRight: '8px' }, children: t.checks.title }), jsx(Chips, { items: [{ value: 'open', label: t.checks.open, count: openRows.length, tone: hasErrors ? 'error' : 'warn' }, { value: 'done', label: t.checks.done, count: doneRows.length }], value: checkTab, onPick: setCheckTab, label: t.checks.title })] }) }) })) : (jsx(Card, { tone: calculated ? 'ok' : undefined, label: t.checks.title, children: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center' }, children: [jsx("span", { class: "s4vp-card-t", children: t.checks.title }), jsx("span", { class: "s4vp-muted", children: t.checks.none })] }) })), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsxs(Card, { flush: true, label: t.emp.title, children: [jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: jsx(Chips, { items: filterItems, value: filter, onPick: pickFilter, label: t.emp.filterLabel }) }), jsxs("div", { class: "s4vp-tbl-bar-r", children: [found.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.emp.matches(found.count) }), jsx(SearchBox, { value: query, onInput: (v) => (setQuery(v), setLimit(PAGE_SIZE)), placeholder: t.emp.search, label: t.emp.searchLabel, width: 220 })] })] }), jsx("div", { class: "s4vp-small", style: { padding: '0 12px 8px' }, children: empSub }), jsx(Table, { columns: empColumns, rows: tableRows, onRowClick: (r) => selectLine(r.id), selectedKey: selected, total: totalRow, empty: rows.length || filter === 'left' ? t.emp.emptyFilter : t.emp.empty, maxHeight: tableRows.length > 10 ? 480 : undefined, label: t.emp.title }), found.rows.length > shown.length ? (jsxs("div", { class: "s4vp-actions", style: { padding: '8px 12px' }, children: [jsx("span", { class: "s4vp-small", children: t.emp.showing(shown.length, found.rows.length) }), jsx(Button, { small: true, label: t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length)), onClick: () => setLimit(limit + PAGE_SIZE) })] })) : null] }) }), panel ? jsx("div", { class: "s4vp-col-side", style: { position: 'sticky', top: '8px', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 16px)', overflowY: 'auto', borderRadius: '12px' }, children: panel }) : null] }), renderDialog()] }));
     }
 
     const TEXT$2 = {
@@ -3613,7 +3667,7 @@ select.s4vp-in{padding-right:28px}
                 render: (it) => (jsxs("span", { style: { display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }, children: [jsx(Badge, { text: t.severity[it.severity] || it.severity, tone: SEVERITY_TONE[it.severity] || 'muted' }), it.severity === 'error' ? null : jsx(Badge, { text: t.status[it.status] || it.status, tone: STATUS_TONE[it.status] || 'muted' })] })),
             },
         ];
-        const listCard = (jsxs(Card, { flush: true, label: t.listTitle, children: [jsxs("div", { style: { padding: '14px 16px 10px', display: 'flex', flexDirection: 'column', gap: '10px' }, children: [jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx("div", { style: { flex: '1 1 170px', minWidth: '0' }, children: jsx(SearchBox, { value: query, onInput: setQuery, placeholder: t.search, width: "100%" }) }), jsx("div", { style: { flex: '0 1 160px', minWidth: '0' }, children: jsx(Select, { value: status, onInput: setStatus, ariaLabel: t.statusFilter, placeholder: t.allStatus, options: ['open', 'accepted', 'resolved'].map((s) => ({ value: s, label: t.status[s] })) }) })] }), jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', justifyContent: 'space-between' }, children: [jsx(Chips, { label: t.severityFilter, value: severity, onPick: setSeverity, items: [
+        const listCard = (jsxs(Card, { flush: true, label: t.listTitle, children: [jsxs("div", { style: { padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '10px' }, children: [jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx("div", { style: { flex: '1 1 170px', minWidth: '0' }, children: jsx(SearchBox, { value: query, onInput: setQuery, placeholder: t.search, width: "100%" }) }), jsx("div", { style: { flex: '0 1 160px', minWidth: '0' }, children: jsx(Select, { value: status, onInput: setStatus, ariaLabel: t.statusFilter, placeholder: t.allStatus, options: ['open', 'accepted', 'resolved'].map((s) => ({ value: s, label: t.status[s] })) }) })] }), jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', justifyContent: 'space-between' }, children: [jsx(Chips, { label: t.severityFilter, value: severity, onPick: setSeverity, items: [
                                         { value: '', label: t.allSeverity, count: items.length },
                                         { value: 'error', label: t.severity.error, count: bySeverity.error, tone: 'error' },
                                         { value: 'warn', label: t.severity.warn, count: bySeverity.warn, tone: 'warn' },
@@ -3691,7 +3745,7 @@ select.s4vp-in{padding-right:28px}
         }
         else {
             const heading = head.employee ? `${who(head) || head.employee}${head.headline ? ` - ${head.headline}` : ''}` : head.title;
-            detailArea = (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '18px', minWidth: '0' }, children: [jsxs(Card, { tone: head.severity === 'error' ? 'error' : head.status === 'open' && head.severity === 'warn' ? 'warn' : '', label: t.why, children: [jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '10px 16px', alignItems: 'flex-start', justifyContent: 'space-between' }, children: [jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '0', flex: '1 1 320px' }, children: [jsx("h2", { style: { fontSize: '20px', fontWeight: '700', lineHeight: '1.25', overflowWrap: 'anywhere' }, children: heading }), jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx(Badge, { text: t.severity[head.severity] || head.severity, tone: SEVERITY_TONE[head.severity] || 'muted', large: true }), head.severity === 'error' ? jsx(Badge, { text: t.blocksApproval, tone: "error", large: true }) : jsx(Badge, { text: t.status[head.status] || head.status, tone: STATUS_TONE[head.status] || 'muted', large: true }), jsx("span", { class: "s4vp-muted", style: { fontSize: '13px' }, children: head.title })] })] }), jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { label: t.prev, small: true, disabled: !prevItem, onClick: () => prevItem && pickItem(prevItem) }), jsx(Button, { label: t.next, small: true, disabled: !nextItem, onClick: () => nextItem && pickItem(nextItem) })] })] }), item && item.description ? jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.description }) : null, item && item.reopened && item.canClose ? jsx("div", { class: "s4vp-small", children: t.reopened }) : null, facts.length ? (jsx("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '6px 28px' }, children: facts.map((f) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { class: "s4vp-muted", children: t.facts[f.key] || f.key }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', textAlign: 'right' }, children: factValue(f) })] }, `f${f.key}`))) })) : null] }), jsxs("div", { class: "s4vp-cols", children: [jsxs("div", { style: { flex: '999 1 420px', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '18px' }, children: [compare ? (jsx(Card, { flush: true, title: t.compareTitle, sub: t.compareSub(compare), children: jsx(Table, { label: t.compareTitle, columns: compareColumns, rows: compareRows, keyOf: (r) => r.key, search: true, searchPlaceholder: t.compareSearch }) })) : null, item && item.employee ? (jsx(Card, { title: t.inputsTitle, children: inputs.length ? (inputs.map((x) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { style: { minWidth: '0', overflowWrap: 'anywhere' }, children: `${t.inputKind[x.kind] || x.kind || ''}${x.description ? ` - ${x.description}` : ''}` }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', whiteSpace: 'nowrap' }, children: money(x.amount) })] }, `i${x.id}`)))) : (jsx("div", { class: "s4vp-muted", style: { fontSize: '13px' }, children: t.inputsNone })) })) : null] }), jsxs(SidePanel, { title: t.handle, children: [item && item.hint ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '4px' }, children: [jsx("div", { class: "s4vp-small", children: t.hint }), jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.hint })] })) : null, jsx("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }, children: links.map((l, i) => (jsx("span", { children: l }, `l${i}`))) }), item ? (jsx(Field, { label: t.assignee, children: jsx(Select, { value: form.assignee, onInput: setField('assignee'), options: assigneeOptions, placeholder: t.unassigned, ariaLabel: t.assignee }) })) : null, item ? (jsx(Field, { label: t.note, hint: needNote ? null : t.noteHint, children: jsx(TextArea, { value: form.note, onInput: setField('note'), rows: 3, ariaLabel: t.note }) })) : null, needNote ? (jsx("div", { role: "alert", style: { color: '#8A1C14', fontSize: '13px', fontWeight: '600' }, children: t.noteRequired })) : null, handleButtons.length ? (jsx("div", { class: "s4vp-actions", children: handleButtons.map((b, i) => (jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`))) })) : null, jsx("div", { class: "s4vp-small", children: item && !item.canClose ? t.errorNoClose : t.footnote }), item ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid #E1E5E8', paddingTop: '12px' }, children: [jsx("div", { style: { fontWeight: '700' }, children: t.history }), history.length ? (history.map((h, i) => (jsxs("div", { style: { fontSize: '13px', overflowWrap: 'anywhere' }, children: [jsx("span", { class: "s4vp-muted", children: `${fmtAt(h.at)} - ${h.user || ''}: ` }), jsx("span", { style: { fontWeight: '600' }, children: t.status[h.status] || h.status || '' }), h.assigneeName ? jsx("span", { children: `, ${t.assignedTo(h.assigneeName)}` }) : null, h.note ? jsx("span", { children: ` - ${h.note}` }) : null] }, `h${i}`)))) : (jsx("div", { class: "s4vp-small", children: t.historyNone }))] })) : null] })] })] }));
+            detailArea = (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '0' }, children: [jsxs(Card, { tone: head.severity === 'error' ? 'error' : head.status === 'open' && head.severity === 'warn' ? 'warn' : '', label: t.why, children: [jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '10px 16px', alignItems: 'flex-start', justifyContent: 'space-between' }, children: [jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '0', flex: '1 1 320px' }, children: [jsx("h2", { style: { fontSize: '20px', fontWeight: '700', lineHeight: '1.25', overflowWrap: 'anywhere' }, children: heading }), jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx(Badge, { text: t.severity[head.severity] || head.severity, tone: SEVERITY_TONE[head.severity] || 'muted', large: true }), head.severity === 'error' ? jsx(Badge, { text: t.blocksApproval, tone: "error", large: true }) : jsx(Badge, { text: t.status[head.status] || head.status, tone: STATUS_TONE[head.status] || 'muted', large: true }), jsx("span", { class: "s4vp-muted", style: { fontSize: '13px' }, children: head.title })] })] }), jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { label: t.prev, small: true, disabled: !prevItem, onClick: () => prevItem && pickItem(prevItem) }), jsx(Button, { label: t.next, small: true, disabled: !nextItem, onClick: () => nextItem && pickItem(nextItem) })] })] }), item && item.description ? jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.description }) : null, item && item.reopened && item.canClose ? jsx("div", { class: "s4vp-small", children: t.reopened }) : null, facts.length ? (jsx("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '6px 28px' }, children: facts.map((f) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { class: "s4vp-muted", children: t.facts[f.key] || f.key }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', textAlign: 'right' }, children: factValue(f) })] }, `f${f.key}`))) })) : null] }), jsxs("div", { class: "s4vp-cols", children: [jsxs("div", { class: "s4vp-col-main", children: [compare ? (jsx(Card, { flush: true, title: t.compareTitle, sub: t.compareSub(compare), children: jsx(Table, { label: t.compareTitle, columns: compareColumns, rows: compareRows, keyOf: (r) => r.key, search: true, searchPlaceholder: t.compareSearch }) })) : null, item && item.employee ? (jsx(Card, { title: t.inputsTitle, children: inputs.length ? (inputs.map((x) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { style: { minWidth: '0', overflowWrap: 'anywhere' }, children: `${t.inputKind[x.kind] || x.kind || ''}${x.description ? ` - ${x.description}` : ''}` }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', whiteSpace: 'nowrap' }, children: money(x.amount) })] }, `i${x.id}`)))) : (jsx("div", { class: "s4vp-muted", style: { fontSize: '13px' }, children: t.inputsNone })) })) : null] }), jsxs(SidePanel, { title: t.handle, children: [item && item.hint ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '4px' }, children: [jsx("div", { class: "s4vp-small", children: t.hint }), jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.hint })] })) : null, jsx("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }, children: links.map((l, i) => (jsx("span", { children: l }, `l${i}`))) }), item ? (jsx(Field, { label: t.assignee, children: jsx(Select, { value: form.assignee, onInput: setField('assignee'), options: assigneeOptions, placeholder: t.unassigned, ariaLabel: t.assignee }) })) : null, item ? (jsx(Field, { label: t.note, hint: needNote ? null : t.noteHint, children: jsx(TextArea, { value: form.note, onInput: setField('note'), rows: 3, ariaLabel: t.note }) })) : null, needNote ? (jsx("div", { role: "alert", style: { color: '#8A1C14', fontSize: '13px', fontWeight: '600' }, children: t.noteRequired })) : null, handleButtons.length ? (jsx("div", { class: "s4vp-actions", children: handleButtons.map((b, i) => (jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`))) })) : null, jsx("div", { class: "s4vp-small", children: item && !item.canClose ? t.errorNoClose : t.footnote }), item ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid #E1E5E8', paddingTop: '12px' }, children: [jsx("div", { style: { fontWeight: '700' }, children: t.history }), history.length ? (history.map((h, i) => (jsxs("div", { style: { fontSize: '13px', overflowWrap: 'anywhere' }, children: [jsx("span", { class: "s4vp-muted", children: `${fmtAt(h.at)} - ${h.user || ''}: ` }), jsx("span", { style: { fontWeight: '600' }, children: t.status[h.status] || h.status || '' }), h.assigneeName ? jsx("span", { children: `, ${t.assignedTo(h.assigneeName)}` }) : null, h.note ? jsx("span", { children: ` - ${h.note}` }) : null] }, `h${i}`)))) : (jsx("div", { class: "s4vp-small", children: t.historyNone }))] })) : null] })] })] }));
         }
         // ------------------------------------------------------------------ nhật ký
         const logItems = log && Array.isArray(log.items) ? log.items : [];
@@ -3713,7 +3767,7 @@ select.s4vp-in{padding-right:28px}
         return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: crumbs, title: `${t.title} ${batch.name || ''}`.trim(), status: headerStatus, sub: list ? `${t.sub(batch)} - ${t.summary(counts)}` : t.loading, actions: [jsx(Button, { label: t.refresh, disabled: busy, onClick: refresh }), jsx(Button, { label: t.back, kind: "primary", onClick: () => app.go('payrollRun', { id }) })] }), jsx(Tabs, { value: tab, onPick: (v) => go({ tab: v === 'log' ? 'log' : '' }), items: [
                         { value: 'checks', label: t.tabChecks, count: list ? counts.open : null },
                         { value: 'log', label: t.tabLog },
-                    ] }), tab === 'log' ? (logCard) : (jsxs("div", { class: "s4vp-cols", children: [jsx("div", { style: { flex: '1 1 440px', maxWidth: '480px', minWidth: '0' }, children: listCard }), jsx("div", { style: { flex: '999 1 560px', minWidth: '0' }, children: detailArea })] }))] }));
+                    ] }), tab === 'log' ? (logCard) : (jsxs("div", { class: "s4vp-cols", children: [jsx("div", { style: { flex: '3 1 300px', minWidth: '0' }, children: listCard }), jsx("div", { style: { flex: '7 1 700px', minWidth: '0' }, children: detailArea })] }))] }));
     }
 
     const TEXT$1 = {
@@ -5316,11 +5370,12 @@ select.s4vp-in{padding-right:28px}
                 return undefined;
             });
         };
-        const reloadBoot = () => {
+        // fresh: bỏ bản bootstrap máy chủ đang nhớ (sau khi đổi thiết lập, sinh kỳ, khóa công); lần mở đầu dùng bản nhớ cho nhanh
+        const reloadBoot = (fresh) => {
             setBootError('');
             pending.current += 1;
             setBusy(t.loading);
-            return call({ action: 'bootstrap' }).then((b) => {
+            return call(fresh ? { action: 'bootstrap', fresh: '1' } : { action: 'bootstrap' }).then((b) => {
                 pending.current = Math.max(0, pending.current - 1);
                 if (!alive.current)
                     return undefined;
@@ -5341,7 +5396,16 @@ select.s4vp-in{padding-right:28px}
         };
         core.useEffect(() => {
             alive.current = true;
-            reloadBoot().then((b) => {
+            // Màn mở thẳng bằng địa chỉ có id (bảng lương): đọc dữ liệu màn song song với bootstrap
+            try {
+                const first = routeRef.current;
+                if (first && first.view === 'payrollRun' && first.params && first.params.id)
+                    prefetch({ action: 'runView', id: String(first.params.id) });
+            }
+            catch (e) {
+                // bỏ qua: view tự nạp
+            }
+            reloadBoot(false).then((b) => {
                 if (!b || !alive.current)
                     return;
                 const subs = b.subsidiaries || [];
@@ -5375,7 +5439,7 @@ select.s4vp-in{padding-right:28px}
             confirm: (text, onYes) => setConfirm({ text: String(text || ''), onYes }),
             busy,
             lang,
-            reloadBoot,
+            reloadBoot: () => reloadBoot(true),
         };
         const activeTab = TAB_OF[current.view] || '';
         const tabs = Object.keys(VIEW_OF_TAB).map((k) => {
@@ -5396,7 +5460,7 @@ select.s4vp-in{padding-right:28px}
                 content = jsx(LegacyView, { app: app, view: current.view }, "legacy");
             }
         }
-        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.outputs, onClick: () => go('outputs') }, { label: t.permits, onClick: () => go('permits') }] }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view !== 'setup' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setup') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot() })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
+        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.outputs, onClick: () => go('outputs') }, { label: t.permits, onClick: () => go('permits') }] }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view === 'home' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setup') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot(true) })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
                         jsx(Button, { label: t.cancel, onClick: () => setConfirm(null) }),
                         jsx(Button, { kind: "primary", label: t.yes, onClick: () => {
                                 const c = confirm;

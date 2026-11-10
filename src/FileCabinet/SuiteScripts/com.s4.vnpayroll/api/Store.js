@@ -9,12 +9,37 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/query", "N/record", "N/format", "./Schema"], (query, record, format, Schema) => {
+define(["N/query", "N/record", "N/format", "N/cache", "./Schema"], (query, record, format, cache, Schema) => {
 	const listCache = {};
+	// Bảng {mã <-> internal id} của custom list là dữ liệu cố định theo bản deploy: nhớ chung trong N/cache (một lần đọc cho
+	// mọi list) thay vì mỗi list một truy vấn ở mỗi lượt gọi. Mã lạ / id lạ thì đọc lại list đó từ cơ sở dữ liệu.
+	const LIST_TTL = 3600;
+	let shared = null;
+	let sharedDirty = false;
 
-	/** {mã -> internal id} và {internal id -> mã} của một custom list. */
-	function listMap(listName) {
-		if (listCache[listName]) return listCache[listName];
+	function sharedLists() {
+		if (shared) return shared;
+		shared = {};
+		try {
+			const raw = cache.getCache({ name: "s4vp_lists", scope: cache.Scope.PROTECTED }).get({ key: "all" });
+			if (raw) shared = JSON.parse(raw) || {};
+		} catch (e) {
+			shared = {};
+		}
+		return shared;
+	}
+
+	function saveSharedLists() {
+		if (!sharedDirty) return;
+		sharedDirty = false;
+		try {
+			cache.getCache({ name: "s4vp_lists", scope: cache.Scope.PROTECTED }).put({ key: "all", value: JSON.stringify(shared), ttl: LIST_TTL });
+		} catch (e) {
+			// không ghi được cache: lượt sau đọc lại từ cơ sở dữ liệu
+		}
+	}
+
+	function loadList(listName) {
 		const def = Schema.lists[listName];
 		if (!def) throw new Error(`Unknown list ${listName}`);
 		const byScript = {};
@@ -28,27 +53,72 @@ define(["N/query", "N/record", "N/format", "./Schema"], (query, record, format, 
 			toId[code] = String(r.id);
 			toCode[String(r.id)] = code;
 		}
-		listCache[listName] = { toId, toCode };
+		listCache[listName] = { toId, toCode, fromDb: true };
+		sharedLists()[listName] = { toId, toCode };
+		sharedDirty = true;
+		saveSharedLists();
 		return listCache[listName];
+	}
+
+	/** {mã -> internal id} và {internal id -> mã} của một custom list. */
+	function listMap(listName) {
+		if (listCache[listName]) return listCache[listName];
+		const hit = sharedLists()[listName];
+		if (hit && hit.toId && hit.toCode) {
+			listCache[listName] = { toId: hit.toId, toCode: hit.toCode, fromDb: false };
+			return listCache[listName];
+		}
+		return loadList(listName);
+	}
+
+	/** Bản nhớ không có mã / id này (list vừa thêm giá trị): đọc lại từ cơ sở dữ liệu một lần. */
+	function fresh(listName) {
+		const m = listMap(listName);
+		return m.fromDb ? m : loadList(listName);
 	}
 
 	function codeOf(listName, id) {
 		if (id === null || id === undefined || id === "") return null;
-		return listMap(listName).toCode[String(id)] || null;
+		const code = listMap(listName).toCode[String(id)];
+		if (code !== undefined) return code;
+		return fresh(listName).toCode[String(id)] || null;
 	}
 
 	function idOf(listName, code) {
 		if (code === null || code === undefined || code === "") return null;
-		const id = listMap(listName).toId[String(code)];
+		const id = listMap(listName).toId[String(code)] || fresh(listName).toId[String(code)];
 		if (!id) throw new Error(`List ${listName} has no value ${code}`);
 		return id;
 	}
 
 	/** SuiteQL gom mọi trang. */
+	// Số liệu đo từng truy vấn của lượt chạy hiện tại (tên, mili giây, số dòng); RESTlet trả kèm khi được hỏi (?timing=1)
+	const stats = [];
+
+	// Gộp truy vấn trùng trong một lượt ĐỌC (GET của RESTlet bật bằng memoize(true)): cùng câu lệnh + tham số thì dùng lại kết
+	// quả. Không bật cho lượt ghi; mọi thao tác ghi qua Store cũng xóa bản nhớ.
+	let memo = null;
+	function memoize(on) {
+		memo = on ? {} : null;
+	}
+	function forget() {
+		if (memo) memo = {};
+	}
+
 	function run(sql, params, scriptId) {
+		const key = memo ? sql + "" + JSON.stringify(params || []) : null;
+		if (key !== null && memo[key]) return memo[key].map((r) => Object.assign({}, r));
+		const rows = runQuery(sql, params, scriptId);
+		if (key !== null) memo[key] = rows.map((r) => Object.assign({}, r));
+		return rows;
+	}
+
+	function runQuery(sql, params, scriptId) {
+		const started = Date.now();
 		const out = [];
 		const paged = query.runSuiteQLPaged({ query: sql, params: params || [], pageSize: 1000, customScriptId: scriptId });
 		for (const range of paged.pageRanges) out.push(...paged.fetch({ index: range.index }).data.asMappedResults());
+		if (stats.length < 200) stats.push({ q: scriptId || String(sql).replace(/\s+/g, " ").slice(0, 60), ms: Date.now() - started, rows: out.length });
 		return out;
 	}
 
@@ -155,12 +225,14 @@ define(["N/query", "N/record", "N/format", "./Schema"], (query, record, format, 
 	}
 
 	function create(name, values) {
+		forget();
 		const r = record.create({ type: rec(name).type, isDynamic: false });
 		setValues(r, name, values);
 		return String(r.save({ enableSourcing: false, ignoreMandatoryFields: true }));
 	}
 
 	function update(name, id, values) {
+		forget();
 		const r = record.load({ type: rec(name).type, id, isDynamic: false });
 		setValues(r, name, values);
 		return String(r.save({ enableSourcing: false, ignoreMandatoryFields: true }));
@@ -168,6 +240,7 @@ define(["N/query", "N/record", "N/format", "./Schema"], (query, record, format, 
 
 	/** Cập nhật nhanh không tải record (không qua User Event của record khác). */
 	function submit(name, id, values) {
+		forget();
 		const def = rec(name);
 		const out = {};
 		for (const [key, v] of Object.entries(values)) {
@@ -189,8 +262,9 @@ define(["N/query", "N/record", "N/format", "./Schema"], (query, record, format, 
 	}
 
 	function remove(name, id) {
+		forget();
 		record.delete({ type: rec(name).type, id });
 	}
 
-	return { run, find, findIn, get, create, update, submit, remove, listMap, codeOf, idOf, toNsDate, rec };
+	return { run, find, findIn, get, create, update, submit, remove, listMap, codeOf, idOf, toNsDate, rec, stats, memoize };
 });

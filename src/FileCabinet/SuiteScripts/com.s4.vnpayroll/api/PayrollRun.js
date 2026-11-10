@@ -140,6 +140,16 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", ".
 		const info = Payroll.employeesInfo(lines.map((l) => l.employee).concat(cmp.leavers.map((l) => l.employee)));
 
 		const checks = checksSummary(id);
+		// Danh sách cảnh báo trả kèm (Checks đã tính ở trên, nhớ trong lượt chạy): giao diện khỏi gọi checksList lần nữa
+		let checksList = null;
+		try {
+			if (checks && typeof Checks.checksList === "function") {
+				const cl = Checks.checksList({ batch: id });
+				checksList = { counts: cl.counts || null, items: cl.items || [] };
+			}
+		} catch (e) {
+			checksList = null;
+		}
 		const steps = RunSteps.payrollSteps(b, period, { employees: lines.length, openChecks: checks ? checks.open : undefined });
 		const bills = safeJson(b.bills, []);
 		const tx = Payroll.transactionsInfo([b.journal, b.reversal].concat((Array.isArray(bills) ? bills : []).map((x) => x && x.id)));
@@ -166,6 +176,7 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", ".
 			steps,
 			progress: RunSteps.progress(steps),
 			checks,
+			checksList,
 			lines: lines.map((l, i) => {
 				const e = info[l.employee] || {};
 				const c = cmp.rows[i];

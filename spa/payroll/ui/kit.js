@@ -14,8 +14,8 @@ import {money, num, pct, fmtDate, toIso, quickFilter} from '../lib/format.js';
 import {pick} from '../lib/i18n.js';
 
 const TEXT = {
-	vi: {search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', crumbs: 'Đường dẫn'},
-	en: {search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', crumbs: 'Breadcrumb'},
+	vi: {search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}`},
+	en: {search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', back: 'Back', backTo: (name) => `Back to ${name}`},
 };
 
 const cx = (...names) => names.filter(Boolean).join(' ');
@@ -52,29 +52,34 @@ export function Page({children}) {
 	return <div class="s4vp-page">{children}</div>;
 }
 
-export function PageHeader({crumbs, title, status, sub, actions}) {
+/**
+ * Đầu trang một hàng: nút quay lại + tiêu đề + trạng thái bên trái (dòng phụ ngay dưới), nút thao tác bên phải.
+ * Không có hàng đường dẫn riêng: `crumbs` [{label, onClick}] chỉ dùng để lấy mục cha gần nhất (mục cuối cùng có onClick)
+ * làm nút quay lại; hoặc truyền thẳng `back` {label, onClick}. Tiêu đề dài bị cắt bằng dấu ba chấm, có title đầy đủ.
+ */
+export function PageHeader({crumbs, back, title, status, sub, actions}) {
 	const t = pick(TEXT);
-	const trail = (crumbs || []).filter(Boolean);
+	const parents = (crumbs || []).filter((c) => c && c.onClick);
+	const up = back && back.onClick ? back : parents.length ? parents[parents.length - 1] : null;
+	const upLabel = up ? (blank(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
+	const acts = keyed(actions);
 	return (
 		<div class="s4vp-ph">
 			<div class="s4vp-ph-main">
-				{trail.length ? (
-					<div class="s4vp-crumbs" aria-label={t.crumbs}>
-						{trail.map((c, i) => (
-							<span key={`c${i}`} style={{display: 'inline-flex', gap: '4px', alignItems: 'center'}}>
-								{i ? <span>/</span> : null}
-								{c.onClick ? Button({label: c.label, onClick: c.onClick, kind: 'link'}) : <span>{text(c.label)}</span>}
-							</span>
-						))}
-					</div>
+				{up ? (
+					<button type="button" class="s4vp-back" aria-label={upLabel} title={upLabel} onClick={() => up.onClick()}>
+						{'‹'}
+					</button>
 				) : null}
-				<div class="s4vp-ph-title">
-					<h1>{text(title)}</h1>
-					{status && status.text ? Badge({text: status.text, tone: status.tone, large: true}) : null}
+				<div class="s4vp-ph-text">
+					<div class="s4vp-ph-title">
+						<h1 title={text(title)}>{text(title)}</h1>
+						{status && status.text ? Badge({text: status.text, tone: status.tone, large: true}) : null}
+					</div>
+					{blank(sub) || sub === '' ? null : <div class="s4vp-ph-sub">{sub}</div>}
 				</div>
-				{blank(sub) || sub === '' ? null : <div class="s4vp-ph-sub">{sub}</div>}
 			</div>
-			{actions ? <div class="s4vp-actions">{keyed(actions)}</div> : null}
+			{acts.length ? <div class="s4vp-actions">{acts}</div> : null}
 		</div>
 	);
 }
@@ -524,7 +529,7 @@ export function Dialog({title, children, actions, onClose, width}) {
 	);
 }
 
-/** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols">. */
+/** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols"> (tỷ lệ 6:4), hoặc trong <div class="s4vp-col-side"> khi cột phải có nhiều khối. */
 export function SidePanel({title, sub, onClose, children, actions}) {
 	const t = pick(TEXT);
 	return (

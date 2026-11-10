@@ -17,7 +17,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth) => {
+define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
@@ -173,11 +173,54 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 		};
 	}
 
+	// Bootstrap (công ty con, kỳ, nhóm lương, danh mục) ít đổi: nhớ theo người dùng trong N/cache. Mọi POST thành công đổi
+	// "phiên bản" nên bản nhớ cũ bị bỏ; sửa bản ghi ngoài SPA (form chuẩn NetSuite) thì tối đa BOOT_TTL giây (5 phút) sau mới thấy,
+	// hoặc ngay khi giao diện hỏi với fresh=1 (nút tải lại, sau thao tác thiết lập).
+	const BOOT_TTL = 300; // N/cache không nhận ttl dưới 300 giây
+	const bootCache = () => cache.getCache({ name: "s4vp_boot", scope: cache.Scope.PROTECTED });
+
+	function bustBootstrap() {
+		try {
+			bootCache().remove({ key: "ver" });
+		} catch (e) {
+			// không có cache: bỏ qua
+		}
+	}
+
+	function cachedBootstrap(fresh) {
+		try {
+			const c = bootCache();
+			if (fresh) c.remove({ key: "ver" });
+			const u = runtime.getCurrentUser();
+			const ver = c.get({ key: "ver", loader: () => String(Date.now()), ttl: 3600 });
+			const key = `b_${ver}_${u.id}_${u.role}_${String(u.getPreference({ name: "LANGUAGE" }) || "")}`;
+			const hit = c.get({ key });
+			if (hit) return JSON.parse(hit);
+			const out = bootstrap();
+			c.put({ key, value: JSON.stringify(out), ttl: BOOT_TTL });
+			return out;
+		} catch (e) {
+			return bootstrap();
+		}
+	}
+
+	/** GET: thêm ?timing=1 (chỉ administrator) để nhận kèm thời gian từng truy vấn - dùng khi đo hiệu năng. */
 	function get(params) {
+		const started = Date.now();
+		const out = getAction(params);
+		if (params && params.timing === "1" && role() === "administrator" && out && typeof out === "object" && !Array.isArray(out)) {
+			out._timing = { ms: Date.now() - started, queries: Store.stats.slice() };
+		}
+		return out;
+	}
+
+	function getAction(params) {
 		return wrap(() => {
+			// Lượt đọc: gộp các truy vấn trùng (cùng câu lệnh, cùng tham số)
+			if (typeof Store.memoize === "function") Store.memoize(true);
 			switch (params.action) {
 				case "bootstrap":
-					return bootstrap();
+					return cachedBootstrap(params.fresh === "1");
 				case "batches":
 					return { batches: withJournalNo(Payroll.list({ subsidiary: params.subsidiary, period: params.period })) };
 				case "batch":
@@ -248,7 +291,10 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 	function post(body) {
 		const out = postAction(body);
 		// Thành công = không có khóa lỗi (s4vpError của wrap, error của các nhánh từ chối cũ)
-		if (out && !out.s4vpError && !out.error) audit(body && body.action, body, out);
+		if (out && !out.s4vpError && !out.error) {
+			if (!body || body.action !== "jobStatus") bustBootstrap();
+			audit(body && body.action, body, out);
+		}
 		return out;
 	}
 

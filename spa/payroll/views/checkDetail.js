@@ -386,7 +386,7 @@ export default function CheckDetailView({app}) {
 
 	const listCard = (
 		<Card flush={true} label={t.listTitle}>
-			<div style={{padding: '14px 16px 10px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
+			<div style={{padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
 				<div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center'}}>
 					<div style={{flex: '1 1 170px', minWidth: '0'}}>
 						<SearchBox value={query} onInput={setQuery} placeholder={t.search} width="100%" />
@@ -524,7 +524,7 @@ export default function CheckDetailView({app}) {
 	} else {
 		const heading = head.employee ? `${who(head) || head.employee}${head.headline ? ` - ${head.headline}` : ''}` : head.title;
 		detailArea = (
-			<div style={{display: 'flex', flexDirection: 'column', gap: '18px', minWidth: '0'}}>
+			<div style={{display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '0'}}>
 				<Card tone={head.severity === 'error' ? 'error' : head.status === 'open' && head.severity === 'warn' ? 'warn' : ''} label={t.why}>
 					<div style={{display: 'flex', flexWrap: 'wrap', gap: '10px 16px', alignItems: 'flex-start', justifyContent: 'space-between'}}>
 						<div style={{display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '0', flex: '1 1 320px'}}>
@@ -557,7 +557,7 @@ export default function CheckDetailView({app}) {
 				</Card>
 
 				<div class="s4vp-cols">
-					<div style={{flex: '999 1 420px', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '18px'}}>
+					<div class="s4vp-col-main">
 						{compare ? (
 							<Card flush={true} title={t.compareTitle} sub={t.compareSub(compare)}>
 								<Table label={t.compareTitle} columns={compareColumns} rows={compareRows} keyOf={(r) => r.key} search={true} searchPlaceholder={t.compareSearch} />
@@ -698,8 +698,8 @@ export default function CheckDetailView({app}) {
 				logCard
 			) : (
 				<div class="s4vp-cols">
-					<div style={{flex: '1 1 440px', maxWidth: '480px', minWidth: '0'}}>{listCard}</div>
-					<div style={{flex: '999 1 560px', minWidth: '0'}}>{detailArea}</div>
+					<div style={{flex: '3 1 300px', minWidth: '0'}}>{listCard}</div>
+					<div style={{flex: '7 1 700px', minWidth: '0'}}>{detailArea}</div>
 				</div>
 			)}
 		</Page>

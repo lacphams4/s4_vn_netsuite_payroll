@@ -6,7 +6,7 @@
  * trong views/legacy.js bằng thành phần UIF như trước.
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
-import {call, errorText} from './lib/api.js';
+import {call, errorText, prefetch} from './lib/api.js';
 import {language, pick} from './lib/i18n.js';
 import {ensureCss} from './ui/css.js';
 import {Button, Menu, Select, Dialog} from './ui/kit.js';
@@ -194,11 +194,12 @@ export default function PayrollApp() {
 		);
 	};
 
-	const reloadBoot = () => {
+	// fresh: bỏ bản bootstrap máy chủ đang nhớ (sau khi đổi thiết lập, sinh kỳ, khóa công); lần mở đầu dùng bản nhớ cho nhanh
+	const reloadBoot = (fresh) => {
 		setBootError('');
 		pending.current += 1;
 		setBusy(t.loading);
-		return call({action: 'bootstrap'}).then(
+		return call(fresh ? {action: 'bootstrap', fresh: '1'} : {action: 'bootstrap'}).then(
 			(b) => {
 				pending.current = Math.max(0, pending.current - 1);
 				if (!alive.current) return undefined;
@@ -219,7 +220,14 @@ export default function PayrollApp() {
 
 	useEffect(() => {
 		alive.current = true;
-		reloadBoot().then((b) => {
+		// Màn mở thẳng bằng địa chỉ có id (bảng lương): đọc dữ liệu màn song song với bootstrap
+		try {
+			const first = routeRef.current;
+			if (first && first.view === 'payrollRun' && first.params && first.params.id) prefetch({action: 'runView', id: String(first.params.id)});
+		} catch (e) {
+			// bỏ qua: view tự nạp
+		}
+		reloadBoot(false).then((b) => {
 			if (!b || !alive.current) return;
 			const subs = b.subsidiaries || [];
 			if (subs.length) setSubsidiary(String((subs.find((s) => s.enabled) || subs[0]).id));
@@ -250,7 +258,7 @@ export default function PayrollApp() {
 		confirm: (text, onYes) => setConfirm({text: String(text || ''), onYes}),
 		busy,
 		lang,
-		reloadBoot,
+		reloadBoot: () => reloadBoot(true),
 	};
 
 	const activeTab = TAB_OF[current.view] || '';
@@ -293,7 +301,8 @@ export default function PayrollApp() {
 					{subs.length ? <Select key="sub" value={subsidiary} ariaLabel={t.subsidiary} width={240} options={subs.map((s) => ({value: String(s.id), label: s.name}))} onInput={(v) => v && v !== subsidiary && setSubsidiary(v)} /> : null}
 				</div>
 			</nav>
-			{boot && unverified && current.view !== 'setup' ? (
+			{/* Chỉ nhắc ở Trang chủ (Thiết lập tự hiện phần riêng): các màn làm việc dành chiều cao cho nội dung */}
+			{boot && unverified && current.view === 'home' ? (
 				<div class="s4vp-strip s4vp-strip-warn" role="status">
 					<span class="s4vp-strip-text">{t.unverifiedShort(unverified)}</span>
 					<Button kind="link" label={t.openSetup} onClick={() => go('setup')} />
@@ -302,7 +311,7 @@ export default function PayrollApp() {
 			{bootError ? (
 				<div class="s4vp-strip s4vp-strip-error" role="alert">
 					<span class="s4vp-strip-text">{bootError}</span>
-					<Button label={t.retry} onClick={() => reloadBoot()} />
+					<Button label={t.retry} onClick={() => reloadBoot(true)} />
 				</div>
 			) : null}
 			{notice ? (

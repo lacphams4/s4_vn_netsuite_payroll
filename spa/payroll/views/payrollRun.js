@@ -409,7 +409,10 @@ export default function PayrollRunView({app}) {
 		if (!id) return Promise.resolve();
 		request.current += 1;
 		const mine = request.current;
-		const work = Promise.all([call({action: 'runView', id}), loadChecks(id)]);
+		// runView trả kèm danh sách cảnh báo (một lượt gọi); máy chủ bản cũ không trả thì mới gọi checksList
+		const work = call({action: 'runView', id}).then((v) =>
+			v && v.checksList && Array.isArray(v.checksList.items) ? [v, {counts: v.checksList.counts || null, items: v.checksList.items}] : loadChecks(id).then((c) => [v, c])
+		);
 		const apply = (r) => {
 			if (!alive.current || mine !== request.current) return undefined;
 			if (!r || !r[0] || !r[0].batch) {
@@ -1133,17 +1136,21 @@ export default function PayrollRunView({app}) {
 				crumbs={[{label: t.crumb, onClick: () => app.go('payrollList')}, {label: b.name || id}]}
 				title={b.description || t.batchOf(b.periodName || '')}
 				status={{text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted'}}
-				sub={subParts.join(' · ')}
+				sub={
+					docLinks.length || bills.length ? (
+						<div style={{display: 'flex', flexWrap: 'wrap', gap: '0 12px', alignItems: 'center'}}>
+							<span>{subParts.join(' · ')}</span>
+							{docLinks.map((x, i) => (
+								<span key={`d${i}`}>{x}</span>
+							))}
+							{bills.length ? <span>{t.docs.bills(bills.length)}</span> : null}
+						</div>
+					) : (
+						subParts.join(' · ')
+					)
+				}
 				actions={headerActions}
 			/>
-			{docLinks.length || bills.length ? (
-				<div class="s4vp-actions s4vp-small">
-					{docLinks.map((x, i) => (
-						<span key={`d${i}`}>{x}</span>
-					))}
-					{bills.length ? <span>{t.docs.bills(bills.length)}</span> : null}
-				</div>
-			) : null}
 			{job ? (
 				<Card tone="warn" label={t.job.title}>
 					<div style={{display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap'}} role="status" aria-live="polite">
@@ -1200,7 +1207,7 @@ export default function PayrollRunView({app}) {
 								<SearchBox value={query} onInput={(v) => (setQuery(v), setLimit(PAGE_SIZE))} placeholder={t.emp.search} label={t.emp.searchLabel} width={220} />
 							</div>
 						</div>
-						<div class="s4vp-small" style={{padding: '0 16px 10px'}}>{empSub}</div>
+						<div class="s4vp-small" style={{padding: '0 12px 8px'}}>{empSub}</div>
 						<Table
 							columns={empColumns}
 							rows={tableRows}
@@ -1212,14 +1219,14 @@ export default function PayrollRunView({app}) {
 							label={t.emp.title}
 						/>
 						{found.rows.length > shown.length ? (
-							<div class="s4vp-actions" style={{padding: '10px 16px'}}>
+							<div class="s4vp-actions" style={{padding: '8px 12px'}}>
 								<span class="s4vp-small">{t.emp.showing(shown.length, found.rows.length)}</span>
 								<Button small={true} label={t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length))} onClick={() => setLimit(limit + PAGE_SIZE)} />
 							</div>
 						) : null}
 					</Card>
 				</div>
-				{panel ? <div style={{flex: '1 1 340px', maxWidth: '420px', minWidth: '0', position: 'sticky', top: '8px', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 16px)', overflowY: 'auto', borderRadius: '12px'}}>{panel}</div> : null}
+				{panel ? <div class="s4vp-col-side" style={{position: 'sticky', top: '8px', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 16px)', overflowY: 'auto', borderRadius: '12px'}}>{panel}</div> : null}
 			</div>
 			{renderDialog()}
 		</Page>

@@ -29,12 +29,47 @@ export function unwrap(response) {
 	return body;
 }
 
+// Địa chỉ RESTlet chỉ hỏi máy chủ một lần (mỗi lần url.resolveScript là một lượt gọi đồng bộ khoảng 0,3 giây), tham số tự ghép
+let restletBase = '';
+function restletUrl(params) {
+	if (!restletBase) restletBase = url.resolveScript(Object.assign({}, RESTLET));
+	const query = Object.keys(params || {})
+		.filter((k) => params[k] !== undefined && params[k] !== null)
+		.map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
+		.join('&');
+	return query ? `${restletBase}${restletBase.indexOf('?') >= 0 ? '&' : '?'}${query}` : restletBase;
+}
+
+const get = (params) => https.get.promise({url: restletUrl(params), headers: {'Content-Type': 'application/json'}}).then(unwrap);
+
+// Gọi trước: khung gửi lượt đọc của màn đang mở song song với bootstrap; view gọi call() cùng tham số sẽ nhận đúng kết quả đó
+// (dùng một lần, trong 20 giây) thay vì chờ bootstrap xong mới bắt đầu gọi.
+const early = {};
+const keyOf = (params) => JSON.stringify(Object.keys(params || {}).sort().map((k) => [k, String(params[k])]));
+
+export function prefetch(params) {
+	try {
+		const promise = get(params);
+		// lỗi của lượt gọi trước không được thành "unhandled rejection"; view nhận lại lỗi khi dùng
+		promise.then(() => undefined, () => undefined);
+		early[keyOf(params)] = {promise, at: Date.now()};
+	} catch (e) {
+		// không gọi trước được: view tự gọi như thường
+	}
+}
+
 export function call(params) {
-	return https.get.promise({url: url.resolveScript(Object.assign({}, RESTLET, {params})), headers: {'Content-Type': 'application/json'}}).then(unwrap);
+	const key = keyOf(params);
+	const hit = early[key];
+	if (hit) {
+		delete early[key];
+		if (Date.now() - hit.at < 20000) return hit.promise;
+	}
+	return get(params);
 }
 
 export function post(body) {
-	return https.post.promise({url: url.resolveScript(Object.assign({}, RESTLET)), body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}}).then(unwrap);
+	return https.post.promise({url: restletUrl(), body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}}).then(unwrap);
 }
 
 // Mở bản ghi NetSuite ở tab mới
