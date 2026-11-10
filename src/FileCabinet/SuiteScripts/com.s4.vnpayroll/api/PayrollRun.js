@@ -6,8 +6,11 @@
  * trùng action cũ của RESTlet. Lỗi nghiệp vụ: throw fail(en, vi).
  *
  * GET  runView  {id, threshold?}        toàn bộ dữ liệu màn chạy lương, không kèm chi tiết từng nhân viên (dạng trả về: xem view()).
- * GET  runLine  {id, line, prev?}       chi tiết một nhân viên (thu nhập, khấu trừ, bảo hiểm, công, giờ, phân bổ, tạm ứng) và
+ * GET  runLine  {id, line, prev?}       chi tiết một nhân viên cho mọi tab theo nhân viên của khung chi tiết (thu nhập, khấu trừ,
+ *                                       bảo hiểm, thuế TNCN, công, giờ công + timesheet từng ngày, phân bổ, cấn trừ tạm ứng) và
  *                                       so sánh từng khoản với kỳ trước; prev = id bảng lương kỳ trước do runView trả.
+ *                                       Chỉ đọc đúng một dòng (không gọi Payroll.detail / Payroll.timesheet vì hai hàm đó nạp
+ *                                       mọi dòng của bảng lương).
  * POST submitRun {id}                   gửi duyệt: bảng lương đã tính (C) -> chờ duyệt (P). RESTlet cũ chưa có thao tác đặt
  *                                       trạng thái P; duyệt / từ chối / mở lại của api/Payroll đã nhận trạng thái P.
  * Mọi thao tác khác (tải nhân viên, đồng bộ giờ, tính, giữ, duyệt, từ chối, mở lại, ghi sổ, đảo...) dùng action cũ.
@@ -18,7 +21,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", "../core/PayCompare", "../core/Money"], (Store, Payroll, Settings, Checks, RunSteps, PayCompare, Money) => {
+define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../core/RunSteps", "../core/PayCompare", "../core/Money"], (Store, Payroll, Settings, Checks, TimeLines, RunSteps, PayCompare, Money) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(blank(s) ? "" : s).trim().toUpperCase();
 	const DEFAULT_THRESHOLD = 0.1;
@@ -144,8 +147,9 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", ".
 		let checksList = null;
 		try {
 			if (checks && typeof Checks.checksList === "function") {
-				const cl = Checks.checksList({ batch: id });
-				checksList = { counts: cl.counts || null, items: cl.items || [] };
+				// Bảng lương lớn có thể có vài nghìn cảnh báo: chỉ gửi 200 mục đầu (lỗi và mục chưa đóng trước) kèm tổng theo quy tắc
+				const cl = Checks.checksList({ batch: id, limit: 200, brief: true });
+				checksList = { counts: cl.counts || null, items: cl.items || [], total: cl.total || 0, truncated: !!cl.truncated, groups: cl.groups || [], byEmployee: cl.byEmployee || null };
 			}
 		} catch (e) {
 			checksList = null;
@@ -193,6 +197,60 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", ".
 		};
 	}
 
+	const numOrNull = (v) => (blank(v) || !isFinite(Number(v)) ? null : Number(v));
+	const ATTENDANCE_KEYS = ["std_days", "work_days", "paid_leave", "unpaid_leave", "si_leave", "absence_days", "ot_hours"];
+
+	/**
+	 * Số liệu tính thuế TNCN của dòng: chỉ lấy số gói đã tính và lưu trên dòng / trong JSON chi tiết, không tính lại.
+	 * method đọc từ hồ sơ lương hiện tại (dòng không lưu phương pháp); selfDeduction / dependentDeduction chỉ có khi JSON
+	 * chi tiết của dòng lưu (d.pit), ngược lại null và giao diện hiện tổng giảm trừ gia cảnh.
+	 */
+	function taxOf(l, d) {
+		let method = null;
+		let flatCommitment = null;
+		try {
+			const prof = blank(l.profile) ? null : Store.get("employee", l.profile);
+			if (prof) {
+				method = norm(prof.pit_method) || "P";
+				flatCommitment = !!prof.flat_commit;
+			}
+		} catch (e) {
+			method = null;
+		}
+		const p = d.pit && typeof d.pit === "object" ? d.pit : {};
+		return {
+			method,
+			flatCommitment,
+			gross: numOrNull(l.gross),
+			exempt: numOrNull(l.exempt),
+			taxable: numOrNull(l.taxable),
+			insurance: numOrNull(d.employeeCompulsoryInsurance),
+			dependents: numOrNull(l.dependents),
+			selfDeduction: numOrNull(p.selfDeduction),
+			dependentDeduction: numOrNull(p.dependentDeduction),
+			familyDeduction: numOrNull(l.family_ded),
+			otherDeductions: numOrNull(l.other_tax_ded),
+			assessable: numOrNull(l.assessable),
+			pit: numOrNull(l.pit),
+		};
+	}
+
+	/**
+	 * Timesheet từng ngày của một nhân viên trong cửa sổ kết công của kỳ (chỉ xem), cùng dạng với Payroll.timesheet.
+	 * Lỗi (vai trò không xem được Time, thiếu kỳ) trả kèm khóa failed để các tab khác vẫn mở được.
+	 */
+	function timesheetOf(batch, employee) {
+		try {
+			const period = Store.get("period", batch.period);
+			if (!period) return { from: "", to: "", requireApproval: false, entries: [] };
+			const w = TimeLines.windowOf(period);
+			const group = blank(period.paygroup) ? null : Store.get("paygroup", period.paygroup);
+			return { from: w.from, to: w.to, requireApproval: !!Settings.resolve(batch.subsidiary, group).requireTimeApproval, entries: TimeLines.entries([employee], w.from, w.to) };
+		} catch (e) {
+			return { from: "", to: "", requireApproval: false, entries: [], failed: String((e && e.message) || e).slice(0, 300) };
+		}
+	}
+
 	const inputAmount = (i) => (!blank(i.amount) ? Number(i.amount) : (Number(i.qty) || 0) * (Number(i.rate) || 0) * (blank(i.multiplier) ? 1 : Number(i.multiplier)));
 
 	/**
@@ -204,7 +262,12 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", ".
 	 *   deductions: Array,        {inputId, code, name, amount} - khấu trừ sau thuế nhập tay
 	 *   insurance: Array,         {code, wageBase, employeeRate, employeeAmount, employerRate, employerAmount}
 	 *   time: Array,              dòng giờ công tính lương của nhân viên (record batch_time)
-	 *   allocations: Array, advanceOffsets: Array,
+	 *   attendance: object,       {std_days, work_days, paid_leave, unpaid_leave, si_leave, absence_days, ot_hours, att_locked}
+	 *   tax: object,              {method, flatCommitment, gross, exempt, taxable, insurance, dependents, selfDeduction, dependentDeduction,
+	 *                             familyDeduction, otherDeductions, assessable, pit} - xem taxOf()
+	 *   timesheet: object,        {from, to, requireApproval, entries: [{id, date, hours, projectName, taskName, approval, statusName, memo}], failed?}
+	 *   allocations: Array,       {component, project, task, branch, workCenter, source, hours, ratio, amount}
+	 *   advanceOffsets: Array,    {refNbr, amount, remainingBalance, id}
 	 *   compare: {previous: {id, name}|null, line: {gross|ee_ins|er_ins|pit|net: {current, previous, diff, pct}}|null,
 	 *             earnings: [{code, name, current, previous, diff, pct, kind}], insurance: [...]}
 	 * }}
@@ -243,8 +306,10 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", ".
 		let prev = null;
 		let prevDetail = null;
 		let prevLine = null;
+		const b = Payroll.getBatch(id);
+		const attendance = { att_locked: !!l.att_locked };
+		for (const k of ATTENDANCE_KEYS) attendance[k] = numOrNull(l[k]);
 		try {
-			const b = Payroll.getBatch(id);
 			if (!blank(params.prev) && String(params.prev) !== id) {
 				const pb = Store.get("batch", params.prev);
 				if (pb && String(pb.subsidiary) === String(b.subsidiary)) prev = { id: pb.id, name: pb.name };
@@ -272,7 +337,10 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "../core/RunSteps", ".
 			earnings,
 			deductions: inputs.filter((i) => i.kind === "D").map((i) => ({ inputId: i.id, code: i.code || "", name: i.description || "", amount: i.amount || 0 })),
 			insurance,
+			attendance,
+			tax: taxOf(l, d),
 			time: Store.find("batch_time", { where: "{batch} = ? AND {employee} = ?", params: [id, l.employee] }),
+			timesheet: timesheetOf(b, l.employee),
 			allocations: d.allocations || [],
 			advanceOffsets: d.advanceOffsets || [],
 			compare: {

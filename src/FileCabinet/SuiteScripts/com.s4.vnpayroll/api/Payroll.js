@@ -82,12 +82,16 @@ define([
 		const list = [...new Set(ids.filter((x) => !blank(x)).map(String))];
 		for (let i = 0; i < list.length; i += 900) {
 			const chunk = list.slice(i, i + 900);
-			const rows = Store.run(
-				`SELECT e.id, e.entityid, e.firstname, e.lastname, e.isinactive, e.department, e.location, e.class, e.subsidiary, BUILTIN.DF(e.department) AS deptname
-				 FROM employee e WHERE e.id IN (${chunk.map(() => "?").join(",")})`,
-				chunk,
-				"s4vp_employee_info"
-			);
+			// Id là số nguyên: ghép thẳng vào câu lệnh (900 tham số ràng buộc làm truy vấn chậm). Tên phòng ban lấy bằng JOIN
+			// (BUILTIN.DF tính từng dòng, chậm với 1.000 nhân viên); vai trò không đọc được bảng department thì dùng cách cũ.
+			const inList = chunk.filter((x) => /^\d+$/.test(x)).join(",") || "0";
+			const cols = "e.id, e.entityid, e.firstname, e.lastname, e.isinactive, e.department, e.location, e.class, e.subsidiary";
+			let rows;
+			try {
+				rows = Store.run(`SELECT ${cols}, d.fullname AS deptname FROM employee e LEFT JOIN department d ON d.id = e.department WHERE e.id IN (${inList})`, [], "s4vp_employee_info");
+			} catch (e) {
+				rows = Store.run(`SELECT ${cols}, BUILTIN.DF(e.department) AS deptname FROM employee e WHERE e.id IN (${inList})`, [], "s4vp_employee_info");
+			}
 			for (const r of rows) {
 				const name = [r.lastname, r.firstname].filter(Boolean).join(" ").trim() || r.entityid;
 				out[String(r.id)] = { id: String(r.id), code: r.entityid, name, isInactive: r.isinactive === "T", department: r.department, location: r.location, cls: r.class, subsidiary: r.subsidiary, departmentName: r.deptname || "" };
@@ -190,6 +194,15 @@ define([
 		const weeklyOff = c.settings.weeklyOffDays;
 		const added = [];
 		const skipped = [];
+		// Bảng lương lớn (500 - 1.000 người): một lượt gọi không đủ governance / thời gian để ghi hết. Mỗi lượt ghi đến khi gần
+		// hết hạn mức thì dừng và trả more = true; giao diện gọi lại (lib/api.js tự lặp), dòng đã có và không đổi thì bỏ qua.
+		const script = runtime.getCurrentScript();
+		const deadline = Date.now() + 40000;
+		const byEmployee = {};
+		for (const l of existing) byEmployee[l.employee] = l;
+		const same = (line, values) => Object.keys(values).every((k) => String(line[k] === null || line[k] === undefined ? "" : line[k]) === String(values[k] === null || values[k] === undefined ? "" : values[k]));
+		let more = false;
+		let updated = 0;
 		for (const prof of profiles) {
 			const emp = info[prof.employee] || {};
 			const group = prof.paygroup ? groupsByName[prof.paygroup] : "DEFAULT";
@@ -199,20 +212,31 @@ define([
 			if (!EmploymentDays.employedIn(prof.hire_date, prof.termination_date, p.start, p.end)) continue;
 			const values = applyLeave(p, prof, attendance[prof.employee], weeklyOff, c.holidays);
 			if (have.has(prof.employee)) {
-				const line = existing.find((l) => l.employee === prof.employee);
+				const line = byEmployee[prof.employee];
+				if (same(line, values)) continue;
+				if (script.getRemainingUsage() < 300 || Date.now() > deadline) {
+					more = true;
+					break;
+				}
 				Store.submit("batch_emp", line.id, values);
+				updated++;
 				continue;
 			}
 			if (others.has(prof.employee)) {
 				skipped.push(emp.code || prof.employee);
 				continue;
 			}
+			if (script.getRemainingUsage() < 300 || Date.now() > deadline) {
+				more = true;
+				break;
+			}
 			Store.create("batch_emp", Object.assign({ batch: batchId, employee: prof.employee, profile: prof.id, employment_type: prof.employment_type || "E", accrue13: !!prof.accrue13 }, values));
 			added.push(emp.code || prof.employee);
 		}
 		markUncalculated(batch);
+		if (more) return { added, skipped, updated, more: true };
 		const time = syncTimeCore(batch, p, c.settings);
-		return { added, skipped, updated: existing.length, time };
+		return { added, skipped, updated, time };
 	}
 
 	/** ApplyLeave (3.5): từ bảng tổng hợp công nếu có, ngược lại công chuẩn trừ ngày ngoài hợp đồng. */

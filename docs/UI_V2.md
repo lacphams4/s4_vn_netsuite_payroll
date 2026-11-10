@@ -238,3 +238,26 @@ Hiệu năng (đo trên td2937310, bảng lương 4 nhân viên, lượt gọi n
 - `Store`: bảng mã custom list nhớ chung trong N/cache (ttl 1 giờ, mã lạ thì đọc lại); lượt GET gộp truy vấn trùng (`Store.memoize(true)`, thao tác ghi xóa bản nhớ).
 - `runView` trả kèm `checksList` (`{counts, items}`); giao diện không gọi `checksList` riêng nữa.
 - Đo: thêm `&timing=1` vào lượt GET (chỉ administrator) để nhận `_timing: {ms, queries: [{q, ms, rows}]}`.
+
+## 12. Chạy lương theo bố cục cha - con của bản cũ, và thử tải 1.000 nhân viên (10/11/2026)
+
+Bố cục (người dùng yêu cầu giữ cách tổ chức dữ liệu của bản cũ, chia hai cột 50% - 50%): dưới thẻ số liệu là `s4vp-cols-half` gồm lưới nhân viên (trái) và khung chi tiết luôn hiện (phải, mặc định chọn dòng đầu). Tab theo nhân viên (GET `runLine`, tải cho một nhân viên): Thu nhập, Khấu trừ khác, Bảo hiểm, Thuế TNCN, Công, Giờ công (timesheet từng ngày, sửa giờ), Phân bổ dự án, Cấn trừ tạm ứng, So kỳ trước. Tab cấp bảng lương: Cần soát (thay thẻ "Kiểm tra trước khi duyệt"), Bút toán (action `journal`, tải khi mở tab), Bill cơ quan thu. Tỷ lệ 6 : 4 vẫn dùng cho các màn khác.
+
+`runLine` trả thêm `attendance`, `tax`, `timesheet`; không gọi hàm nạp cả bảng lương. `runView.checksList` chỉ gồm 200 cảnh báo đầu (lỗi và mục chưa đóng trước) kèm `total`, `truncated`, `groups` (số lượng theo quy tắc), `byEmployee` (số điểm mở theo nhân viên); `checksList` nhận thêm `limit`, `rule`, `brief`.
+
+Thử tải trên td2937310 (công ty con 13, 1.000 nhân viên thử "S4VP TEST LT0001-LT1000" tạo bằng action admin `generateTestBulk`, bảng lương BL000008 kỳ 202704 có 1.004 dòng):
+
+| Việc | Kết quả |
+| --- | --- |
+| Tạo 1.000 nhân viên + hồ sơ lương | khoảng 12 phút (4 luồng, 40 người mỗi lượt gọi) |
+| Tải nhân viên vào bảng lương | khoảng 8 dòng / giây, hơn 2 phút; một lượt gọi không ghi hết nên `loadEmployees` làm theo lượt (`more: true`, `lib/api.js` tự gọi lại) |
+| Tính lương (Map/Reduce) | 367 giây, không dòng lỗi |
+| runView (nóng) | 1,3 giây máy chủ, 0,9 MB |
+| runLine (bấm một nhân viên) | 1,0 giây máy chủ |
+| checksList đầy đủ (3.007 mục) | 0,8 giây máy chủ, 1 MB |
+| homeSummary | 2,4 giây |
+| attendanceMonth | 3,2 giây, 0,4 MB |
+| profiles (màn Nhân sự) | 1,6 giây, 0,9 MB |
+| Lọc nhanh trên lưới 1.004 dòng | 0,2 giây |
+
+Đã sửa trong lượt thử: `loadEmployees` chạy theo lượt và bỏ qua dòng không đổi; `employeesInfo` ghép id thẳng vào câu lệnh và lấy tên phòng ban bằng JOIN (1,06 -> 0,25 giây cho 900 nhân viên); giới hạn danh sách cảnh báo trong runView. Chưa làm: thu gọn dữ liệu dòng của runView (0,9 MB), phân trang phía máy chủ cho màn Kiểm tra và Nhân sự, tăng tốc attendanceMonth và homeSummary; chưa thử duyệt, ghi sổ, in phiếu lương, file ngân hàng với 1.000 dòng.

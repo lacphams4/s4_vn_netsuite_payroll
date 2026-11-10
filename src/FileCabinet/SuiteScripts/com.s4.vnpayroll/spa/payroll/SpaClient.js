@@ -230,8 +230,29 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
         }
         return get(params);
     }
+    const send$1 = (body) => https.post.promise({ url: restletUrl(), body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
+    // Thao tác ghi nhiều dòng (tải 1.000 nhân viên vào bảng lương) được máy chủ làm theo từng lượt: kết quả có more = true thì gọi
+    // lại cùng nội dung cho đến khi xong (tối đa 60 lượt), cộng dồn các danh sách / số đếm của từng lượt.
     function post(body) {
-        return https.post.promise({ url: restletUrl(), body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
+        const merge = (a, b) => {
+            const out = Object.assign({}, a, b);
+            Object.keys(a || {}).forEach((k) => {
+                if (Array.isArray(a[k]) && Array.isArray(b[k]))
+                    out[k] = a[k].concat(b[k]);
+                else if (typeof a[k] === 'number' && typeof b[k] === 'number')
+                    out[k] = a[k] + b[k];
+            });
+            return out;
+        };
+        const step = (acc, left) => send$1(body).then((r) => {
+            const total = acc ? merge(acc, r || {}) : r;
+            if (r && r.more === true && left > 0)
+                return step(total, left - 1);
+            if (total && total.more)
+                delete total.more;
+            return total;
+        });
+        return step(null, 60);
     }
     // Mở bản ghi NetSuite ở tab mới
     function openRecord(type, id) {
@@ -441,6 +462,45 @@ select.s4vp-in{padding-right:28px}
 .s4vp-empty{padding:28px 16px;text-align:center;color:var(--s4vp-sub);font-size:14px}
 .s4vp-row{}
 .s4vp-line{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+
+.s4vp-cols-half{flex-wrap:nowrap;align-items:stretch}
+.s4vp-cols-half > .s4vp-col-half{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
+.s4vp-pane{height:clamp(290px,calc(100vh - 378px),1200px);background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:12px;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.s4vp-pane-h{flex:0 0 auto;padding:6px 10px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;min-width:0}
+.s4vp-pane-h .s4vp-chips{gap:6px}
+.s4vp-pane-h .s4vp-chip{min-height:30px;padding:0 10px}
+.s4vp-pane-h .s4vp-in{min-height:30px}
+.s4vp-pane-t{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.s4vp-pane-s{font-size:12px;color:var(--s4vp-sub);font-weight:400}
+.s4vp-pane-msg{flex:0 0 auto;padding:0 12px 4px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4vp-pane-b{flex:1 1 auto;min-height:0;overflow:auto}
+.s4vp-pane-pad{padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.s4vp-pane-f{flex:0 0 auto;padding:4px 12px;border-top:1px solid var(--s4vp-line);display:flex;gap:10px;align-items:center;justify-content:space-between;min-height:28px;font-size:12px;color:var(--s4vp-sub)}
+.s4vp-pane-f > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.s4vp-pane-f .s4vp-btn{min-height:28px;flex:0 0 auto}
+.s4vp-pane-b .s4vp-tbl-wrap{overflow:visible;max-width:none}
+.s4vp-pane-b .s4vp-tbl th{position:sticky;top:0;z-index:1;padding:6px}
+.s4vp-pane-b .s4vp-tbl td{font-size:13px;padding:6px}
+.s4vp-pane-b .s4vp-tbl th:first-child,.s4vp-pane-b .s4vp-tbl td:first-child{padding-left:12px}
+.s4vp-pane-b .s4vp-tbl th:last-child,.s4vp-pane-b .s4vp-tbl td:last-child{padding-right:12px}
+.s4vp-pane-b .s4vp-tbl tr.s4vp-total td{position:sticky;bottom:0;background:#F7F8F9;box-shadow:inset 0 1px 0 #D9DEE2}
+.s4vp-pane-b .s4vp-tbl .s4vp-btn-link{min-height:24px;font-size:13px}
+.s4vp-pane-b .s4vp-tbl .s4vp-badge{padding:2px 7px}
+.s4vp-pane-b .s4vp-tbl-bar{padding:0 0 8px}
+.s4vp-pane-b .s4vp-tbl-bar .s4vp-in{min-height:30px}
+.s4vp-pane-b .s4vp-tbl-bar .s4vp-btn{min-height:30px}
+.s4vp-pane-b .s4vp-tbl-bar .s4vp-chip{min-height:30px;padding:0 10px}
+.s4vp-pane-b .s4vp-empty{padding:18px 12px}
+.s4vp-ell{display:block;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4vp-tabs2{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:0 1px;align-items:center;border-bottom:1px solid var(--s4vp-line);padding:0 8px}
+.s4vp-tabs2-g{display:contents}
+.s4vp-tabs2-batch .s4vp-tab{background:#EEF3F6}
+.s4vp-tabs2-cap{margin-left:auto;font-size:11px;font-weight:600;color:var(--s4vp-sub);padding:0 6px 0 10px;white-space:nowrap;text-transform:uppercase;letter-spacing:.03em}
+.s4vp-tabs2 .s4vp-tab{min-height:30px;padding:0 5px;font-size:13px;display:inline-flex;align-items:center;gap:4px}
+.s4vp-tab-n{font-size:11px;font-weight:700;padding:1px 6px;border-radius:999px;background:#EEF0F2;color:var(--s4vp-sub)}
+.s4vp-tab-n.s4vp-t-warn{background:var(--s4vp-warn-bg);color:var(--s4vp-warn)}
+.s4vp-tab-n.s4vp-t-error{background:var(--s4vp-err-bg);color:var(--s4vp-err)}
+@media (max-width:812px){.s4vp-cols-half{flex-wrap:wrap}.s4vp-cols-half > .s4vp-col-half{flex:1 1 100%}.s4vp-pane{height:auto;max-height:80vh}}
 `;
     let done = false;
     // Chèn CSS một lần; gọi ở đầu mỗi lần vẽ khung cũng không sao (đã có thẻ thì bỏ qua)
@@ -2415,7 +2475,7 @@ select.s4vp-in{padding-right:28px}
                 timeSynced: (r) => `Giờ công: nhận ${r.accepted || 0}/${r.entries || 0} dòng timesheet${r.pending ? ` (${r.pending} dòng chưa duyệt hoặc bị từ chối)` : ''}`,
                 queued: 'Đã đưa vào hàng đợi tính lương nền. Màn hình tự cập nhật khi tính xong.',
                 calcOk: 'Đã tính xong, không có lỗi',
-                calcErrors: (n) => `Đã tính, có ${n} nhân viên lỗi - xem mục Kiểm tra trước khi duyệt`,
+                calcErrors: (n) => `Đã tính, có ${n} nhân viên lỗi - xem tab Cần soát`,
                 submitted: 'Đã gửi duyệt',
                 approved: 'Đã duyệt bảng lương',
                 rejected: 'Đã từ chối bảng lương',
@@ -2426,6 +2486,7 @@ select.s4vp-in{padding-right:28px}
                 bills: (r) => `Đã lập ${(r.created || []).length} bill${(r.skipped || []).length ? `; khoản chưa có cơ quan thu: ${(r.skipped || []).map((s) => s.code).join(', ')}` : ''}`,
                 inputSaved: 'Đã lưu khoản nhập tay. Bấm Tính lương để cập nhật số liệu.',
                 inputDeleted: 'Đã xóa khoản nhập tay. Bấm Tính lương để cập nhật số liệu.',
+                timeSaved: 'Đã lưu giờ công. Bấm Tính lương để cập nhật số liệu.',
                 jobDone: 'Tác vụ nền đã xong, số liệu đã được cập nhật.',
             },
             job: {
@@ -2450,6 +2511,8 @@ select.s4vp-in{padding-right:28px}
                 notCalculated: 'Chưa tính lương',
             },
             checks: {
+                partial: (n, total) => `Đang hiện ${n} / ${total} điểm (lỗi và điểm chưa xử lý trước)`,
+                viewAll: 'Xem tất cả',
                 title: 'Kiểm tra trước khi duyệt',
                 open: 'Cần xử lý', done: 'Đã xử lý',
                 search: 'Tìm quy tắc, nhân viên',
@@ -2467,7 +2530,7 @@ select.s4vp-in{padding-right:28px}
             },
             emp: {
                 title: 'Nhân viên',
-                filters: { all: 'Tất cả', review: 'Cần xem', error: 'Lỗi', over: (p) => `Lệch trên ${p} so kỳ trước`, isNew: 'Người mới', left: 'Không còn ở kỳ này' },
+                filters: { all: 'Tất cả', review: 'Cần xem', error: 'Lỗi', over: (p) => `Lệch trên ${p}`, isNew: 'Người mới', left: 'Không còn' },
                 filterLabel: 'Lọc nhân viên',
                 search: 'Tên, mã, số tiền',
                 searchLabel: 'Tìm nhân viên',
@@ -2477,7 +2540,7 @@ select.s4vp-in{padding-right:28px}
                 more: (n) => `Hiện thêm ${n} dòng`,
                 showing: (a, b) => `Đang hiện ${a} / ${b} dòng`,
                 total: (n) => `Tổng ${n} nhân viên`,
-                cols: { name: 'Nhân viên', days: 'Công', gross: 'Tổng thu nhập', eeIns: 'BH NLĐ', pit: 'Thuế TNCN', ded: 'Khấu trừ', net: 'Thực lĩnh', cmp: 'So kỳ trước', note: 'Ghi chú' },
+                cols: { name: 'Nhân viên', days: 'Công', gross: 'Tổng thu nhập', eeIns: 'BH NLĐ', pit: 'Thuế TNCN', net: 'Thực lĩnh', cmp: 'So kỳ trước', note: 'Ghi chú' },
                 type: { E: 'Nhân viên', C: 'Cộng tác viên' },
                 first: 'Kỳ đầu',
                 gone: 'Không còn',
@@ -2491,20 +2554,46 @@ select.s4vp-in{padding-right:28px}
             panel: {
                 loading: 'Đang tải chi tiết...',
                 failed: 'Không tải được chi tiết nhân viên.',
-                tabs: { earn: 'Thu nhập', ded: 'Khấu trừ', ins: 'Bảo hiểm', time: 'Giờ công', alloc: 'Phân bổ', cmp: 'So kỳ trước' },
-                tabsLabel: 'Chi tiết nhân viên',
+                tabs: {
+                    earn: 'Thu nhập', ded: 'Khấu trừ khác', ins: 'Bảo hiểm', tax: 'Thuế TNCN', att: 'Công', time: 'Giờ công', alloc: 'Phân bổ dự án', adv: 'Cấn trừ tạm ứng', cmp: 'So kỳ trước',
+                    checks: 'Cần soát', journal: 'Bút toán', bills: 'Bill cơ quan thu',
+                },
+                tabsLabel: 'Chi tiết bảng lương',
+                groupBatch: 'Bảng lương',
+                batchTitle: 'Cả bảng lương',
+                noLine: 'Chưa chọn nhân viên',
                 search: 'Tìm khoản, số tiền',
                 addEarning: 'Thêm khoản thu nhập',
                 addDeduction: 'Thêm khoản khấu trừ',
                 delete: 'Xóa',
                 cols: {
-                    item: 'Khoản', amount: 'Số tiền', exempt: 'Miễn thuế', code: 'Mã', memo: 'Diễn giải', base: 'Mức đóng', ee: 'NLĐ', er: 'Công ty', project: 'Dự án / công việc',
-                    hours: 'Giờ tính lương', sourceHours: 'Giờ timesheet', component: 'Thành phần', target: 'Nơi nhận', ratio: 'Tỷ lệ', current: 'Kỳ này', previous: 'Kỳ trước', diff: 'Chênh',
+                    item: 'Khoản', amount: 'Số tiền', exempt: 'Miễn thuế', code: 'Mã', memo: 'Diễn giải', base: 'Căn cứ', eeRate: 'Tỷ lệ NLĐ', ee: 'NLĐ đóng', erRate: 'Tỷ lệ DN', er: 'DN đóng',
+                    project: 'Dự án / khách hàng', projectOnly: 'Dự án', task: 'Công việc', branch: 'Địa điểm', workCenter: 'Phòng ban', source: 'Nguồn', allocHours: 'Số giờ',
+                    entries: 'Số dòng', hours: 'Giờ tính lương', sourceHours: 'Giờ timesheet', reason: 'Lý do sửa', date: 'Ngày', sheetHours: 'Số giờ', approval: 'Trạng thái duyệt', counted: 'Tính lương',
+                    note: 'Ghi chú', component: 'Khoản trích', ratio: 'Tỷ lệ', current: 'Kỳ này', previous: 'Kỳ trước', diff: 'Chênh', label: 'Chỉ tiêu', value: 'Giá trị',
+                    advanceNbr: 'Số tạm ứng', offset: 'Đã cấn trừ', balanceAfter: 'Số dư còn lại', document: 'Chứng từ',
                 },
                 src: { S: 'Hệ thống', T: 'Giờ công', M: 'Nhập tay', O: 'Sản lượng' },
-                att: { std_days: 'Công chuẩn', work_days: 'Công hưởng lương', paid_leave: 'Nghỉ có lương', unpaid_leave: 'Nghỉ không lương', si_leave: 'Nghỉ hưởng BHXH', ot_hours: 'Giờ làm thêm', att_locked: 'Công đã khóa' },
+                att: { std_days: 'Công chuẩn', work_days: 'Công hưởng lương', paid_leave: 'Nghỉ có lương', unpaid_leave: 'Nghỉ không lương', si_leave: 'Nghỉ ốm, thai sản (BHXH)', absence_days: 'Ngày nghỉ xét đóng BH', ot_hours: 'Giờ làm thêm', att_locked: 'Công đã khóa' },
                 yes: 'Có', no: 'Chưa',
-                timeHint: 'Sửa giờ công từng dòng ở màn hình cũ (Thao tác khác - Màn hình cũ).',
+                allocSrc: { P: 'Bảng tỷ lệ', T: 'Giờ công', R: 'Theo tổ', D: 'Mặc định', S: 'Sản lượng' },
+                time: {
+                    title: 'Giờ công tính lương',
+                    hint: 'Giờ lấy từ Time (timesheet) của NetSuite khi bấm Nạp giờ công hoặc Tải nhân viên, gộp theo dự án và công việc trong kỳ. Sửa giờ phải ghi lý do; nạp lại vẫn giữ giờ đã sửa. Giờ thường dùng cho lương giờ và phân bổ dự án; giờ làm thêm lấy từ đơn làm thêm đã duyệt.',
+                    none: '(không gắn dự án)', edit: 'Sửa giờ', sync: 'Nạp giờ công', save: 'Lưu giờ',
+                    editTitle: (n) => `Sửa giờ công: ${n}`,
+                    editHint: 'Giờ tính lương khác giờ timesheet thì phải ghi lý do. Sau khi lưu cần tính lại lương.',
+                    sheetTitle: (f, to) => `Timesheet từng ngày (${f} - ${to})`,
+                    sheetFailed: 'Không đọc được timesheet từ Time của NetSuite:',
+                    approval: { A: 'Đã duyệt', P: 'Chờ duyệt / mở', R: 'Từ chối', N: 'Không dùng duyệt' },
+                },
+                tax: {
+                    gross: 'Tổng thu nhập', exempt: 'Thu nhập miễn thuế', taxable: 'Thu nhập chịu thuế', insurance: 'Bảo hiểm bắt buộc được trừ', self: 'Giảm trừ bản thân',
+                    dependents: 'Số người phụ thuộc', dependentDeduction: 'Giảm trừ người phụ thuộc', family: 'Giảm trừ gia cảnh (bản thân và người phụ thuộc)', other: 'Giảm trừ khác',
+                    assessable: 'Thu nhập tính thuế', method: 'Phương pháp tính thuế', commitment: 'Có cam kết thu nhập (không khấu trừ)', pit: 'Thuế TNCN',
+                    methods: { P: 'Lũy tiến từng phần', F: 'Khấu trừ theo tỷ lệ cố định', N: 'Không cư trú', X: 'Không khấu trừ' },
+                    note: 'Số liệu là kết quả lần tính lương gần nhất của gói, màn hình không tính lại. Phương pháp tính thuế lấy từ hồ sơ lương hiện tại.',
+                },
                 sum: { gross: 'Tổng thu nhập', eeIns: 'Bảo hiểm người lao động', pit: 'Thuế TNCN', otherDed: 'Khấu trừ khác', advance: 'Cấn trừ tạm ứng', net: 'Thực lĩnh', erIns: 'Bảo hiểm công ty đóng' },
                 cmpKeys: { gross: 'Tổng thu nhập', ee_ins: 'BH người lao động', er_ins: 'BH công ty', pit: 'Thuế TNCN', net: 'Thực lĩnh' },
                 cmpNone: 'Chưa có kỳ trước để so sánh.',
@@ -2524,9 +2613,13 @@ select.s4vp-in{padding-right:28px}
             },
             journal: {
                 title: 'Bút toán dự kiến', titleReleased: 'Bút toán đã ghi sổ', close: 'Đóng', search: 'Tìm tài khoản, diễn giải, số tiền',
-                cols: { account: 'Tài khoản', memo: 'Diễn giải', debit: 'Nợ', credit: 'Có', dim: 'Chiều phân tích' },
+                cols: { account: 'Tài khoản', memo: 'Diễn giải', debit: 'Nợ', credit: 'Có', dim: 'Phòng ban / địa điểm / dự án' },
                 total: 'Tổng',
+                notReady: 'Bảng lương chưa tính, chưa có bút toán dự kiến.',
+                loading: 'Đang dựng bút toán...',
+                failed: 'Không dựng được bút toán:',
             },
+            bills: { empty: 'Chưa lập bill cơ quan thu. Bill được lập sau khi ghi sổ bảng lương.' },
             docs: { journal: 'Bút toán ghi sổ', reversal: 'Bút toán đảo', bills: (n) => `${n} bill cơ quan thu`, posted: 'đã ghi sổ', pending: 'chưa ghi sổ, chờ duyệt', voided: 'đã hủy' },
         },
         en: {
@@ -2576,7 +2669,7 @@ select.s4vp-in{padding-right:28px}
                 timeSynced: (r) => `Hours: ${r.accepted || 0}/${r.entries || 0} timesheet entries accepted${r.pending ? ` (${r.pending} pending or rejected)` : ''}`,
                 queued: 'Queued for background calculation. This screen updates when it finishes.',
                 calcOk: 'Calculated with no errors',
-                calcErrors: (n) => `Calculated with ${n} employee errors - see Checks before approval`,
+                calcErrors: (n) => `Calculated with ${n} employee errors - see the To review tab`,
                 submitted: 'Submitted for approval',
                 approved: 'Batch approved',
                 rejected: 'Batch rejected',
@@ -2587,6 +2680,7 @@ select.s4vp-in{padding-right:28px}
                 bills: (r) => `Created ${(r.created || []).length} bills${(r.skipped || []).length ? `; no agency vendor for: ${(r.skipped || []).map((s) => s.code).join(', ')}` : ''}`,
                 inputSaved: 'Manual line saved. Click Calculate to update the figures.',
                 inputDeleted: 'Manual line deleted. Click Calculate to update the figures.',
+                timeSaved: 'Hours saved. Click Calculate to update the figures.',
                 jobDone: 'The background job finished; figures are up to date.',
             },
             job: {
@@ -2611,6 +2705,8 @@ select.s4vp-in{padding-right:28px}
                 notCalculated: 'Not calculated yet',
             },
             checks: {
+                partial: (n, total) => `Showing ${n} of ${total} items (errors and open items first)`,
+                viewAll: 'View all',
                 title: 'Checks before approval',
                 open: 'To do', done: 'Handled',
                 search: 'Search rule, employee',
@@ -2628,7 +2724,7 @@ select.s4vp-in{padding-right:28px}
             },
             emp: {
                 title: 'Employees',
-                filters: { all: 'All', review: 'To review', error: 'Errors', over: (p) => `Over ${p} vs previous period`, isNew: 'New', left: 'Not in this period' },
+                filters: { all: 'All', review: 'To review', error: 'Errors', over: (p) => `Over ${p}`, isNew: 'New', left: 'Left' },
                 filterLabel: 'Filter employees',
                 search: 'Name, code, amount',
                 searchLabel: 'Search employees',
@@ -2638,7 +2734,7 @@ select.s4vp-in{padding-right:28px}
                 more: (n) => `Show ${n} more rows`,
                 showing: (a, b) => `Showing ${a} of ${b} rows`,
                 total: (n) => `Total of ${n} employees`,
-                cols: { name: 'Employee', days: 'Days', gross: 'Gross', eeIns: 'Employee insurance', pit: 'PIT', ded: 'Deductions', net: 'Net pay', cmp: 'Vs previous', note: 'Notes' },
+                cols: { name: 'Employee', days: 'Days', gross: 'Gross', eeIns: 'EE insurance', pit: 'PIT', net: 'Net pay', cmp: 'Vs previous', note: 'Notes' },
                 type: { E: 'Employee', C: 'Contractor' },
                 first: 'First period',
                 gone: 'Left',
@@ -2652,20 +2748,46 @@ select.s4vp-in{padding-right:28px}
             panel: {
                 loading: 'Loading details...',
                 failed: 'The employee details could not be loaded.',
-                tabs: { earn: 'Earnings', ded: 'Deductions', ins: 'Insurance', time: 'Hours', alloc: 'Allocation', cmp: 'Vs previous' },
-                tabsLabel: 'Employee details',
+                tabs: {
+                    earn: 'Earnings', ded: 'Other deductions', ins: 'Insurance', tax: 'PIT', att: 'Attendance', time: 'Hours', alloc: 'Project allocation', adv: 'Advance offset', cmp: 'Vs previous',
+                    checks: 'To review', journal: 'Journal', bills: 'Agency bills',
+                },
+                tabsLabel: 'Payroll batch details',
+                groupBatch: 'Batch',
+                batchTitle: 'Whole batch',
+                noLine: 'No employee selected',
                 search: 'Search item, amount',
                 addEarning: 'Add earning',
                 addDeduction: 'Add deduction',
                 delete: 'Delete',
                 cols: {
-                    item: 'Item', amount: 'Amount', exempt: 'Tax exempt', code: 'Code', memo: 'Description', base: 'Wage base', ee: 'Employee', er: 'Company', project: 'Project / task',
-                    hours: 'Payroll hours', sourceHours: 'Timesheet hours', component: 'Component', target: 'Target', ratio: 'Ratio', current: 'This period', previous: 'Previous', diff: 'Change',
+                    item: 'Item', amount: 'Amount', exempt: 'Tax exempt', code: 'Code', memo: 'Description', base: 'Wage base', eeRate: 'Employee rate', ee: 'Employee', erRate: 'Employer rate', er: 'Employer',
+                    project: 'Project / customer', projectOnly: 'Project', task: 'Task', branch: 'Location', workCenter: 'Department', source: 'Source', allocHours: 'Hours',
+                    entries: 'Entries', hours: 'Payroll hours', sourceHours: 'Timesheet hours', reason: 'Reason for change', date: 'Date', sheetHours: 'Hours', approval: 'Approval status', counted: 'Counted',
+                    note: 'Memo', component: 'Component', ratio: 'Ratio', current: 'This period', previous: 'Previous', diff: 'Change', label: 'Item', value: 'Value',
+                    advanceNbr: 'Advance number', offset: 'Offset', balanceAfter: 'Remaining balance', document: 'Document',
                 },
                 src: { S: 'System', T: 'Time', M: 'Manual', O: 'Output' },
-                att: { std_days: 'Standard days', work_days: 'Paid work days', paid_leave: 'Paid leave', unpaid_leave: 'Unpaid leave', si_leave: 'Social insurance leave', ot_hours: 'Overtime hours', att_locked: 'Attendance locked' },
+                att: { std_days: 'Standard days', work_days: 'Paid work days', paid_leave: 'Paid leave', unpaid_leave: 'Unpaid leave', si_leave: 'Sick and maternity leave (social insurance)', absence_days: 'Absence days for insurance', ot_hours: 'Overtime hours', att_locked: 'Attendance locked' },
                 yes: 'Yes', no: 'No',
-                timeHint: 'Edit hours line by line on the previous screen (More actions - Previous screen).',
+                allocSrc: { P: 'Ratio table', T: 'Timesheet', R: 'By team', D: 'Default', S: 'Output' },
+                time: {
+                    title: 'Payroll hours',
+                    hint: 'Hours come from NetSuite Time (timesheets) when you click Load hours or Load employees, grouped by project and task within the period. Editing hours requires a reason; edited hours are kept when hours are loaded again. Regular hours feed hourly pay and project allocation; overtime hours come from approved overtime requests.',
+                    none: '(no project)', edit: 'Edit hours', sync: 'Load hours', save: 'Save hours',
+                    editTitle: (n) => `Edit hours: ${n}`,
+                    editHint: 'A reason is required when payroll hours differ from the timesheet. Recalculate after saving.',
+                    sheetTitle: (f, to) => `Daily timesheet (${f} - ${to})`,
+                    sheetFailed: 'The timesheet could not be read from NetSuite Time:',
+                    approval: { A: 'Approved', P: 'Pending / open', R: 'Rejected', N: 'Approval not used' },
+                },
+                tax: {
+                    gross: 'Gross income', exempt: 'Tax-exempt income', taxable: 'Taxable income', insurance: 'Deductible compulsory insurance', self: 'Personal deduction',
+                    dependents: 'Number of dependents', dependentDeduction: 'Dependent deduction', family: 'Family deduction (personal and dependents)', other: 'Other deductions',
+                    assessable: 'Assessable income', method: 'Tax method', commitment: 'Income commitment filed (no withholding)', pit: 'PIT',
+                    methods: { P: 'Progressive', F: 'Flat-rate withholding', N: 'Non-resident', X: 'No withholding' },
+                    note: 'Figures are the result of the latest payroll calculation; this screen does not recalculate. The tax method comes from the current payroll profile.',
+                },
                 sum: { gross: 'Gross', eeIns: 'Employee insurance', pit: 'PIT', otherDed: 'Other deductions', advance: 'Advance offset', net: 'Net pay', erIns: 'Employer insurance' },
                 cmpKeys: { gross: 'Gross', ee_ins: 'Employee insurance', er_ins: 'Employer insurance', pit: 'PIT', net: 'Net pay' },
                 cmpNone: 'No previous period to compare.',
@@ -2685,9 +2807,13 @@ select.s4vp-in{padding-right:28px}
             },
             journal: {
                 title: 'Journal preview', titleReleased: 'Released journal', close: 'Close', search: 'Search account, memo, amount',
-                cols: { account: 'Account', memo: 'Memo', debit: 'Debit', credit: 'Credit', dim: 'Segments' },
+                cols: { account: 'Account', memo: 'Memo', debit: 'Debit', credit: 'Credit', dim: 'Department / location / project' },
                 total: 'Total',
+                notReady: 'The batch has not been calculated; there is no journal preview yet.',
+                loading: 'Building the journal...',
+                failed: 'The journal could not be built:',
             },
+            bills: { empty: 'No agency bills yet. Bills are created after the batch is released.' },
             docs: { journal: 'Release journal', reversal: 'Reversal journal', bills: (n) => `${n} agency bills`, posted: 'posted', pending: 'not posted, pending approval', voided: 'voided' },
         },
     };
@@ -2696,6 +2822,10 @@ select.s4vp-in{padding-right:28px}
     const PAGE_SIZE = 200;
     const EMPTY_FORM = { earning_type: '', description: '', qty: '', rate: '', multiplier: '', code: '', amount: '' };
     const FILTERS = ['all', 'review', 'error', 'over', 'new', 'left'];
+    // Tab của khung chi tiết: theo nhân viên đang chọn (dữ liệu runLine) và cấp bảng lương
+    const LINE_TABS = ['earn', 'ded', 'ins', 'tax', 'att', 'time', 'alloc', 'adv', 'cmp'];
+    const BATCH_TABS = ['checks', 'journal', 'bills'];
+    const EMPTY_TIME = { id: '', hours: '', reason: '', label: '' };
     const blank = (v) => v === null || v === undefined || v === '';
     const n0 = (v) => Number(v) || 0;
     // Phần trăm có dấu, một chữ số thập phân: +15% / -1,2% / 0%
@@ -2725,6 +2855,39 @@ select.s4vp-in{padding-right:28px}
     });
     // Danh sách cảnh báo (mục 9): API chưa có hoặc lỗi thì coi như rỗng
     const loadChecks = (batch) => call({ action: 'checksList', batch }).then((r) => (r && !r.error && Array.isArray(r.items) ? { counts: r.counts || null, items: r.items } : NO_CHECKS), () => NO_CHECKS);
+    // Lỗi mức error chặn duyệt, không đóng tay được: luôn nằm ở nhóm cần xử lý
+    const isOpenCheck = (c) => (c.status || 'open') === 'open' || c.severity === 'error';
+    const nameOf = (l) => [l.code, l.name].filter(Boolean).join(' ');
+    /**
+     * Danh sách của tab "Cần soát": lỗi tính lương theo dòng, thông báo khi tính, công chưa khóa (màn hình tự dựng) rồi tới cảnh báo
+     * của phân hệ Kiểm tra. Trả {openRows, doneRows}.
+     */
+    function buildAttention(data, checkItems, t) {
+        const b = data.batch || {};
+        const period = data.period || {};
+        const s = String(b.status || '');
+        const lines = Array.isArray(data.lines) ? data.lines : [];
+        const items = (Array.isArray(checkItems) ? checkItems : []).filter(Boolean);
+        const own = [];
+        const errorLines = lines.filter((l) => !blank(l.error));
+        // Phân hệ Kiểm tra đã báo lỗi tính lương của nhân viên (quy tắc CALC_ERROR) thì không lặp lại dòng tự dựng
+        const reported = {};
+        items.forEach((c) => {
+            if (c.rule === 'CALC_ERROR' && !blank(c.employee))
+                reported[String(c.employee)] = true;
+        });
+        errorLines.filter((l) => !reported[String(l.employee)]).forEach((l) => own.push({ id: `err:${l.id}`, severity: 'error', title: t.checks.calcError, employeeText: nameOf(l), note: String(l.error), status: 'open', lineId: l.id }));
+        if (!errorLines.length)
+            (b.messages || []).forEach((m, i) => own.push({ id: `msg:${i}`, severity: 'error', title: t.checks.calcMessage, employeeText: t.checks.allBatch, note: String(m), status: 'open' }));
+        if (b.calculated && period.id && period.att_status !== 'L' && ['H', 'B', 'C', 'P'].indexOf(s) >= 0)
+            own.push({ id: 'att', severity: 'warn', title: t.checks.attOpen, employeeText: t.checks.allBatch, note: t.checks.attOpenNote, status: 'open', attendance: true });
+        const checkRow = (c, i) => ({
+            id: `chk:${c.key || `${c.rule}:${c.employee || ''}`}:${i}`, severity: c.severity || 'warn', title: c.title || c.rule || '', employeeText: blank(c.employee) ? t.checks.allBatch : [c.employeeCode, c.employeeName].filter(Boolean).join(' ') || String(c.employee),
+            note: [c.headline, c.note, blank(c.amount) || !Number(c.amount) ? '' : money(c.amount)].filter(Boolean).join(' · '), status: isOpenCheck(c) ? 'open' : c.status, statusText: t.checks.status[isOpenCheck(c) ? 'open' : c.status] || '',
+            assignee: c.assigneeName || c.assignee || '', rule: c.rule, employee: blank(c.employee) ? '' : String(c.employee),
+        });
+        return { openRows: own.concat(items.filter(isOpenCheck).map(checkRow)), doneRows: items.filter((c) => !isOpenCheck(c)).map(checkRow) };
+    }
     const jobKind = (job) => (!job ? '' : /^release:/.test(job) ? 'release' : /^reverse:/.test(job) ? 'reverse' : job === 'queued' ? 'queued' : 'calc');
     function PayrollRunView({ app }) {
         const t = pick(TEXT$3);
@@ -2745,8 +2908,14 @@ select.s4vp-in{padding-right:28px}
         const [tab, setTab] = core.useState('earn');
         const [dialog, setDialog] = core.useState(null);
         const [jobInfo, setJobInfo] = core.useState(null);
+        const [journal, setJournal] = core.useState(null);
         const formRef = core.useRef(EMPTY_FORM);
         const [form, setForm] = core.useState(EMPTY_FORM);
+        const timeRef = core.useRef(EMPTY_TIME);
+        const [timeForm, setTimeForm] = core.useState(EMPTY_TIME);
+        const lineTab = core.useRef('earn');
+        const tabInit = core.useRef('');
+        const journalKey = core.useRef('');
         const alive = core.useRef(true);
         const request = core.useRef(0);
         const detailRequest = core.useRef(0);
@@ -2760,7 +2929,7 @@ select.s4vp-in{padding-right:28px}
             request.current += 1;
             const mine = request.current;
             // runView trả kèm danh sách cảnh báo (một lượt gọi); máy chủ bản cũ không trả thì mới gọi checksList
-            const work = call({ action: 'runView', id }).then((v) => v && v.checksList && Array.isArray(v.checksList.items) ? [v, { counts: v.checksList.counts || null, items: v.checksList.items }] : loadChecks(id).then((c) => [v, c]));
+            const work = call({ action: 'runView', id }).then((v) => v && v.checksList && Array.isArray(v.checksList.items) ? [v, { counts: v.checksList.counts || null, items: v.checksList.items, total: v.checksList.total || 0, truncated: !!v.checksList.truncated, byEmployee: v.checksList.byEmployee || null }] : loadChecks(id).then((c) => [v, c]));
             const apply = (r) => {
                 if (!alive.current || mine !== request.current)
                     return undefined;
@@ -2770,6 +2939,20 @@ select.s4vp-in{padding-right:28px}
                     return undefined;
                 }
                 versionRef.current += 1;
+                // Lần nạp đầu của một bảng lương: đang ở bước Soát mà còn điểm cần soát thì mở sẵn tab Cần soát
+                if (tabInit.current !== id) {
+                    tabInit.current = id;
+                    let first = 'earn';
+                    try {
+                        if (!params.line && r[0].progress && r[0].progress.currentKey === 'review' && buildAttention(r[0], (r[1] || NO_CHECKS).items, t).openRows.length)
+                            first = 'checks';
+                    }
+                    catch (e) {
+                        first = 'earn';
+                    }
+                    lineTab.current = 'earn';
+                    setTab(first);
+                }
                 setFailed(false);
                 setData(r[0]);
                 setChecks(r[1] || NO_CHECKS);
@@ -2791,23 +2974,46 @@ select.s4vp-in{padding-right:28px}
             setJobInfo(null);
             setData(null);
             setDetail(null);
+            journalKey.current = '';
+            setJournal(null);
             load(false);
             return () => {
                 alive.current = false;
             };
         }, [id]);
-        // Chi tiết nhân viên đang chọn: tải theo yêu cầu, tải lại sau mỗi lần nạp bảng lương
+        // Nhân viên đang chọn: như màn cũ, chưa chọn (hoặc dòng đã chọn không còn) thì lấy dòng đầu tiên của bảng lương
         const prevId = data && data.compare && data.compare.previous ? data.compare.previous.id : '';
         const isLeaver = selected.indexOf('left:') === 0;
+        const loadedLines = data && Array.isArray(data.lines) ? data.lines : [];
+        const sel = selected && (isLeaver || loadedLines.some((l) => String(l.id) === selected)) ? selected : loadedLines.length ? String(loadedLines[0].id) : '';
+        const onLineTab = BATCH_TABS.indexOf(tab) < 0;
+        // Chi tiết nhân viên đang chọn: tải theo yêu cầu cho đúng một nhân viên, chỉ khi đang xem tab theo nhân viên; tải lại sau mỗi
+        // lần nạp bảng lương (bảng lương 1.000 nhân viên: runView không kèm chi tiết của dòng nào)
         core.useEffect(() => {
-            if (!id || !selected || isLeaver || !data)
+            if (!id || !sel || isLeaver || !data || !onLineTab)
+                return undefined;
+            const key = `${sel}|${version}`;
+            if (detail && detail.key === key && !detail.error)
                 return undefined;
             detailRequest.current += 1;
             const mine = detailRequest.current;
-            const key = `${selected}|${version}`;
-            call({ action: 'runLine', id, line: selected, prev: prevId }).then((r) => alive.current && mine === detailRequest.current && setDetail(r && r.line ? { key, line: selected, data: r } : { key, line: selected, error: true }), () => alive.current && mine === detailRequest.current && setDetail({ key, line: selected, error: true }));
+            call({ action: 'runLine', id, line: sel, prev: prevId }).then((r) => alive.current && mine === detailRequest.current && setDetail(r && r.line ? { key, line: sel, data: r } : { key, line: sel, error: true }), () => alive.current && mine === detailRequest.current && setDetail({ key, line: sel, error: true }));
             return undefined;
-        }, [id, selected, version]);
+        }, [id, sel, version, onLineTab]);
+        // Bút toán xem trước: tải khi mở tab Bút toán, tải lại khi số liệu bảng lương đổi
+        const loadJournal = (force) => {
+            const key = `${id}|${version}`;
+            if (!force && journalKey.current === key)
+                return;
+            journalKey.current = key;
+            call({ action: 'journal', id }).then((r) => alive.current && journalKey.current === key && setJournal(r && Array.isArray(r.lines) ? { id, data: r } : { id, error: serverText((r && (r.s4vpError || r.error)) || '', (r && (r.s4vpErrorVi || r.errorVi)) || '') || '-' }), (e) => alive.current && journalKey.current === key && setJournal({ id, error: errorText(e) || '-' }));
+        };
+        const journalWanted = tab === 'journal' && !!(data && data.batch && data.batch.calculated);
+        core.useEffect(() => {
+            if (id && journalWanted)
+                loadJournal(false);
+            return undefined;
+        }, [id, journalWanted, version]);
         // Tác vụ nền (tính lương bằng Map/Reduce, ghi sổ, đảo): hỏi trạng thái, tự nạp lại khi xong
         const job = data && data.batch ? String(data.batch.job || '') : '';
         core.useEffect(() => {
@@ -2874,10 +3080,7 @@ select.s4vp-in{padding-right:28px}
         const statusKey = s === 'C' && !calculated ? 'B' : s;
         const isHr = !!user.isHr;
         const checkItems = Array.isArray(checks.items) ? checks.items : [];
-        // Lỗi mức error chặn duyệt, không đóng tay được: luôn nằm ở nhóm cần xử lý
-        const isOpenCheck = (c) => (c.status || 'open') === 'open' || c.severity === 'error';
         const openChecks = checkItems.filter((c) => c && isOpenCheck(c));
-        const doneChecks = checkItems.filter((c) => c && !isOpenCheck(c));
         const openCount = data.checks ? n0(data.checks.open) : openChecks.filter((c) => c.severity !== 'info').length;
         // ------------------------------------------------------------------ thao tác
         const act = (action, extra, message) => app.run(t.working, send(Object.assign({ action, id }, extra || {}))).then((r) => {
@@ -2911,10 +3114,7 @@ select.s4vp-in{padding-right:28px}
         const doRelease = () => app.confirm(t.confirm.release, () => act('release', null, (r) => (r.resumed ? t.done.resumed : t.done.released)));
         const doReverse = () => app.confirm(t.confirm.reverse, () => act('reverse', null, (r) => (r.resumed ? t.done.resumed : t.done.reversed)));
         const goAttendance = () => app.go('attendance', { period: period.id });
-        const openJournalPreview = () => app.run(t.loading, call({ action: 'journal', id })).then((r) => {
-            if (r && alive.current && Array.isArray(r.lines))
-                setDialog({ kind: 'journal', data: r });
-        });
+        const openJournalPreview = () => setTab('journal');
         const bankFile = () => app.run(t.working, call({ action: 'bankfile', id })).then((r) => {
             if (r && r.fileName)
                 download(r.fileName, r.content || '');
@@ -3035,35 +3235,33 @@ select.s4vp-in{padding-right:28px}
             { key: 'pit', label: t.cards.pit, value: money(totals.pit), note: t.cards.pitNote(money(totals.pitEmployee), money(totals.pitContractor)) },
             { key: 'cost', label: t.cards.cost, value: money(totals.cost), note: t.cards.costNote(money(totals.gross)) },
         ];
-        // ------------------------------------------------------------------ cần xử lý
-        const nameOf = (l) => [l.code, l.name].filter(Boolean).join(' ');
+        // ------------------------------------------------------------------ cần soát
+        const pickTab = (k) => {
+            if (BATCH_TABS.indexOf(k) < 0)
+                lineTab.current = k;
+            setTab(k);
+        };
+        // Chọn nhân viên: đang ở tab cấp bảng lương thì về tab nhân viên xem gần nhất
         const selectLine = (lineId) => {
             setSelected(String(lineId));
-            setTab('earn');
+            if (BATCH_TABS.indexOf(tab) >= 0)
+                setTab(lineTab.current || 'earn');
         };
-        const attention = [];
-        const errorLines = lines.filter((l) => !blank(l.error));
-        // Phân hệ Kiểm tra đã báo lỗi tính lương của nhân viên (quy tắc CALC_ERROR) thì không lặp lại dòng tự dựng
-        const reported = {};
-        checkItems.forEach((c) => {
-            if (c && c.rule === 'CALC_ERROR' && !blank(c.employee))
-                reported[String(c.employee)] = true;
-        });
-        errorLines.filter((l) => !reported[String(l.employee)]).forEach((l) => attention.push({ id: `err:${l.id}`, severity: 'error', title: t.checks.calcError, employeeText: nameOf(l), note: String(l.error), status: 'open', lineId: l.id }));
-        if (!errorLines.length)
-            (b.messages || []).forEach((m, i) => attention.push({ id: `msg:${i}`, severity: 'error', title: t.checks.calcMessage, employeeText: t.checks.allBatch, note: String(m), status: 'open' }));
-        if (calculated && period.id && period.att_status !== 'L' && ['H', 'B', 'C', 'P'].indexOf(s) >= 0)
-            attention.push({ id: 'att', severity: 'warn', title: t.checks.attOpen, employeeText: t.checks.allBatch, note: t.checks.attOpenNote, status: 'open', attendance: true });
-        const checkRow = (c, i) => ({
-            id: `chk:${c.key || `${c.rule}:${c.employee || ''}`}:${i}`, severity: c.severity || 'warn', title: c.title || c.rule || '', employeeText: blank(c.employee) ? t.checks.allBatch : [c.employeeCode, c.employeeName].filter(Boolean).join(' ') || String(c.employee),
-            note: [c.headline, c.note, blank(c.amount) || !Number(c.amount) ? '' : money(c.amount)].filter(Boolean).join(' · '), status: isOpenCheck(c) ? 'open' : c.status, statusText: t.checks.status[isOpenCheck(c) ? 'open' : c.status] || '',
-            assignee: c.assigneeName || c.assignee || '', rule: c.rule, employee: blank(c.employee) ? '' : String(c.employee),
-        });
-        const openRows = attention.concat(openChecks.map(checkRow));
-        const doneRows = doneChecks.map(checkRow);
+        let attention = { openRows: [], doneRows: [] };
+        try {
+            attention = buildAttention(data, checkItems, t);
+        }
+        catch (e) {
+            attention = { openRows: [], doneRows: [] };
+        }
+        const openRows = attention.openRows;
+        const doneRows = attention.doneRows;
         const openCheck = (r) => {
-            if (r.lineId)
-                selectLine(r.lineId);
+            if (r.lineId) {
+                lineTab.current = 'earn';
+                setSelected(String(r.lineId));
+                setTab('earn');
+            }
             else if (r.attendance)
                 goAttendance();
             else if (r.rule)
@@ -3071,25 +3269,41 @@ select.s4vp-in{padding-right:28px}
         };
         const sevTone = { error: 'error', warn: 'warn', info: 'info' };
         const checkColumns = [
-            { key: 'title', label: t.checks.cols.title, render: (r) => jsx("span", { style: { fontWeight: '600' }, children: r.title }) },
-            { key: 'employeeText', label: t.checks.cols.employee },
-            { key: 'note', label: t.checks.cols.note, render: (r) => jsx("span", { style: { display: 'block', maxWidth: '420px', overflowWrap: 'anywhere' }, children: r.note }) },
-            { key: 'statusText', label: t.checks.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText || t.checks.status[r.status] || '', tone: r.status === 'open' ? sevTone[r.severity] || 'warn' : 'ok' }) },
-            { key: 'assignee', label: t.checks.cols.assignee, nowrap: true, render: (r) => (r.assignee ? r.assignee : jsx("span", { class: "s4vp-muted", children: r.rule ? t.checks.unassigned : '' })) },
+            {
+                key: 'title', label: t.checks.cols.title,
+                render: (r) => (jsxs("span", { style: { display: 'block' }, children: [jsx("span", { style: { fontWeight: '600' }, children: r.title }), jsx("span", { class: "s4vp-small", style: { display: 'block' }, children: r.employeeText })] })),
+            },
+            { key: 'note', label: t.checks.cols.note, render: (r) => jsx("span", { style: { display: 'block', maxWidth: '260px', overflowWrap: 'anywhere' }, children: r.note }) },
+            {
+                key: 'statusText', label: t.checks.cols.status, nowrap: true,
+                render: (r) => (jsxs("span", { style: { display: 'block' }, children: [jsx(Badge, { text: r.statusText || t.checks.status[r.status] || '', tone: r.status === 'open' ? sevTone[r.severity] || 'warn' : 'ok' }), r.rule ? jsx("span", { class: "s4vp-small", style: { display: 'block' }, children: r.assignee || t.checks.unassigned }) : null] })),
+            },
             { key: 'open', label: t.checks.cols.action, nowrap: true, render: (r) => (r.lineId || r.attendance || r.rule ? jsx("span", { class: "s4vp-link", children: t.checks.openItem }) : '') },
         ];
         const hasErrors = openRows.some((r) => r.severity === 'error');
+        // Danh sách gửi về bị giới hạn (bảng lương lớn): số đếm lấy theo tổng của máy chủ, không theo số dòng đang có
+        const openTotal = checks.truncated && checks.counts ? Math.max(openRows.length, n0(checks.counts.open) + (openRows.length - openChecks.length)) : openRows.length;
         // ------------------------------------------------------------------ lưới nhân viên
         const checksByEmp = {};
         const errorsByEmp = {};
-        openChecks.forEach((c) => {
-            if (blank(c.employee) || c.severity === 'info')
-                return;
-            const k = String(c.employee);
-            checksByEmp[k] = (checksByEmp[k] || 0) + 1;
-            if (c.severity === 'error')
-                errorsByEmp[k] = (errorsByEmp[k] || 0) + 1;
-        });
+        if (checks.byEmployee) {
+            // Máy chủ đếm trên toàn bộ cảnh báo (danh sách gửi về có thể chỉ là 200 mục đầu)
+            Object.keys(checks.byEmployee).forEach((k) => {
+                checksByEmp[k] = n0(checks.byEmployee[k].open);
+                if (n0(checks.byEmployee[k].errors))
+                    errorsByEmp[k] = n0(checks.byEmployee[k].errors);
+            });
+        }
+        else {
+            openChecks.forEach((c) => {
+                if (blank(c.employee) || c.severity === 'info')
+                    return;
+                const k = String(c.employee);
+                checksByEmp[k] = (checksByEmp[k] || 0) + 1;
+                if (c.severity === 'error')
+                    errorsByEmp[k] = (errorsByEmp[k] || 0) + 1;
+            });
+        }
         const cmpText = (c) => {
             if (!c || !prev)
                 return '';
@@ -3106,14 +3320,14 @@ select.s4vp-in{padding-right:28px}
             return {
                 id: String(l.id), code: l.code || '', name: l.name || '', typeText: t.emp.type[l.employment_type] || '', department: l.department || '',
                 days: blank(l.work_days) && blank(l.std_days) ? '' : `${num(n0(l.work_days))} / ${num(n0(l.std_days))}`,
-                gross: n0(l.gross), ee_ins: n0(l.ee_ins), pit: n0(l.pit), ded: n0(l.other_ded) + n0(l.advance), net: n0(l.net),
+                gross: n0(l.gross), ee_ins: n0(l.ee_ins), pit: n0(l.pit), net: n0(l.net),
                 cmpText: cmpText(c), cmpOver: !!c.over, cmpNew: c.kind === 'new', review, isError,
                 noteText: [isError ? t.emp.error : '', review ? t.emp.review(review) : '', l.error || '', l.warnings || ''].filter(Boolean).join(' '),
                 warnText: [l.error, l.warnings].filter(Boolean).join(' | '),
             };
         });
         const leftRows = leavers.map((l) => ({
-            id: `left:${l.employee}`, code: l.code || '', name: l.name || '', typeText: '', department: '', days: '', gross: null, ee_ins: null, pit: null, ded: null, net: null,
+            id: `left:${l.employee}`, code: l.code || '', name: l.name || '', typeText: '', department: '', days: '', gross: null, ee_ins: null, pit: null, net: null,
             cmpText: t.emp.gone, left: true, prevNet: n0(l.previous), review: 0, isError: false, noteText: `${t.panel.prevNet} ${money(l.previous)}`, warnText: '',
         }));
         const counts = { all: rows.length, review: rows.filter((r) => r.review || r.isError).length, error: rows.filter((r) => r.isError).length, over: rows.filter((r) => r.cmpOver).length, new: rows.filter((r) => r.cmpNew).length, left: leftRows.length };
@@ -3127,7 +3341,7 @@ select.s4vp-in{padding-right:28px}
         }
         const shown = found.rows.slice(0, limit);
         const sumOf = (list, k) => list.reduce((a, r) => a + n0(r[k]), 0);
-        const totalRow = filter !== 'left' && found.rows.length > 1 ? { code: t.emp.total(found.rows.length), gross: sumOf(found.rows, 'gross'), ee_ins: sumOf(found.rows, 'ee_ins'), pit: sumOf(found.rows, 'pit'), ded: sumOf(found.rows, 'ded'), net: sumOf(found.rows, 'net') } : null;
+        const totalRow = filter !== 'left' && found.rows.length > 1 ? { code: t.emp.total(found.rows.length), gross: sumOf(found.rows, 'gross'), ee_ins: sumOf(found.rows, 'ee_ins'), pit: sumOf(found.rows, 'pit'), net: sumOf(found.rows, 'net') } : null;
         const pickFilter = (v) => {
             setFilter(v);
             setLimit(PAGE_SIZE);
@@ -3136,7 +3350,7 @@ select.s4vp-in{padding-right:28px}
         const filterItems = [
             { value: 'all', label: t.emp.filters.all, count: counts.all },
             { value: 'review', label: t.emp.filters.review, count: counts.review, tone: 'warn' },
-            { value: 'error', label: t.emp.filters.error, count: counts.error, tone: 'error' },
+            counts.error || filter === 'error' ? { value: 'error', label: t.emp.filters.error, count: counts.error, tone: 'error' } : null,
             prev ? { value: 'over', label: t.emp.filters.over(thresholdText), count: counts.over, tone: 'warn' } : null,
             prev && counts.new ? { value: 'new', label: t.emp.filters.isNew, count: counts.new } : null,
             prev && counts.left ? { value: 'left', label: t.emp.filters.left, count: counts.left } : null,
@@ -3144,13 +3358,15 @@ select.s4vp-in{padding-right:28px}
         const empColumns = [
             {
                 key: 'code', label: t.emp.cols.name, nowrap: true,
-                render: (r) => (jsxs("span", { style: { display: 'block' }, children: [jsx("span", { class: "s4vp-link", children: r.code }), ` ${r.name}`, jsx("span", { class: "s4vp-small", style: { display: 'block' }, children: [r.typeText, r.department].filter(Boolean).join(' · ') })] })),
+                render: (r) => {
+                    const attrs = { class: 's4vp-ell', title: [r.code, r.name, r.typeText, r.department].filter(Boolean).join(' · ') };
+                    return (jsxs("span", { ...attrs, children: [jsx("span", { class: "s4vp-link", children: r.code }), ` ${r.name}`] }));
+                },
             },
             { key: 'days', label: t.emp.cols.days, align: 'right', nowrap: true },
             { key: 'gross', label: t.emp.cols.gross, type: 'money', nowrap: true },
             { key: 'ee_ins', label: t.emp.cols.eeIns, type: 'money', nowrap: true },
             { key: 'pit', label: t.emp.cols.pit, type: 'money', nowrap: true },
-            { key: 'ded', label: t.emp.cols.ded, type: 'money', nowrap: true },
             { key: 'net', label: t.emp.cols.net, type: 'money', nowrap: true, render: (r) => jsx("span", { style: { fontWeight: '600' }, children: r.left ? '' : money(r.net) }) },
             { key: 'cmpText', label: t.emp.cols.cmp, align: 'right', nowrap: true, render: (r) => (r.cmpOver ? jsx(Badge, { text: r.cmpText, tone: "warn" }) : jsx("span", { class: "s4vp-muted", children: r.cmpText })) },
             {
@@ -3160,19 +3376,17 @@ select.s4vp-in{padding-right:28px}
                         return jsx("span", { class: "s4vp-small", children: r.noteText });
                     if (!r.isError && !r.review)
                         return '';
-                    const attrs = { style: { display: 'inline-flex', gap: '6px', alignItems: 'center' } };
-                    if (r.warnText)
-                        attrs.title = r.warnText;
-                    return (jsxs("span", { ...attrs, children: [r.isError ? jsx(Badge, { text: t.emp.error, tone: "error" }) : null, r.review ? jsx(Badge, { text: t.emp.review(r.review), tone: "warn" }) : null] }));
+                    const attrs = { style: { display: 'inline-flex', gap: '4px', alignItems: 'center' }, title: [r.review ? t.emp.review(r.review) : '', r.warnText].filter(Boolean).join(' - ') || t.emp.error };
+                    return (jsxs("span", { ...attrs, children: [r.isError ? jsx(Badge, { text: t.emp.error, tone: "error" }) : null, r.review ? jsx(Badge, { text: String(r.review), tone: "warn" }) : null] }));
                 },
             },
         ];
         const empSub = prev ? `${t.emp.compareWith(prev.name, prev.periodName || fmtDate(prev.periodEnd))}: ${t.emp.compareStats(n0(summary.joiners), n0(summary.leavers), n0(summary.over), thresholdText)}` : t.cards.noPrev;
-        // ------------------------------------------------------------------ khung chi tiết
-        const currentLine = isLeaver ? null : lines.find((l) => String(l.id) === selected) || null;
-        const currentLeaver = isLeaver ? leavers.find((l) => `left:${l.employee}` === selected) || null : null;
-        const detailData = detail && detail.line === selected && detail.data ? detail.data : null;
-        const detailError = !!(detail && detail.line === selected && detail.error);
+        // ------------------------------------------------------------------ khung chi tiết: thao tác
+        const currentLine = isLeaver ? null : lines.find((l) => String(l.id) === sel) || null;
+        const currentLeaver = isLeaver ? leavers.find((l) => `left:${l.employee}` === sel) || null : null;
+        const detailData = detail && detail.line === sel && detail.data ? detail.data : null;
+        const detailError = !!(detail && detail.line === sel && detail.error);
         const setField = (k) => (v) => {
             formRef.current = Object.assign({}, formRef.current, { [k]: v });
             setForm(formRef.current);
@@ -3198,46 +3412,148 @@ select.s4vp-in{padding-right:28px}
         };
         const deleteInput = (r) => app.confirm(t.confirm.deleteInput(r.name || r.code || ''), () => act('deleteInput', { id: r.inputId, batch: id }, () => t.done.inputDeleted));
         const deleteColumn = editable
-            ? { key: 'del', label: '', nowrap: true, render: (r) => (r.inputId ? jsx(Button, { kind: "link", small: true, label: t.panel.delete, disabled: working, onClick: () => deleteInput(r) }) : '') }
+            ? { key: 'del', label: '', nowrap: true, noRowClick: true, render: (r) => (r.inputId ? jsx(Button, { kind: "link", small: true, label: t.panel.delete, disabled: working, onClick: () => deleteInput(r) }) : '') }
             : null;
-        const sumLine = (label, value, strong) => (jsxs("div", { class: "s4vp-line", style: strong ? { fontSize: '16px', fontWeight: '700' } : {}, children: [jsx("span", { class: strong ? '' : 's4vp-muted', children: label }), jsx("span", { class: "s4vp-num", children: money(value) || '-' })] }));
-        const renderPanelTab = () => {
+        // Sửa giờ công một dòng (action cũ saveTime): giờ khác giờ timesheet thì máy chủ bắt buộc có lý do
+        const setTimeField = (k) => (v) => {
+            timeRef.current = Object.assign({}, timeRef.current, { [k]: v });
+            setTimeForm(timeRef.current);
+        };
+        const openTimeEdit = (r) => {
+            timeRef.current = { id: r.id, hours: blank(r.hours) ? '' : num(r.hours), reason: r.reason || '', label: [r.projectText, r.taskText].filter(Boolean).join(' / ') };
+            setTimeForm(timeRef.current);
+            setDialog({ kind: 'time' });
+        };
+        const saveTime = () => {
+            const v = timeRef.current;
+            const hours = toNumber(v.hours);
+            if (!v.id || blank(hours))
+                return;
+            act('saveTime', { lineId: v.id, batch: id, values: { hours, reason: v.reason } }, () => t.done.timeSaved).then((r) => {
+                if (r && alive.current)
+                    setDialog(null);
+            });
+        };
+        const sumLine = (label, value, strong) => (jsxs("div", { class: "s4vp-line", style: { fontSize: '16px', fontWeight: '700' } , children: [jsx("span", { class: '' , children: label }), jsx("span", { class: "s4vp-num", children: money(value) || '-' })] }));
+        const cash = (v) => (blank(v) ? '-' : money(v) || '0');
+        const qty = (v) => (blank(v) ? '-' : num(v) || '0');
+        const pc = t.panel.cols;
+        const search = t.panel.search;
+        // Bảng nhãn - giá trị (Công, Thuế TNCN): vẫn là lưới có ô tìm
+        const pairTable = (list) => (jsx(Table, { columns: [
+                { key: 'label', label: pc.label, render: (r) => jsx("span", { style: r.strong ? { fontWeight: '700' } : {}, children: r.label }) },
+                { key: 'value', label: pc.value, align: 'right', nowrap: true, render: (r) => jsx("span", { style: r.strong ? { fontWeight: '700' } : {}, children: r.value }) },
+            ], rows: list, search: true, searchPlaceholder: search }));
+        // ------------------------------------------------------------------ khung chi tiết: tab theo nhân viên
+        const renderLineTab = () => {
             const d = detailData;
-            const pc = t.panel.cols;
             if (tab === 'earn') {
-                const list = (d.earnings || []).map((x, i) => Object.assign({}, x, { id: `e${i}`, srcText: [t.panel.src[x.source] || x.source || '', x.ruleCode].filter(Boolean).join(' · '), calcText: blank(x.quantity) && blank(x.rate) ? '' : `${num(n0(x.quantity))} × ${num(n0(x.rate))}${blank(x.multiplier) || Number(x.multiplier) === 1 ? '' : ` × ${num(x.multiplier)}`}` }));
-                const total = list.length > 1 ? { name: t.journal.total, amount: sumOf(list, 'amount') } : null;
-                return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '10px' }, children: [jsx(Table, { columns: [
-                                { key: 'name', label: pc.item, render: (r) => (jsxs("span", { style: { display: 'block' }, children: [jsx("span", { style: { fontWeight: '600' }, children: r.name || r.code }), jsx("span", { class: "s4vp-small", style: { display: 'block' }, children: [r.code, r.calcText, r.srcText].filter(Boolean).join(' · ') })] })) },
-                                { key: 'amount', label: pc.amount, type: 'money', nowrap: true },
-                                deleteColumn,
-                            ], rows: list, total: total, search: true, searchPlaceholder: t.panel.search, maxHeight: 300 }), editable ? jsx(Button, { kind: "dashed", block: true, label: t.panel.addEarning, disabled: working, onClick: () => openInput('E') }) : null] }));
+                const list = (d.earnings || []).map((x, i) => Object.assign({}, x, {
+                    id: `e${i}`, srcText: [t.panel.src[x.source] || x.source || '', x.ruleCode].filter(Boolean).join(' · '),
+                    calcText: blank(x.quantity) && blank(x.rate) ? '' : `${num(n0(x.quantity))} × ${num(n0(x.rate))}${blank(x.multiplier) || Number(x.multiplier) === 1 ? '' : ` × ${num(x.multiplier)}`}`,
+                }));
+                const total = list.length > 1 ? { name: t.journal.total, amount: sumOf(list, 'amount'), exempt: sumOf(list, 'exempt') } : null;
+                return (jsx(Table, { columns: [
+                        { key: 'name', label: pc.item, render: (r) => (jsxs("span", { style: { display: 'block' }, children: [jsx("span", { style: { fontWeight: '600' }, children: r.name || r.code }), jsx("span", { class: "s4vp-small", style: { display: 'block' }, children: [r.code, r.calcText, r.srcText, r.project].filter(Boolean).join(' · ') })] })) },
+                        { key: 'amount', label: pc.amount, type: 'money', nowrap: true },
+                        { key: 'exempt', label: pc.exempt, type: 'money', nowrap: true },
+                        deleteColumn,
+                    ], rows: list, total: total, search: true, searchPlaceholder: search, toolbar: editable ? jsx(Button, { kind: "dashed", small: true, label: t.panel.addEarning, disabled: working, onClick: () => openInput('E') }) : null }));
             }
             if (tab === 'ded') {
                 const list = (d.deductions || []).map((x, i) => Object.assign({}, x, { id: `d${i}` }));
                 const total = list.length > 1 ? { code: t.journal.total, amount: sumOf(list, 'amount') } : null;
-                return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '10px' }, children: [jsx(Table, { columns: [{ key: 'code', label: pc.code, nowrap: true }, { key: 'name', label: pc.memo }, { key: 'amount', label: pc.amount, type: 'money', nowrap: true }, deleteColumn], rows: list, total: total, search: true, searchPlaceholder: t.panel.search, maxHeight: 300 }), editable ? jsx(Button, { kind: "dashed", block: true, label: t.panel.addDeduction, disabled: working, onClick: () => openInput('D') }) : null] }));
+                return (jsx(Table, { columns: [{ key: 'code', label: pc.code, nowrap: true }, { key: 'name', label: pc.memo }, { key: 'amount', label: pc.amount, type: 'money', nowrap: true }, deleteColumn], rows: list, total: total, search: true, searchPlaceholder: search, toolbar: editable ? jsx(Button, { kind: "dashed", small: true, label: t.panel.addDeduction, disabled: working, onClick: () => openInput('D') }) : null }));
             }
             if (tab === 'ins') {
-                const list = (d.insurance || []).map((x, i) => Object.assign({}, x, { id: `i${i}`, rateText: `${pct(x.employeeRate) || '-'} / ${pct(x.employerRate) || '-'}` }));
+                const list = (d.insurance || []).map((x, i) => Object.assign({}, x, { id: `i${i}` }));
                 const total = list.length > 1 ? { code: t.journal.total, employeeAmount: sumOf(list, 'employeeAmount'), employerAmount: sumOf(list, 'employerAmount') } : null;
                 return (jsx(Table, { columns: [
-                        { key: 'code', label: pc.item, render: (r) => (jsxs("span", { style: { display: 'block' }, children: [jsx("span", { style: { fontWeight: '600' }, children: r.code }), jsx("span", { class: "s4vp-small", style: { display: 'block' }, children: `${pc.base} ${money(r.wageBase) || '-'} · ${r.rateText}` })] })) },
+                        { key: 'code', label: pc.component, nowrap: true, render: (r) => jsx("span", { style: { fontWeight: '600' }, children: r.code }) },
+                        { key: 'wageBase', label: pc.base, type: 'money', nowrap: true },
+                        { key: 'employeeRate', label: pc.eeRate, type: 'pct', nowrap: true },
                         { key: 'employeeAmount', label: pc.ee, type: 'money', nowrap: true },
+                        { key: 'employerRate', label: pc.erRate, type: 'pct', nowrap: true },
                         { key: 'employerAmount', label: pc.er, type: 'money', nowrap: true },
-                    ], rows: list, total: total, search: true, searchPlaceholder: t.panel.search, maxHeight: 300 }));
+                    ], rows: list, total: total, search: true, searchPlaceholder: search }));
+            }
+            if (tab === 'tax') {
+                // Chỉ hiện số gói đã tính và lưu trên dòng; không tính lại
+                const x = d.tax || {};
+                const tt = t.panel.tax;
+                const list = [
+                    { id: 'gross', label: tt.gross, value: cash(x.gross) },
+                    { id: 'exempt', label: tt.exempt, value: cash(x.exempt) },
+                    { id: 'taxable', label: tt.taxable, value: cash(x.taxable), strong: true },
+                    { id: 'insurance', label: tt.insurance, value: cash(x.insurance) },
+                    blank(x.selfDeduction) ? null : { id: 'self', label: tt.self, value: cash(x.selfDeduction) },
+                    { id: 'dependents', label: tt.dependents, value: qty(x.dependents) },
+                    blank(x.dependentDeduction) ? null : { id: 'dep', label: tt.dependentDeduction, value: cash(x.dependentDeduction) },
+                    { id: 'family', label: tt.family, value: cash(x.familyDeduction) },
+                    { id: 'other', label: tt.other, value: cash(x.otherDeductions) },
+                    { id: 'assessable', label: tt.assessable, value: cash(x.assessable), strong: true },
+                    { id: 'method', label: tt.method, value: blank(x.method) ? '-' : tt.methods[x.method] || String(x.method) },
+                    x.flatCommitment ? { id: 'commit', label: tt.commitment, value: t.panel.yes } : null,
+                    { id: 'pit', label: tt.pit, value: cash(x.pit), strong: true },
+                ].filter(Boolean);
+                return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px' }, children: [pairTable(list), jsx("div", { class: "s4vp-small", children: tt.note })] }));
+            }
+            if (tab === 'att') {
+                const a = d.attendance || d.line || {};
+                const list = ['std_days', 'work_days', 'paid_leave', 'unpaid_leave', 'si_leave', 'absence_days', 'ot_hours'].map((k) => ({ id: k, label: t.panel.att[k], value: qty(a[k]) }));
+                list.push({ id: 'att_locked', label: t.panel.att.att_locked, value: a.att_locked ? t.panel.yes : t.panel.no });
+                return pairTable(list);
             }
             if (tab === 'time') {
-                const l = d.line || {};
-                const att = ['std_days', 'work_days', 'paid_leave', 'unpaid_leave', 'si_leave', 'ot_hours'];
-                const list = (d.time || []).map((x, i) => Object.assign({}, x, { id: `t${i}`, target: [x.project_name || x.project, x.task_name || x.task].filter(Boolean).join(' / ') || '-' }));
-                const total = list.length > 1 ? { target: t.journal.total, source_hours: sumOf(list, 'source_hours'), hours: sumOf(list, 'hours') } : null;
-                return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '10px' }, children: [jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '4px' }, children: [att.map((k) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { class: "s4vp-muted", children: t.panel.att[k] }), jsx("span", { class: "s4vp-num", children: blank(l[k]) ? '-' : num(l[k]) })] }, k))), jsxs("div", { class: "s4vp-line", children: [jsx("span", { class: "s4vp-muted", children: t.panel.att.att_locked }), jsx("span", { children: l.att_locked ? t.panel.yes : t.panel.no })] })] }), jsx(Table, { columns: [{ key: 'target', label: pc.project }, { key: 'source_hours', label: pc.sourceHours, type: 'num', nowrap: true }, { key: 'hours', label: pc.hours, type: 'num', nowrap: true }], rows: list, total: total, search: true, searchPlaceholder: t.panel.search, maxHeight: 240 }), list.length && editable ? jsx("div", { class: "s4vp-small", children: t.panel.timeHint }) : null] }));
+                const tm = t.panel.time;
+                const list = (d.time || []).map((x, i) => Object.assign({}, x, { id: blank(x.id) ? `t${i}` : String(x.id), projectText: x.project_name || x.project || tm.none, taskText: x.task_name || x.task || '' }));
+                const total = list.length > 1 ? { projectText: t.journal.total, source_hours: sumOf(list, 'source_hours'), hours: sumOf(list, 'hours') } : null;
+                const sheet = d.timesheet || { entries: [] };
+                const entries = Array.isArray(sheet.entries) ? sheet.entries : [];
+                // Dòng timesheet được nhận vào lương: cùng quy tắc với màn cũ (bắt buộc duyệt thì chỉ dòng đã duyệt, không thì trừ dòng bị từ chối)
+                const usesApproval = entries.some((e) => e.approval !== 'N');
+                const counted = (e) => !usesApproval || (sheet.requireApproval ? e.approval === 'A' : e.approval !== 'R');
+                const days = entries.map((e, i) => Object.assign({}, e, {
+                    id: blank(e.id) ? `s${i}` : `s${e.id}`, dateText: fmtDate(e.date), projectText: e.projectName || tm.none, approvalText: tm.approval[e.approval] || e.statusName || '', countedText: counted(e) ? t.panel.yes : t.panel.no,
+                }));
+                const dayTotal = days.length > 1 ? { dateText: t.journal.total, hours: sumOf(days, 'hours') } : null;
+                return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px' }, children: [jsx("div", { class: "s4vp-small", children: tm.hint }), jsx(Table, { columns: [
+                                { key: 'projectText', label: pc.project },
+                                { key: 'taskText', label: pc.task },
+                                { key: 'entries', label: pc.entries, type: 'num', nowrap: true },
+                                { key: 'source_hours', label: pc.sourceHours, type: 'num', nowrap: true },
+                                { key: 'hours', label: pc.hours, type: 'num', nowrap: true },
+                                { key: 'reason', label: pc.reason },
+                                editable ? { key: 'edit', label: '', nowrap: true, noRowClick: true, render: (r) => jsx(Button, { kind: "link", small: true, label: tm.edit, disabled: working, onClick: () => openTimeEdit(r) }) } : null,
+                            ], rows: list, total: total, search: true, searchPlaceholder: search, label: tm.title, toolbar: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx("span", { style: { fontWeight: '600', fontSize: '13px' }, children: tm.title }), editable ? jsx(Button, { small: true, label: tm.sync, disabled: working, onClick: () => act('syncTime', null, t.done.timeSynced) }) : null] }) }), sheet.failed ? (jsx("div", { class: "s4vp-small", style: { color: 'var(--s4vp-err)' }, children: `${tm.sheetFailed} ${sheet.failed}` })) : (jsx(Table, { columns: [
+                                { key: 'dateText', label: pc.date, nowrap: true },
+                                { key: 'hours', label: pc.sheetHours, type: 'num', nowrap: true },
+                                { key: 'projectText', label: pc.project },
+                                { key: 'taskName', label: pc.task },
+                                { key: 'approvalText', label: pc.approval, nowrap: true },
+                                { key: 'countedText', label: pc.counted, nowrap: true },
+                                { key: 'memo', label: pc.note },
+                            ], rows: days, total: dayTotal, search: true, searchPlaceholder: search, label: tm.sheetTitle(fmtDate(sheet.from), fmtDate(sheet.to)), toolbar: jsx("span", { style: { fontWeight: '600', fontSize: '13px' }, children: tm.sheetTitle(fmtDate(sheet.from), fmtDate(sheet.to)) }) }))] }));
             }
             if (tab === 'alloc') {
-                const list = (d.allocations || []).map((x, i) => Object.assign({}, x, { id: `a${i}`, target: [x.project, x.task, x.branch, x.workCenter].filter(Boolean).join(' / ') || '-' }));
+                const list = (d.allocations || []).map((x, i) => Object.assign({}, x, { id: `a${i}`, sourceText: x.source ? t.panel.allocSrc[x.source] || x.source : '' }));
                 const total = list.length > 1 ? { component: t.journal.total, amount: sumOf(list, 'amount') } : null;
-                return (jsx(Table, { columns: [{ key: 'component', label: pc.component, nowrap: true }, { key: 'target', label: pc.target }, { key: 'ratio', label: pc.ratio, type: 'pct', nowrap: true }, { key: 'amount', label: pc.amount, type: 'money', nowrap: true }], rows: list, total: total, search: true, searchPlaceholder: t.panel.search, maxHeight: 300 }));
+                return (jsx(Table, { columns: [
+                        { key: 'component', label: pc.component, nowrap: true },
+                        { key: 'project', label: pc.projectOnly },
+                        { key: 'task', label: pc.task },
+                        { key: 'branch', label: pc.branch },
+                        { key: 'workCenter', label: pc.workCenter },
+                        { key: 'sourceText', label: pc.source, nowrap: true },
+                        { key: 'hours', label: pc.allocHours, type: 'num', nowrap: true },
+                        { key: 'ratio', label: pc.ratio, type: 'pct', nowrap: true },
+                        { key: 'amount', label: pc.amount, type: 'money', nowrap: true },
+                    ], rows: list, total: total, search: true, searchPlaceholder: search }));
+            }
+            if (tab === 'adv') {
+                const list = (d.advanceOffsets || []).map((x, i) => Object.assign({}, x, { id: `v${i}` }));
+                const total = list.length > 1 ? { refNbr: t.journal.total, amount: sumOf(list, 'amount') } : null;
+                return (jsx(Table, { columns: [{ key: 'refNbr', label: pc.advanceNbr, nowrap: true }, { key: 'amount', label: pc.offset, type: 'money', nowrap: true }, { key: 'remainingBalance', label: pc.balanceAfter, type: 'money', nowrap: true }], rows: list, total: total, search: true, searchPlaceholder: search }));
             }
             // So kỳ trước: chỉ tiêu của dòng, rồi từng khoản thu nhập
             const c = d.compare || {};
@@ -3248,52 +3564,128 @@ select.s4vp-in{padding-right:28px}
             const cmpColumns = (first) => [
                 { key: 'name', label: first },
                 { key: 'current', label: pc.current, type: 'money', nowrap: true },
-                // Khung hẹp: số kỳ trước và mức chênh chung một cột (chênh ở dòng nhỏ bên dưới)
+                { key: 'previous', label: pc.previous, type: 'money', nowrap: true },
                 {
-                    key: 'previous', label: `${pc.previous} / ${pc.diff}`, align: 'right', nowrap: true,
-                    render: (r) => (jsxs("span", { style: { display: 'block' }, children: [money(r.previous) || '-', jsx("span", { class: "s4vp-small", style: r.diff ? { display: 'block', color: 'var(--s4vp-warn)', fontWeight: '600' } : { display: 'block' }, children: blank(r.diff) ? '' : r.diff ? `${signedMoney(r.diff)}${blank(r.pct) ? '' : ` (${signedPct(r.pct)})`}` : '0' })] })),
+                    key: 'diff', label: pc.diff, align: 'right', nowrap: true,
+                    render: (r) => jsx("span", { style: r.diff ? { color: 'var(--s4vp-warn)', fontWeight: '600' } : {}, children: blank(r.diff) ? '' : r.diff ? `${signedMoney(r.diff)}${blank(r.pct) ? '' : ` (${signedPct(r.pct)})`}` : '0' }),
                 },
             ];
-            return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '10px' }, children: [jsx("div", { class: "s4vp-small", children: c.inPrevious ? t.panel.cmpWith(c.previous.name) : t.panel.cmpNew(c.previous.name) }), jsx(Table, { columns: cmpColumns(pc.item), rows: keyRows }), c.inPrevious || itemRows.length ? jsx(Table, { columns: cmpColumns(t.panel.cmpItems), rows: itemRows, search: true, searchPlaceholder: t.panel.search, maxHeight: 260 }) : null] }));
+            return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px' }, children: [jsx("div", { class: "s4vp-small", children: c.inPrevious ? t.panel.cmpWith(c.previous.name) : t.panel.cmpNew(c.previous.name) }), jsx(Table, { columns: cmpColumns(pc.item), rows: keyRows }), c.inPrevious || itemRows.length ? jsx(Table, { columns: cmpColumns(t.panel.cmpItems), rows: itemRows, search: true, searchPlaceholder: search }) : null] }));
+        };
+        // ------------------------------------------------------------------ khung chi tiết: tab cấp bảng lương
+        const txState = (docId) => {
+            const x = tx[String(docId)] || {};
+            return x.voided ? t.docs.voided : x.posting ? t.docs.posted : t.docs.pending;
+        };
+        const bills = Array.isArray(b.bills) ? b.bills : [];
+        const openBill = (billId) => {
+            try {
+                window.open(`/app/accounting/transactions/vendbill.nl?id=${encodeURIComponent(billId)}`, '_blank');
+            }
+            catch (e) {
+                app.notify(String((e && e.message) || e), 'error');
+            }
+        };
+        const renderBatchTab = () => {
+            if (tab === 'checks') {
+                return (jsxs("div", { children: [checks.truncated ? (jsxs("div", { class: "s4vp-line s4vp-small", style: { padding: '6px 12px' }, children: [jsx("span", { class: "s4vp-muted", children: t.checks.partial(checkItems.length, n0(checks.total)) }), jsx(Button, { kind: "link", small: true, label: t.checks.viewAll, onClick: () => app.go('checkDetail', { id }) })] })) : null, jsx(Table, { columns: checkColumns, rows: checkTab === 'done' ? doneRows : openRows, onRowClick: openCheck, empty: checkTab === 'done' ? t.checks.noneDone : t.checks.none, search: true, searchPlaceholder: t.checks.search, label: t.checks.title, toolbar: jsx(Chips, { items: [{ value: 'open', label: t.checks.open, count: openTotal, tone: hasErrors ? 'error' : 'warn' }, { value: 'done', label: t.checks.done, count: doneRows.length }], value: checkTab, onPick: setCheckTab, label: t.checks.title }) })] }));
+            }
+            if (tab === 'bills') {
+                const list = bills.map((x, i) => ({ id: `b${i}`, billId: x.id, doc: `${(tx[String(x.id)] || {}).tranid || x.id} (${txState(x.id)})`, memo: x.memo || '', amount: x.amount }));
+                const total = list.length > 1 ? { doc: t.journal.total, amount: sumOf(list, 'amount') } : null;
+                const canCreate = !isHr && s === 'R';
+                return (jsx(Table, { columns: [
+                        { key: 'doc', label: pc.document, nowrap: true, noRowClick: true, render: (r) => jsx(Button, { kind: "link", small: true, label: r.doc, onClick: () => openBill(r.billId) }) },
+                        { key: 'memo', label: pc.memo },
+                        { key: 'amount', label: pc.amount, type: 'money', nowrap: true },
+                    ], rows: list, total: total, empty: t.bills.empty, search: true, searchPlaceholder: search, label: t.panel.tabs.bills, toolbar: canCreate ? jsx(Button, { small: true, label: t.act.agencyBills, disabled: working, onClick: () => app.confirm(t.confirm.agencyBills, () => act('agencyBills', null, t.done.bills)) }) : null }));
+            }
+            // Bút toán: bản xem trước dựng từ số đã tính (action cũ journal), tải khi mở tab
+            if (!calculated)
+                return jsx(Empty, { text: t.journal.notReady });
+            if (!journal || journal.id !== id)
+                return jsx(Empty, { text: t.journal.loading });
+            if (journal.error) {
+                return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }, children: [jsx(Empty, { text: `${t.journal.failed} ${journal.error}` }), jsx(Button, { small: true, label: t.retry, onClick: () => loadJournal(true) })] }));
+            }
+            const j = journal.data || {};
+            const list = (j.lines || []).map((x, i) => Object.assign({}, x, { id: `j${i}`, accountText: x.accountNumber || x.account || '', dim: [x.sub, x.branch, x.workCenter, x.project].filter(Boolean).join(' / ') }));
+            const total = { accountText: t.journal.total, debit: sumOf(list, 'debit'), credit: sumOf(list, 'credit') };
+            const heading = `${b.journal ? t.journal.titleReleased : t.journal.title}${j.memo ? `: ${j.memo}` : ''}`;
+            return (jsx(Table, { columns: [
+                    { key: 'accountText', label: t.journal.cols.account, nowrap: true },
+                    { key: 'memo', label: t.journal.cols.memo },
+                    { key: 'debit', label: t.journal.cols.debit, type: 'money', nowrap: true },
+                    { key: 'credit', label: t.journal.cols.credit, type: 'money', nowrap: true },
+                    { key: 'dim', label: t.journal.cols.dim },
+                ], rows: list, total: total, search: true, searchPlaceholder: t.journal.search, label: heading, toolbar: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx("span", { style: { fontWeight: '600', fontSize: '13px' }, children: heading }), b.journal ? jsx(Button, { kind: "link", small: true, label: `${b.journalNo || b.journal} (${txState(b.journal)})`, onClick: () => openJournal(b.journal) }) : null] }) }));
+        };
+        // ------------------------------------------------------------------ khung chi tiết: khung, dải tab
+        const isBatchTab = BATCH_TABS.indexOf(tab) >= 0;
+        const tabButton = (k, count, tone) => {
+            const on = tab === k;
+            return (jsxs("button", { type: "button", role: "tab", class: on ? 's4vp-tab s4vp-on' : 's4vp-tab', "aria-selected": on ? 'true' : 'false', onClick: () => pickTab(k), children: [t.panel.tabs[k], count ? jsx("span", { class: tone ? `s4vp-tab-n s4vp-t-${tone}` : 's4vp-tab-n', children: String(count) }) : null] }, `t${k}`));
         };
         const renderPanel = () => {
-            if (currentLeaver) {
-                return (jsxs(SidePanel, { title: [currentLeaver.code, currentLeaver.name].filter(Boolean).join(' '), sub: t.emp.filters.left, onClose: () => setSelected(''), children: [jsx("div", { class: "s4vp-small", children: t.panel.leftNote(prev ? prev.name : '') }), sumLine(t.panel.prevNet, currentLeaver.previous, true)] }));
-            }
-            if (!currentLine)
-                return null;
-            const l = detailData ? Object.assign({}, currentLine, detailData.line, { code: currentLine.code, name: currentLine.name }) : currentLine;
-            const tabItems = ['earn', 'ded', 'ins', 'time', 'alloc', 'cmp'].map((k) => ({ value: k, label: t.panel.tabs[k] }));
+            let title = t.panel.noLine;
+            let sub = '';
+            let side = null;
+            let message = '';
+            let messageTone = 'var(--s4vp-warn)';
             let body;
-            if (detailError)
-                body = jsx(Empty, { text: t.panel.failed });
-            else if (!detailData)
-                body = jsx(Empty, { text: t.panel.loading });
-            else {
+            if (isBatchTab) {
+                title = t.panel.batchTitle;
+                sub = b.name || '';
                 try {
-                    body = renderPanelTab();
+                    body = renderBatchTab();
                 }
                 catch (e) {
                     body = jsx(Empty, { text: t.panel.failed });
                 }
             }
-            return (jsxs(SidePanel, { title: nameOf(currentLine), sub: [t.emp.type[currentLine.employment_type], currentLine.department].filter(Boolean).join(' · '), onClose: () => setSelected(''), children: [blank(currentLine.error) ? null : jsx("div", { style: { color: 'var(--s4vp-err)', fontSize: '13px', overflowWrap: 'anywhere' }, children: String(currentLine.error) }), blank(currentLine.warnings) ? null : jsx("div", { style: { color: 'var(--s4vp-warn)', fontSize: '13px', overflowWrap: 'anywhere' }, children: String(currentLine.warnings) }), jsx(Tabs, { items: tabItems, value: tab, onPick: setTab, label: t.panel.tabsLabel }), body, jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid var(--s4vp-line)', paddingTop: '12px' }, children: [sumLine(t.panel.sum.gross, l.gross), sumLine(t.panel.sum.eeIns, l.ee_ins), sumLine(t.panel.sum.pit, l.pit), n0(l.other_ded) ? sumLine(t.panel.sum.otherDed, l.other_ded) : null, n0(l.advance) ? sumLine(t.panel.sum.advance, l.advance) : null, sumLine(t.panel.sum.net, l.net, true), n0(l.er_ins) ? sumLine(t.panel.sum.erIns, l.er_ins) : null] })] }));
+            else if (currentLeaver) {
+                title = [currentLeaver.code, currentLeaver.name].filter(Boolean).join(' ');
+                sub = t.emp.filters.left;
+                body = (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px' }, children: [jsx("div", { class: "s4vp-small", children: t.panel.leftNote(prev ? prev.name : '') }), sumLine(t.panel.prevNet, currentLeaver.previous)] }));
+            }
+            else if (currentLine) {
+                const l = detailData ? Object.assign({}, currentLine, detailData.line, { code: currentLine.code, name: currentLine.name }) : currentLine;
+                title = nameOf(currentLine);
+                sub = [t.emp.type[currentLine.employment_type], currentLine.department].filter(Boolean).join(' · ');
+                side = `${t.panel.sum.net} ${money(l.net) || '-'}`;
+                if (!blank(currentLine.error)) {
+                    message = String(currentLine.error);
+                    messageTone = 'var(--s4vp-err)';
+                }
+                else if (!blank(currentLine.warnings))
+                    message = String(currentLine.warnings);
+                if (detailError)
+                    body = jsx(Empty, { text: t.panel.failed });
+                else if (!detailData)
+                    body = jsx(Empty, { text: t.panel.loading });
+                else {
+                    try {
+                        body = renderLineTab();
+                    }
+                    catch (e) {
+                        body = jsx(Empty, { text: t.panel.failed });
+                    }
+                }
+            }
+            else
+                body = jsx(Empty, { text: lines.length ? t.panel.noLine : t.emp.empty });
+            const msgAttrs = { class: 's4vp-pane-msg', style: { color: messageTone } };
+            if (message)
+                msgAttrs.title = message;
+            return (jsxs("section", { class: "s4vp-pane", "aria-label": t.panel.tabsLabel, children: [jsxs("div", { class: "s4vp-pane-h", children: [jsxs("div", { class: "s4vp-pane-t", children: [title, sub ? jsx("span", { class: "s4vp-pane-s", children: ` · ${sub}` }) : null] }), side ? jsx("div", { style: { fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }, children: side }) : null] }), message ? jsx("div", { ...msgAttrs, children: message }) : null, jsxs("div", { class: "s4vp-tabs2", role: "tablist", "aria-label": t.panel.tabsLabel, children: [jsx("div", { class: "s4vp-tabs2-g", children: LINE_TABS.map((k) => tabButton(k)) }), jsxs("div", { class: "s4vp-tabs2-g s4vp-tabs2-batch", children: [jsx("span", { class: "s4vp-tabs2-cap", children: t.panel.groupBatch }), tabButton('checks', openTotal, hasErrors ? 'error' : 'warn'), tabButton('journal'), tabButton('bills', bills.length)] })] }), jsx("div", { class: "s4vp-pane-b", children: jsx("div", { class: "s4vp-pane-pad", children: body }) })] }));
         };
         // ------------------------------------------------------------------ hộp thoại
         const renderDialog = () => {
             if (!dialog)
                 return null;
-            if (dialog.kind === 'journal') {
-                const j = dialog.data || {};
-                const list = (j.lines || []).map((x, i) => Object.assign({}, x, { id: `j${i}`, accountText: x.accountNumber || x.account || '', dim: [x.sub, x.branch, x.workCenter, x.project].filter(Boolean).join(' / ') }));
-                const total = { accountText: t.journal.total, debit: sumOf(list, 'debit'), credit: sumOf(list, 'credit') };
-                return (jsx(Dialog, { title: `${b.journal ? t.journal.titleReleased : t.journal.title}${j.memo ? `: ${j.memo}` : ''}`, width: 900, onClose: () => setDialog(null), actions: [jsx(Button, { label: t.journal.close, onClick: () => setDialog(null) })], children: jsx(Table, { columns: [
-                            { key: 'accountText', label: t.journal.cols.account, nowrap: true },
-                            { key: 'memo', label: t.journal.cols.memo },
-                            { key: 'debit', label: t.journal.cols.debit, type: 'money', nowrap: true },
-                            { key: 'credit', label: t.journal.cols.credit, type: 'money', nowrap: true },
-                            { key: 'dim', label: t.journal.cols.dim },
-                        ], rows: list, total: total, search: true, searchPlaceholder: t.journal.search, maxHeight: 380 }) }));
+            if (dialog.kind === 'time') {
+                const tm = t.panel.time;
+                return (jsxs(Dialog, { title: tm.editTitle(timeForm.label || ''), onClose: () => setDialog(null), actions: [jsx(Button, { label: t.input.cancel, onClick: () => setDialog(null) }), jsx(Button, { kind: "primary", label: tm.save, disabled: blank(toNumber(timeForm.hours)) || working, onClick: saveTime })], children: [jsx("div", { class: "s4vp-small", children: tm.editHint }), jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: pc.hours, children: jsx(NumberInput, { value: timeForm.hours, onInput: setTimeField('hours') }) }), jsx(Field, { label: pc.reason, children: jsx(TextInput, { value: timeForm.reason, onInput: setTimeField('reason'), onEnter: saveTime }) })] })] }));
             }
             if (!currentLine)
                 return null;
@@ -3303,20 +3695,15 @@ select.s4vp-in{padding-right:28px}
             return (jsxs(Dialog, { title: `${isE ? t.panel.addEarning : t.panel.addDeduction} ${t.input.forEmp(nameOf(currentLine))}`, onClose: () => setDialog(null), actions: [jsx(Button, { label: t.input.cancel, onClick: () => setDialog(null) }), jsx(Button, { kind: "primary", label: t.input.save, disabled: !ready || working, onClick: saveInput })], children: [jsx("div", { class: "s4vp-small", children: isE ? t.input.hintE : t.input.hintD }), isE ? (jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.input.earningType, children: jsx(Select, { value: form.earning_type, onInput: setField('earning_type'), options: types, placeholder: t.input.pickType }) }), jsx(Field, { label: t.input.memo, children: jsx(TextInput, { value: form.description, onInput: setField('description') }) }), jsx(Field, { label: t.input.qty, children: jsx(NumberInput, { value: form.qty, onInput: setField('qty') }) }), jsx(Field, { label: t.input.rate, children: jsx(NumberInput, { value: form.rate, onInput: setField('rate') }) }), jsx(Field, { label: t.input.mult, children: jsx(NumberInput, { value: form.multiplier, onInput: setField('multiplier'), placeholder: "1" }) })] })) : (jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.input.code, children: jsx(TextInput, { value: form.code, onInput: setField('code'), placeholder: "KHAC" }) }), jsx(Field, { label: t.input.memo, children: jsx(TextInput, { value: form.description, onInput: setField('description') }) }), jsx(Field, { label: t.input.amount, children: jsx(NumberInput, { value: form.amount, onInput: setField('amount'), onEnter: saveInput }) })] }))] }));
         };
         // ------------------------------------------------------------------ chứng từ, tác vụ nền
-        const txState = (docId) => {
-            const x = tx[String(docId)] || {};
-            return x.voided ? t.docs.voided : x.posting ? t.docs.posted : t.docs.pending;
-        };
         const docLinks = [];
         if (b.journal)
             docLinks.push(jsx(Button, { kind: "link", label: `${t.docs.journal} ${b.journalNo || b.journal} (${txState(b.journal)})`, onClick: () => openJournal(b.journal) }));
         if (b.reversal)
             docLinks.push(jsx(Button, { kind: "link", label: `${t.docs.reversal} ${b.reversalNo || b.reversal} (${txState(b.reversal)})`, onClick: () => openJournal(b.reversal) }));
-        const bills = Array.isArray(b.bills) ? b.bills : [];
         const kindOfJob = jobKind(job);
-        const panel = renderPanel();
-        const tableRows = shown;
-        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('payrollList') }, { label: b.name || id }], title: b.description || t.batchOf(b.periodName || ''), status: { text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted' }, sub: docLinks.length || bills.length ? (jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '0 12px', alignItems: 'center' }, children: [jsx("span", { children: subParts.join(' · ') }), docLinks.map((x, i) => (jsx("span", { children: x }, `d${i}`))), bills.length ? jsx("span", { children: t.docs.bills(bills.length) }) : null] })) : (subParts.join(' · ')), actions: headerActions }), job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job[kindOfJob] || t.job.calc }), kindOfJob === 'calc' && jobInfo ? jsx("span", { children: t.job.stage(jobInfo.stage, jobInfo.status) }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), openRows.length || doneRows.length ? (jsx(Card, { flush: true, tone: hasErrors ? 'error' : openRows.length ? 'warn' : 'ok', label: t.checks.title, children: jsx(Table, { columns: checkColumns, rows: checkTab === 'done' ? doneRows : openRows, onRowClick: openCheck, empty: checkTab === 'done' ? t.checks.noneDone : t.checks.none, search: true, searchPlaceholder: t.checks.search, maxHeight: 260, label: t.checks.title, toolbar: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx("span", { class: "s4vp-card-t", style: { paddingRight: '8px' }, children: t.checks.title }), jsx(Chips, { items: [{ value: 'open', label: t.checks.open, count: openRows.length, tone: hasErrors ? 'error' : 'warn' }, { value: 'done', label: t.checks.done, count: doneRows.length }], value: checkTab, onPick: setCheckTab, label: t.checks.title })] }) }) })) : (jsx(Card, { tone: calculated ? 'ok' : undefined, label: t.checks.title, children: jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center' }, children: [jsx("span", { class: "s4vp-card-t", children: t.checks.title }), jsx("span", { class: "s4vp-muted", children: t.checks.none })] }) })), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsxs(Card, { flush: true, label: t.emp.title, children: [jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: jsx(Chips, { items: filterItems, value: filter, onPick: pickFilter, label: t.emp.filterLabel }) }), jsxs("div", { class: "s4vp-tbl-bar-r", children: [found.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.emp.matches(found.count) }), jsx(SearchBox, { value: query, onInput: (v) => (setQuery(v), setLimit(PAGE_SIZE)), placeholder: t.emp.search, label: t.emp.searchLabel, width: 220 })] })] }), jsx("div", { class: "s4vp-small", style: { padding: '0 12px 8px' }, children: empSub }), jsx(Table, { columns: empColumns, rows: tableRows, onRowClick: (r) => selectLine(r.id), selectedKey: selected, total: totalRow, empty: rows.length || filter === 'left' ? t.emp.emptyFilter : t.emp.empty, maxHeight: tableRows.length > 10 ? 480 : undefined, label: t.emp.title }), found.rows.length > shown.length ? (jsxs("div", { class: "s4vp-actions", style: { padding: '8px 12px' }, children: [jsx("span", { class: "s4vp-small", children: t.emp.showing(shown.length, found.rows.length) }), jsx(Button, { small: true, label: t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length)), onClick: () => setLimit(limit + PAGE_SIZE) })] })) : null] }) }), panel ? jsx("div", { class: "s4vp-col-side", style: { position: 'sticky', top: '8px', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 16px)', overflowY: 'auto', borderRadius: '12px' }, children: panel }) : null] }), renderDialog()] }));
+        // Tóm tắt so sánh với kỳ trước (số người mới, không còn, lệch đã có trên các chip lọc): hiện khi rê chuột vào thanh lọc
+        const headAttrs = { class: 's4vp-pane-h', title: empSub };
+        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('payrollList') }, { label: b.name || id }], title: b.description || t.batchOf(b.periodName || ''), status: { text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted' }, sub: docLinks.length || bills.length ? (jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '0 12px', alignItems: 'center' }, children: [jsx("span", { children: subParts.join(' · ') }), docLinks.map((x, i) => (jsx("span", { children: x }, `d${i}`))), bills.length ? jsx("span", { children: t.docs.bills(bills.length) }) : null] })) : (subParts.join(' · ')), actions: headerActions }), job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job[kindOfJob] || t.job.calc }), kindOfJob === 'calc' && jobInfo ? jsx("span", { children: t.job.stage(jobInfo.stage, jobInfo.status) }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols s4vp-cols-half", children: [jsx("div", { class: "s4vp-col-half", children: jsxs("section", { class: "s4vp-pane", "aria-label": t.emp.title, children: [jsxs("div", { ...headAttrs, children: [jsx(Chips, { items: filterItems, value: filter, onPick: pickFilter, label: t.emp.filterLabel }), jsxs("div", { style: { display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }, children: [found.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.emp.matches(found.count) }), jsx(SearchBox, { value: query, onInput: (v) => (setQuery(v), setLimit(PAGE_SIZE)), placeholder: t.emp.search, label: t.emp.searchLabel, width: 170 })] })] }), jsx("div", { class: "s4vp-pane-b", children: jsx(Table, { columns: empColumns, rows: shown, onRowClick: (r) => selectLine(r.id), selectedKey: sel, total: totalRow, empty: rows.length || filter === 'left' ? t.emp.emptyFilter : t.emp.empty, label: t.emp.title }) }), found.rows.length > shown.length ? (jsxs("div", { class: "s4vp-pane-f", children: [jsx("span", { children: t.emp.showing(shown.length, found.rows.length) }), jsx(Button, { small: true, label: t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length)), onClick: () => setLimit(limit + PAGE_SIZE) })] })) : null] }) }), jsx("div", { class: "s4vp-col-half", children: renderPanel() })] }), renderDialog()] }));
     }
 
     const TEXT$2 = {

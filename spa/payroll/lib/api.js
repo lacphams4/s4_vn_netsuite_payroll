@@ -68,8 +68,27 @@ export function call(params) {
 	return get(params);
 }
 
+const send = (body) => https.post.promise({url: restletUrl(), body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}}).then(unwrap);
+
+// Thao tác ghi nhiều dòng (tải 1.000 nhân viên vào bảng lương) được máy chủ làm theo từng lượt: kết quả có more = true thì gọi
+// lại cùng nội dung cho đến khi xong (tối đa 60 lượt), cộng dồn các danh sách / số đếm của từng lượt.
 export function post(body) {
-	return https.post.promise({url: restletUrl(), body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}}).then(unwrap);
+	const merge = (a, b) => {
+		const out = Object.assign({}, a, b);
+		Object.keys(a || {}).forEach((k) => {
+			if (Array.isArray(a[k]) && Array.isArray(b[k])) out[k] = a[k].concat(b[k]);
+			else if (typeof a[k] === 'number' && typeof b[k] === 'number') out[k] = a[k] + b[k];
+		});
+		return out;
+	};
+	const step = (acc, left) =>
+		send(body).then((r) => {
+			const total = acc ? merge(acc, r || {}) : r;
+			if (r && r.more === true && left > 0) return step(total, left - 1);
+			if (total && total.more) delete total.more;
+			return total;
+		});
+	return step(null, 60);
 }
 
 // Mở bản ghi NetSuite ở tab mới

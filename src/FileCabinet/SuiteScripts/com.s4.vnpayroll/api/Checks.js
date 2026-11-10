@@ -73,7 +73,8 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		const list = [...new Set((ids || []).filter((x) => !blank(x)).map(String))];
 		for (let i = 0; i < list.length; i += 900) {
 			const chunk = list.slice(i, i + 900);
-			const rows = Store.run(`SELECT e.id, e.entityid, e.firstname, e.lastname FROM employee e WHERE e.id IN (${chunk.map(() => "?").join(",")})`, chunk, "s4vp_checks_employees");
+			const inList = chunk.filter((x) => /^\d+$/.test(x)).join(",") || "0";
+			const rows = Store.run(`SELECT e.id, e.entityid, e.firstname, e.lastname FROM employee e WHERE e.id IN (${inList})`, [], "s4vp_checks_employees");
 			for (const r of rows) out[String(r.id)] = { id: String(r.id), code: r.entityid || "", name: [r.lastname, r.firstname].filter(Boolean).join(" ").trim() || r.entityid || "" };
 		}
 		return out;
@@ -295,9 +296,38 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		return Object.values(out).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 	}
 
+	/**
+	 * Danh sách cảnh báo. Bảng lương lớn có thể có vài nghìn cảnh báo: truyền `limit` để chỉ nhận N mục đầu (lỗi trước, cảnh báo
+	 * chưa đóng, rồi phần còn lại) kèm `groups` (số lượng theo quy tắc) và `truncated`; `rule` lọc một quy tắc; `brief` bỏ danh
+	 * sách người phụ trách (màn Chạy lương không cần).
+	 */
 	function checksList(params) {
-		const c = compute(params && params.batch);
-		return { batch: batchView(c), counts: Rules.counts(c.items), blocking: Rules.blocking(c.items).length, items: c.items.map(publicItem), assignees: assignees(c) };
+		const q = params || {};
+		const c = compute(q.batch);
+		let items = c.items;
+		const groupsBy = {};
+		// Số điểm mở (không tính mức info) theo nhân viên: lưới nhân viên dùng khi danh sách bị giới hạn
+		const byEmployee = {};
+		for (const it of items) {
+			if (it.status === "open" && it.severity !== "info" && !blank(it.employee)) {
+				const e = byEmployee[String(it.employee)] || (byEmployee[String(it.employee)] = { open: 0, errors: 0 });
+				e.open++;
+				if (it.severity === "error") e.errors++;
+			}
+			const g = groupsBy[it.rule] || (groupsBy[it.rule] = { rule: it.rule, title: it.title, severity: it.severity, total: 0, open: 0 });
+			g.total++;
+			if (it.status === "open") g.open++;
+		}
+		if (q.rule) items = items.filter((it) => it.rule === q.rule);
+		const total = items.length;
+		const limit = Math.floor(Number(q.limit) || 0);
+		if (limit > 0 && items.length > limit) {
+			const rank = (it) => (it.status === "open" ? 0 : 3) + (it.severity === "error" ? 0 : it.severity === "warn" ? 1 : 2);
+			items = items.map((it, i) => ({ it, i })).sort((a, b) => rank(a.it) - rank(b.it) || a.i - b.i).slice(0, limit).map((x) => x.it);
+		}
+		const out = { batch: batchView(c), counts: Rules.counts(c.items), blocking: Rules.blocking(c.items).length, items: items.map(publicItem), total, truncated: items.length < total, groups: Object.keys(groupsBy).map((k) => groupsBy[k]), byEmployee };
+		if (!q.brief) out.assignees = assignees(c);
+		return out;
 	}
 
 	// ------------------------------------------------------------------ chi tiết một cảnh báo

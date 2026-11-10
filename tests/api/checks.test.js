@@ -29,7 +29,11 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
           return row;
         });
       }
-      if (tag === "s4vp_checks_employees") return table("emp").filter((e) => params.includes(e.id));
+      if (tag === "s4vp_checks_employees") {
+        // id được ghép thẳng vào câu lệnh: IN (1,2,3)
+        const ids = (/IN \(([^)]*)\)/.exec(sql) || ["", ""])[1].split(",").map((x) => x.trim());
+        return table("emp").filter((e) => ids.includes(String(e.id)));
+      }
       if (tag === "s4vp_checks_assignees") {
         if (mockDb.noAccessColumn) throw new Error("Field giveaccess not found");
         return table("emp").filter((e) => e.access);

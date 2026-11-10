@@ -2,7 +2,7 @@
 const path = require("path");
 const API = path.join(__dirname, "../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api");
 
-const db = { batches: [], periods: [], lines: {}, emps: {}, inputs: [], time: [], submitted: [], queries: [] };
+const db = { batches: [], periods: [], lines: {}, emps: {}, inputs: [], time: [], submitted: [], queries: [], profiles: {}, timebill: [], timebillFails: false, requireTimeApproval: true };
 const FIELD_TYPES = { employment_type: { type: "select", target: "list:employment_type" }, att_locked: { type: "check" }, warnings: { type: "textarea" }, error: { type: "textarea" }, employee: { type: "select", target: "employee" }, batch: { type: "select", target: "rec:batch" } };
 const field = (k) => Object.assign({ id: `f_${k}`, type: "currency" }, FIELD_TYPES[k] || {});
 
@@ -32,6 +32,7 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
     if (name === "period") return db.periods.find((x) => x.id === String(id)) || null;
     if (name === "batch") return db.batches.find((x) => x.id === String(id)) || null;
     if (name === "paygroup") return { id: String(id), name: "DEFAULT", description: "Mặc định" };
+    if (name === "employee") return db.profiles[String(id)] || null;
     if (name === "batch_emp") {
       for (const b of Object.keys(db.lines)) {
         const l = db.lines[b].find((x) => x.id === String(id));
@@ -58,13 +59,34 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Payroll", () 
     for (const id of ids) if (db.emps[id]) out[String(id)] = db.emps[id];
     return out;
   },
+  detail: () => {
+    throw new Error("runLine must not load the whole batch (Payroll.detail)");
+  },
+  lines: () => {
+    throw new Error("runLine must not load every line of the batch (Payroll.lines)");
+  },
+  timesheet: () => {
+    throw new Error("runLine must not call Payroll.timesheet (it loads every line)");
+  },
   transactionsInfo: (ids) => {
     const out = {};
     for (const id of ids.filter(Boolean)) out[String(id)] = { tranid: `JE${id}`, posting: true, voided: false };
     return out;
   },
 }));
+jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/TimeLines", () => ({
+  windowOf: (period) => ({ from: period.time_from || period.start, to: period.time_to || period.end }),
+  entries: (ids, from, to) => {
+    db.queries.push("timebill");
+    if (db.timebillFails) throw new Error("no permission");
+    return db.timebill.filter((e) => ids.map(String).includes(e.employee) && e.date >= from && e.date <= to);
+  },
+  forBatch: () => {
+    throw new Error("runLine must not load the time lines of the whole batch");
+  },
+}));
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Settings", () => ({
+  resolve: () => ({ requireTimeApproval: db.requireTimeApproval }),
   earningTypes: () => ({ byId: { 1: { code: "BASE", description: "Lương chính" }, 2: { code: "BONUS", description: "Thưởng" } }, byCode: { BASE: { description: "Lương chính" }, BONUS: { description: "Thưởng" }, MEAL: { description: "Ăn ca" } } }),
 }));
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Checks", () => ({ routes: { get: {}, post: {} } }));
@@ -97,6 +119,14 @@ beforeEach(() => {
   db.emps = { 101: { code: "E101", name: "NV 101", departmentName: "Kế toán" }, 102: { code: "E102", name: "NV 102" }, 103: { code: "E103", name: "NV 103" }, 104: { code: "E104", name: "CTV 104" } };
   db.inputs = [{ id: "900", batch: "7", employee: "101", kind: "E", earning_type: "2", description: "Thưởng dự án", amount: 100 }, { id: "901", batch: "7", employee: "101", kind: "D", code: "KHAC", description: "Trừ đồng phục", amount: 20 }];
   db.time = [{ id: "1", batch: "7", employee: "101", hours: 8 }];
+  db.profiles = { 501: { id: "501", pit_method: "P", flat_commit: false }, 503: { id: "503", pit_method: "F", flat_commit: true } };
+  db.timebill = [
+    { id: "t1", employee: "101", date: "2027-03-02", hours: 8, projectName: "Dự án A", taskName: "Thiết kế", approval: "A", statusName: "Approved", memo: "" },
+    { id: "t2", employee: "101", date: "2027-02-27", hours: 8, projectName: "Dự án A", taskName: "", approval: "A", statusName: "Approved", memo: "ngoài kỳ" },
+    { id: "t3", employee: "102", date: "2027-03-03", hours: 4, projectName: "", taskName: "", approval: "P", statusName: "Pending", memo: "" },
+  ];
+  db.timebillFails = false;
+  db.requireTimeApproval = true;
 });
 
 describe("routes", () => {
@@ -232,6 +262,93 @@ describe("runLine", () => {
   test("dòng không thuộc bảng lương: từ chối", () => {
     expect(() => PayrollRun.lineDetail({ id: "7", line: "31" })).toThrow(/Không tìm thấy nhân viên/);
     expect(() => PayrollRun.lineDetail({ id: "7" })).toThrow();
+  });
+});
+
+describe("runLine - dữ liệu cho các tab theo nhân viên", () => {
+  beforeEach(() => {
+    Object.assign(db.lines[7][0], { profile: "501", paid_leave: 1, unpaid_leave: 0, si_leave: 0.5, absence_days: 2, ot_hours: 6, taxable: 1090, exempt: 10, dependents: 2, family_ded: 300, assessable: 730, other_tax_ded: 0, gross: 1100 });
+    const d = JSON.parse(db.lines[7][0].detail);
+    d.employeeCompulsoryInsurance = 60;
+    d.advanceOffsets = [{ refNbr: "TU0001", amount: 50, remainingBalance: 150, id: "9" }];
+    d.allocations = [{ component: "GROSS", project: "P1", task: "T1", branch: "HN", workCenter: "KT", source: "T", hours: 8, ratio: 1, amount: 1100 }];
+    db.lines[7][0].detail = JSON.stringify(d);
+  });
+
+  test("công: số công của dòng, cờ khóa công", () => {
+    const d = PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" });
+    expect(d.attendance).toEqual({ att_locked: true, std_days: 23, work_days: 23, paid_leave: 1, unpaid_leave: 0, si_leave: 0.5, absence_days: 2, ot_hours: 6 });
+    expect(PayrollRun.lineDetail({ id: "7", line: "72", prev: "3" }).attendance).toMatchObject({ std_days: 23, paid_leave: null, ot_hours: null });
+  });
+
+  test("thuế TNCN: lấy số gói đã tính trên dòng, phương pháp từ hồ sơ lương, không tự tính lại", () => {
+    const d = PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" });
+    expect(d.tax).toEqual({
+      method: "P", flatCommitment: false, gross: 1100, exempt: 10, taxable: 1090, insurance: 60, dependents: 2, selfDeduction: null, dependentDeduction: null,
+      familyDeduction: 300, otherDeductions: 0, assessable: 730, pit: 40,
+    });
+  });
+
+  test("thuế TNCN: tách giảm trừ bản thân / người phụ thuộc khi JSON chi tiết có lưu; dòng không có hồ sơ thì method null", () => {
+    const d0 = JSON.parse(db.lines[7][0].detail);
+    d0.pit = { selfDeduction: 200, dependentDeduction: 100 };
+    db.lines[7][0].detail = JSON.stringify(d0);
+    expect(PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" }).tax).toMatchObject({ selfDeduction: 200, dependentDeduction: 100, familyDeduction: 300 });
+    const c = PayrollRun.lineDetail({ id: "7", line: "73", prev: "3" }).tax;
+    expect(c).toMatchObject({ method: null, flatCommitment: null, insurance: null, taxable: null, pit: 70 });
+    db.lines[7][2].profile = "503";
+    expect(PayrollRun.lineDetail({ id: "7", line: "73", prev: "3" }).tax).toMatchObject({ method: "F", flatCommitment: true });
+  });
+
+  test("giờ công: dòng giờ tính lương và timesheet từng ngày trong cửa sổ kết công, chỉ của nhân viên đó", () => {
+    const d = PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" });
+    expect(d.time).toEqual([expect.objectContaining({ id: "1", hours: 8 })]);
+    expect(d.timesheet).toMatchObject({ from: "2027-03-01", to: "2027-03-31", requireApproval: true });
+    expect(d.timesheet.entries.map((e) => e.id)).toEqual(["t1"]);
+    expect(d.timesheet.failed).toBeUndefined();
+    db.requireTimeApproval = false;
+    db.periods[1].time_from = "2027-02-26";
+    db.periods[1].time_to = "2027-03-25";
+    const w = PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" }).timesheet;
+    expect(w).toMatchObject({ from: "2027-02-26", to: "2027-03-25", requireApproval: false });
+    expect(w.entries.map((e) => e.id)).toEqual(["t1", "t2"]);
+  });
+
+  test("không đọc được Time (vai trò thiếu quyền): vẫn trả các tab khác, timesheet có failed", () => {
+    db.timebillFails = true;
+    const d = PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" });
+    expect(d.timesheet).toMatchObject({ entries: [], failed: "no permission" });
+    expect(d.earnings.length).toBe(2);
+    expect(d.tax.pit).toBe(40);
+  });
+
+  test("phân bổ dự án và cấn trừ tạm ứng lấy từ chi tiết đã tính của dòng", () => {
+    const d = PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" });
+    expect(d.allocations).toEqual([{ component: "GROSS", project: "P1", task: "T1", branch: "HN", workCenter: "KT", source: "T", hours: 8, ratio: 1, amount: 1100 }]);
+    expect(d.advanceOffsets).toEqual([{ refNbr: "TU0001", amount: 50, remainingBalance: 150, id: "9" }]);
+    const none = PayrollRun.lineDetail({ id: "7", line: "72", prev: "3" });
+    expect(none.allocations).toEqual([]);
+    expect(none.advanceOffsets).toEqual([]);
+    expect(none.tax.insurance).toBeNull();
+  });
+
+  test("tải theo một nhân viên: số truy vấn không phụ thuộc số dòng của bảng lương, không nạp cả bảng lương", () => {
+    PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" });
+    const small = db.queries.slice();
+    db.queries = [];
+    for (let i = 0; i < 1000; i++) db.lines[7].push(line(1000 + i, 5000 + i, 100));
+    PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" });
+    expect(db.queries).toEqual(small);
+    expect(small).not.toContain("s4vp_run_lines");
+    expect(small.length).toBeLessThanOrEqual(12);
+  });
+
+  test("runView không trả chi tiết từng dòng (bảng lương 1.000 nhân viên vẫn gọn)", () => {
+    for (let i = 0; i < 1000; i++) db.lines[7].push(line(1000 + i, 5000 + i, 100, { detail: JSON.stringify({ earnings: [{ earningType: "BASE", amount: 100 }] }) }));
+    const v = PayrollRun.view({ id: "7" });
+    expect(v.lines.length).toBe(1003);
+    for (const k of ["detail", "earnings", "insurance", "allocations", "advanceOffsets", "time", "timesheet", "tax"]) expect(v.lines.every((l) => l[k] === undefined)).toBe(true);
+    expect(JSON.stringify(v.lines[500]).length).toBeLessThan(900);
   });
 });
 
