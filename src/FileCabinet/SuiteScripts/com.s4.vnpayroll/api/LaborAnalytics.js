@@ -283,11 +283,90 @@ define(["N/runtime", "N/log", "N/cache", "./Store", "./Settings", "./Clock", "..
 		}
 	}
 
-	/** Bảng lương có bút toán của công ty con trong khoảng tháng, kèm số dòng và tổng số liệu còn hiệu lực. */
+	const GL_TTL = 600;
+
+	function glCacheKey(sub, from, to) {
+		let who = "";
+		try {
+			const u = runtime.getCurrentUser();
+			who = `${u.id || ""}_${u.role || ""}`;
+		} catch (e) {
+			who = "";
+		}
+		return `gl_${who}_${sub}_${from}_${to}`;
+	}
+
+	/**
+	 * Sổ cái theo tháng, nhớ phần các tháng ĐÃ QUA (trước tháng hiện tại) trong N/cache theo người dùng và vai trò (600 giây):
+	 * truy vấn sổ cái 13 tháng là phần chậm nhất của lượt gọi đầu, mà số của tháng đã qua hiếm khi đổi. Tháng hiện tại trở đi
+	 * luôn đọc trực tiếp. `fresh` bỏ qua bản nhớ (nút Tải lại của màn hình). Không đọc được sổ cái -> null, không nhớ.
+	 */
+	function queryGlCached(sub, from, to, fresh) {
+		const cur = ym(str(Clock.today()).slice(0, 7));
+		const lastPast = cur ? addMonths(cur, -1) : "";
+		if (!cur || from > lastPast) return queryGl(sub, from, to);
+		const pastTo = to < lastPast ? to : lastPast;
+		const key = glCacheKey(sub, from, pastTo);
+		let store = null;
+		let past = null;
+		try {
+			store = cache.getCache({ name: "s4vp_labor_gl", scope: cache.Scope.PROTECTED });
+			if (!fresh) {
+				const raw = store.get({ key });
+				past = raw ? JSON.parse(raw) : null;
+			}
+		} catch (e) {
+			past = null;
+		}
+		if (!Array.isArray(past)) {
+			const rows = queryGl(sub, from, pastTo);
+			if (rows === null) return null;
+			past = rows.map((r) => ({ month: str(r.month), accttype: str(r.accttype), debit: num(r.debit), credit: num(r.credit) }));
+			try {
+				if (store) store.put({ key, value: JSON.stringify(past), ttl: GL_TTL });
+			} catch (e) {
+				// không có cache: lượt sau đọc lại
+			}
+		}
+		if (to <= lastPast) return past;
+		const live = queryGl(sub, cur, to);
+		return live === null ? null : past.concat(live);
+	}
+
+	/**
+	 * Trích tháng 13 mà bút toán ghi sổ thực ghi, theo bảng lương: chỉ dòng nhân viên (không phải cộng tác viên) có số trích
+	 * dương - đúng điều kiện của PayrollJournalBuilder.buildRelease và LaborCostFacts. Tổng `accrued13` trên bảng lương cộng mọi
+	 * dòng nên lệch khi có cộng tác viên hoặc dòng âm mang số trích. Không đọc được -> null (nơi gọi dùng tổng trên bảng lương).
+	 */
+	function queryBatchAccruals(sub, from, to) {
+		const month = batchMonth();
+		const acc = `be.${col("batch_emp", "accrued13")}`;
+		const etype = `be.${col("batch_emp", "employment_type")}`;
+		try {
+			const out = {};
+			for (const r of Store.run(
+				`SELECT be.${col("batch_emp", "batch")} AS batch, SUM(${acc}) AS accrued13
+				 FROM ${tbl("batch_emp")} be
+				 INNER JOIN ${tbl("batch")} b ON b.id = be.${col("batch_emp", "batch")}
+				 INNER JOIN ${tbl("period")} p ON p.id = b.${col("batch", "period")}
+				 WHERE b.${col("batch", "subsidiary")} = ? AND b.${col("batch", "journal")} IS NOT NULL AND be.isinactive = 'F' AND b.isinactive = 'F'
+				   AND ${acc} > 0 AND (${etype} IS NULL OR ${etype} <> ?) AND ${month} >= ? AND ${month} <= ?
+				 GROUP BY be.${col("batch_emp", "batch")}`,
+				[sub, Store.idOf("employment_type", "C"), from, to], "s4vp_la_batch_accruals")) out[String(r.batch)] = num(r.accrued13);
+			return out;
+		} catch (e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Bảng lương có bút toán của công ty con trong khoảng tháng, kèm số dòng và tổng số liệu còn hiệu lực. `expected` = tổng Nợ
+	 * chi phí của bút toán ghi sổ: thu nhập + BH doanh nghiệp + trích tháng 13 của nhân viên có số trích dương.
+	 */
 	function queryBatches(sub, from, to) {
 		const month = batchMonth();
 		const b = (f) => `b.${col("batch", f)}`;
-		return Store.run(
+		const rows = Store.run(
 			`SELECT b.id AS id, ${b("status")} AS status, ${b("journal")} AS journal, ${month} AS month, ${b("gross")} AS gross, ${b("er_ins")} AS er_ins, ${b("accrued13")} AS accrued13,
 			        COUNT(f.id) AS facts, SUM(${fc("amount")}) AS amount
 			 FROM ${tbl("batch")} b
@@ -295,9 +374,11 @@ define(["N/runtime", "N/log", "N/cache", "./Store", "./Settings", "./Clock", "..
 			 LEFT JOIN ${tbl("cost_fact")} f ON ${fc("batch")} = b.id AND ${activeFact()}
 			 WHERE ${b("subsidiary")} = ? AND ${b("journal")} IS NOT NULL AND b.isinactive = 'F' AND ${month} >= ? AND ${month} <= ?
 			 GROUP BY b.id, ${b("status")}, ${b("journal")}, ${month}, ${b("gross")}, ${b("er_ins")}, ${b("accrued13")}`,
-			[sub, from, to], "s4vp_la_batches").map((r) => ({
+			[sub, from, to], "s4vp_la_batches");
+		const accruals = rows.length ? queryBatchAccruals(sub, from, to) : {};
+		return rows.map((r) => ({
 			id: String(r.id), status: Store.codeOf("batch_status", r.status), journal: str(r.journal), month: str(r.month),
-			expected: num(r.gross) + num(r.er_ins) + num(r.accrued13), facts: num(r.facts), amount: num(r.amount),
+			expected: num(r.gross) + num(r.er_ins) + (accruals ? accruals[String(r.id)] || 0 : num(r.accrued13)), facts: num(r.facts), amount: num(r.amount),
 		}));
 	}
 
@@ -395,7 +476,7 @@ define(["N/runtime", "N/log", "N/cache", "./Store", "./Settings", "./Clock", "..
 		const headcount = (m) => (heads[m] ? heads[m].E : has(m) ? 0 : null);
 
 		// 3. Sổ cái
-		const glRows = queryGl(sub, from, to);
+		const glRows = queryGlCached(sub, from, to, !blank(p.fresh) && str(p.fresh) !== "0");
 		const gl = {};
 		if (glRows) {
 			for (const r of glRows) {
@@ -568,7 +649,11 @@ define(["N/runtime", "N/log", "N/cache", "./Store", "./Settings", "./Clock", "..
 		return out;
 	}
 
-	/** Chi tiết tới nhân viên của đúng một nhóm (dim = key): tính từ dòng bảng lương đã ghi sổ của tháng này và kỳ so sánh. */
+	/**
+	 * Chi tiết tới nhân viên của đúng một nhóm (dim = key): tính từ dòng bảng lương đã ghi sổ của tháng này và kỳ so sánh.
+	 * Mỗi nhân viên kèm `batch` (bảng lương của tháng đang xem; nhiều bảng thì bảng có số tiền của nhóm lớn nhất, bằng nhau thì
+	 * bảng có id nhỏ hơn) và `line` (id dòng batch_emp của bảng đó) để giao diện mở thẳng dòng lương; chỉ có ở kỳ so sánh -> null.
+	 */
 	function laborDrill(params) {
 		const p = params || {};
 		const { sub, month, compare } = resolveMonths(p);
@@ -593,11 +678,13 @@ define(["N/runtime", "N/log", "N/cache", "./Store", "./Settings", "./Clock", "..
 				for (const f of Facts.employeeFacts(line, options[line.batch])) {
 					if (str(f[prop]) !== key) continue;
 					const emp = String(line.employee);
-					if (!byEmployee.has(emp)) byEmployee.set(emp, { employee: emp, code: "", name: "", department: "", cur: 0, prev: 0, components: emptyComponents() });
+					if (!byEmployee.has(emp)) byEmployee.set(emp, { employee: emp, code: "", name: "", department: "", cur: 0, prev: 0, components: emptyComponents(), batches: {} });
 					const row = byEmployee.get(emp);
 					if (m === month) {
 						row.cur += f.amount;
 						row.components[f.component] = (row.components[f.component] || 0) + f.amount;
+						const src = (row.batches[String(line.batch)] = row.batches[String(line.batch)] || { batch: String(line.batch), line: String(line.id), amount: 0 });
+						src.amount += f.amount;
 					} else {
 						row.prev += f.amount;
 					}
@@ -605,7 +692,11 @@ define(["N/runtime", "N/log", "N/cache", "./Store", "./Settings", "./Clock", "..
 			}
 		}
 		const info = byEmployee.size ? employeeInfo([...byEmployee.keys()]) : {};
-		const rows = [...byEmployee.values()].map((r) => Object.assign(r, info[r.employee] || {}, { diff: r.cur - r.prev, pct: Variance.pct(r.cur, r.prev) }))
+		const rows = [...byEmployee.values()].map((r) => {
+			const src = Object.values(r.batches).sort((a, b) => b.amount - a.amount || Number(a.batch) - Number(b.batch))[0] || null;
+			delete r.batches;
+			return Object.assign(r, info[r.employee] || {}, { diff: r.cur - r.prev, pct: Variance.pct(r.cur, r.prev), batch: src ? src.batch : null, line: src ? src.line : null });
+		})
 			.sort((a, b) => b.cur - a.cur || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 		return { subsidiary: sub, month: show(month), compare: show(compare), dim, key, rows };
 	}

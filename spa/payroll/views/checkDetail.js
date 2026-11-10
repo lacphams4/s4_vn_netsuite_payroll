@@ -1,16 +1,19 @@
 /**
  * Kiểm tra bảng lương và nhật ký (mẫu docs/design/CanhBao.dc.html). Tham số route: id (bảng lương), rule, employee, tab ('log').
  *
- * Tab Cảnh báo: danh sách bên trái (ô tìm, lọc theo mức độ và trạng thái), chi tiết bên phải (giải thích, số liệu nền, so sánh
+ * Tab Cảnh báo: danh sách bên trái tải theo trang từ máy chủ (bảng lương 1.000 nhân viên có vài nghìn cảnh báo): ô tìm, lọc
+ * theo mức độ / trạng thái / nhóm quy tắc đều gửi lên máy chủ (GET checksList với q, severity, status, rule, offset, limit),
+ * số đếm luôn là số của toàn bộ bảng lương; chọn một nhóm quy tắc thì có thể đóng cả nhóm (POST resolveCheckGroup, làm theo
+ * lượt). Chi tiết bên phải (giải thích, số liệu nền, so sánh
  * từng khoản với kỳ trước, khoản nhập tay trong kỳ) và khung Xử lý (gợi ý, người phụ trách, ghi chú, Chấp nhận / Đã xử lý /
  * Mở lại, lịch sử). Tab Nhật ký: lưới thao tác trên bảng lương có ô tìm và nút tải xuống.
  *
  * Cảnh báo đang chọn nằm trên route (rule, employee) nên dán lại đường dẫn là mở đúng trường hợp; chưa chọn thì lấy mục đầu.
- * Dữ liệu: GET checksList, checkDetail, auditLog; POST resolveCheck (api/Checks.js, api/AuditLog.js).
+ * Dữ liệu: GET checksList, checkDetail, auditLog; POST resolveCheck, resolveCheckGroup (api/Checks.js, api/AuditLog.js).
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, download} from '../lib/api.js';
-import {money, num, pct, fmtDate, quickFilter} from '../lib/format.js';
+import {money, num, pct, fmtDate} from '../lib/format.js';
 import {pick} from '../lib/i18n.js';
 import {Page, PageHeader, Card, Button, Table, Badge, Chips, Tabs, Select, Field, TextArea, SearchBox, SidePanel, Empty} from '../ui/kit.js';
 
@@ -37,6 +40,17 @@ const TEXT = {
 		listTitle: 'Danh sách cảnh báo',
 		search: 'Tìm tên, mã nhân viên, cảnh báo',
 		shown: (n, total) => `${n} / ${total} mục`,
+		more: (n) => `Hiện thêm ${n}`,
+		groupFilter: 'Lọc theo nhóm quy tắc',
+		allRules: 'Mọi quy tắc',
+		groupTitle: (title, n) => `Xử lý cả nhóm "${title}": ${n} mục chưa xử lý`,
+		groupHint: 'Dùng khi đã rà cả nhóm và cùng một lý do. Mỗi mục vẫn được ghi lịch sử riêng; mục nào số liệu đổi sau đó sẽ tự mở lại.',
+		groupNote: 'Ghi chú chung cho cả nhóm (bắt buộc)',
+		acceptGroup: (n) => `Chấp nhận cả ${n} mục`,
+		resolveGroup: (n) => `Đã xử lý cả ${n} mục`,
+		confirmGroup: (n, title, status) => `Đóng ${n} cảnh báo "${title}" với trạng thái "${status}"? Thao tác ghi từng mục vào lịch sử xử lý.`,
+		closingGroup: 'Đang đóng cả nhóm...',
+		groupDone: (n) => `Đã đóng ${n} cảnh báo của nhóm.`,
 		allSeverity: 'Tất cả',
 		severity: {error: 'Lỗi', warn: 'Cảnh báo', info: 'Thông tin'},
 		severityFilter: 'Lọc theo mức độ',
@@ -119,6 +133,17 @@ const TEXT = {
 		summary: (c) => `${c.errors} blocking error(s), ${c.warnings} open warning(s), ${c.resolved} closed`,
 		batchStatus: {H: 'On hold', B: 'Pending calculation', C: 'Calculated', P: 'Pending approval', A: 'Approved', J: 'Rejected', R: 'Released', V: 'Reversed'},
 		listTitle: 'Checks',
+		more: (n) => `Show ${n} more`,
+		groupFilter: 'Filter by rule group',
+		allRules: 'All rules',
+		groupTitle: (title, n) => `Handle the whole group "${title}": ${n} open`,
+		groupHint: 'Use this after reviewing the whole group for one common reason. Each check keeps its own history; a check reopens by itself when its figures change later.',
+		groupNote: 'Common note for the group (required)',
+		acceptGroup: (n) => `Accept all ${n}`,
+		resolveGroup: (n) => `Mark all ${n} resolved`,
+		confirmGroup: (n, title, status) => `Close ${n} checks "${title}" as "${status}"? Each one is written to its handling history.`,
+		closingGroup: 'Closing the group...',
+		groupDone: (n) => `${n} checks of the group were closed.`,
 		search: 'Search name, employee code, check',
 		shown: (n, total) => `${n} / ${total} items`,
 		allSeverity: 'All',
@@ -189,6 +214,9 @@ const SEVERITY_TONE = {error: 'error', warn: 'warn', info: 'info'};
 const STATUS_TONE = {open: 'warn', accepted: 'ok', resolved: 'ok'};
 const BATCH_TONE = {H: 'muted', B: 'info', C: 'warn', P: 'warn', A: 'ok', J: 'error', R: 'ok', V: 'muted'};
 const EMPTY_COUNTS = {open: 0, errors: 0, warnings: 0, resolved: 0};
+// Số cảnh báo mỗi trang của danh sách bên trái (máy chủ lọc và cắt trang)
+const PAGE = 100;
+const SEARCH_DELAY = 350;
 
 const pad = (n) => String(n).padStart(2, '0');
 // Thời điểm lưu dạng ISO UTC; hiện theo giờ máy người dùng dd/mm/yyyy HH:mm
@@ -223,7 +251,13 @@ export default function CheckDetailView({app}) {
 	const [log, setLog] = useState(null);
 	const [severity, setSeverity] = useState('');
 	const [status, setStatus] = useState('');
+	const [rule, setRule] = useState('');
+	// Ô tìm: chữ đang gõ (queryText) và chữ đã gửi lên máy chủ (query, chậm SEARCH_DELAY sau lần gõ cuối)
+	const [queryText, setQueryText] = useState('');
 	const [query, setQuery] = useState('');
+	const queryTimer = useRef(null);
+	const [groupNote, setGroupNote] = useState('');
+	const [groupNeedNote, setGroupNeedNote] = useState(false);
 	// Giá trị form giữ trong ref rồi setState: hai ô cập nhật liền nhau không ghi đè nhau
 	const formRef = useRef({note: '', assignee: ''});
 	const [form, setForm] = useState(formRef.current);
@@ -243,14 +277,33 @@ export default function CheckDetailView({app}) {
 	};
 	const setField = (k) => (v) => setFormValues(Object.assign({}, formRef.current, {[k]: v}));
 
-	const loadList = () => {
+	// Danh sách tải theo trang: offset = 0 thay cả danh sách (giữ số mục đang hiện khi tải lại), offset > 0 nối thêm trang.
+	// Người phụ trách chỉ hỏi ở lượt đầu (brief = 1 bỏ danh sách đó và các trường rỗng của từng mục).
+	const listRef = useRef(null);
+	const loadList = (offset, keep) => {
 		if (!id) return Promise.resolve();
 		listReq.current += 1;
 		const mine = listReq.current;
-		return app.run(t.loading, call({action: 'checksList', batch: id})).then((r) => {
+		const from = offset || 0;
+		const have = listRef.current;
+		const q = {action: 'checksList', batch: id, offset: from, limit: from ? PAGE : Math.max(PAGE, keep || 0)};
+		if (rule) q.rule = rule;
+		if (severity) q.severity = severity;
+		if (status) q.status = status;
+		if (query) q.q = query;
+		if (have && have.assignees) q.brief = 1;
+		return app.run(t.loading, call(q)).then((r) => {
 			if (!alive.current || mine !== listReq.current || !r) return;
-			setList(r);
+			const next = Object.assign({}, r, {assignees: r.assignees || (have && have.assignees) || [], items: from && have ? (have.items || []).concat(r.items || []) : r.items || []});
+			listRef.current = next;
+			setList(next);
 		});
+	};
+	const reloadList = () => loadList(0, listRef.current && listRef.current.items ? listRef.current.items.length : 0);
+	const onSearch = (v) => {
+		setQueryText(v);
+		if (queryTimer.current) clearTimeout(queryTimer.current);
+		queryTimer.current = setTimeout(() => alive.current && setQuery(String(v || '').trim()), SEARCH_DELAY);
 	};
 	const loadDetail = (key) => {
 		detailReq.current += 1;
@@ -281,14 +334,19 @@ export default function CheckDetailView({app}) {
 
 	useEffect(() => {
 		alive.current = true;
+		listRef.current = null;
 		setList(null);
 		setDetail(null);
 		setLog(null);
-		loadList();
 		return () => {
 			alive.current = false;
+			if (queryTimer.current) clearTimeout(queryTimer.current);
 		};
 	}, [id]);
+	// Đổi bảng lương hoặc bộ lọc: tải lại trang đầu từ máy chủ
+	useEffect(() => {
+		loadList(0);
+	}, [id, rule, severity, status, query]);
 	useEffect(() => {
 		if (tab === 'checks') loadDetail(selKey);
 	}, [id, selKey, tab]);
@@ -299,7 +357,7 @@ export default function CheckDetailView({app}) {
 	const go = (extra) => app.go('checkDetail', Object.assign({id, rule: params.rule || '', employee: params.employee || '', tab: tab === 'log' ? 'log' : ''}, extra));
 	const pickItem = (it) => go({rule: it.rule, employee: it.employee || '', tab: ''});
 	const refresh = () => {
-		loadList();
+		reloadList();
 		if (tab === 'log') loadLog();
 		else loadDetail(selKey);
 	};
@@ -318,9 +376,28 @@ export default function CheckDetailView({app}) {
 		app.run(t.saving, post(body)).then((r) => {
 			if (!r || !alive.current) return;
 			app.notify(t.saved, 'ok');
-			loadList();
+			reloadList();
 			loadDetail(it.key);
 		});
+	};
+
+	// Đóng cả nhóm quy tắc đang lọc: máy chủ làm theo lượt (more = true thì lib/api.js gọi lại), ghi chú chung bắt buộc
+	const closeGroup = (g, nextStatus) => {
+		const note = String(groupNote || '').trim();
+		if (!note) {
+			setGroupNeedNote(true);
+			return;
+		}
+		setGroupNeedNote(false);
+		app.confirm(t.confirmGroup(g.closable, g.title || g.rule, t.status[nextStatus]), () =>
+			app.run(t.closingGroup, post({action: 'resolveCheckGroup', batch: id, rule: g.rule, status: nextStatus, note})).then((r) => {
+				if (!r || !alive.current) return;
+				app.notify(t.groupDone(Number(r.closed) || 0), 'ok');
+				setGroupNote('');
+				reloadList();
+				loadDetail(selKey);
+			})
+		);
 	};
 
 	// ------------------------------------------------------------------ không có bảng lương
@@ -343,17 +420,14 @@ export default function CheckDetailView({app}) {
 
 	const batch = (list && list.batch) || {id};
 	const counts = (list && list.counts) || EMPTY_COUNTS;
-	const bySeverity = {error: 0, warn: 0, info: 0};
-	items.forEach((it) => (bySeverity[it.severity] = (bySeverity[it.severity] || 0) + 1));
-	// Chữ hiển thị đưa vào dữ liệu dòng để ô tìm khớp được "Lỗi", "Chưa xử lý"...
-	const rows = items.map((it) => Object.assign({}, it, {severityText: t.severity[it.severity] || '', statusText: t.status[it.status] || ''}));
-	const filtered = rows.filter((it) => (!severity || it.severity === severity) && (!status || it.status === status));
-	let shown = filtered;
-	try {
-		shown = quickFilter(filtered, query).rows;
-	} catch (e) {
-		shown = filtered;
-	}
+	// Máy chủ đã lọc và cắt trang: items là các mục đã tải, total là số mục khớp bộ lọc, bySeverity đếm theo mức độ trong phạm
+	// vi các bộ lọc còn lại, groups là số lượng theo quy tắc trên toàn bộ bảng lương
+	const bySeverity = Object.assign({error: 0, warn: 0, info: 0}, (list && list.bySeverity) || {});
+	const total = list ? Number(list.total) || 0 : 0;
+	const groups = (list && Array.isArray(list.groups) ? list.groups : []).filter(Boolean);
+	const group = rule ? groups.find((g) => g.rule === rule) || null : null;
+	const filtering = !!(rule || severity || status || query);
+	const shown = items;
 	const at = shown.findIndex((it) => it.key === selKey);
 	const prevItem = at > 0 ? shown[at - 1] : null;
 	const nextItem = at >= 0 && at < shown.length - 1 ? shown[at + 1] : at < 0 && shown.length ? shown[0] : null;
@@ -389,7 +463,7 @@ export default function CheckDetailView({app}) {
 			<div style={{padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '10px'}}>
 				<div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center'}}>
 					<div style={{flex: '1 1 170px', minWidth: '0'}}>
-						<SearchBox value={query} onInput={setQuery} placeholder={t.search} width="100%" />
+						<SearchBox value={queryText} onInput={onSearch} placeholder={t.search} width="100%" />
 					</div>
 					<div style={{flex: '0 1 160px', minWidth: '0'}}>
 						<Select
@@ -407,14 +481,42 @@ export default function CheckDetailView({app}) {
 						value={severity}
 						onPick={setSeverity}
 						items={[
-							{value: '', label: t.allSeverity, count: items.length},
+							{value: '', label: t.allSeverity, count: bySeverity.error + bySeverity.warn + bySeverity.info},
 							{value: 'error', label: t.severity.error, count: bySeverity.error, tone: 'error'},
 							{value: 'warn', label: t.severity.warn, count: bySeverity.warn, tone: 'warn'},
 							{value: 'info', label: t.severity.info, count: bySeverity.info},
 						]}
 					/>
-					{shown.length !== items.length ? <span class="s4vp-small">{t.shown(shown.length, items.length)}</span> : null}
+					{shown.length !== total ? <span class="s4vp-small">{t.shown(shown.length, total)}</span> : null}
 				</div>
+				{groups.length > 1 || rule ? (
+					<Chips
+						label={t.groupFilter}
+						value={rule}
+						onPick={(v) => {
+							setRule(v);
+							setGroupNote('');
+							setGroupNeedNote(false);
+						}}
+						items={[{value: '', label: t.allRules}].concat(groups.map((g) => ({value: g.rule, label: g.title || g.rule, count: g.open ? `${g.open} / ${g.total}` : g.total, tone: g.open ? SEVERITY_TONE[g.severity] : ''})))}
+					/>
+				) : null}
+				{group && group.closable > 0 ? (
+					<div style={{display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid #E1E5E8', paddingTop: '8px'}}>
+						<div style={{fontWeight: '600', overflowWrap: 'anywhere'}}>{t.groupTitle(group.title || group.rule, group.closable)}</div>
+						<div class="s4vp-small">{t.groupHint}</div>
+						<TextArea value={groupNote} onInput={setGroupNote} rows={2} ariaLabel={t.groupNote} placeholder={t.groupNote} />
+						{groupNeedNote ? (
+							<div role="alert" style={{color: '#8A1C14', fontSize: '13px', fontWeight: '600'}}>
+								{t.noteRequired}
+							</div>
+						) : null}
+						<div class="s4vp-actions">
+							<Button small={true} kind="primary" label={t.acceptGroup(group.closable)} title={t.acceptTitle} disabled={!!app.busy} onClick={() => closeGroup(group, 'accepted')} />
+							<Button small={true} label={t.resolveGroup(group.closable)} title={t.resolveTitle} disabled={!!app.busy} onClick={() => closeGroup(group, 'resolved')} />
+						</div>
+					</div>
+				) : null}
 			</div>
 			<Table
 				label={t.listTitle}
@@ -424,8 +526,14 @@ export default function CheckDetailView({app}) {
 				selectedKey={selKey}
 				onRowClick={pickItem}
 				maxHeight={400}
-				empty={!list ? t.loading : items.length ? t.noneFiltered : t.listNone}
+				empty={!list ? t.loading : filtering ? t.noneFiltered : t.listNone}
 			/>
+			{list && shown.length < total ? (
+				<div style={{padding: '8px 12px', display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between'}}>
+					<span class="s4vp-small">{t.shown(shown.length, total)}</span>
+					<Button small={true} label={t.more(Math.min(PAGE, total - shown.length))} disabled={!!app.busy} onClick={() => loadList(shown.length)} />
+				</div>
+			) : null}
 		</Card>
 	);
 
@@ -498,7 +606,7 @@ export default function CheckDetailView({app}) {
 	if (!selKey) {
 		detailArea = (
 			<Card>
-				<Empty text={!list ? t.loading : items.length ? t.pickOne : t.none} />
+				<Empty text={!list ? t.loading : items.length ? t.pickOne : filtering ? t.noneFiltered : t.none} />
 			</Card>
 		);
 	} else if (current && !item) {

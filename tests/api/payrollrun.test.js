@@ -2,15 +2,24 @@
 const path = require("path");
 const API = path.join(__dirname, "../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api");
 
-const db = { batches: [], periods: [], lines: {}, emps: {}, inputs: [], time: [], submitted: [], queries: [], profiles: {}, timebill: [], timebillFails: false, requireTimeApproval: true };
+const db = { batches: [], periods: [], lines: {}, emps: {}, inputs: [], time: [], submitted: [], queries: [], sql: [], profiles: {}, timebill: [], timebillFails: false, requireTimeApproval: true };
 const FIELD_TYPES = { employment_type: { type: "select", target: "list:employment_type" }, att_locked: { type: "check" }, warnings: { type: "textarea" }, error: { type: "textarea" }, employee: { type: "select", target: "employee" }, batch: { type: "select", target: "rec:batch" } };
 const field = (k) => Object.assign({ id: `f_${k}`, type: "currency" }, FIELD_TYPES[k] || {});
 
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () => ({
   rec: () => ({ type: "customrecord_s4vp_batch_emp", fields: new Proxy({}, { get: (t, k) => field(String(k)) }) }),
-  codeOf: (list, v) => (v === null || v === undefined ? null : { 1: "E", 2: "C" }[v] || null),
+  codeOf: (list, v) => (v === null || v === undefined ? null : { 1: "E", 2: "C" }[v] || v),
   run: (sql, params, tag) => {
     db.queries.push(tag);
+    const fake = require("./leanFake");
+    db.sql.push({ tag, columns: fake.columnsOf(sql) });
+    if (String(tag).indexOf("s4vp_lean_") === 0) {
+      // Dữ liệu mẫu của test này -> dạng bảng logic của leanFake
+      const lines = [];
+      for (const b of Object.keys(db.lines)) for (const l of db.lines[b]) lines.push(Object.assign({ batch: b }, l));
+      const emp = Object.keys(db.emps).map((id) => ({ id, entityid: db.emps[id].code, firstname: db.emps[id].name, lastname: "", dept: db.emps[id].departmentName || "" }));
+      return fake.run({ batch: db.batches, period: db.periods, batch_emp: lines, emp }, sql, params, tag);
+    }
     return (db.lines[String(params[0])] || []).map((l) => {
       const row = { id: l.id };
       for (const k of Object.keys(l)) row[`c_${k}`] = k === "employment_type" ? { E: 1, C: 2 }[l[k]] : k === "att_locked" ? (l[k] ? "T" : "F") : l[k];
@@ -98,7 +107,9 @@ const line = (id, employee, net, extra) => Object.assign({ id: String(id), emplo
 
 beforeEach(() => {
   delete Checks.summary;
+  delete Checks.checksList;
   db.queries = [];
+  db.sql = [];
   db.submitted = [];
   // Mã kỳ cố ý không theo thứ tự ngày: kỳ trước xác định theo ngày kết thúc
   db.periods = [
@@ -148,7 +159,10 @@ describe("runView", () => {
     expect(v.paygroup).toEqual({ id: "1", code: "DEFAULT", description: "Mặc định" });
     expect(v.steps.map((s) => s.key)).toEqual(["prepare", "attendance", "calculate", "review", "approve", "post"]);
     expect(v.lines.map((l) => l.code)).toEqual(["E101", "E102", "E104"]);
-    expect(v.lines[0]).toMatchObject({ id: "71", employee: "101", name: "NV 101", department: "Kế toán", employment_type: "E", att_locked: true, net: 1000 });
+    // Dòng thu gọn: chỉ các trường lưới dùng; rỗng / 0 / false không gửi (pit của dòng 3 khác 0, other_ded không gửi)
+    expect(v.lines[0]).toEqual({ id: "71", employee: "101", code: "E101", name: "NV 101", department: "Kế toán", employment_type: "E", std_days: 23, work_days: 23, gross: 1100, ee_ins: 60, pit: 40, net: 1000, cmp: { kind: "both", diff: 0, pct: 0 } });
+    expect(v.lines[1]).toMatchObject({ warnings: "Thiếu tài khoản ngân hàng", cmp: { kind: "both", diff: 300, pct: 0.15, over: true } });
+    expect(v.lines[2]).toEqual({ id: "73", employee: "104", code: "E104", name: "CTV 104", employment_type: "C", std_days: 23, work_days: 23, gross: 800, pit: 70, net: 700, cmp: { kind: "new" } });
     expect(v.lines[0].detail).toBeUndefined();
     expect(v.totals).toMatchObject({ count: 3, errors: 0, warned: 1, net: 4000, ee_ins: 120, er_ins: 400, insurance: 520, pit: 150, pitContractor: 70, pitEmployee: 80, netContractor: 700, netEmployee: 3300 });
     expect(v.totals.cost).toBe(v.totals.gross + 400);
@@ -159,14 +173,14 @@ describe("runView", () => {
     expect(v.compare.previous).toEqual({ id: "3", name: "BL000003", status: "R", period: "5", periodName: "202703", periodEnd: "2027-02-28" });
     expect(v.compare.threshold).toBe(0.1);
     expect(v.lines.map((l) => l.cmp.kind)).toEqual(["both", "both", "new"]);
-    expect(v.lines[1].cmp).toMatchObject({ previous: 2000, diff: 300, pct: 0.15, over: true });
-    expect(v.compare.leavers).toEqual([expect.objectContaining({ employee: "103", code: "E103", name: "NV 103", previous: 500 })]);
+    expect(v.lines[1].cmp).toEqual({ kind: "both", diff: 300, pct: 0.15, over: true });
+    expect(v.compare.leavers).toEqual([{ employee: "103", kind: "left", code: "E103", name: "NV 103", previous: 500 }]);
     expect(v.compare.summary).toMatchObject({ hasPrevious: true, joiners: 1, leavers: 1, over: 1 });
     expect(v.compare.summary.totals.net).toEqual({ current: 4000, previous: 3500, diff: 500, pct: 0.1429 });
   });
 
   test("ngưỡng chênh là tham số", () => {
-    expect(PayrollRun.view({ id: "7", threshold: "0.2" }).lines[1].cmp.over).toBe(false);
+    expect(PayrollRun.view({ id: "7", threshold: "0.2" }).lines[1].cmp.over).toBeUndefined();
     expect(PayrollRun.view({ id: "7", threshold: "abc" }).compare.threshold).toBe(0.1);
   });
 
@@ -175,7 +189,7 @@ describe("runView", () => {
     const v = PayrollRun.view({ id: "7" });
     expect(v.compare.previous).toBeNull();
     expect(v.compare.summary.hasPrevious).toBe(false);
-    expect(v.lines.every((l) => l.cmp.previous === null && !l.cmp.over)).toBe(true);
+    expect(v.lines.every((l) => l.cmp.kind === "both" && l.cmp.diff === undefined && !l.cmp.over)).toBe(true);
   });
 
   test("chưa có phân hệ Kiểm tra: checks null, bước soát là bước hiện tại", () => {
@@ -205,7 +219,65 @@ describe("runView", () => {
     for (let i = 0; i < 500; i++) db.lines[7].push(line(1000 + i, 5000 + i, 100));
     PayrollRun.view({ id: "7" });
     expect(db.queries.length).toBe(small);
-    expect(small).toBeLessThanOrEqual(8);
+    // bảng lương, kỳ, nhóm lương, bảng lương cùng công ty con (tìm kỳ trước), dòng kỳ này + kỳ trước kèm tên: 5 truy vấn
+    expect(db.queries.slice().sort()).toEqual(["get_paygroup", "get_period", "s4vp_lean_batches", "s4vp_lean_lines"]);
+    expect(db.sql.find((q) => q.tag === "s4vp_lean_lines").columns).toBeLessThanOrEqual(22);
+    expect(db.sql.find((q) => q.tag === "s4vp_lean_batches").columns).toBeLessThanOrEqual(11);
+  });
+
+  test("bảng lương 1.004 nhân viên: phản hồi runView dưới 0,5 MB, tổng vẫn tính trên mọi dòng", () => {
+    db.lines[7] = [];
+    db.lines[3] = [];
+    for (let i = 1; i <= 1004; i++) {
+      const emp = 20000 + i;
+      db.emps[emp] = { code: `S4VP TEST LT${String(i).padStart(4, "0")}`, name: `S4VP TEST LT${String(i).padStart(4, "0")} Nguyễn Văn Thử`, departmentName: "Khối sản xuất : Phân xưởng lắp ráp" };
+      db.lines[7].push(line(700000 + i, emp, 21875000 + i, { gross: 26250000 + i, ee_ins: 2625000, er_ins: 5512500, pit: 1750000, exempt: 730000, family_ded: 15500000, assessable: 7395000, net_before: 21875000 }));
+      db.lines[3].push(line(300000 + i, emp, 20875000 + i * 3, { gross: 25250000, ee_ins: 2625000, er_ins: 5512500, pit: 1750000 }));
+    }
+    // Danh sách cảnh báo trả kèm như phân hệ Kiểm tra thật: 200 mục gọn + số điểm mở theo từng nhân viên
+    Checks.checksList = () => ({
+      counts: { open: 3007, errors: 0, warnings: 3007, resolved: 0 }, total: 3007, truncated: true,
+      items: db.lines[7].slice(0, 200).map((l) => ({ key: `MISSING_TAX_CODE:${l.employee}`, rule: "MISSING_TAX_CODE", severity: "warn", title: "Thiếu mã số thuế cá nhân", headline: "Hồ sơ lương chưa có mã số thuế", employee: l.employee, employeeCode: db.emps[l.employee].code, employeeName: db.emps[l.employee].name, lineId: l.id, status: "open", canClose: true })),
+      groups: [{ rule: "MISSING_TAX_CODE", title: "Thiếu mã số thuế cá nhân", severity: "warn", total: 1004, open: 1004, closable: 1004 }],
+      byEmployee: db.lines[7].reduce((o, l) => Object.assign(o, { [l.employee]: { open: 3 } }), {}),
+    });
+    const v = PayrollRun.view({ id: "7" });
+    const size = Buffer.byteLength(JSON.stringify(v), "utf8");
+    expect(v.lines).toHaveLength(1004);
+    expect(v.checksList.items).toHaveLength(200);
+    expect(v.checks).toEqual({ open: 3007, errors: 0, warnings: 3007, resolved: 0 });
+    expect(size).toBeLessThan(500000);
+    expect(Buffer.byteLength(JSON.stringify(v.lines), "utf8") / 1004).toBeLessThan(380);
+    expect(v.totals.er_ins).toBe(5512500 * 1004);
+    expect(v.totals.exempt).toBe(730000 * 1004);
+    expect(v.compare.summary).toMatchObject({ hasPrevious: true, count: 1004, prevCount: 1004, joiners: 0, leavers: 0 });
+    for (const k of ["exempt", "er_ins", "family_ded", "assessable", "net_before", "other_ded", "advance", "att_locked", "paid_leave", "profile", "batch", "insurance_wage"]) expect(v.lines.every((l) => !(k in l))).toBe(true);
+    expect(v.lines.every((l) => !("values" in l.cmp) && !("previous" in l.cmp))).toBe(true);
+  });
+
+  test("checksList của phân hệ Kiểm tra: gọi một lần, số đếm lấy từ đó (không gọi summary lần nữa)", () => {
+    let listed = 0;
+    Checks.summary = () => {
+      throw new Error("summary must not be called when checksList answered");
+    };
+    Checks.checksList = (q) => {
+      listed++;
+      expect(q).toEqual({ batch: "7", limit: 200, brief: true });
+      return { counts: { open: 2, errors: 1, warnings: 1, resolved: 3 }, items: [{ key: "NET_NEGATIVE:101" }], total: 5, truncated: false, groups: [], byEmployee: { 101: { open: 1, errors: 1 } } };
+    };
+    const v = PayrollRun.view({ id: "7" });
+    expect(listed).toBe(1);
+    expect(v.checks).toEqual({ open: 2, errors: 1, warnings: 1, resolved: 3 });
+    expect(v.checksList).toMatchObject({ total: 5, truncated: false, items: [{ key: "NET_NEGATIVE:101" }] });
+    expect(v.steps.find((s) => s.key === "review")).toMatchObject({ note: "openChecks", count: 2 });
+    // checksList lỗi: vẫn có số đếm nếu summary chạy được
+    Checks.checksList = () => {
+      throw new Error("boom");
+    };
+    Checks.summary = () => ({ open: 1, errors: 0, warnings: 1, resolved: 0 });
+    const w = PayrollRun.view({ id: "7" });
+    expect(w.checks).toEqual({ open: 1, errors: 0, warnings: 1, resolved: 0 });
+    expect(w.checksList).toBeNull();
   });
 
   test("thông báo tính lương thành mảng dòng; bút toán có số chứng từ", () => {
@@ -294,6 +366,13 @@ describe("runLine - dữ liệu cho các tab theo nhân viên", () => {
     d0.pit = { selfDeduction: 200, dependentDeduction: 100 };
     db.lines[7][0].detail = JSON.stringify(d0);
     expect(PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" }).tax).toMatchObject({ selfDeduction: 200, dependentDeduction: 100, familyDeduction: 300 });
+    // Khối pit lưu lúc tính lương có phương pháp: ưu tiên hơn hồ sơ hiện tại (hồ sơ có thể đã đổi sau khi tính)
+    d0.pit = { method: "n", selfDeduction: 0, dependentDeduction: 0 };
+    db.lines[7][0].detail = JSON.stringify(d0);
+    expect(PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" }).tax).toMatchObject({ method: "N", flatCommitment: false, selfDeduction: 0, dependentDeduction: 0 });
+    d0.pit = { selfDeduction: 200, dependentDeduction: 100 };
+    db.lines[7][0].detail = JSON.stringify(d0);
+    expect(PayrollRun.lineDetail({ id: "7", line: "71", prev: "3" }).tax.method).toBe("P");
     const c = PayrollRun.lineDetail({ id: "7", line: "73", prev: "3" }).tax;
     expect(c).toMatchObject({ method: null, flatCommitment: null, insurance: null, taxable: null, pit: 70 });
     db.lines[7][2].profile = "503";

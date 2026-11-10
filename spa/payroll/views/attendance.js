@@ -386,8 +386,26 @@ export default function AttendanceView({app}) {
 			setLoaded(true);
 			if (r && r.period && Array.isArray(r.rows)) {
 				// Ô ngày về dạng nén (chỉ số vào cellTable): bung một lần khi nhận, các dòng dùng chung đối tượng ô
+				// Lưới 1.000 nhân viên về dạng nén (core/AttendanceMonthGrid.packRows): rows[].cells là chỉ số vào cellRows (các dãy ô
+				// khác nhau), rows[].totals là chỉ số vào totalsTable, trường bằng giá trị mặc định không gửi. Máy chủ luôn trả đủ
+				// mọi nhân viên của kỳ nên ô tìm, bộ lọc "có ngoại lệ" và "Hiện thêm" làm ngay ở đây, không gọi lại máy chủ.
 				const table = Array.isArray(r.cellTable) ? r.cellTable : [];
-				r.rows.forEach((row) => (row.cells = (row.cells || []).map((c) => (typeof c === 'number' ? table[c] || {s: '', k: 'N'} : c))));
+				const cellRows = Array.isArray(r.cellRows) ? r.cellRows : [];
+				const totalsKeys = Array.isArray(r.totalsKeys) ? r.totalsKeys : [];
+				const totalsTable = Array.isArray(r.totalsTable) ? r.totalsTable : [];
+				const cellsOf = cellRows.map((list) => (list || []).map((x) => table[x] || {s: '', k: 'N'}));
+				const totalsOf = totalsTable.map((list) => {
+					const o = {};
+					totalsKeys.forEach((k, i) => (o[k] = Number((list || [])[i]) || 0));
+					return o;
+				});
+				r.rows = r.rows.map((row) => {
+					const out = Object.assign({department: '', contractor: false, salaryType: 'M', source: 'docs', hasSummary: false, locked: false, open: 0}, row);
+					if (typeof row.cells === 'number') out.cells = cellsOf[row.cells] || [];
+					else out.cells = (row.cells || []).map((x) => (typeof x === 'number' ? table[x] || {s: '', k: 'N'} : x));
+					if (typeof row.totals === 'number') out.totals = totalsOf[row.totals] || {};
+					return out;
+				});
 				setData(r);
 			}
 			else if (!r) setData(null);

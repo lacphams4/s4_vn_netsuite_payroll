@@ -8,8 +8,11 @@
  * = tổng dòng phân bổ (GROSS + ERINS) + trích trước tháng 13; và khớp từng khóa (tài khoản, phòng ban, class, địa điểm, dự án).
  *
  * Quy tắc:
- * - Dòng phân bổ ERINS -> employerIns. Trích trước tháng 13 (nhân viên, số dương) -> accrued13, tài khoản và phòng ban như
- *   bút toán: tài khoản chi phí của hồ sơ (kèm phòng ban của hồ sơ), không có thì tài khoản chi phí mặc định, phòng ban trống.
+ * - Dòng phân bổ ERINS -> employerIns. Trích trước tháng 13 (nhân viên, số dương) -> accrued13, đúng các dòng Nợ của bút toán:
+ *   chi tiết dòng lương có `accrual13` (dòng chia theo cơ cấu phân bổ GROSS, PayrollJournalBuilder.splitAccrual, lưu lúc tính
+ *   lương) và tổng đúng số trích thì mỗi dòng chia một dòng số liệu với đủ tài khoản, phòng ban, class, địa điểm, dự án; không
+ *   có (bảng lương tính trước khi có quy tắc này, nhân viên không có dòng phân bổ) thì như cũ: tài khoản chi phí của hồ sơ
+ *   (kèm phòng ban của hồ sơ), không có thì tài khoản chi phí mặc định, phòng ban trống.
  * - Cộng tác viên (C): mọi dòng GROSS -> contractor.
  * - Nhân viên (E): mỗi dòng GROSS chia theo cơ cấu thu nhập của chính nhân viên đó (nhóm loại thu nhập -> thành phần, bảng
  *   CATEGORY bên dưới). Thu nhập có đích riêng được gắn đúng đích khi nhận ra được từ dữ liệu đã lưu:
@@ -210,10 +213,24 @@ define(["./Money"], (Money) => {
 
 		const accrued = D(line.accrued13 !== undefined && line.accrued13 !== null ? line.accrued13 : line.accrued13th);
 		if (type !== "C" && accrued.gt(0)) {
-			const own = !blank(d.expenseAccount);
-			push({ account: own ? str(d.expenseAccount) : str(opt.defaultExpenseAccount), department: own ? str(d.expenseSub) : "", class: "", location: str(opt.defaultLocation), project: "" }, "accrued13", accrued, 0);
+			const split = accrualRows(d, accrued);
+			if (split.length) {
+				for (const a of split) push(dimOf(a), "accrued13", a.amount, 0);
+			} else {
+				const own = !blank(d.expenseAccount);
+				push({ account: own ? str(d.expenseAccount) : str(opt.defaultExpenseAccount), department: own ? str(d.expenseSub) : "", class: "", location: str(opt.defaultLocation), project: "" }, "accrued13", accrued, 0);
+			}
 		}
 		return finish(map);
+	}
+
+	/**
+	 * Dòng chia trích tháng 13 đã lưu trong chi tiết dòng lương, chỉ khi tổng đúng số trích (cùng điều kiện bút toán dùng các
+	 * dòng này); ngược lại mảng rỗng -> ghi theo cách cũ.
+	 */
+	function accrualRows(detail, accrued) {
+		const rows = (Array.isArray(detail && detail.accrual13) ? detail.accrual13 : []).filter((a) => a && !D(a.amount).isZero());
+		return rows.length && Money.sum(rows, (a) => a.amount).eq(D(accrued)) ? rows : [];
 	}
 
 	function finish(map) {
@@ -351,5 +368,5 @@ define(["./Money"], (Money) => {
 		return out;
 	}
 
-	return { COMPONENTS, GROSS_COMPONENTS, CATEGORY, DIMS, componentOf, employeeFacts, build, expected, total, verify, monthOf, toRecord, plan, factKey, parseDetail };
+	return { COMPONENTS, GROSS_COMPONENTS, CATEGORY, DIMS, componentOf, employeeFacts, build, expected, total, verify, monthOf, toRecord, plan, factKey, parseDetail, accrualRows };
 });

@@ -83,6 +83,10 @@ define(["N/runtime", "N/log", "./Store", "./Clock"], (runtime, log, Store, Clock
 		processPunches: { vi: "Xử lý lượt chấm công", en: "Processed clock punches" },
 		loadSheetEmployees: { vi: "Nạp nhân viên vào bảng công", en: "Loaded employees into the attendance sheet" },
 		saveSheet: { vi: "Sửa bảng công ký hiệu", en: "Edited the attendance sheet" },
+		resolveCheckGroup: {
+			vi: "Xử lý cả nhóm cảnh báo", en: "Handled a group of checks",
+			detail: (r) => ({ vi: `${r.rule || ""}: ${r.closed || 0} mục - ${CHECK_STATUS.vi[r.status] || r.status || ""}`, en: `${r.rule || ""}: ${r.closed || 0} item(s) - ${CHECK_STATUS.en[r.status] || r.status || ""}` }),
+		},
 		resolveCheck: {
 			vi: "Xử lý cảnh báo", en: "Handled a check",
 			detail: (r) => {

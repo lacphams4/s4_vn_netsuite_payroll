@@ -104,6 +104,14 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
       const fs = activeFacts(sub).filter((f) => f.batch === b.id);
       return { id: b.id, status: b.status, journal: b.journal, month: monthOfBatch(b), gross: b.gross, er_ins: b.er_ins, accrued13: b.accrued13, facts: fs.length, amount: fs.length ? fs.reduce((t, f) => t + f.amount, 0) : null };
     }),
+    // Trích tháng 13 bút toán thực ghi: dòng nhân viên (không phải cộng tác viên) có số trích dương, gom theo bảng lương
+    s4vp_la_batch_accruals: (sql, [sub, ctr, from, to]) => {
+      if (mockDb.failAccruals) throw new Error("join not allowed");
+      const ids = mockDb.batches.filter((b) => b.subsidiary === s(sub) && b.journal && monthOfBatch(b) >= from && monthOfBatch(b) <= to).map((b) => b.id);
+      return group(mockDb.lines.filter((l) => ids.includes(l.batch) && !l.isInactive && l.accrued13 > 0 && l.employment_type !== ctr), (l) => [l.batch], (l) => ({ batch: l.batch, accrued13: 0 }), (g, l) => {
+        g.accrued13 += l.accrued13;
+      });
+    },
     s4vp_la_fact_accounts: (sql, [sub, month]) => group(activeFacts(sub).filter((f) => f.month === month), (f) => [f.account], (f) => ({ account: f.account, num: acc(f.account).num || null, name: acc(f.account).name || null, amount: 0 }), (g, f) => {
       g.amount += f.amount;
     }),
@@ -243,7 +251,7 @@ const queries = () => db.calls.filter((c) => c.startsWith("run:"));
 beforeEach(() => {
   Object.assign(db, {
     facts: [], nextId: 1, batches: [], lines: [], periods: [], empDept: {}, employees: {}, journals: {}, cache: {}, calls: [], writes: [], logs: [], sql: {}, usage: 5000,
-    failGl: false, failBook: false, failJournal: false, failLabelJoin: false, failDeptJoin: false, failFind: null, noCache: false,
+    failGl: false, failBook: false, failJournal: false, failLabelJoin: false, failDeptJoin: false, failAccruals: false, failFind: null, noCache: false,
     accounts: { 642: { num: "642", name: "Chi phí quản lý", accttype: "Expense" }, 632: { num: "632", name: "Giá vốn", accttype: "COGS" } },
     labels: { department: { D1: "Văn phòng", D2: "Sản xuất" }, class: { WC1: "Chuyền 1" }, location: { L0: "Trụ sở" }, project: { P1: "Dự án Một" } },
     gl: [
@@ -431,7 +439,36 @@ describe("laborAnalytics", () => {
     expect(queries()).toContain("run:s4vp_la_gl_nobook");
     db.failBook = false;
     db.gl = [{ month: "202704", accttype: "Bank", debit: 5, credit: 0 }];
+    expect(analytics({ month: "2027-04", fresh: "1" }).notes).toEqual(["NO_GL_ACCESS"]);
+  });
+
+  test("sổ cái các tháng đã qua được nhớ (N/cache theo người dùng); tháng hiện tại luôn đọc trực tiếp; fresh bỏ qua bản nhớ", () => {
+    const glQueries = () => queries().filter((c) => c === "run:s4vp_la_gl").length;
+    expect(analytics({ month: "2027-04" }).months[10].revenue).toBe(900000000);
+    expect(glQueries()).toBe(2); // tháng đã qua + tháng hiện tại (hôm nay 2027-04-30)
+    expect(Object.keys(db.cache)).toEqual(["gl_5__13_202604_202703"]);
+    db.gl.find((r) => r.month === "202703" && r.accttype === "Income").credit = 1;
+    db.gl.find((r) => r.month === "202704" && r.accttype === "COGS").debit = 460000000;
+    db.calls = [];
+    const again = analytics({ month: "2027-04" });
+    expect(glQueries()).toBe(1);
+    expect(again.months[10].revenue).toBe(900000000);
+    expect(again.months[11].cogs).toBe(460000000);
+    expect(analytics({ month: "2027-04", fresh: "1" }).months[10].revenue).toBe(1);
+    expect(analytics({ month: "2027-04" }).months[10].revenue).toBe(1);
+    // Xem một tháng đã qua: cả khoảng nằm trong bản nhớ riêng, không có truy vấn tháng hiện tại
+    db.calls = [];
+    analytics({ month: "2027-03" });
+    analytics({ month: "2027-03" });
+    expect(glQueries()).toBe(1);
+    // Không đọc được sổ cái thì không nhớ; không có N/cache vẫn chạy
+    db.cache = {};
+    db.failGl = true;
     expect(analytics({ month: "2027-04" }).notes).toEqual(["NO_GL_ACCESS"]);
+    expect(db.cache).toEqual({});
+    db.failGl = false;
+    db.noCache = true;
+    expect(analytics({ month: "2027-04" }).months[11].revenue).toBe(1000000000);
   });
 
   test("loại tài khoản dạng tên đầy đủ ('Cost of Goods Sold', 'Other Income') vẫn phân loại đúng", () => {
@@ -474,6 +511,34 @@ describe("laborAnalytics", () => {
     expect(analytics({ month: "2027-04" }).months[11].headcount).toBe(6);
   });
 
+  test("FACTS_OUTDATED không báo sai khi cộng tác viên hoặc dòng âm mang số trích tháng 13 (bút toán chỉ trích nhân viên, số dương)", () => {
+    // Dòng cộng tác viên có accrued13 khác 0 và một dòng nhân viên âm: tổng trên bảng lương cộng cả hai, bút toán và số liệu thì không
+    const ctv = db.lines.find((l) => l.batch === "4" && l.employment_type === "C");
+    ctv.accrued13 = 700000;
+    db.lines.find((l) => l.id === "4-1").accrued13 = -250000;
+    const b = db.batches.find((x) => x.id === "4");
+    b.accrued13 = db.lines.filter((l) => l.batch === "4").reduce((t, l) => t + l.accrued13, 0);
+    rebuildAll();
+    const posted = 5000000;
+    expect(b.accrued13).toBe(posted + 700000 - 250000);
+    expect(db.facts.filter((f) => f.batch === "4" && f.active && f.component === "accrued13").reduce((t, f) => t + f.amount, 0)).toBe(posted);
+    expect(analytics({ month: "2027-04" }).notes).toEqual([]);
+    expect(db.sql.s4vp_la_batch_accruals).toMatch(/custrecord_s4vp_be_accrued13 > 0/);
+    expect(db.sql.s4vp_la_batch_accruals).toMatch(/GROUP BY/);
+    // Số liệu lệch thật vẫn bị báo
+    db.facts.find((f) => f.batch === "4" && f.active).amount += 1;
+    expect(analytics({ month: "2027-04" }).notes).toEqual(["FACTS_OUTDATED"]);
+    rebuildAll();
+    // Không đọc được dòng nhân viên theo cách gom này: dùng tổng trên bảng lương như trước (không lỗi)
+    db.failAccruals = true;
+    expect(analytics({ month: "2027-04" }).notes).toEqual(["FACTS_OUTDATED"]);
+    ctv.accrued13 = 0;
+    db.lines.find((l) => l.id === "4-1").accrued13 = 1000000;
+    b.accrued13 = 6000000;
+    rebuildAll();
+    expect(analytics({ month: "2027-04" }).notes).toEqual([]);
+  });
+
   test("chỉ truy vấn gom nhóm: không đọc dòng nhân viên, dưới 12 truy vấn, số truy vấn không tăng theo số nhân viên", () => {
     analytics({ month: "2027-04" });
     const small = db.calls.slice();
@@ -483,6 +548,7 @@ describe("laborAnalytics", () => {
     addBatch("6", "202704", 1200);
     rebuildAll();
     db.calls = [];
+    db.cache = {}; // so sánh hai lượt gọi lạnh (lượt nóng bớt một truy vấn sổ cái nhờ bản nhớ)
     const big = analytics({ month: "2027-04" });
     expect(db.calls).toEqual(small);
     expect(big.months[11].headcount).toBe(1200);
@@ -523,7 +589,9 @@ describe("laborDrill", () => {
     const row = analytics({ month: "2027-04" }).breakdown.rows.find((x) => x.key === "D2");
     const r = LA.routes.get.laborDrill.run({ subsidiary: "13", month: "2027-04", compare: "prev", dim: "department", key: "D2" });
     expect(r).toMatchObject({ month: "2027-04", compare: "2027-03", dim: "department", key: "D2" });
-    expect(Object.keys(r.rows[0])).toEqual(["employee", "code", "name", "department", "cur", "prev", "components", "diff", "pct"]);
+    expect(Object.keys(r.rows[0])).toEqual(["employee", "code", "name", "department", "cur", "prev", "components", "diff", "pct", "batch", "line"]);
+    // Bảng lương và dòng lương của tháng đang xem, để mở thẳng màn Chạy lương
+    expect(r.rows.map((x) => [x.employee, x.batch, x.line]).sort()).toEqual([["102", "4", "4-2"], ["104", "4", "4-4"], ["106", "4", "4-6"]]);
     expect(r.rows.map((x) => x.employee).sort()).toEqual(["102", "104", "106"]);
     expect(r.rows.reduce((t, x) => t + x.cur, 0)).toBe(row.cur);
     expect(r.rows.reduce((t, x) => t + x.prev, 0)).toBe(row.prev);
@@ -544,6 +612,24 @@ describe("laborDrill", () => {
     expect(none.rows.every((x) => x.cur === 1000000 && x.components.accrued13 === 1000000)).toBe(true);
     expect(LA.laborDrill({ subsidiary: "13", month: "2027-04", dim: "project", key: "KHONG-CO" }).rows).toEqual([]);
     expect(() => LA.laborDrill({ subsidiary: "13", month: "2027-04", dim: "employee", key: "1" })).toThrow(/dimension/);
+  });
+
+  test("batch / line: nhiều bảng lương trong tháng thì lấy bảng có số tiền của nhóm lớn nhất; chỉ có ở kỳ so sánh thì null", () => {
+    // Bảng 7 cùng tháng 04: nhân viên 101, 102 có thêm một dòng lương nhỏ hơn (lương cơ sở 5 triệu)
+    addBatch("7", "202704", 2, { base: 5000000 });
+    // Bảng 9 cùng tháng: lớn hơn bảng 4 cho nhân viên 101
+    addBatch("9", "202704", 1, { base: 40000000 });
+    rebuildAll();
+    const d1 = LA.laborDrill({ subsidiary: "13", month: "2027-04", dim: "department", key: "D1" });
+    const of = (rows, emp) => rows.find((x) => x.employee === emp);
+    expect(of(d1.rows, "101")).toMatchObject({ batch: "9", line: "9-1", cur: (21000000 + 5000000 + 40000000) + Math.round(21000000 * 0.215) + Math.round(5000000 * 0.215) + Math.round(40000000 * 0.215) });
+    expect(of(d1.rows, "103")).toMatchObject({ batch: "4", line: "4-3" });
+    // Cộng tác viên 900 có mặt ở cả ba bảng với cùng số tiền: lấy bảng có id nhỏ nhất
+    expect(of(d1.rows, "900")).toMatchObject({ batch: "4", line: "4-c" });
+    // Xem tháng 03 so với tháng 04: nhân viên 105 chỉ có ở kỳ so sánh -> không có bảng lương của tháng đang xem
+    const mar = LA.laborDrill({ subsidiary: "13", month: "2027-03", compare: "2027-04", dim: "department", key: "D1" });
+    expect(of(mar.rows, "105")).toMatchObject({ cur: 0, batch: null, line: null });
+    expect(of(mar.rows, "101")).toMatchObject({ batch: "3", line: "3-1" });
   });
 
   test("chỉ đọc dòng của các bảng lương trong hai tháng, một lần cho mọi bảng", () => {

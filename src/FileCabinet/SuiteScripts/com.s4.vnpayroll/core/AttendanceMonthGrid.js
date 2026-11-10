@@ -349,6 +349,9 @@ define(["./Dates", "./Money", "./WorkingDayCounter", "./EmploymentDays", "./Atte
 		const corePeriod = { startDate: ps, endDate: pe, standardWorkDays: n(period.standardWorkDays) };
 		const exceptions = [];
 		const push = (e) => exceptions.push(e);
+		// Nhân viên nguồn chứng từ không có chứng từ nào trong kỳ (phần lớn của 1.000 người) có cùng ô ngày và cùng số dự tính
+		// nếu cùng ngày vào làm / nghỉ việc: tính một lần rồi dùng chung (các ô và số dự tính không bị sửa sau đó).
+		const plain = {};
 
 		const rows = employees.map((emp) => {
 			const id = String(emp.employee);
@@ -399,16 +402,24 @@ define(["./Dates", "./Money", "./WorkingDayCounter", "./EmploymentDays", "./Atte
 					if (unknown.length) push({ key: `unknown:${id}`, type: "unknownSymbol", severity: "warn", employee: id, count: unknown.length, codes: [...new Set(unknown.map((i) => cells[i].s))], dayIndex: unknown[0], date: dayList[unknown[0]].date });
 					if (missing.length) push({ key: `missing:${id}`, type: "sheetMissing", severity: "warn", employee: id, count: missing.length, dayIndex: missing[0], date: dayList[missing[0]].date });
 				}
-			} else {
-				cells = docCells(emp, dayList, docs, leaveTypes, table);
-				const approved = (list) => list.filter((d) => d.status === "A");
-				expected = totalsOf(Summary.buildExceptions({
-					period: corePeriod, employee: coreEmp, weeklyOff: input.weeklyOff, holidays: input.holidays,
-					leaveRequests: approved(docs.leaves).map((l) => ({ refNbr: l.name, fromDate: l.from, toDate: l.to || l.from, fromHalf: l.from_half || "A", toHalf: l.to_half || "P", leaveType: leaveTypes[l.leave_type] || {} })),
-					trips: approved(docs.trips).map((t) => ({ refNbr: t.name, fromDate: t.from, toDate: t.to || t.from })),
-					exceptions: approved(docs.exceptions).map((x) => ({ refNbr: x.name, workDate: x.work_date, exceptionType: x.exception_type, deductDays: n(x.deduct_days), adjustDays: n(x.adjust_days) })),
-					overtime: approvedOt,
-				}));
+				} else {
+				const noDocs = !docs.leaves.length && !docs.trips.length && !docs.exceptions.length && !docs.overtime.length;
+				const plainKey = `${coreEmp.hireDate || ""}|${coreEmp.terminationDate || ""}`;
+				if (noDocs && plain[plainKey]) {
+					cells = plain[plainKey].cells;
+					expected = plain[plainKey].expected;
+				} else {
+					cells = docCells(emp, dayList, docs, leaveTypes, table);
+					const approved = (list) => list.filter((d) => d.status === "A");
+					expected = totalsOf(Summary.buildExceptions({
+						period: corePeriod, employee: coreEmp, weeklyOff: input.weeklyOff, holidays: input.holidays,
+						leaveRequests: approved(docs.leaves).map((l) => ({ refNbr: l.name, fromDate: l.from, toDate: l.to || l.from, fromHalf: l.from_half || "A", toHalf: l.to_half || "P", leaveType: leaveTypes[l.leave_type] || {} })),
+						trips: approved(docs.trips).map((t) => ({ refNbr: t.name, fromDate: t.from, toDate: t.to || t.from })),
+						exceptions: approved(docs.exceptions).map((x) => ({ refNbr: x.name, workDate: x.work_date, exceptionType: x.exception_type, deductDays: n(x.deduct_days), adjustDays: n(x.adjust_days) })),
+						overtime: approvedOt,
+					}));
+					if (noDocs) plain[plainKey] = { cells, expected };
+				}
 			}
 			row.cells = decorate(cells, dayList, docs);
 
@@ -558,6 +569,95 @@ define(["./Dates", "./Money", "./WorkingDayCounter", "./EmploymentDays", "./Atte
 		return { cellTable, rows: packed };
 	}
 
+	// Giá trị mặc định của một dòng: packRows không gửi, unpackRows (và giao diện) điền lại
+	const ROW_DEFAULTS = { department: "", contractor: false, salaryType: "M", source: "docs", hasSummary: false, locked: false, open: 0 };
+	const TOTAL_KEYS = COMPARE.map(([field]) => field);
+
+	/**
+	 * Nén cả lưới cho 1.000 nhân viên: ngoài bảng ô (cellTable), các DÃY ô giống nhau giữa các dòng (cùng lịch, không có chứng
+	 * từ) và các bộ số tổng giống nhau cũng chỉ gửi một lần; trường của dòng bằng giá trị mặc định (ROW_DEFAULTS), cờ false
+	 * không gửi.
+	 * @returns {{cellTable, cellRows: number[][], totalsKeys: string[], totalsTable: number[][], rows: Array}}
+	 *   rows[].cells là chỉ số vào cellRows (mỗi phần tử là dãy chỉ số vào cellTable); rows[].totals là chỉ số vào totalsTable
+	 *   (mỗi phần tử là dãy số theo thứ tự totalsKeys), không có khi dòng không có số tổng (cộng tác viên).
+	 */
+	function packRows(rows) {
+		const cellIndex = new Map();
+		const byObject = new Map();
+		const cellTable = [];
+		const rowIndex = new Map();
+		const cellRows = [];
+		const totalIndex = new Map();
+		const totalsTable = [];
+		const byList = new Map();
+		const packed = (rows || []).map((r) => {
+			const o = { employee: r.employee, code: r.code, name: r.name };
+			for (const k of Object.keys(r)) {
+				if (k === "cells" || k === "totals" || k in o) continue;
+				const v = r[k];
+				if (v === undefined || v === false || (k in ROW_DEFAULTS && v === ROW_DEFAULTS[k])) continue;
+				o[k] = v;
+			}
+			// Dãy ô dùng chung giữa các dòng (cùng đối tượng mảng): tra theo đối tượng trước, khỏi dựng khóa chuỗi
+			let ri = byList.get(r.cells);
+			if (ri === undefined) {
+				const list = (r.cells || []).map((c) => {
+					let i = byObject.get(c);
+					if (i === undefined) {
+						const key = JSON.stringify(c);
+						i = cellIndex.get(key);
+						if (i === undefined) {
+							i = cellTable.length;
+							cellIndex.set(key, i);
+							cellTable.push(c);
+						}
+						byObject.set(c, i);
+					}
+					return i;
+				});
+				const key = list.join(",");
+				ri = rowIndex.get(key);
+				if (ri === undefined) {
+					ri = cellRows.length;
+					rowIndex.set(key, ri);
+					cellRows.push(list);
+				}
+				if (r.cells) byList.set(r.cells, ri);
+			}
+			o.cells = ri;
+			if (r.totals) {
+				const list = TOTAL_KEYS.map((k) => n(r.totals[k]));
+				const key = list.join("|");
+				let ti = totalIndex.get(key);
+				if (ti === undefined) {
+					ti = totalsTable.length;
+					totalIndex.set(key, ti);
+					totalsTable.push(list);
+				}
+				o.totals = ti;
+			}
+			return o;
+		});
+		return { cellTable, cellRows, totalsKeys: TOTAL_KEYS.slice(), totalsTable, rows: packed };
+	}
+
+	/** Phép ngược của packRows (giao diện làm tương tự khi nhận dữ liệu): dòng đủ trường như kết quả của build. */
+	function unpackRows(packed) {
+		const p = packed || {};
+		const table = p.cellTable || [];
+		const keys = p.totalsKeys || TOTAL_KEYS;
+		return (p.rows || []).map((r) => {
+			const o = Object.assign({}, ROW_DEFAULTS, r);
+			o.cells = ((p.cellRows || [])[r.cells] || []).map((i) => table[i]);
+			if (typeof r.totals === "number") {
+				const list = (p.totalsTable || [])[r.totals] || [];
+				o.totals = {};
+				keys.forEach((k, i) => (o.totals[k] = n(list[i])));
+			}
+			return o;
+		});
+	}
+
 	function unpack(cellTable, rows) {
 		return (rows || []).map((r) => Object.assign({}, r, { cells: (r.cells || []).map((i) => (typeof i === "number" ? cellTable[i] : i)) }));
 	}
@@ -580,5 +680,5 @@ define(["./Dates", "./Money", "./WorkingDayCounter", "./EmploymentDays", "./Atte
 		return String(list[list.length - 1].id);
 	}
 
-	return { build, days, symbolTable, inPeriod, sourceOf, leavePortion, exceptionSubtype, counts, pack, unpack, defaultPeriod, short };
+	return { build, days, symbolTable, inPeriod, sourceOf, leavePortion, exceptionSubtype, counts, pack, unpack, packRows, unpackRows, defaultPeriod, short };
 });

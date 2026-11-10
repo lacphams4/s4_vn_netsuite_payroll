@@ -10,18 +10,30 @@
  *   assertApprovable(batchId) ném lỗi nghiệp vụ khi còn cảnh báo mức error (để api/Payroll.approve gọi trước khi duyệt)
  *
  * Route (vai trò "payroll"):
- *   GET  checksList  { batch }                 -> { batch, counts, blocking, items, assignees }
+ *   GET  checksList  { batch, rule?, severity?, status?, q?, offset?, limit?, brief? }
+ *                    -> { batch, counts, blocking, items, total, offset, truncated, groups, bySeverity, byEmployee?, assignees? }
+ *                    Lọc và phân trang phía máy chủ (bảng lương 1.000 nhân viên có vài nghìn cảnh báo): `items` là trang
+ *                    [offset, offset + limit) của danh sách đã lọc (limit trống = tất cả), `total` là số mục khớp bộ lọc;
+ *                    counts / blocking / groups luôn tính trên TOÀN BỘ cảnh báo; groups = [{rule, title, severity, total, open,
+ *                    closable}] để xử lý theo nhóm quy tắc; bySeverity đếm theo mức độ trong phạm vi các bộ lọc còn lại.
+ *                    `brief`: không kèm assignees, mục gọn (bỏ trường rỗng); có `offset`: không kèm byEmployee.
  *   GET  checkDetail { batch, rule, employee } -> { item, facts, compare, inputs, history, profileId }
  *   POST resolveCheck { batch, rule, employee, status, note, assignee } -> { ok, key, status, counts, ... }
+ *   POST resolveCheckGroup { batch, rule, status: 'accepted' | 'resolved', note, assignee? } -> { ok, rule, status, closed, more, counts, left }
+ *                    Đóng mọi cảnh báo còn mở của một quy tắc (không áp dụng cho mức error), cùng điều kiện với resolveCheck (ghi
+ *                    chú bắt buộc, lưu dấu số liệu và lịch sử từng mục). Làm theo lượt: mỗi lượt gọi tối đa GROUP_STEP mục, còn
+ *                    thì trả more = true (lib/api.js tự gọi lại, cộng dồn `closed`).
  *
- * Governance: mỗi lần tính đọc theo lô (bảng lương, kỳ, dòng của kỳ này và kỳ trước trong một truy vấn, hồ sơ, giờ công,
- * dòng nhập tay, tham số, kết quả đã lưu), không lặp truy vấn theo nhân viên. Kết quả tính được nhớ trong một lần chạy script.
- * Không trả mã số thuế, số tài khoản: chỉ dùng để biết có hay không.
+ * Governance: mỗi lần tính đọc theo lô, số truy vấn KHÔNG phụ thuộc số nhân viên: bảng lương + kỳ + các bảng lương cùng công
+ * ty con để tìm kỳ trước (1, api/Lean.batchesNear), dòng kỳ này + kỳ trước kèm tên nhân viên (1, api/Lean.batchLines), hồ sơ lương chỉ các cột quy tắc
+ * cần (1, lọc bằng truy vấn con thay cho IN 900 id), tham số (1), kết quả đã lưu (1, không đọc lịch sử); giờ công và dòng nhập
+ * tay chỉ đọc (dạng gom nhóm) khi bảng lương có hồ sơ lương giờ. Kết quả tính được nhớ trong một lần chạy script.
+ * Không đọc mã số thuế, số tài khoản: SQL chỉ trả cờ có / không.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, Store, Clock, Rules) => {
+define(["N/runtime", "./Store", "./Clock", "./Lean", "../core/PayrollChecks"], (runtime, Store, Clock, Lean, Rules) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const num = (v) => {
 		const n = Number(v);
@@ -29,7 +41,12 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 	};
 	const STATUS_CODE = { open: "O", accepted: "A", resolved: "R" };
 	const STATUS_NAME = { O: "open", A: "accepted", R: "resolved" };
-	const LINE_KEYS = ["batch", "employee", "profile", "employment_type", "std_days", "work_days", "insurance_wage", "gross", "ee_ins", "pit", "other_ded", "advance", "net", "error"];
+	const PROFILE_KEYS = ["employee", "salary_type", "employment_type", "hire_date", "termination_date", "ins_applicable", "region"];
+	const RESULT_KEYS = ["rule", "employee", "status", "assignee", "note", "stamp"];
+	// Đóng cả nhóm: số mục mỗi lượt gọi, thời gian tối đa một lượt, governance tối thiểu phải còn (mỗi mục ghi một record)
+	const GROUP_STEP = 60;
+	const GROUP_MS = 20000;
+	const GROUP_MIN_USAGE = 200;
 	const HISTORY_MAX = 50;
 	const ASSIGNEE_MAX = 300;
 	// Tham số tùy chọn trong bảng tham số pháp lý (record param), tra theo ngày cuối kỳ:
@@ -67,58 +84,46 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 
 	// ------------------------------------------------------------------ đọc dữ liệu theo lô
 
-	/** Tên và mã nhân viên của nhiều id trong một truy vấn (mỗi 900 id). */
+	/** Tên và mã nhân viên của nhiều id trong một truy vấn (mỗi 900 id); chỉ dùng cho người phụ trách không có dòng trong bảng lương. */
 	function employeesInfo(ids) {
 		const out = {};
 		const list = [...new Set((ids || []).filter((x) => !blank(x)).map(String))];
 		for (let i = 0; i < list.length; i += 900) {
-			const chunk = list.slice(i, i + 900);
-			const inList = chunk.filter((x) => /^\d+$/.test(x)).join(",") || "0";
-			const rows = Store.run(`SELECT e.id, e.entityid, e.firstname, e.lastname FROM employee e WHERE e.id IN (${inList})`, [], "s4vp_checks_employees");
+			const rows = Store.run(`SELECT e.id, e.entityid, e.firstname, e.lastname FROM employee e WHERE e.id IN (${Lean.idList(list.slice(i, i + 900))})`, [], "s4vp_checks_employees");
 			for (const r of rows) out[String(r.id)] = { id: String(r.id), code: r.entityid || "", name: [r.lastname, r.firstname].filter(Boolean).join(" ").trim() || r.entityid || "" };
 		}
 		return out;
 	}
 
-	/** Dòng nhân viên của một hoặc hai bảng lương, không đọc trường chi tiết JSON (nhẹ hơn Store.find). */
-	function linesOf(batchIds) {
-		const ids = [...new Set(batchIds.filter((x) => !blank(x)).map(String))];
-		if (!ids.length) return [];
-		const def = Store.rec("batch_emp");
-		const cols = ["t.id AS id"].concat(LINE_KEYS.map((k) => `t.${def.fields[k].id} AS c_${k}`));
-		const sql = `SELECT ${cols.join(", ")} FROM ${def.type} t WHERE t.${def.fields.batch.id} IN (${ids.map(() => "?").join(",")}) AND t.isinactive = 'F' ORDER BY t.id`;
-		return Store.run(sql, ids, "s4vp_checks_lines").map((r) => {
-			const o = { id: String(r.id) };
-			for (const k of LINE_KEYS) {
-				const f = def.fields[k];
-				let v = r[`c_${k}`];
-				if (v === undefined) v = null;
-				if (f.type === "select" && f.target && f.target.startsWith("list:")) v = Store.codeOf(f.target.slice(5), v);
-				else if (f.type === "select") v = v === null ? null : String(v);
-				else if (f.type === "float" || f.type === "currency" || f.type === "int") v = blank(v) ? null : Number(v);
-				o[k] = v;
-			}
-			return o;
-		});
+	/** Bảng lương và kỳ của nó (dự phòng khi Lean.batchesNear không trả chính bảng lương: đã vô hiệu, không có công ty con). */
+	function header(id) {
+		const keys = ["name", "status", "calculated", "subsidiary", "paygroup", "period"];
+		const pKeys = ["name", "start", "end", "att_status"];
+		const r = Lean.select("batch", keys, {
+			where: "{id} = ?", params: [id], includeInactive: true, tag: "s4vp_checks_batch",
+			join: `LEFT JOIN ${Lean.rec("period").type} p ON p.id = ${Lean.col("batch", "period")}`,
+			extra: Lean.cols("period", pKeys, "p", "p_"), raw: pKeys.map((k) => `p_${k}`),
+		})[0];
+		if (!r) return null;
+		const period = !blank(r.period) && (!blank(r.p_start) || !blank(r.p_name)) ? Lean.row("period", pKeys, r, "p_", { id: r.period }) : null;
+		const batch = {};
+		for (const k of ["id"].concat(keys)) batch[k] = r[k];
+		return { batch, period };
 	}
 
 	/**
 	 * Bảng lương kỳ trước để so sánh: cùng công ty con, cùng nhóm lương, chưa bị đảo, kỳ kết thúc trước ngày bắt đầu kỳ này
 	 * và gần nhất. Xác định theo NGÀY kết thúc kỳ, không theo mã kỳ (mã kỳ có thể lệch tháng so với ngày).
 	 */
-	function previousBatch(batch, period) {
+	function previousBatch(batch, period, near) {
 		if (!period || blank(period.start)) return null;
-		const others = Store.find("batch", { where: "{subsidiary} = ? AND {id} <> ?", params: [batch.subsidiary, batch.id] }).filter((b) => b.status !== "V" && String(b.paygroup || "") === String(batch.paygroup || ""));
-		if (!others.length) return null;
-		const periods = {};
-		for (const p of Store.findIn("period", "id", others.map((b) => b.period))) periods[p.id] = p;
 		let best = null;
-		for (const b of others) {
-			const p = periods[b.period];
-			if (!p || blank(p.end) || !(String(p.end) < String(period.start))) continue;
-			if (!best || String(p.end) > String(best.period.end) || (String(p.end) === String(best.period.end) && Number(b.id) > Number(best.batch.id))) best = { batch: b, period: p };
+		for (const b of near || []) {
+			if (String(b.id) === String(batch.id) || b.status === "V" || String(b.paygroup || "") !== String(batch.paygroup || "")) continue;
+			if (blank(b.periodEnd) || !(String(b.periodEnd) < String(period.start))) continue;
+			if (!best || String(b.periodEnd) > String(best.periodEnd) || (String(b.periodEnd) === String(best.periodEnd) && Number(b.id) > Number(best.id))) best = b;
 		}
-		return best;
+		return best ? { batch: { id: best.id, name: best.name }, period: { name: best.periodName, start: best.periodStart, end: best.periodEnd } } : null;
 	}
 
 	/** Ngưỡng và mức tối thiểu lấy từ bảng tham số của thiết lập, hiệu lực tại ngày cuối kỳ. Không có thì để trống. */
@@ -127,7 +132,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		const end = period && period.end ? String(period.end) : "";
 		let rows = [];
 		try {
-			rows = Store.find("param", { where: "UPPER({name}) LIKE ? OR UPPER({name}) LIKE ?", params: [`${PARAM_MINWAGE}%`, "CHECK.%"] });
+			rows = Lean.select("param", ["name", "value", "effective", "expiration"], { where: "UPPER({name}) LIKE ? OR UPPER({name}) LIKE ?", params: [`${PARAM_MINWAGE}%`, "CHECK.%"], tag: "s4vp_checks_params" });
 		} catch (e) {
 			rows = [];
 		}
@@ -165,12 +170,12 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		}
 	}
 
-	/** Kết quả xử lý đã lưu của bảng lương: { <key>: record }. Record chưa được deploy thì coi như chưa có gì. */
+	/** Kết quả xử lý đã lưu của bảng lương: { <key>: record } (không đọc lịch sử). Record chưa được deploy thì coi như chưa có gì. */
 	function storedResults(batchId) {
 		const out = {};
 		let rows = [];
 		try {
-			rows = Store.find("check_result", { where: "{batch} = ?", params: [batchId] });
+			rows = Lean.select("check_result", RESULT_KEYS, { where: "{batch} = ?", params: [batchId], tag: "s4vp_checks_results" });
 		} catch (e) {
 			rows = [];
 		}
@@ -182,44 +187,93 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		return out;
 	}
 
+	/** Lịch sử xử lý của các kết quả đã lưu: { <id record>: [..] } (một truy vấn cho cả lô). */
+	function historiesOf(ids) {
+		const out = {};
+		const list = Lean.idList(ids);
+		if (list === "0") return out;
+		for (const r of Lean.select("check_result", ["history"], { where: `{id} IN (${list})`, tag: "s4vp_checks_history" })) out[r.id] = parseJson(r.history, []);
+		return out;
+	}
+
+	/**
+	 * Hồ sơ lương của nhân viên có dòng trong các bảng lương: chỉ các cột quy tắc cần; mã số thuế và tài khoản ngân hàng chỉ
+	 * lấy cờ có / không. Lọc bằng truy vấn con trên dòng bảng lương nên chỉ một truy vấn dù bao nhiêu nhân viên.
+	 */
+	function profilesOf(batchIds) {
+		const sub = `SELECT ${Lean.col("batch_emp", "employee", "l")} FROM ${Lean.rec("batch_emp").type} l WHERE ${Lean.col("batch_emp", "batch", "l")} IN (${Lean.idList(batchIds)}) AND l.isinactive = 'F'`;
+		const has = (key) => `TRIM(${Lean.col("employee", key)}) IS NULL`;
+		return Lean.select("employee", PROFILE_KEYS, {
+			where: `{employee} IN (${sub})`, tag: "s4vp_checks_profiles",
+			extra: [`CASE WHEN ${has("tax_code")} THEN 'F' ELSE 'T' END AS has_tax`, `CASE WHEN ${has("bank_account")} OR ${has("bank_name")} THEN 'F' ELSE 'T' END AS has_bank`],
+			raw: ["has_tax", "has_bank"],
+		});
+	}
+
+	/** Tổng theo nhân viên của một bảng con của bảng lương (gom nhóm trong SQL, không kéo từng dòng). */
+	function sumByEmployee(name, expr, batchId, extraWhere, extraParams, tag) {
+		const emp = Lean.col(name, "employee");
+		const sql = `SELECT ${emp} AS emp, ${expr} AS n FROM ${Lean.rec(name).type} t WHERE ${Lean.col(name, "batch")} = ? AND t.isinactive = 'F'${extraWhere ? ` AND ${extraWhere}` : ""} GROUP BY ${emp}`;
+		const out = {};
+		for (const r of Store.run(sql, [batchId].concat(extraParams || []), tag)) if (!blank(r.emp)) out[String(r.emp)] = num(r.n);
+		return out;
+	}
+
 	// ------------------------------------------------------------------ tính cảnh báo
 
-	/** Tính toàn bộ cảnh báo của một bảng lương và ghép trạng thái đã lưu. Nhớ kết quả trong một lần chạy script. */
-	function compute(batchId) {
+	/**
+	 * Đọc dữ liệu và tính cảnh báo của một bảng lương, ghép trạng thái đã lưu. Chưa có chữ hiển thị (xem compute): đủ cho số
+	 * đếm (summary, assertApprovable). Nhớ kết quả trong một lần chạy script.
+	 */
+	function load(batchId) {
 		const id = String(batchId || "");
 		if (!id) throw fail("The payroll batch is required", "Thiếu bảng lương");
 		if (memo[id]) return memo[id];
-		const batch = Store.get("batch", id);
-		if (!batch) throw fail("Payroll batch not found", "Không tìm thấy bảng lương");
-		const period = batch.period ? Store.get("period", batch.period) : null;
-		const prev = previousBatch(batch, period);
-		const all = linesOf([id, prev ? prev.batch.id : null]);
+		// Một truy vấn: bảng lương này, kỳ của nó và các bảng lương cùng công ty con (để tìm kỳ trước)
+		const near = Lean.batchesNear(id);
+		const me = near.find((b) => String(b.id) === id) || null;
+		let batch;
+		let period;
+		if (me) {
+			batch = { id: me.id, name: me.name, status: me.status, calculated: me.calculated, subsidiary: me.subsidiary, paygroup: me.paygroup, period: me.period };
+			period = !blank(me.period) && (!blank(me.periodStart) || !blank(me.periodName)) ? { id: me.period, name: me.periodName, start: me.periodStart, end: me.periodEnd, att_status: me.periodAtt } : null;
+		} else {
+			const h = header(id);
+			if (!h) throw fail("Payroll batch not found", "Không tìm thấy bảng lương");
+			batch = h.batch;
+			period = h.period;
+		}
+		const prev = previousBatch(batch, period, near);
+		const all = Lean.batchLines([id, prev ? prev.batch.id : null]);
 		const lines = all.filter((l) => l.batch === id);
 		const prevLines = prev ? all.filter((l) => l.batch === String(prev.batch.id)) : null;
-		const empIds = [...new Set(all.map((l) => l.employee).filter((x) => !blank(x)))];
+		const info = {};
+		for (const l of all) if (!blank(l.employee) && !info[l.employee]) info[l.employee] = { id: l.employee, code: l.code || "", name: l.name || "" };
 
 		const profiles = {};
 		const profileIds = {};
 		const wanted = {};
 		for (const l of lines) if (l.profile) wanted[l.employee] = l.profile;
 		let needRegion = false;
-		for (const p of empIds.length ? Store.findIn("employee", "employee", empIds) : []) {
+		let hourly = false;
+		for (const p of all.length ? profilesOf([id, prev ? prev.batch.id : null]) : []) {
 			// Một nhân viên một hồ sơ; nếu có nhiều thì ưu tiên hồ sơ gắn trên dòng bảng lương
 			if (profiles[p.employee] && wanted[p.employee] !== p.id) continue;
 			profileIds[p.employee] = p.id;
 			profiles[p.employee] = {
 				salary_type: p.salary_type || "M", employment_type: p.employment_type || "E", hire_date: p.hire_date, termination_date: p.termination_date,
-				ins_applicable: p.ins_applicable, region: p.region || "", hasTaxCode: !blank(String(p.tax_code || "").trim()),
-				hasBank: !blank(String(p.bank_account || "").trim()) && !blank(String(p.bank_name || "").trim()),
+				ins_applicable: p.ins_applicable, region: p.region || "", hasTaxCode: p.has_tax === "T" || p.has_tax === true, hasBank: p.has_bank === "T" || p.has_bank === true,
 			};
 			if (!p.region) needRegion = true;
 		}
+		for (const l of lines) if (profiles[l.employee] && profiles[l.employee].salary_type === "H") hourly = true;
 
-		const hours = {};
-		const manualEarnings = {};
-		if (lines.length) {
-			for (const t of Store.find("batch_time", { where: "{batch} = ?", params: [id] })) hours[t.employee] = (hours[t.employee] || 0) + num(t.hours);
-			for (const i of Store.find("batch_input", { where: "{batch} = ?", params: [id] })) if (i.kind === "E") manualEarnings[i.employee] = (manualEarnings[i.employee] || 0) + 1;
+		// Giờ công và dòng nhập tay chỉ ảnh hưởng quy tắc của hồ sơ lương giờ: bảng lương không có ai lương giờ thì không đọc
+		let hours = {};
+		let manualEarnings = {};
+		if (hourly) {
+			hours = sumByEmployee("batch_time", `SUM(${Lean.col("batch_time", "hours")})`, id, "", [], "s4vp_checks_hours");
+			manualEarnings = sumByEmployee("batch_input", "COUNT(*)", id, `${Lean.col("batch_input", "kind")} = ?`, [Store.idOf("input_kind", "E")], "s4vp_checks_inputs");
 		}
 
 		const options = checkOptions(period);
@@ -234,27 +288,54 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 			options,
 		});
 		const stored = storedResults(id);
-		const merged = Rules.merge(raw, stored);
-		const info = employeesInfo(empIds.concat(merged.map((it) => it.assignee)));
-		const l = lang();
-		const items = Rules.sort(
-			merged.map((it) => {
-				const text = Rules.describe(it, l);
-				const e = it.employee ? info[it.employee] || {} : {};
-				return Object.assign({}, it, {
-					title: text.title, headline: text.headline, description: text.description, hint: text.hint,
-					employeeCode: e.code || "", employeeName: e.name || "", assigneeName: it.assignee ? (info[it.assignee] || {}).name || "" : "", canClose: Rules.canClose(it),
-				});
-			})
-		);
-		memo[id] = { batch, period, prev, items, lines, prevLines, profiles, profileIds, hours, stored, info };
+		memo[id] = { batch, period, prev, merged: Rules.merge(raw, stored), lines, prevLines, profiles, profileIds, hours, stored, info, full: false };
 		return memo[id];
+	}
+
+	/**
+	 * Cảnh báo đã sắp thứ tự và có tên nhân viên, người phụ trách (c.items). Chữ hiển thị (title, headline, description, hint) chỉ
+	 * dựng cho mục được trả về (withText) - bảng lương lớn có vài nghìn mục.
+	 */
+	function compute(batchId) {
+		const c = load(batchId);
+		if (c.full) return c;
+		const missing = [...new Set(c.merged.map((it) => it.assignee).filter((x) => !blank(x) && !c.info[x]))];
+		if (missing.length) Object.assign(c.info, employeesInfo(missing));
+		for (const it of c.merged) {
+			const e = it.employee ? c.info[it.employee] || {} : {};
+			it.employeeCode = e.code || "";
+			it.employeeName = e.name || "";
+			it.assigneeName = it.assignee ? (c.info[it.assignee] || {}).name || "" : "";
+			it.canClose = Rules.canClose(it);
+		}
+		c.lang = lang();
+		c.items = Rules.sort(c.merged);
+		c.full = true;
+		return c;
+	}
+
+	function withText(c, it) {
+		if (it.title === undefined) {
+			const text = Rules.describe(it, c.lang);
+			it.title = text.title;
+			it.headline = text.headline;
+			it.description = text.description;
+			it.hint = text.hint;
+		}
+		return it;
 	}
 
 	const publicItem = (it) => ({
 		key: it.key, rule: it.rule, severity: it.severity, title: it.title, headline: it.headline, employee: it.employee, employeeCode: it.employeeCode, employeeName: it.employeeName,
 		lineId: it.lineId, amount: it.amount, status: it.status, assignee: it.assignee, assigneeName: it.assigneeName, note: it.note, reopened: it.reopened, canClose: it.canClose,
 	});
+
+	/** Mục gọn cho danh sách dài: bỏ trường rỗng (null, chuỗi rỗng, false). */
+	const briefItem = (it) => {
+		const out = publicItem(it);
+		for (const k of Object.keys(out)) if (out[k] === null || out[k] === undefined || out[k] === "" || out[k] === false) delete out[k];
+		return out;
+	};
 
 	function batchView(c) {
 		const b = c.batch;
@@ -267,17 +348,18 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 
 	/** Số cảnh báo của bảng lương cho thanh bước và thẻ số liệu. */
 	function summary(batchId) {
-		return Rules.counts(compute(batchId).items);
+		return Rules.counts(load(batchId).merged);
 	}
 
 	/** Các cảnh báo mức error đang chặn duyệt. */
 	function blockers(batchId) {
-		return Rules.blocking(compute(batchId).items).map(publicItem);
+		const c = compute(batchId);
+		return Rules.blocking(c.items).map((it) => publicItem(withText(c, it)));
 	}
 
 	/** Ném lỗi nghiệp vụ khi bảng lương còn cảnh báo mức error. */
 	function assertApprovable(batchId) {
-		const n = Rules.blocking(compute(batchId).items).length;
+		const n = Rules.blocking(load(batchId).merged).length;
 		if (n) throw fail(`The batch still has ${n} blocking check(s); fix the data and recalculate before approving`, `Bảng lương còn ${n} lỗi kiểm tra chặn duyệt; hãy sửa dữ liệu và tính lại trước khi duyệt`);
 	}
 
@@ -296,36 +378,88 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		return Object.values(out).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 	}
 
+	/** Chữ để so khớp ô tìm: chữ thường, bỏ dấu tiếng Việt. */
+	function fold(s) {
+		const t = String(blank(s) ? "" : s).toLowerCase();
+		try {
+			return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+		} catch (e) {
+			return t;
+		}
+	}
+
+	/** Số lượng theo quy tắc trên toàn bộ cảnh báo: [{rule, title, severity, total, open, closable}] (closable = còn mở và đóng tay được). */
+	function groupsOf(c) {
+		const by = {};
+		const order = [];
+		for (const it of c.items) {
+			let g = by[it.rule];
+			if (!g) {
+				g = by[it.rule] = { rule: it.rule, title: withText(c, it).title, severity: it.severity, total: 0, open: 0, closable: 0 };
+				order.push(g);
+			}
+			g.total++;
+			if (it.status === "open") {
+				g.open++;
+				if (it.canClose) g.closable++;
+			}
+		}
+		return order;
+	}
+
 	/**
-	 * Danh sách cảnh báo. Bảng lương lớn có thể có vài nghìn cảnh báo: truyền `limit` để chỉ nhận N mục đầu (lỗi trước, cảnh báo
-	 * chưa đóng, rồi phần còn lại) kèm `groups` (số lượng theo quy tắc) và `truncated`; `rule` lọc một quy tắc; `brief` bỏ danh
-	 * sách người phụ trách (màn Chạy lương không cần).
+	 * Danh sách cảnh báo, lọc và phân trang phía máy chủ. Tham số (đều tùy chọn trừ batch):
+	 *   rule, severity ('error' | 'warn' | 'info'), status ('open' | 'accepted' | 'resolved'), q (ô tìm: mã / tên nhân viên, tên
+	 *   cảnh báo, dòng tóm tắt, ghi chú, người phụ trách; không phân biệt hoa thường và dấu), offset, limit (trống = tất cả).
+	 * Thứ tự cố định (core/PayrollChecks.sort): còn mở trước, lỗi rồi cảnh báo rồi thông tin, theo quy tắc, theo tên nhân viên -
+	 * nên `limit` không kèm offset vẫn là "N mục cần xử lý trước" như trước đây.
+	 * counts, blocking, groups tính trên toàn bộ cảnh báo; total là số mục khớp bộ lọc; bySeverity đếm theo mức độ với các bộ lọc
+	 * khác (rule, status, q). `brief`: mục gọn, không kèm assignees (màn Chạy lương). Có `offset`: không kèm byEmployee.
 	 */
 	function checksList(params) {
 		const q = params || {};
 		const c = compute(q.batch);
-		let items = c.items;
-		const groupsBy = {};
-		// Số điểm mở (không tính mức info) theo nhân viên: lưới nhân viên dùng khi danh sách bị giới hạn
-		const byEmployee = {};
-		for (const it of items) {
-			if (it.status === "open" && it.severity !== "info" && !blank(it.employee)) {
-				const e = byEmployee[String(it.employee)] || (byEmployee[String(it.employee)] = { open: 0, errors: 0 });
-				e.open++;
-				if (it.severity === "error") e.errors++;
-			}
-			const g = groupsBy[it.rule] || (groupsBy[it.rule] = { rule: it.rule, title: it.title, severity: it.severity, total: 0, open: 0 });
-			g.total++;
-			if (it.status === "open") g.open++;
+		const paged = !blank(q.offset);
+		const out = { batch: batchView(c), counts: Rules.counts(c.items), blocking: Rules.blocking(c.items).length };
+
+		const words = fold(q.q).split(/\s+/).filter((w) => w);
+		const matches = (it) => {
+			if (!words.length) return true;
+			withText(c, it);
+			const text = fold([it.employeeCode, it.employeeName, it.title, it.headline, it.note, it.assigneeName].join(" "));
+			return words.every((w) => text.indexOf(w) >= 0);
+		};
+		const bySeverity = { error: 0, warn: 0, info: 0 };
+		const filtered = [];
+		for (const it of c.items) {
+			if (!blank(q.rule) && it.rule !== String(q.rule)) continue;
+			if (!blank(q.status) && it.status !== String(q.status)) continue;
+			if (!matches(it)) continue;
+			bySeverity[it.severity] = (bySeverity[it.severity] || 0) + 1;
+			if (!blank(q.severity) && it.severity !== String(q.severity)) continue;
+			filtered.push(it);
 		}
-		if (q.rule) items = items.filter((it) => it.rule === q.rule);
-		const total = items.length;
+		const total = filtered.length;
+		const offset = Math.max(0, Math.floor(Number(q.offset) || 0));
 		const limit = Math.floor(Number(q.limit) || 0);
-		if (limit > 0 && items.length > limit) {
-			const rank = (it) => (it.status === "open" ? 0 : 3) + (it.severity === "error" ? 0 : it.severity === "warn" ? 1 : 2);
-			items = items.map((it, i) => ({ it, i })).sort((a, b) => rank(a.it) - rank(b.it) || a.i - b.i).slice(0, limit).map((x) => x.it);
+		const page = limit > 0 ? filtered.slice(offset, offset + limit) : filtered.slice(offset);
+		out.items = page.map((it) => (q.brief ? briefItem(withText(c, it)) : publicItem(withText(c, it))));
+		out.total = total;
+		out.offset = offset;
+		out.truncated = offset + page.length < total;
+		out.groups = groupsOf(c);
+		out.bySeverity = bySeverity;
+		if (!paged) {
+			// Số điểm mở (không tính mức info) theo nhân viên: lưới nhân viên của màn Chạy lương dùng khi danh sách bị giới hạn
+			const byEmployee = {};
+			for (const it of c.items) {
+				if (it.status !== "open" || it.severity === "info" || blank(it.employee)) continue;
+				const e = byEmployee[String(it.employee)] || (byEmployee[String(it.employee)] = { open: 0 });
+				e.open++;
+				if (it.severity === "error") e.errors = (e.errors || 0) + 1;
+			}
+			out.byEmployee = byEmployee;
 		}
-		const out = { batch: batchView(c), counts: Rules.counts(c.items), blocking: Rules.blocking(c.items).length, items: items.map(publicItem), total, truncated: items.length < total, groups: Object.keys(groupsBy).map((k) => groupsBy[k]), byEmployee };
 		if (!q.brief) out.assignees = assignees(c);
 		return out;
 	}
@@ -423,7 +557,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		const key = keyOf(p.rule, p.employee);
 		const item = c.items.find((it) => it.key === key) || null;
 		const saved = c.stored[key] || null;
-		const history = saved ? parseJson(saved.history, []).slice().reverse() : [];
+		const history = saved ? (historiesOf([saved.id])[saved.id] || []).slice().reverse() : [];
 		if (!item) {
 			// Cảnh báo không còn (dữ liệu đã sửa, đã tính lại): trả lịch sử để người dùng vẫn xem được việc đã làm
 			return { batch: batchView(c), item: null, facts: [], compare: null, inputs: [], history, profileId: null };
@@ -434,7 +568,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		}
 		return {
 			batch: batchView(c),
-			item: Object.assign(publicItem(item), { description: item.description, hint: item.hint, data: item.data }),
+			item: Object.assign(publicItem(withText(c, item)), { description: item.description, hint: item.hint, data: item.data }),
 			facts: factsOf(c, item),
 			compare: item.employee ? compareOf(c, item.employee) : null,
 			inputs,
@@ -445,13 +579,8 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 
 	// ------------------------------------------------------------------ lưu kết quả xử lý
 
-	function resolveCheck(body) {
-		const b = body || {};
-		const c = compute(b.batch);
-		const key = keyOf(b.rule, b.employee);
-		const item = c.items.find((it) => it.key === key);
-		if (!item) throw fail("This check no longer exists; refresh the list", "Cảnh báo này không còn (dữ liệu đã thay đổi), hãy tải lại danh sách");
-		const saved = c.stored[key] || null;
+	/** Kiểm tra yêu cầu đóng / mở / ghi chú cho một mục; trả giá trị đã chuẩn hóa. */
+	function resolveInput(item, b) {
 		const status = blank(b.status) ? item.status : String(b.status);
 		if (!STATUS_CODE[status]) throw fail(`Unknown status ${status}`, `Trạng thái không hợp lệ ${status}`);
 		const note = String(b.note === undefined || b.note === null ? item.note : b.note).trim().slice(0, 3900);
@@ -460,20 +589,87 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		const closing = status !== "open";
 		if (closing && !Rules.canClose(item)) throw fail("Errors cannot be closed by hand: fix the data and recalculate, the check then disappears", "Lỗi không đóng tay được: hãy sửa dữ liệu và tính lại, cảnh báo sẽ tự mất");
 		if (closing && !note) throw fail("A note is required to close a check", "Cần ghi chú khi đóng cảnh báo");
+		return { status, note, assignee, closing };
+	}
 
-		const me = currentUser();
-		const history = saved ? parseJson(saved.history, []) : [];
-		let assigneeName = "";
-		if (assignee) assigneeName = (c.info[assignee] || employeesInfo([assignee])[assignee] || {}).name || "";
-		history.push({ at: new Date().toISOString(), user: me.name, userId: me.id, status, note, assignee, assigneeName });
+	/** Ghi kết quả xử lý của một mục (tạo hoặc cập nhật record check_result) và cập nhật bản đang nhớ; trả id record. */
+	function writeResult(c, item, v, me, history, assigneeName) {
+		const saved = c.stored[item.key] || null;
+		const list = (history || []).concat([{ at: new Date().toISOString(), user: me.name, userId: me.id, status: v.status, note: v.note, assignee: v.assignee, assigneeName }]);
+		const stamp = v.closing ? Rules.fingerprint(item) : "";
 		const values = {
-			batch: c.batch.id, rule: item.rule, employee: item.employee, status: STATUS_CODE[status], assignee, note, updated_by: me.id, updated_date: Clock.today(), key,
-			stamp: closing ? Rules.fingerprint(item) : "", history: JSON.stringify(history.slice(-HISTORY_MAX)),
+			batch: c.batch.id, rule: item.rule, employee: item.employee, status: STATUS_CODE[v.status], assignee: v.assignee, note: v.note, updated_by: me.id, updated_date: Clock.today(), key: item.key,
+			stamp, history: JSON.stringify(list.slice(-HISTORY_MAX)),
 		};
 		const id = saved ? Store.update("check_result", saved.id, values) : Store.create("check_result", values);
-		delete memo[String(c.batch.id)];
-		const after = compute(c.batch.id);
-		return { ok: true, id, key, rule: item.rule, employee: item.employee, employeeCode: item.employeeCode, status, previous: item.status, counts: Rules.counts(after.items) };
+		c.stored[item.key] = { id: String(id), rule: item.rule, employee: item.employee, status: v.status, assignee: v.assignee, note: v.note, stamp };
+		item.status = v.status;
+		item.note = v.note;
+		item.assignee = v.assignee;
+		item.assigneeName = assigneeName;
+		item.reopened = false;
+		return id;
+	}
+
+	function resolveCheck(body) {
+		const b = body || {};
+		const c = compute(b.batch);
+		const key = keyOf(b.rule, b.employee);
+		const item = c.items.find((it) => it.key === key);
+		if (!item) throw fail("This check no longer exists; refresh the list", "Cảnh báo này không còn (dữ liệu đã thay đổi), hãy tải lại danh sách");
+		const saved = c.stored[key] || null;
+		const previous = item.status;
+		const v = resolveInput(item, b);
+		const me = currentUser();
+		let assigneeName = "";
+		if (v.assignee) assigneeName = (c.info[v.assignee] || employeesInfo([v.assignee])[v.assignee] || {}).name || "";
+		const id = writeResult(c, item, v, me, saved ? historiesOf([saved.id])[saved.id] || [] : [], assigneeName);
+		return { ok: true, id, key, rule: item.rule, employee: item.employee, employeeCode: item.employeeCode, status: v.status, previous, counts: Rules.counts(c.items) };
+	}
+
+	function remainingUsage() {
+		try {
+			return Number(runtime.getCurrentScript().getRemainingUsage());
+		} catch (e) {
+			return Infinity;
+		}
+	}
+
+	/**
+	 * Đóng mọi cảnh báo còn mở của một quy tắc (xử lý theo nhóm). Cùng điều kiện với resolveCheck: mức error không đóng tay
+	 * được, ghi chú bắt buộc, mỗi mục lưu dấu số liệu và một dòng lịch sử. Làm theo lượt (GROUP_STEP mục, GROUP_MS, governance):
+	 * còn mục thì trả more = true để giao diện gọi lại cùng nội dung.
+	 */
+	function resolveCheckGroup(body) {
+		const b = body || {};
+		if (blank(b.rule)) throw fail("The check rule is required", "Thiếu quy tắc kiểm tra");
+		const status = String(b.status || "");
+		if (status !== "accepted" && status !== "resolved") throw fail(`Unknown status ${status}`, `Trạng thái không hợp lệ ${status}`);
+		const c = compute(b.batch);
+		const rule = String(b.rule);
+		const group = c.items.filter((it) => it.rule === rule);
+		if (!group.length) throw fail("This check no longer exists; refresh the list", "Cảnh báo này không còn (dữ liệu đã thay đổi), hãy tải lại danh sách");
+		const todo = group.filter((it) => it.status === "open");
+		const started = Date.now();
+		const me = currentUser();
+		let assigneeName = "";
+		let closed = 0;
+		if (todo.length) {
+			// Kiểm một lần cho cả nhóm (cùng quy tắc nên cùng mức độ): lỗi nghiệp vụ ném trước khi ghi bất cứ mục nào
+			const first = resolveInput(todo[0], { status, note: b.note, assignee: b.assignee });
+			if (first.assignee) assigneeName = (c.info[first.assignee] || employeesInfo([first.assignee])[first.assignee] || {}).name || "";
+			const step = todo.slice(0, GROUP_STEP);
+			const histories = historiesOf(step.map((it) => (c.stored[it.key] || {}).id));
+			for (const it of step) {
+				if (closed && (Date.now() - started > GROUP_MS || remainingUsage() < GROUP_MIN_USAGE)) break;
+				const v = resolveInput(it, { status, note: b.note, assignee: b.assignee });
+				const saved = c.stored[it.key] || null;
+				writeResult(c, it, v, me, saved ? histories[saved.id] || [] : [], assigneeName);
+				closed++;
+			}
+		}
+		const left = group.filter((it) => it.status === "open").length;
+		return { ok: true, rule, status, closed, more: closed > 0 && left > 0, counts: Rules.counts(c.items), left: { open: left } };
 	}
 
 	const routes = {
@@ -483,8 +679,9 @@ define(["N/runtime", "./Store", "./Clock", "../core/PayrollChecks"], (runtime, S
 		},
 		post: {
 			resolveCheck: { roles: "payroll", run: resolveCheck },
+			resolveCheckGroup: { roles: "payroll", run: resolveCheckGroup },
 		},
 	};
 
-	return { routes, summary, blockers, assertApprovable, checksList, checkDetail, resolveCheck };
+	return { routes, summary, blockers, assertApprovable, checksList, checkDetail, resolveCheck, resolveCheckGroup };
 });

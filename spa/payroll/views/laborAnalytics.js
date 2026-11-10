@@ -76,6 +76,7 @@ const TEXT = {
 			total: 'Chi phí lao động',
 			pick: (m) => `Xem tháng ${m}`,
 			empty: 'Chưa có số liệu theo tháng.',
+			negative: 'Cột xuống dưới trục 0: chi phí âm trong tháng (đảo lương)',
 		},
 		bridge: {
 			title: 'Vì sao thay đổi',
@@ -153,6 +154,7 @@ const TEXT = {
 			search: 'Tìm tài khoản, số tiền',
 			empty: 'Không có tài khoản chi phí lương nào trong tháng.',
 			noGl: 'Vai trò của bạn không đọc được sổ cái nên không đối chiếu được.',
+			name: 'Tên tài khoản',
 			cols: {account: 'Tài khoản', payroll: 'Theo bảng lương', gl: 'Theo sổ cái', difference: 'Chênh lệch', status: 'Kết quả'},
 		},
 	},
@@ -216,6 +218,7 @@ const TEXT = {
 			total: 'Labor cost',
 			pick: (m) => `View ${m}`,
 			empty: 'No monthly data yet.',
+			negative: 'Bars below the zero line: negative cost in the month (payroll reversal)',
 		},
 		bridge: {
 			title: 'Why it changed',
@@ -293,6 +296,7 @@ const TEXT = {
 			search: 'Search account, amount',
 			empty: 'No labor expense accounts this month.',
 			noGl: 'Your role cannot read the general ledger, so nothing can be reconciled.',
+			name: 'Account name',
 			cols: {account: 'Account', payroll: 'Per payroll', gl: 'Per general ledger', difference: 'Difference', status: 'Result'},
 		},
 	},
@@ -355,6 +359,21 @@ function niceAxis(max) {
 	return {top, ticks};
 }
 
+// Trục số tiền có cả phần âm (tháng có đảo lương): cùng bước chia với phần dương, mốc 0 nằm giữa; không có số âm thì đúng
+// bằng niceAxis. Bước được nới đôi khi quá 6 khoảng để nhãn trục không chồng nhau.
+function signedAxis(maxPos, maxNeg) {
+	const base = niceAxis(Math.max(maxPos, maxNeg));
+	if (!(maxNeg > 0)) return {top: base.top, bottom: 0, ticks: base.ticks};
+	let step = base.ticks.length > 1 ? base.ticks[1] - base.ticks[0] : base.top;
+	const size = (v) => (v > 0 ? Math.ceil((v * 1.14) / step - 1e-9) * step : 0);
+	while ((size(maxPos) + size(maxNeg)) / step > 6) step *= 2;
+	const top = size(maxPos);
+	const bottom = size(maxNeg);
+	const ticks = [];
+	for (let i = -Math.round(bottom / step); i <= Math.round(top / step); i++) ticks.push(i * step);
+	return {top, bottom, ticks};
+}
+
 const csvCell = (v) => {
 	const s = v === null || v === undefined ? '' : typeof v === 'number' ? String(Math.round(v * 10000) / 10000) : String(v);
 	return /[",\r\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -395,15 +414,24 @@ function lineImage(points, count) {
 
 function TrendChart({months, selected, compareMonth, noGl, onPick, t}) {
 	const rows = (months || []).filter(Boolean).map((m) => {
-		const cogs = Math.max(0, numOr(m.laborCogs) || 0);
-		const opex = Math.max(0, numOr(m.laborOpex) || 0);
+		// Số âm trong tháng (đảo lương) giữ nguyên dấu: phần âm vẽ xuống dưới trục 0, không cắt về 0
+		const cogs = numOr(m.laborCogs) || 0;
+		const opex = numOr(m.laborOpex) || 0;
 		const labor = numOr(m.labor);
 		const revenue = numOr(m.revenue);
-		return {month: String(m.month || ''), cogs, opex, labor: isNum(labor) ? labor : cogs + opex, stack: cogs + opex, rate: !noGl && m.hasGl !== false && revenue > 0 && isNum(labor) ? labor / revenue : null};
+		const pos = Math.max(0, cogs) + Math.max(0, opex);
+		const neg = Math.max(0, -cogs) + Math.max(0, -opex);
+		return {month: String(m.month || ''), cogs, opex, pos, neg, labor: isNum(labor) ? labor : cogs + opex, stack: cogs + opex, rate: !noGl && m.hasGl !== false && revenue > 0 && isNum(labor) ? labor / revenue : null};
 	});
 	if (!rows.length) return <Empty text={t.trend.empty} />;
 	const maxStack = Math.max.apply(null, rows.map((r) => r.stack));
-	const axis = niceAxis(maxStack);
+	const axis = signedAxis(Math.max.apply(null, rows.map((r) => r.pos)), Math.max.apply(null, rows.map((r) => r.neg)));
+	const span = axis.top + axis.bottom || 1;
+	const hasNeg = axis.bottom > 0;
+	// Vị trí dọc (px từ đỉnh ô vẽ) của một giá trị trên trục số tiền; phần trăm chiều cao ô cột của một độ lớn
+	const yOf = (v) => BAR_TOP + (BAR_H * (axis.top - v)) / span;
+	const hOf = (v) => Math.round((v / span) * 1000) / 10;
+	const segH = (v, whole) => `${whole > 0 ? Math.round((Math.abs(v) / whole) * 1000) / 10 : 0}%`;
 	const rates = rows.filter((r) => isNum(r.rate)).map((r) => r.rate);
 	let lo = rates.length ? Math.floor(Math.min.apply(null, rates) * 100 + 1e-9) / 100 : 0;
 	let hi = rates.length ? Math.ceil(Math.max.apply(null, rates) * 100 - 1e-9) / 100 : 0;
@@ -438,12 +466,13 @@ function TrendChart({months, selected, compareMonth, noGl, onPick, t}) {
 				) : null}
 				<span class="s4vp-la-hint">{t.trend.hint}</span>
 			</div>
+			{hasNeg ? <div class="s4vp-la-negnote">{t.trend.negative}</div> : null}
 			<div class="s4vp-la-trend">
 				<div class="s4vp-la-yax" aria-hidden="true">
 					{rates.length ? <span style={{top: px(RATIO_TOP + RATIO_H * (1 - yIn(1)) - 6)}}>{pct1(hi)}</span> : null}
 					{rates.length ? <span style={{top: px(RATIO_TOP + RATIO_H * (1 - yIn(0)) - 6)}}>{pct1(lo)}</span> : null}
 					{axis.ticks.map((v) => (
-						<span key={`t${v}`} style={{top: px(BAR_TOP + BAR_H * (1 - v / axis.top) - 6)}}>
+						<span key={`t${v}`} style={{top: px(yOf(v) - 6)}}>
 							{v === 0 ? '0' : compact(v, t.unit)}
 						</span>
 					))}
@@ -452,9 +481,9 @@ function TrendChart({months, selected, compareMonth, noGl, onPick, t}) {
 					{rates.length ? <div class="s4vp-la-grid" style={{top: px(RATIO_TOP + RATIO_H * (1 - yIn(1)))}} /> : null}
 					{rates.length ? <div class="s4vp-la-grid" style={{top: px(RATIO_TOP + RATIO_H * (1 - yIn(0)))}} /> : null}
 					{axis.ticks
-						.filter((v) => v > 0)
+						.filter((v) => (hasNeg ? v > -axis.bottom : v > 0))
 						.map((v) => (
-							<div key={`g${v}`} class="s4vp-la-grid" style={{top: px(BAR_TOP + BAR_H * (1 - v / axis.top))}} />
+							<div key={`g${v}`} class={hasNeg && v === 0 ? 's4vp-la-grid s4vp-la-zero' : 's4vp-la-grid'} style={{top: px(yOf(v))}} />
 						))}
 					{image ? <div class="s4vp-la-linelayer" style={{backgroundImage: image}} /> : null}
 					<div class="s4vp-la-slots">
@@ -463,7 +492,8 @@ function TrendChart({months, selected, compareMonth, noGl, onPick, t}) {
 							const name = monthLabel(r.month);
 							const detail = [`${name} - ${t.trend.total}: ${cash(r.labor)}`, `${t.trend.cogs}: ${cash(r.cogs)}`, `${t.trend.opex}: ${cash(r.opex)}`].concat(isNum(r.rate) ? [`${t.trend.ratio}: ${pct1(r.rate)}`] : []).join('\n');
 							const f = isNum(r.rate) ? yIn(fOf(r.rate)) : null;
-							const total = (r.stack / axis.top) * 100;
+							// Nhãn tổng đặt trên đầu phần dương (tháng chỉ có số âm: ngay trên trục 0); số là tổng ròng của tháng
+							const total = hOf(axis.bottom + r.pos);
 							const attrs = {type: 'button', class: on ? 's4vp-la-slot s4vp-on' : 's4vp-la-slot', title: detail, 'aria-label': `${t.trend.pick(name)}. ${detail.replace(/\n/g, '. ')}`, 'aria-pressed': on ? 'true' : 'false'};
 							if (!on) attrs.onClick = () => onPick(r.month);
 							return (
@@ -481,12 +511,18 @@ function TrendChart({months, selected, compareMonth, noGl, onPick, t}) {
 										)}
 									</span>
 									<span class="s4vp-la-bcell">
-										<span class="s4vp-la-stack">
-											{r.cogs > 0 ? <span class={r.opex > 0 ? 's4vp-la-seg s4vp-la-seg-a' : 's4vp-la-seg s4vp-la-seg-a s4vp-la-seg-top'} style={{height: `${Math.round((r.cogs / axis.top) * 1000) / 10}%`}} /> : null}
-											{r.opex > 0 ? <span class="s4vp-la-seg s4vp-la-seg-b s4vp-la-seg-top" style={{height: `${Math.round((r.opex / axis.top) * 1000) / 10}%`}} /> : null}
+										<span class="s4vp-la-stack" style={hasNeg ? {bottom: `${hOf(axis.bottom)}%`, height: `${hOf(axis.top)}%`} : {}}>
+											{r.cogs > 0 ? <span class={r.opex > 0 ? 's4vp-la-seg s4vp-la-seg-a' : 's4vp-la-seg s4vp-la-seg-a s4vp-la-seg-top'} style={{height: segH(r.cogs, axis.top)}} /> : null}
+											{r.opex > 0 ? <span class="s4vp-la-seg s4vp-la-seg-b s4vp-la-seg-top" style={{height: segH(r.opex, axis.top)}} /> : null}
 										</span>
-										{labeled(r) && r.stack > 0 ? (
-											<span class="s4vp-la-vlab" style={{bottom: `calc(${Math.round(total * 10) / 10}% + ${r.cogs > 0 && r.opex > 0 ? 5 : 3}px)`}}>
+										{r.neg > 0 ? (
+											<span class="s4vp-la-stack-neg" style={{top: `${hOf(axis.top)}%`, height: `${hOf(axis.bottom)}%`}}>
+												{r.cogs < 0 ? <span class={r.opex < 0 ? 's4vp-la-seg s4vp-la-seg-a' : 's4vp-la-seg s4vp-la-seg-a s4vp-la-seg-bot'} style={{height: segH(r.cogs, axis.bottom)}} /> : null}
+												{r.opex < 0 ? <span class="s4vp-la-seg s4vp-la-seg-b s4vp-la-seg-bot" style={{height: segH(r.opex, axis.bottom)}} /> : null}
+											</span>
+										) : null}
+										{(labeled(r) || r.neg > 0) && r.stack !== 0 ? (
+											<span class="s4vp-la-vlab" style={{bottom: `calc(${total}% + ${r.cogs > 0 && r.opex > 0 ? 5 : 3}px)`}}>
 												{compact(r.stack, t.unit)}
 											</span>
 										) : null}
@@ -590,6 +626,8 @@ export default function LaborAnalyticsView({app}) {
 	const alive = useRef(true);
 	const request = useRef(0);
 	const drillRequest = useRef(0);
+	// Nút Tải lại: bỏ qua số sổ cái của các tháng đã qua mà máy chủ đang nhớ
+	const fresh = useRef(false);
 
 	useEffect(() => {
 		alive.current = true;
@@ -600,6 +638,8 @@ export default function LaborAnalyticsView({app}) {
 		setError('');
 		const query = {action: 'laborAnalytics', subsidiary, compare, dim};
 		if (month) query.month = month;
+		if (fresh.current) query.fresh = '1';
+		fresh.current = false;
 		call(query).then(
 			(r) => {
 				if (!alive.current || mine !== request.current) return;
@@ -652,7 +692,10 @@ export default function LaborAnalyticsView({app}) {
 		const next = Object.assign({month: curMonth, compare, dim}, patch);
 		app.go('laborAnalytics', {month: next.month || '', compare: next.compare === 'prev' ? '' : next.compare, dim: next.dim === 'department' ? '' : next.dim});
 	};
-	const reload = () => setTick(tick + 1);
+	const reload = () => {
+		fresh.current = true;
+		setTick(tick + 1);
+	};
 	const rebuild = (onlyMonth) =>
 		app.confirm(onlyMonth ? t.confirmRebuildMonth(monthLabel(onlyMonth)) : t.confirmRebuildAll, () => {
 			const body = {action: 'rebuildLaborFacts', subsidiary};
@@ -958,6 +1001,15 @@ export default function LaborAnalyticsView({app}) {
 		{key: 'ofRevenue', label: pc.ofRevenue, align: 'right', nowrap: true, render: (r) => pct1(r.ofRevenue)},
 	];
 
+	const exportPnl = () =>
+		download(
+			`labor-pnl-${curMonth || 'month'}.csv`,
+			toCsv(
+				[pc.item, pc.cur, pc.prev, pc.diff, pc.pct, pc.ofRevenue],
+				pnlRows.map((r) => [r.sub ? t.pnl.searchAs[r.id] || r.label : r.label, r.cur, r.prev, r.diff, r.pct, r.ofRevenue]),
+			),
+		);
+
 	// ---------------------------------------------------------------- đối chiếu sổ cái
 	const rec = d.reconcile && typeof d.reconcile === 'object' ? d.reconcile : {};
 	const recRows = (Array.isArray(rec.rows) ? rec.rows : []).filter(Boolean).map((r, i) => {
@@ -980,7 +1032,17 @@ export default function LaborAnalyticsView({app}) {
 	];
 	const recTotal = recRows.length ? {accountNumber: t.breakdown.total, payroll: recRows.reduce((a, r) => a + r.payroll, 0), gl: recRows.reduce((a, r) => a + (r.gl || 0), 0), difference: recRows.reduce((a, r) => a + (r.difference || 0), 0), status: ''} : null;
 	const recSummary = noGl ? t.recon.noGl : !recRows.length ? t.recon.empty : recOk ? t.recon.okText(recRows.length) : t.recon.offText(offRows.length, money(offRows.reduce((a, r) => a + Math.abs(r.difference), 0)));
-	const recActions = [noGl || !recRows.length ? null : <Badge text={recOk ? t.recon.ok : t.recon.off} tone={recOk ? 'ok' : 'warn'} large />, recOk && recRows.length ? <Button label={reconOpen ? t.recon.hide : t.recon.show} small onClick={() => setReconOpen(!reconOpen)} /> : null];
+	// CSV gồm mọi tài khoản và dòng tổng, kể cả khi bảng đang thu gọn; vai trò không đọc được sổ cái thì các cột sổ cái trống
+	const exportRecon = () => {
+		const line = (r) => [r.accountNumber, r.accountName, r.payroll, noGl ? null : r.gl, noGl ? null : r.difference, noGl ? '' : r.status];
+		const total = recTotal ? [[recTotal.accountNumber, '', recTotal.payroll, noGl ? null : recTotal.gl, noGl ? null : recTotal.difference, '']] : [];
+		download(`labor-reconcile-${curMonth || 'month'}.csv`, toCsv([rc.account, t.recon.name, rc.payroll, rc.gl, rc.difference, rc.status], recRows.map(line).concat(total)));
+	};
+	const recActions = [
+		noGl || !recRows.length ? null : <Badge text={recOk ? t.recon.ok : t.recon.off} tone={recOk ? 'ok' : 'warn'} large />,
+		recOk && recRows.length ? <Button label={reconOpen ? t.recon.hide : t.recon.show} small onClick={() => setReconOpen(!reconOpen)} /> : null,
+		<Button label={t.csv} small onClick={exportRecon} disabled={!recRows.length} />,
+	];
 
 	return (
 		<Page>
@@ -1054,7 +1116,7 @@ export default function LaborAnalyticsView({app}) {
 				{noFacts ? null : (
 					<div class="s4vp-cols s4vp-la-pair">
 						<div class="s4vp-col-main">
-							<Card title={t.pnl.title} sub={t.pnl.sub} flush>
+							<Card title={t.pnl.title} sub={t.pnl.sub} flush actions={[<Button label={t.csv} small onClick={exportPnl} disabled={!pnlRows.length} />]}>
 								<Table columns={pnlCols} rows={pnlRows} search searchPlaceholder={t.pnl.search} label={t.pnl.title} />
 							</Card>
 						</div>

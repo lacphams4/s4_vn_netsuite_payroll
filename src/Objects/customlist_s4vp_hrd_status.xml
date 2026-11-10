@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_hrd_status">
+  <name>S4VP hrd_status</name>
+  <description>S4 VN Payroll code list hrd_status; values keep the Acumatica codes (D, A).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_hrd_status_d">
+      <value>D - Nháp</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrd_status_a">
+      <value>A - Đã áp dụng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

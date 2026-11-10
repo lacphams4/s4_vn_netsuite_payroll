@@ -7,7 +7,7 @@ const ins = (wage, contributed = true) => (contributed ? [{ code: "BHXH_HT", wag
 
 function line(batch, employee, v) {
 	return Object.assign({ batch, employee, employment_type: "E", taxable: 0, pit: 0, family_ded: 0, dependents: 0, ee_ins: 0, other_tax_ded: 0, assessable: 0, insurance_wage: 0, gross: 0 }, v, {
-		detail: JSON.stringify({ insurance: v.insurance || [], allocations: v.allocations || [], employmentType: v.employment_type || "E", expenseAccount: v.expenseAccount || "" }),
+		detail: JSON.stringify({ insurance: v.insurance || [], allocations: v.allocations || [], employmentType: v.employment_type || "E", expenseAccount: v.expenseAccount || "", accrual13: v.accrual13 }),
 	});
 }
 
@@ -119,6 +119,30 @@ describe("Chi phí theo tài khoản (VP405000)", () => {
 		expect(r.rows[2]).toMatchObject({ wages: 30000000, employerIns: 7050000, contractor: 4116000, accountName: "Chi phí nhân viên quản lý" });
 		expect(r.totals.difference).toBe(1000);
 		expect(r.warnings.map((w) => w.code)).toEqual(["GL_DIFF"]);
+	});
+
+	test("trích tháng 13 có dòng chia theo phân bổ: theo tài khoản x phòng ban của từng dòng chia, khớp bút toán theo tài khoản", () => {
+		const split = [
+			line("b", "1", {
+				accrued13: 2500000, expenseAccount: "6421",
+				allocations: [{ component: "GROSS", amount: 20000000, account: "6421", sub: "D1" }, { component: "GROSS", amount: 10000000, account: "622", sub: "D2", project: "P1" }, { component: "ERINS", amount: 7050000, account: "6421", sub: "D1" }],
+				accrual13: [{ account: "6421", sub: "D1", project: "", amount: 1666667 }, { account: "622", sub: "D2", project: "P1", amount: 833333 }],
+			}),
+			// Tổng dòng chia lệch số trích: không dùng, ghi như cũ (tài khoản mặc định, phòng ban trống)
+			line("b", "4", { accrued13: 1000000, allocations: [{ component: "GROSS", amount: 5000000, account: "622", sub: "D2" }], accrual13: [{ account: "622", sub: "D2", amount: 999999 }] }),
+		];
+		const src = RD.sourceRows([{ id: "b", tax_month: "202611" }], split, {}, {});
+		expect(src[0].accrualAllocations).toHaveLength(2);
+		expect(rows[0].accrualAllocations).toEqual([]);
+		const gl = [{ account: "6421", debit: 20000000 + 7050000 + 1666667, credit: 0 }, { account: "622", debit: 10000000 + 833333 + 5000000, credit: 0 }, { account: "642", debit: 1000000, credit: 0 }];
+		const r = RD.costReport(src, gl, { defaultExpenseAccount: "642", departments: { D1: "Văn phòng", D2: "Xưởng" } });
+		expect(r.rows.map((x) => [x.accountNumber, x.department, x.wages, x.accrued13th, x.total, x.difference])).toEqual([
+			["622", "Xưởng", 15000000, 833333, 15833333, 0],
+			["642", "", 0, 1000000, 1000000, 0],
+			["6421", "Văn phòng", 20000000, 1666667, 28716667, 0],
+		]);
+		expect(r.totals.accrued13th).toBe(3500000);
+		expect(r.warnings).toEqual([]);
 	});
 
 	test("không đọc được bút toán: không so sánh", () => {

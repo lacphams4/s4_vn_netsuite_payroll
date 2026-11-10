@@ -27,18 +27,27 @@
  *   statutoryDeadlines  false: gói chưa có tham số hạn nộp tờ khai / bảo hiểm nên chỉ có mốc nội bộ
  *   permits          {expired, expiring, nextExpiry} giấy phép lao động (null khi không đọc được)
  *
- * Governance: số truy vấn cố định (không lặp theo nhân viên); Checks.summary chỉ gọi cho tối đa MAX_CHECKED bảng lương đang dở.
+ * Governance: số truy vấn cố định và nhỏ, không kéo dữ liệu theo nhân viên: nhóm lương, kỳ, bảng lương (mỗi thứ một truy vấn
+ * chỉ các cột cần), chứng từ công chờ duyệt (MỘT truy vấn đếm UNION ALL cho bốn loại, lọc công ty con bằng EXISTS trên hồ
+ * sơ lương thay cho đọc mọi hồ sơ), số dòng tổng hợp công (gom nhóm), giấy phép lao động (chỉ giấy đang hiệu lực / đã hết
+ * hạn của công ty con); Checks.summary chỉ gọi cho tối đa MAX_CHECKED bảng lương đang dở.
  * Không ghi lương hay số định danh vào log.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "../core/Dates", "../core/RunSteps", "../core/Deadlines"], (log, Store, Clock, Checks, WorkPermits, Dates, RunSteps, Deadlines) => {
+define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "./Lean", "../core/Dates", "../core/RunSteps", "../core/Deadlines"], (log, Store, Clock, Checks, WorkPermits, Lean, Dates, RunSteps, Deadlines) => {
 	const MAX_RUNNING = 20; // số bảng lương đang dở đưa lên trang chủ
 	const MAX_CHECKED = 6; // số bảng lương đang dở được hỏi cảnh báo (Checks.summary)
 	const RECENT_DONE = 5; // số bảng lương đã xong gần nhất đưa lên trang chủ
 	const UPCOMING = 2; // số kỳ sắp tới
 	const DOC_TYPES = { leave: "leave_request", ot: "ot_request", trip: "business_trip", exception: "att_exception" };
+	// Trường ngày đầu / ngày cuối của từng loại chứng từ công (đơn làm thêm, phiếu ngoại lệ chỉ có một ngày)
+	const DOC_DATES = { leave: ["from", "to"], trip: ["from", "to"], ot: ["work_date", "work_date"], exception: ["work_date", "work_date"] };
+	const BATCH_KEYS = ["name", "description", "subsidiary", "period", "status", "calculated", "emp_count", "doc_date", "net"];
+	const PERIOD_KEYS = ["name", "paygroup", "start", "end", "std_days", "status", "att_status", "tax_month"];
+	// Số ngày nhắc trước khi giấy phép hết hạn khi không đọc được thiết lập (core/PlanRecords.DEFAULTS.reminderDays)
+	const PERMIT_REMINDER_DAYS = 60;
 	const FINAL = ["R", "V"];
 
 	function fail(en, vi) {
@@ -73,8 +82,8 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "../core/Dat
 	/** Kỳ của các nhóm lương dùng cho công ty con (nhóm không gắn công ty con là nhóm dùng chung). */
 	function periodsOf(subsidiary) {
 		const groups = {};
-		for (const g of Store.find("paygroup", { includeInactive: true })) groups[g.id] = g;
-		const periods = Store.find("period").filter((p) => {
+		for (const g of Lean.select("paygroup", ["name", "subsidiary"], { includeInactive: true, tag: "s4vp_home_paygroups" })) groups[g.id] = g;
+		const periods = Lean.select("period", PERIOD_KEYS, { tag: "s4vp_home_periods" }).filter((p) => {
 			const g = groups[p.paygroup];
 			return !g || !g.subsidiary || String(g.subsidiary) === subsidiary;
 		});
@@ -104,30 +113,48 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "../core/Dat
 		}
 	}
 
-	/** Chứng từ công chờ duyệt (P) của công ty con: [{type, from, to}] - chỉ loại và khoảng ngày, không mang nhân viên. */
-	function pendingDocs(subsidiary) {
-		const pending = safe("request_status", null, () => Store.idOf("request_status", "P"));
-		if (!pending) return [];
-		const raw = [];
-		for (const [type, name] of Object.entries(DOC_TYPES)) {
-			const rows = safe(`docs ${type}`, [], () => Store.find(name, { where: "{status} = ?", params: [pending] }));
-			for (const d of rows) raw.push({ type, subsidiary: d.subsidiary, employee: d.employee, from: d.from || d.work_date || null, to: d.to || d.work_date || d.from || null });
-		}
-		// Chứng từ không ghi công ty con thì lấy theo hồ sơ nhân viên (như api/Attendance.list); chỉ đọc hồ sơ khi cần
-		let mine = null;
-		if (raw.some((d) => !d.subsidiary)) {
-			mine = safe("profiles", new Set(), () => new Set(Store.find("employee", { where: "{subsidiary} = ?", params: [subsidiary], includeInactive: true }).map((p) => String(p.employee))));
-		}
-		return raw.filter((d) => (d.subsidiary ? String(d.subsidiary) === subsidiary : mine.has(String(d.employee)))).map((d) => ({ type: d.type, from: d.from, to: d.to }));
+	/**
+	 * Câu đếm chứng từ công chờ duyệt của một loại: n = số chứng từ của công ty con, inp = số chứng từ giao kỳ đang chạy.
+	 * Chứng từ không ghi công ty con thì lấy theo hồ sơ lương của nhân viên (như api/Attendance.list) bằng EXISTS - không đọc
+	 * hồ sơ nào về máy chủ ứng dụng. Tham số: [cuối kỳ, đầu kỳ, trạng thái P, công ty con, công ty con].
+	 */
+	function docCountSql(type) {
+		const name = DOC_TYPES[type];
+		const from = Lean.col(name, DOC_DATES[type][0]);
+		const to = Lean.col(name, DOC_DATES[type][1]);
+		const sub = Lean.col(name, "subsidiary");
+		const mine = `(${sub} = ? OR (${sub} IS NULL AND EXISTS (SELECT 1 FROM ${Lean.rec("employee").type} p WHERE ${Lean.col("employee", "employee", "p")} = ${Lean.col(name, "employee")} AND ${Lean.col("employee", "subsidiary", "p")} = ?)))`;
+		return (
+			`SELECT '${type}' AS kind, COUNT(*) AS n, SUM(CASE WHEN ${from} <= TO_DATE(?, 'YYYY-MM-DD') AND COALESCE(${to}, ${from}) >= TO_DATE(?, 'YYYY-MM-DD') THEN 1 ELSE 0 END) AS inp ` +
+			`FROM ${Lean.rec(name).type} t WHERE t.isinactive = 'F' AND ${Lean.col(name, "status")} = ? AND ${mine}`
+		);
 	}
 
-	function overlaps(doc, period) {
+	/**
+	 * Chứng từ công chờ duyệt (P) của công ty con: {leave, ot, trip, exception, total, inPeriod} - chỉ số đếm.
+	 * Một truy vấn UNION ALL cho cả bốn loại; account không chạy được câu gộp (hoặc thiếu một loại record) thì đếm từng loại.
+	 */
+	function pendingDocs(subsidiary, period) {
+		const out = { leave: 0, ot: 0, trip: 0, exception: 0, total: 0, inPeriod: 0 };
+		const pending = safe("request_status", null, () => Store.idOf("request_status", "P"));
+		if (!pending) return out;
+		// Không có kỳ đang chạy: khoảng ngày rỗng để inp = 0
+		const one = [period ? period.end : "1900-01-01", period ? period.start : "2999-12-31", pending, subsidiary, subsidiary];
+		const types = Object.keys(DOC_TYPES);
+		let rows;
 		try {
-			if (!doc.from || !period) return false;
-			return Dates.cmp(doc.from, period.end) <= 0 && Dates.cmp(doc.to || doc.from, period.start) >= 0;
+			rows = Store.run(types.map(docCountSql).join(" UNION ALL "), types.reduce((all) => all.concat(one), []), "s4vp_home_docs");
 		} catch (e) {
-			return false;
+			rows = [];
+			for (const type of types) rows = rows.concat(safe(`docs ${type}`, [], () => Store.run(docCountSql(type), one, `s4vp_home_docs_${type}`)));
 		}
+		for (const r of rows) {
+			if (!(r.kind in DOC_TYPES)) continue;
+			out[r.kind] += int(r.n);
+			out.total += int(r.n);
+			out.inPeriod += int(r.inp);
+		}
+		return out;
 	}
 
 	/** Cảnh báo của bảng lương qua Checks.summary (mục 9); null khi phân hệ Kiểm tra chưa có hoặc lỗi. */
@@ -140,15 +167,37 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "../core/Dat
 		});
 	}
 
+	/**
+	 * Giấy phép lao động của công ty con: chỉ đọc giấy đang hiệu lực (A) hoặc đã hết hạn (E) với hai cột trạng thái, ngày hết
+	 * hạn; công ty con lấy theo hồ sơ lương của nhân viên bằng EXISTS (không đọc mọi hồ sơ như WorkPermits.list). Số ngày nhắc
+	 * trước lấy từ WorkPermits.params() và chỉ hỏi khi có giấy đang hiệu lực.
+	 */
 	function permitsOf(subsidiary, today) {
-		if (!WorkPermits || typeof WorkPermits.list !== "function") return null;
 		return safe("permits", null, () => {
 			const out = { expired: 0, expiring: 0, nextExpiry: null };
-			for (const p of WorkPermits.list(subsidiary)) {
+			const mine = `EXISTS (SELECT 1 FROM ${Lean.rec("employee").type} p WHERE ${Lean.col("employee", "employee", "p")} = {employee} AND ${Lean.col("employee", "subsidiary", "p")} = ?)`;
+			const rows = Lean.select("work_permit", ["status", "expiry"], {
+				where: `{status} IN (?, ?) AND ${mine}`, params: [Store.idOf("wp_status", "A"), Store.idOf("wp_status", "E"), subsidiary], tag: "s4vp_home_permits",
+			});
+			let reminder = null;
+			for (const p of rows) {
 				// A = đang hiệu lực, E = đã hết hạn; bản nháp, đã nộp, đã thu hồi không nhắc
-				const lapsed = p.status === "E" || (p.status === "A" && p.expiry && Dates.cmp(p.expiry, today) < 0);
-				if (lapsed) out.expired += 1;
-				else if (p.status === "A" && p.expiringSoon) {
+				const daysLeft = p.expiry ? Dates.diff(today, p.expiry) : null;
+				if (p.status === "E" || (p.status === "A" && daysLeft !== null && daysLeft < 0)) {
+					out.expired += 1;
+					continue;
+				}
+				if (p.status !== "A" || daysLeft === null) continue;
+				if (reminder === null) {
+					reminder = PERMIT_REMINDER_DAYS;
+					try {
+						const v = WorkPermits && typeof WorkPermits.params === "function" ? Number(WorkPermits.params().reminderDays) : NaN;
+						if (isFinite(v) && v >= 0) reminder = v;
+					} catch (e) {
+						reminder = PERMIT_REMINDER_DAYS;
+					}
+				}
+				if (daysLeft <= reminder) {
 					out.expiring += 1;
 					if (!out.nextExpiry || Dates.cmp(p.expiry, out.nextExpiry) < 0) out.nextExpiry = p.expiry;
 				}
@@ -210,7 +259,7 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "../core/Dat
 		const { periods, groups } = periodsOf(subsidiary);
 		const periodById = {};
 		for (const p of periods) periodById[p.id] = p;
-		const batches = Store.find("batch", { where: "{subsidiary} = ?", params: [subsidiary], order: "{id} DESC" });
+		const batches = Lean.select("batch", BATCH_KEYS, { where: "{subsidiary} = ?", params: [subsidiary], order: "{id} DESC", tag: "s4vp_home_batches" });
 		const open = batches.filter((b) => !FINAL.includes(b.status));
 		const finished = batches.filter((b) => FINAL.includes(b.status));
 
@@ -218,9 +267,8 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "../core/Dat
 		const currentId = current ? String(current.id) : "";
 		const previous = Deadlines.previousPeriod(periods, current);
 		const inCurrent = current ? batches.filter((b) => String(b.period) === currentId) : [];
-		const docs = safe("docs", [], () => pendingDocs(subsidiary));
-		const docCounts = { leave: 0, ot: 0, trip: 0, exception: 0, total: docs.length };
-		for (const d of docs) docCounts[d.type] += 1;
+		const docs = safe("docs", { leave: 0, ot: 0, trip: 0, exception: 0, total: 0, inPeriod: 0 }, () => pendingDocs(subsidiary, current));
+		const docCounts = { leave: docs.leave, ot: docs.ot, trip: docs.trip, exception: docs.exception, total: docs.total };
 
 		const runs = [];
 		const todos = [];
@@ -229,7 +277,7 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "../core/Dat
 		let attendanceDone = false;
 		if (current) {
 			const counts = attendanceCounts(currentId, subsidiary);
-			const docsInPeriod = docs.filter((d) => overlaps(d, current)).length;
+			const docsInPeriod = docs.inPeriod;
 			const locked = current.att_status === "L";
 			const steps = RunSteps.attendanceSteps(current, { openExceptions: docsInPeriod, hasSummary: counts ? counts.total : 0, hasBatch: inCurrent.some((b) => b.status !== "V") });
 			const progress = RunSteps.progress(steps);

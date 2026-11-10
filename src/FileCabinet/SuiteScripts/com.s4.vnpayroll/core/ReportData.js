@@ -57,6 +57,8 @@ define(["./Money", "./Dates", "./PayrollReports"], (Money, Dates, Reports) => {
 				taxCode: p.tax_code || "", idNumber: p.personal_id || "", socialInsuranceNbr: p.si_number || "",
 				insurance: insurance.map((i) => ({ code: i.code, wageBase: i.wageBase || 0, employeeAmount: i.employeeAmount || 0, employerAmount: i.employerAmount || 0 })),
 				accrued13th: l.accrued13 || 0, allocations: d.allocations || [], expenseAccount: d.expenseAccount || "",
+				// Dòng chia trích tháng 13 theo cơ cấu phân bổ (lưu lúc tính lương); bảng lương cũ không có
+				accrualAllocations: Array.isArray(d.accrual13) ? d.accrual13 : [],
 			});
 		}
 		return out;
@@ -171,7 +173,9 @@ define(["./Money", "./Dates", "./PayrollReports"], (Money, Dates, Reports) => {
 	/**
 	 * VP405000 tối giản: chi phí nhân sự theo tài khoản (và phòng ban), so với phát sinh Nợ - Có cùng tài khoản trên
 	 * bút toán ghi sổ của các bảng lương. glLines null = không đọc được bút toán (không so sánh).
-	 * @param {Array} rows dòng nguồn (có allocations, accrued13th, expenseAccount, employmentType)
+	 * Trích tháng 13 đi theo đúng dòng Nợ của bút toán: nhân viên có dòng chia (accrualAllocations, tổng đúng số trích) thì theo
+	 * tài khoản và phòng ban của từng dòng chia; không có thì như trước (tài khoản chi phí của hồ sơ / mặc định, phòng ban trống).
+	 * @param {Array} rows dòng nguồn (có allocations, accrued13th, expenseAccount, employmentType, accrualAllocations)
 	 * @param {Array|null} glLines [{account, debit, credit}]
 	 * @param {{defaultExpenseAccount, accounts: Object<string, {number, name}>, departments: Object<string, string>}} ref
 	 */
@@ -191,8 +195,16 @@ define(["./Money", "./Dates", "./PayrollReports"], (Money, Dates, Reports) => {
 				else e.wages = e.wages.plus(D(a.amount));
 			}
 			if (!ctr && D(r.accrued13th).gt(0)) {
-				const e = get(r.expenseAccount || ref.defaultExpenseAccount || "", "");
-				e.accrued13th = e.accrued13th.plus(D(r.accrued13th));
+				const split = (r.accrualAllocations || []).filter((a) => a && !D(a.amount).isZero());
+				if (split.length && Money.sum(split, (a) => a.amount).eq(D(r.accrued13th))) {
+					for (const a of split) {
+						const e = get(a.account, a.sub);
+						e.accrued13th = e.accrued13th.plus(D(a.amount));
+					}
+				} else {
+					const e = get(r.expenseAccount || ref.defaultExpenseAccount || "", "");
+					e.accrued13th = e.accrued13th.plus(D(r.accrued13th));
+				}
 			}
 		}
 		// Bút toán: Nợ - Có theo tài khoản (gộp mọi phòng ban); so với tổng chi phí cùng tài khoản

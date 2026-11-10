@@ -1,0 +1,36 @@
+<customlist scriptid="customlist_s4vp_hrd_type">
+  <name>S4VP hrd_type</name>
+  <description>S4 VN Payroll code list hrd_type; values keep the Acumatica codes (H, T, P, S, R, D, X).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_hrd_type_h">
+      <value>H - Tiếp nhận</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrd_type_t">
+      <value>T - Điều chuyển</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrd_type_p">
+      <value>P - Bổ nhiệm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrd_type_s">
+      <value>S - Điều chỉnh lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrd_type_r">
+      <value>R - Khen thưởng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrd_type_d">
+      <value>D - Kỷ luật</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrd_type_x">
+      <value>X - Chấm dứt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -3,7 +3,7 @@
 const path = require("path");
 const API = path.join(__dirname, "../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api");
 
-const mockState = { today: "2027-03-30", data: {}, calls: [], writes: [], checks: null, permits: [], failJoin: false };
+const mockState = { today: "2027-03-30", data: {}, calls: [], sql: [], writes: [], checks: null, reminderDays: 60, failJoin: false };
 const state = mockState;
 
 jest.mock("N/log", () => ({ error: jest.fn(), audit: jest.fn(), debug: jest.fn() }), { virtual: true });
@@ -15,9 +15,13 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Checks", () =
   },
 }));
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/WorkPermits", () => ({
+  // Trang chủ không còn gọi WorkPermits.list (đọc mọi hồ sơ lương): chỉ hỏi số ngày nhắc trước
   list: () => {
-    if (mockState.permits === "boom") throw new Error("no permission");
-    return mockState.permits;
+    throw new Error("homeSummary must not call WorkPermits.list (it reads every payroll profile)");
+  },
+  params: () => {
+    mockState.calls.push("permitParams");
+    return { reminderDays: mockState.reminderDays };
   },
 }));
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () => {
@@ -34,8 +38,13 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
       if (["leave_request", "ot_request", "business_trip", "att_exception"].includes(name)) return rows.filter((d) => d.status === "P");
       return rows;
     },
-    run(sql, params) {
-      mockState.calls.push("run");
+    run(sql, params, tag) {
+      mockState.calls.push(tag);
+      const fake = require("./leanFake");
+      mockState.sql.push({ tag, sql, columns: fake.columnsOf(sql) });
+      // Câu SuiteQL gọn của trang chủ (kỳ, bảng lương, đếm chứng từ, giấy phép): tests/api/leanFake.js
+      const lean = fake.run(mockState.data, sql, params, tag);
+      if (lean !== undefined) return lean;
       if (/INNER JOIN employee/.test(sql) && mockState.failJoin) throw new Error("join not allowed");
       const rows = (mockState.data.attendance || []).filter((a) => a.period === String(params[0]) && (params.length < 2 || a.subsidiary === String(params[1])));
       const by = {};
@@ -66,9 +75,10 @@ const batch = (id, period, status, extra) => Object.assign({ id, name: `BL00000$
 beforeEach(() => {
   state.today = "2027-03-30";
   state.calls = [];
+  state.sql = [];
   state.writes = [];
   state.checks = null;
-  state.permits = [];
+  state.reminderDays = 60;
   state.failJoin = false;
   state.data = {
     paygroup: [{ id: "1", name: "DEFAULT", subsidiary: null }, { id: "2", name: "OTHER", subsidiary: "14" }],
@@ -80,6 +90,7 @@ beforeEach(() => {
     business_trip: [],
     att_exception: [{ status: "P", subsidiary: "14", employee: "8", work_date: "2027-03-05" }],
     employee: [{ employee: "7", subsidiary: "13" }, { employee: "99", subsidiary: "14" }],
+    work_permit: [],
   };
 });
 
@@ -195,13 +206,27 @@ describe("homeSummary", () => {
     expect(todo(r, "batch_post")).toMatchObject({ owner: "acct", tone: "error", daysLeft: -5 });
   });
 
-  test("giấy phép lao động: đã hết hạn và sắp hết hạn; lỗi đọc thì permits = null", () => {
-    state.permits = [{ status: "A", expiry: "2027-02-15" }, { status: "E", expiry: "2026-12-01" }, { status: "A", expiry: "2027-04-20", expiringSoon: true }, { status: "A", expiry: "2027-04-10", expiringSoon: true }, { status: "D" }, { status: "A", expiry: "2028-01-01", expiringSoon: false }];
+  test("giấy phép lao động: đã hết hạn và sắp hết hạn theo số ngày nhắc trước; lỗi đọc thì permits = null", () => {
+    state.data.work_permit = [
+      { id: "1", employee: "7", status: "A", expiry: "2027-02-15" },
+      { id: "2", employee: "7", status: "E", expiry: "2026-12-01" },
+      { id: "3", employee: "7", status: "A", expiry: "2027-04-20" },
+      { id: "4", employee: "7", status: "A", expiry: "2027-04-10" },
+      { id: "5", employee: "7", status: "D" },
+      { id: "6", employee: "7", status: "A", expiry: "2028-01-01" },
+      // nhân viên của công ty con khác, giấy đã vô hiệu: không tính
+      { id: "7", employee: "99", status: "E", expiry: "2026-01-01" },
+      { id: "8", employee: "7", status: "E", expiry: "2026-01-01", isInactive: true },
+    ];
     let r = run();
     expect(r.permits).toEqual({ expired: 2, expiring: 2, nextExpiry: "2027-04-10" });
     expect(todo(r, "permitsExpired")).toMatchObject({ tone: "error", count: 2, go: { view: "permits" } });
     expect(todo(r, "permitsExpiring")).toMatchObject({ count: 2, date: "2027-04-10", daysLeft: 11 });
-    state.permits = "boom";
+    // chỉ đọc hai cột của giấy đang hiệu lực / đã hết hạn
+    expect(state.sql.find((q) => q.tag === "s4vp_home_permits").columns).toBeLessThanOrEqual(3);
+    state.reminderDays = 15;
+    expect(run().permits).toEqual({ expired: 2, expiring: 1, nextExpiry: "2027-04-10" });
+    state.data.failPermits = true;
     r = run();
     expect(r.permits).toBeNull();
     expect(todo(r, "permitsExpired")).toBeUndefined();
@@ -236,9 +261,35 @@ describe("homeSummary", () => {
     state.calls = [];
     const r = run();
     expect(state.calls.length).toBe(few);
-    expect(few).toBeLessThanOrEqual(10);
+    // nhóm lương, kỳ, bảng lương, đếm chứng từ công (một câu UNION ALL), đếm dòng tổng hợp công, giấy phép: 6 truy vấn
+    expect(state.calls.slice().sort()).toEqual(["s4vp_home_att", "s4vp_home_batches", "s4vp_home_docs", "s4vp_home_paygroups", "s4vp_home_periods", "s4vp_home_permits"]);
+    // không truy vấn nào đọc theo nhân viên hay kéo cột thừa (bảng lương không đọc hai trường clob)
+    for (const q of state.sql) expect(q.columns).toBeLessThanOrEqual(10);
+    expect(state.sql.find((q) => q.tag === "s4vp_home_batches").sql).not.toMatch(/bills|messages/);
     expect(r.pendingDocs.leave).toBe(301);
     expect(r.runs.filter((x) => x.kind === "payroll" && x.group === "running").length).toBe(20);
     expect(r.runCounts.running).toBe(43);
+  });
+
+  test("account không chạy được UNION ALL: đếm từng loại chứng từ, kết quả như cũ; thiếu một loại record vẫn chạy", () => {
+    const base = run();
+    state.data.failUnion = true;
+    state.calls = [];
+    const r = run();
+    expect(r.pendingDocs).toEqual(base.pendingDocs);
+    expect(r.runs[0].pendingDocs).toBe(base.runs[0].pendingDocs);
+    expect(state.calls.filter((t) => /^s4vp_home_docs_/.test(t)).sort()).toEqual(["s4vp_home_docs_exception", "s4vp_home_docs_leave", "s4vp_home_docs_ot", "s4vp_home_docs_trip"]);
+  });
+
+  test("chứng từ chờ duyệt: không ghi công ty con thì theo hồ sơ lương; giao kỳ đang chạy tính riêng", () => {
+    state.data.business_trip = [
+      { status: "P", subsidiary: null, employee: "7", from: "2027-02-25", to: "2027-03-02" },
+      { status: "P", subsidiary: null, employee: "99", from: "2027-03-02", to: "2027-03-02" },
+      { status: "P", subsidiary: "13", employee: "99", from: "2027-05-02", to: null },
+    ];
+    const r = run();
+    expect(r.pendingDocs).toEqual({ leave: 1, ot: 1, trip: 2, exception: 0, total: 4 });
+    expect(r.runs[0].pendingDocs).toBe(2);
+    expect(todo(r, "docs_trip").count).toBe(2);
   });
 });

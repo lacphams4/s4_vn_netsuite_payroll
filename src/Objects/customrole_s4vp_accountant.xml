@@ -254,5 +254,13 @@
       <permkey>[customrecord_s4vp_audit_log]</permkey>
       <permlevel>CREATE</permlevel>
     </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_contract]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_decision]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
   </permissions>
 </role>

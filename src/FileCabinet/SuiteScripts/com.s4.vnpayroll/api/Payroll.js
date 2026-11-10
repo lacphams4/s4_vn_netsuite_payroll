@@ -19,7 +19,8 @@ define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
 	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines", "./Checks", "./LaborAnalytics", "./CostAccounts",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts) => {
+	"../core/PitCalculator",
+], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts, Pit) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -352,6 +353,41 @@ define([
 	}
 
 	/**
+	 * Bọc bộ đọc tham số pháp lý để ghi lại mức giảm trừ bản thân mà bộ tính thuế ĐÃ ĐỌC khi tính một nhân viên (kết quả của
+	 * PayrollEngine chỉ trả tổng giảm trừ gia cảnh). Không đổi giá trị nào; mọi hàm khác của provider dùng nguyên bản.
+	 * @returns {{provider, seen: {self?: number}}}
+	 */
+	function pitTap(provider) {
+		const seen = {};
+		const tap = Object.create(provider);
+		tap.getValue = (code, d) => {
+			const v = provider.getValue(code, d);
+			if (code === "PIT.SELF_DEDUCTION") seen.self = Number(v);
+			return v;
+		};
+		return { provider: tap, seen };
+	}
+
+	/**
+	 * Khối `pit` lưu trong chi tiết dòng lương: {method, selfDeduction, dependentDeduction}. Chỉ chuyển tiếp số bộ tính thuế đã
+	 * dùng, không tính lại: giảm trừ bản thân = mức bộ tính thuế đã đọc (pitTap); giảm trừ người phụ thuộc = tổng giảm trừ gia
+	 * cảnh của kết quả - giảm trừ bản thân (PitCalculator: familyDeduction = selfDeduction + dependentDeduction). Phương pháp
+	 * không dùng giảm trừ (F, N, X) hoặc kỳ không tính thuế: tổng giảm trừ gia cảnh = 0 nên hai số đều 0 như kết quả của bộ
+	 * tính thuế. Không xác định được chắc chắn thì trả null (không lưu khối, màn hình hiện tổng như trước).
+	 * @param {string} pitMethod phương pháp của hồ sơ
+	 * @param {number} familyDeduction tổng giảm trừ gia cảnh của kết quả tính
+	 * @param {{self?: number}} seen
+	 */
+	function pitBlock(pitMethod, familyDeduction, seen) {
+		const method = Pit.normalizeMethod(pitMethod);
+		const family = Number(familyDeduction) || 0;
+		if (family === 0) return { method, selfDeduction: 0, dependentDeduction: 0 };
+		const self = seen ? seen.self : undefined;
+		if (method !== "P" || !(self > 0) || self > family) return null;
+		return { method, selfDeduction: self, dependentDeduction: Money.D(family).minus(Money.D(self)).toNumber() };
+	}
+
+	/**
 	 * Tính bảng lương. Lỗi một nhân viên không dừng cả bảng: dòng đó về 0 và ghi lỗi (4.6.9).
 	 * @param {string} batchId
 	 * @param {{lineIds?: string[], skipFinish?: boolean, fromJob?: boolean}} [opt] lineIds: chỉ tính một phần (Map/Reduce chia
@@ -437,22 +473,31 @@ define([
 						defaultSub: prof.department || e.department || "", workCenters: costAccounts.workCenters, projects: costAccounts.projects, departments: costAccounts.departments,
 					},
 				};
-				const r = Engine.calculateEmployee(ectx, emp);
+				const tap = pitTap(ectx.provider);
+				const r = Engine.calculateEmployee(Object.assign({}, ectx, { provider: tap.provider }), emp);
 				const ded = emp.deductions.filter((d) => d.amount);
+				const pit = pitBlock(emp.pitMethod, r.familyDeduction, tap.seen);
+				// Trích tháng 13 đi theo cơ cấu phân bổ GROSS của chính nhân viên (đủ tài khoản, phòng ban, dự án, địa điểm, class);
+				// không có dòng phân bổ dương thì mảng rỗng và bút toán ghi như trước. Tắt bằng settings.accrual13ByAllocation = false
+				// (chưa có trường thiết lập: mặc định bật).
+				const accrual13 = c.settings.accrual13ByAllocation === false ? [] : Journal.splitAccrual(r.accrued13th, r.allocations);
+				const extra = {};
+				if (pit) extra.pit = pit;
+				if (accrual13.length) extra.accrual13 = accrual13;
 				Store.submit("batch_emp", line.id, {
 					std_days: r.standardDays, work_days: r.workDays, base_salary: r.baseSalary, insurance_wage: r.insuranceWage, benefit: r.benefit, gross: r.grossPay,
 					exempt: r.taxExemptIncome, taxable: r.taxableIncome, ee_ins: r.employeeInsurance, er_ins: r.employerInsurance, dependents: r.dependentCount,
 					family_ded: r.familyDeduction, assessable: r.assessableIncome, pit: r.pit, other_ded: r.otherDeductions, net_before: r.netBeforeAdvance,
 					advance: r.advanceOffset, net: r.netPay, accrued13: r.accrued13th, ot_hours: r.overtimeHours,
 					warnings: r.warnings.map((w) => (lang() === "vi" ? w.messageVi : w.message)).join(" | ").slice(0, 1000), error: "",
-					detail: JSON.stringify({
+					detail: JSON.stringify(Object.assign({
 						earnings: r.earnings.map((x) => ({ earningType: x.earningType, quantity: x.quantity, rate: x.rate, multiplier: x.multiplier, amount: x.amount, taxExemptAmount: x.taxExemptAmount || 0, source: x.source, ruleCode: x.ruleCode || "", project: x.project || "" })),
 						insurance: r.insurance, advanceOffsets: r.advanceOffsets.map((o) => Object.assign({}, o, { id: ((advances[line.employee] || []).find((a) => a.refNbr === o.refNbr) || {}).id })),
 						allocations: r.allocations, deductions: ded, hourlyRate: r.hourlyRate, employeeCompulsoryInsurance: r.employeeCompulsoryInsurance,
 						employmentType: emp.employmentType, expenseAccount: prof.expense_account || "", expenseSub: prof.department || e.department || "",
 						// Phiếu sản lượng đã dùng: ghi sổ chỉ khóa đúng các phiếu này (không khóa phiếu của bảng khác cùng kỳ)
 						outputRefs: [...new Set(emp.outputShares.map((s) => s.refNbr).filter(Boolean))],
-					}),
+					}, extra)),
 				});
 			} catch (err) {
 				const msg = err.userMessage ? (lang() === "vi" ? err.userMessage.vi : err.userMessage.en) : lang() === "vi" && err.messageVi ? err.messageVi : String(err.message || err);
@@ -784,6 +829,8 @@ define([
 				return {
 					employee: l.employee, employmentType: l.employment_type || d.employmentType || "E", netPay: l.net || 0, accrued13th: l.accrued13 || 0, expenseAccount: d.expenseAccount || "",
 					expenseSub: d.expenseSub || "", pit: l.pit || 0, insurance: d.insurance || [], deductions: d.deductions || [], advanceOffsets: d.advanceOffsets || [], allocations: d.allocations || [],
+					// Dòng chia trích tháng 13 lưu lúc tính lương; bảng lương tính trước đây không có -> bút toán ghi như cũ
+					accrualAllocations: Array.isArray(d.accrual13) ? d.accrual13 : [],
 				};
 			}),
 		};
@@ -1201,5 +1248,6 @@ define([
 		create, loadEmployees, calculate, finishCalculation, removeHold, hold, approve, reject, reopen, release, reverse, agencyBills, bankFile,
 		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine, transactionsInfo,
 		markQueued, setJobId, assertQueueable, clearJob, finishRelease, finishReverse, employeesInfo, syncTime, saveTime, timesheet,
+		pitTap, pitBlock, releaseModel,
 	};
 });

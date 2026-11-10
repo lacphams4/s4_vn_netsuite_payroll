@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_hrc_status">
+  <name>S4VP hrc_status</name>
+  <description>S4 VN Payroll code list hrc_status; values keep the Acumatica codes (D, A, X, T).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_hrc_status_d">
+      <value>D - Nháp</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrc_status_a">
+      <value>A - Hiệu lực</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrc_status_x">
+      <value>X - Hết hạn</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_hrc_status_t">
+      <value>T - Chấm dứt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

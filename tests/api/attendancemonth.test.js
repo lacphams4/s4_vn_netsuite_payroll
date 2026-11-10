@@ -1,6 +1,6 @@
 // api/AttendanceMonth (GET attendanceMonth, attendanceEmployee) với Store giả: kiểm dạng dữ liệu trả về, phạm vi nhân viên,
 // kỳ mặc định, quyền sửa. Mô-đun N/* và lớp đọc ghi record được thay bằng dữ liệu mẫu trong bộ nhớ.
-const mockState = { role: "administrator", fx: {}, timeFails: false };
+const mockState = { role: "administrator", fx: {}, timeFails: false, queries: [] };
 
 jest.mock("N/runtime", () => ({ getCurrentUser: () => ({ roleId: mockState.role }) }), { virtual: true });
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () => {
@@ -10,7 +10,16 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
     find: (name, opt) => copy(mockState.fx[name]).filter((x) => !opt || !opt.where || !/\{period\}/.test(opt.where) || String(x.period) === String(opt.params[0])),
     findIn: (name, field, ids) => copy(mockState.fx[name]).filter((x) => (ids || []).map(String).includes(String(x[field]))),
     get: (name, id) => copy(mockState.fx[name]).find((x) => String(x.id) === String(id)) || null,
-    run: (sql, params) => params.map((id) => ({ id, entityid: `E0${id}`, firstname: `NV${id}`, lastname: "", deptname: "Kế toán" })),
+    // Câu SuiteQL gọn (api/Lean): tra theo tag trong tests/api/leanFake.js; tên nhân viên tự sinh E0<id> / NV<id>
+    run: (sql, params, tag) => {
+      const fake = require("./leanFake");
+      mockState.queries.push({ tag, columns: fake.columnsOf(sql), sql });
+      const rows = fake.run(Object.assign({ autoEmp: true }, mockState.fx), sql, params, tag);
+      if (rows === undefined) throw new Error(`unexpected query ${tag}`);
+      return rows;
+    },
+    codeOf: (list, v) => (v === undefined ? null : v),
+    idOf: (list, code) => code,
   };
 });
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Settings", () => ({
@@ -32,6 +41,9 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/TimeLines", (
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Clock", () => ({ today: () => "2026-11-10" }));
 
 const Api = require("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/AttendanceMonth");
+const Grid = require("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/core/AttendanceMonthGrid");
+// Lưới về dạng nén (Grid.packRows): bung lại thành dòng đủ trường, ô ngày là đối tượng ô
+const full = (r) => Grid.unpackRows(r);
 
 function fixtures(mode = "E") {
   const sheet = { id: "1", period: "5", employee: "7" };
@@ -78,6 +90,7 @@ function fixtures(mode = "E") {
 beforeEach(() => {
   mockState.role = "administrator";
   mockState.timeFails = false;
+  mockState.queries = [];
   mockState.fx = fixtures();
 });
 
@@ -99,15 +112,22 @@ describe("attendanceMonth", () => {
     });
     expect(r).toMatchObject({ locked: false, closed: false, canEdit: true, canUnlock: true, hasBatch: false, hasSummary: true, otherSubsidiaries: 1, timeUnavailable: false, syncLimit: 150 });
     // Nhân viên 7 (nhóm trống = DEFAULT), 8, 9; 10 thuộc công ty con khác, 11 thuộc nhóm khác, 12 đã nghỉ trước kỳ
-    expect(r.rows.map((x) => [x.employee, x.code, x.source])).toEqual([["7", "E07", "docs"], ["8", "E08", "docs"], ["9", "E09", "time"]]);
+    expect(full(r).map((x) => [x.employee, x.code, x.source])).toEqual([["7", "E07", "docs"], ["8", "E08", "docs"], ["9", "E09", "time"]]);
     expect(r.days).toHaveLength(31);
     expect(r.days[9]).toMatchObject({ type: "H", name: "Lễ thử" });
-    // Ô ngày đã nén: chỉ số vào cellTable
-    expect(r.rows[0].cells).toHaveLength(31);
-    expect(r.rows[0].cells.every((i) => Number.isInteger(i) && r.cellTable[i])).toBe(true);
-    expect(r.cellTable[r.rows[0].cells[8]]).toEqual({ s: "P", k: "P", v: 1 });
-    expect(r.cellTable[r.rows[1].cells[0]]).toEqual({ s: "", k: "O" });
-    expect(r.cellTable[r.rows[2].cells[14]]).toEqual({ s: "4", k: "H", h: 0, hp: 4 });
+    // Lưới nén: rows[].cells là chỉ số vào cellRows, mỗi dãy gồm 31 chỉ số vào cellTable; rows[].totals là chỉ số vào totalsTable
+    expect(r.rows.every((x) => Number.isInteger(x.cells) && r.cellRows[x.cells].length === 31)).toBe(true);
+    expect(r.cellRows.every((list) => list.every((i) => Number.isInteger(i) && r.cellTable[i]))).toBe(true);
+    expect(r.totalsKeys).toEqual(["std_days", "paid_leave", "unpaid_leave", "si_leave", "trip_days", "late_days", "adjust_days", "work_days", "ot_hours"]);
+    expect(r.totalsTable[r.rows[0].totals]).toEqual([23, 2, 0, 0, 0, 0, 0, 23, 0]);
+    expect(r.rows[2].totals).toBeUndefined();
+    // Trường bằng mặc định không gửi
+    expect(r.rows[1]).toEqual({ employee: "8", code: "E08", name: "NV8", department: "Kế toán", cells: expect.any(Number), totals: expect.any(Number), estimated: true, open: 3 });
+    const rows = full(r);
+    expect(rows[0]).toMatchObject({ contractor: false, salaryType: "M", source: "docs", hasSummary: true, locked: false, totals: { std_days: 23, paid_leave: 2, work_days: 23 } });
+    expect(rows[0].cells[8]).toEqual({ s: "P", k: "P", v: 1 });
+    expect(rows[1].cells[0]).toEqual({ s: "", k: "O" });
+    expect(rows[2].cells[14]).toEqual({ s: "4", k: "H", h: 0, hp: 4 });
     expect(r.steps.map((s) => `${s.key}:${s.state}`)).toEqual(["collect:done", "exceptions:current", "lock:todo", "handoff:todo"]);
     expect(r.exceptions.map((e) => e.key)).toEqual(["pendinghours:9", "doc:leave:22", "doc:exception:41", "nosummary:8"]);
     expect(r.counts.open).toBe(4);
@@ -125,7 +145,7 @@ describe("attendanceMonth", () => {
 
   test("không lọc công ty con: gồm mọi nhân viên của nhóm lương của kỳ", () => {
     const r = Api.month({ period: "5" });
-    expect(r.rows.map((x) => x.employee)).toEqual(["10", "7", "8", "9"]);
+    expect(full(r).map((x) => x.employee)).toEqual(["10", "7", "8", "9"]);
     expect(r.otherSubsidiaries).toBe(0);
   });
 
@@ -175,8 +195,8 @@ describe("attendanceMonth", () => {
     const r = Api.month({ period: "5", subsidiary: "13" });
     expect(r.period.mode).toBe("S");
     expect(r.timeUnavailable).toBe(false);
-    expect(r.rows.map((x) => x.source)).toEqual(["sheet", "sheet", "sheet"]);
-    expect(r.cellTable[r.rows[0].cells[2]]).toEqual({ s: "ZZ", k: "?" });
+    expect(full(r).map((x) => x.source)).toEqual(["sheet", "sheet", "sheet"]);
+    expect(full(r)[0].cells[2]).toEqual({ s: "ZZ", k: "?" });
     expect(r.exceptions.map((e) => e.type)).toEqual(expect.arrayContaining(["unknownSymbol", "noSheetRow"]));
   });
 
@@ -184,7 +204,7 @@ describe("attendanceMonth", () => {
     mockState.timeFails = true;
     const r = Api.month({ period: "5", subsidiary: "13" });
     expect(r.timeUnavailable).toBe(true);
-    expect(r.rows[2]).toMatchObject({ source: "time", hours: 0 });
+    expect(full(r)[2]).toMatchObject({ source: "time", hours: 0 });
   });
 
   test("kỳ không có nhân viên nào: lưới rỗng, bước thu thập", () => {
@@ -192,6 +212,95 @@ describe("attendanceMonth", () => {
     expect(r.rows).toEqual([]);
     expect(r.otherSubsidiaries).toBe(4);
     expect(r.steps[0].state).toBe("current");
+  });
+});
+
+describe("attendanceMonth - hiệu năng với 1.000 nhân viên", () => {
+  const tags = () => mockState.queries.map((q) => q.tag).sort();
+  function big(n) {
+    const fx = fixtures();
+    fx.employee = [];
+    fx.attendance = [];
+    for (let i = 1; i <= n; i++) {
+      const emp = String(1000 + i);
+      fx.employee.push({ id: `p${emp}`, name: `hs${emp}`, employee: emp, subsidiary: "13", paygroup: "1", employment_type: "E", salary_type: "M", hire_date: i % 50 === 0 ? "2027-03-15" : "2020-01-01" });
+    }
+    fx.leave_request = [{ id: "21", name: "NP21", employee: "1001", from: "2027-03-09", to: "2027-03-09", leave_type: "10", days: 1, status: "P" }];
+    fx.att_exception = [];
+    mockState.fx = fx;
+    mockState.queries = [];
+  }
+
+  test("9 truy vấn, không phụ thuộc số nhân viên; không truy vấn nào kéo cột thừa hay dùng IN với tham số ràng buộc", () => {
+    big(20);
+    Api.month({ period: "5", subsidiary: "13" });
+    const few = tags();
+    expect(few).toEqual(["s4vp_att_docs", "s4vp_att_meta", "s4vp_att_paygroups", "s4vp_att_period", "s4vp_att_profiles", "s4vp_att_summaries", "s4vp_att_symbols"]);
+    // + thiết lập và ngày lễ qua api/Settings (giả ở đây): 9 truy vấn trên account
+    big(1000);
+    const r = Api.month({ period: "5", subsidiary: "13" });
+    expect(tags()).toEqual(few);
+    expect(r.rows).toHaveLength(1000);
+    const cols = {};
+    for (const q of mockState.queries) cols[q.tag] = q.columns;
+    expect(cols.s4vp_att_profiles).toBeLessThanOrEqual(14);
+    expect(cols.s4vp_att_summaries).toBeLessThanOrEqual(12);
+    expect(cols.s4vp_att_period).toBeLessThanOrEqual(10);
+    for (const q of mockState.queries) {
+      expect(q.sql).not.toMatch(/\?\s*,\s*\?\s*,\s*\?/);
+      expect(q.sql).not.toMatch(/BUILTIN\.DF/);
+    }
+  });
+
+  test("không chọn kỳ: thêm đúng một truy vấn kỳ (không đọc lại kỳ đã chọn)", () => {
+    big(20);
+    Api.month({ subsidiary: "13" });
+    expect(tags()).toEqual(["s4vp_att_docs", "s4vp_att_meta", "s4vp_att_paygroups", "s4vp_att_periods", "s4vp_att_profiles", "s4vp_att_summaries", "s4vp_att_symbols"]);
+  });
+
+  test("lưới 1.000 nhân viên x 31 ngày: phản hồi dưới 150 KB, số đếm và ngoại lệ tính trên toàn kỳ", () => {
+    big(1000);
+    const r = Api.month({ period: "5", subsidiary: "13" });
+    const size = Buffer.byteLength(JSON.stringify(r), "utf8");
+    expect(size).toBeLessThan(150000);
+    // 1.000 dòng chỉ có vài dãy ô khác nhau: lịch chung, người vào làm giữa kỳ, người có đơn nghỉ chờ duyệt
+    expect(r.cellRows.length).toBeLessThanOrEqual(4);
+    expect(r.totalsTable.length).toBeLessThanOrEqual(3);
+    expect(r.stats).toMatchObject({ employees: 1000, summaryEmployees: 1000, estimated: 1000, docs: { leave: 1, pending: 1 } });
+    expect(r.counts.open).toBe(1);
+    expect(r.exceptions.map((e) => e.key)).toEqual(["doc:leave:21"]);
+    const rows = full(r);
+    expect(rows.filter((x) => x.open > 0).map((x) => x.employee)).toEqual(["1001"]);
+    expect(rows[0].cells[8]).toMatchObject({ k: "W", p: 1 });
+    expect(rows[1].cells[8]).toEqual({ s: "X", k: "W", v: 1 });
+    expect(rows[49].cells[0]).toEqual({ s: "", k: "O" });
+    // Chưa lập bảng tổng hợp: số của dòng là số dự tính; người vào làm giữa kỳ có số công chuẩn riêng
+    expect(rows.every((x) => x.estimated && !x.hasSummary)).toBe(true);
+    expect(rows[49].totals.work_days).toBeLessThan(rows[1].totals.work_days);
+    expect(rows[1].totals.work_days).toBe(rows[1].totals.std_days);
+    // Bung lại đúng bằng lưới chưa nén
+    expect(rows[5].cells).toHaveLength(31);
+    expect(r.docs).toEqual([expect.objectContaining({ type: "leave", name: "NP21", employee: "1001", leaveType: "PN" })]);
+  });
+
+  test("lọc trong SQL cho cùng kết quả với bộ lọc cũ: nhóm lương khác, nghỉ việc trước kỳ, công ty con khác", () => {
+    const r = Api.month({ period: "6", subsidiary: "13" });
+    // Kỳ 6 thuộc nhóm X (id 2): chỉ hồ sơ p5 (nhân viên 11)
+    expect(full(r).map((x) => x.employee)).toEqual(["11"]);
+    expect(mockState.queries.find((q) => q.tag === "s4vp_att_profiles").sql).toMatch(/ IN \(2\)/);
+    mockState.queries = [];
+    Api.month({ period: "5", subsidiary: "13" });
+    expect(mockState.queries.find((q) => q.tag === "s4vp_att_profiles").sql).toMatch(/NOT IN \(2\)/);
+  });
+
+  test("account không chạy được UNION ALL hoặc không đọc được bảng department: tự chia câu, kết quả như cũ", () => {
+    const base = Api.month({ period: "5", subsidiary: "13" });
+    mockState.fx.failUnion = true;
+    mockState.fx.failDepartment = true;
+    mockState.queries = [];
+    const r = Api.month({ period: "5", subsidiary: "13" });
+    expect(r).toEqual(base);
+    expect(tags()).toEqual(expect.arrayContaining(["s4vp_att_batches", "s4vp_att_other", "s4vp_att_docs_leave", "s4vp_att_docs_trip", "s4vp_att_docs_exception", "s4vp_att_docs_ot", "s4vp_att_profiles_df"]));
   });
 });
 

@@ -19,9 +19,13 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
   const table = (name) => mockDb[name] || [];
   return {
     rec: () => ({ type: "customrecord_x", fields: new Proxy({}, { get: (t, k) => field(String(k)) }) }),
-    codeOf: (list, v) => (v === null || v === undefined ? null : LISTS[list][v] || null),
+    codeOf: (list, v) => (v === null || v === undefined ? null : (LISTS[list] || {})[v] || v),
+    idOf: (list, code) => code,
     run(sql, params, tag) {
       mockDb.queries.push(tag);
+      mockDb.sql.push({ tag, sql, columns: require("./leanFake").columnsOf(sql) });
+      const lean = require("./leanFake").run(mockDb, sql, params, tag);
+      if (lean !== undefined) return lean;
       if (tag === "s4vp_checks_lines") {
         return table("batch_emp").filter((l) => params.includes(l.batch)).map((l) => {
           const row = { id: l.id };
@@ -95,7 +99,7 @@ const prof = (employee, extra = {}) =>
 function seed() {
   for (const k of Object.keys(db)) delete db[k];
   Object.assign(db, {
-    queries: [], writes: [], logs: [], seq: 100, notDeployed: false, failWrite: false, noAccessColumn: false,
+    queries: [], sql: [], writes: [], logs: [], seq: 100, notDeployed: false, failWrite: false, noAccessColumn: false,
     // Mã kỳ cố ý lệch so với ngày: kỳ trước phải được xác định theo ngày kết thúc
     period: [
       { id: "2", name: "202705", start: "2027-02-01", end: "2027-02-28", att_status: "L" },
@@ -190,8 +194,8 @@ describe("Checks.summary và checksList", () => {
   test("số truy vấn cố định, không lặp theo nhân viên; kết quả được nhớ trong một lần chạy", () => {
     Checks.summary("7");
     const first = db.queries.length;
-    expect(first).toBeLessThanOrEqual(12);
-    expect(db.queries.filter((q) => q === "s4vp_checks_lines")).toHaveLength(1);
+    // bảng lương + kỳ + kỳ trước, dòng kèm tên, hồ sơ, tham số, kết quả đã lưu; không ai lương giờ nên không đọc giờ công
+    expect(db.queries.slice().sort()).toEqual(["s4vp_checks_params", "s4vp_checks_profiles", "s4vp_checks_results", "s4vp_lean_batches", "s4vp_lean_lines"]);
     Checks.summary("7");
     Checks.blockers("7");
     expect(db.queries.length).toBe(first);
@@ -299,6 +303,148 @@ describe("Checks.checkDetail", () => {
     expect(top.compare).toBeNull();
     const gone = Checks.checkDetail({ batch: "7", rule: "NET_ZERO", employee: "1" });
     expect(gone).toMatchObject({ item: null, compare: null, history: [] });
+  });
+});
+
+describe("Checks - bảng lương 1.000 nhân viên: lọc, phân trang, nhóm phía máy chủ", () => {
+  // Mỗi nhân viên thiếu mã số thuế (warn) và là người mới so với kỳ trước (info); 10 người đầu thực lĩnh âm (error)
+  function big(n = 1000) {
+    db.batch_emp = [];
+    db.employee = [];
+    db.emp = [{ id: "9", entityid: "KT01", firstname: "Lương", lastname: "Kế toán", access: true }];
+    for (let i = 1; i <= n; i++) {
+      const id = 1000 + i;
+      db.batch_emp.push(line(50000 + i, 7, id, i <= 10 ? { net: -1 } : {}));
+      db.employee.push(prof(id, { tax_code: "" }));
+      db.emp.push({ id: String(id), entityid: `LT${String(i).padStart(4, "0")}`, firstname: `Nhân viên ${i}`, lastname: "Thử", access: false });
+    }
+    jest.resetModules();
+    Checks = require(path.join(API, "Checks"));
+  }
+
+  test("số truy vấn và số cột không tăng theo số nhân viên; hồ sơ chỉ đọc cột quy tắc cần", () => {
+    big(1000);
+    const r = Checks.checksList({ batch: "7", offset: 0, limit: 50, brief: true });
+    expect(db.queries.slice().sort()).toEqual(["s4vp_checks_params", "s4vp_checks_profiles", "s4vp_checks_results", "s4vp_lean_batches", "s4vp_lean_lines"]);
+    const cols = {};
+    for (const q of db.sql) cols[q.tag] = q.columns;
+    expect(cols.s4vp_checks_profiles).toBeLessThanOrEqual(10);
+    expect(cols.s4vp_lean_lines).toBeLessThanOrEqual(22);
+    // không còn IN với tham số ràng buộc
+    expect(db.sql.find((q) => q.tag === "s4vp_checks_profiles").sql).not.toMatch(/\?,\s*\?/);
+    expect(r.counts).toEqual({ open: 1010, errors: 10, warnings: 1000, resolved: 0 });
+    expect(r.total).toBe(2010);
+    expect(r.items).toHaveLength(50);
+    expect(r.truncated).toBe(true);
+    expect(r.byEmployee).toBeUndefined();
+    expect(r.assignees).toBeUndefined();
+    expect(JSON.stringify(r).length).toBeLessThan(30000);
+  });
+
+  test("phân trang: các trang nối nhau đúng thứ tự, không trùng, không sót; total theo bộ lọc, counts theo toàn bộ", () => {
+    big(300);
+    const all = Checks.checksList({ batch: "7", brief: true }).items.map((it) => it.key);
+    expect(all).toHaveLength(610);
+    const paged = [];
+    for (let offset = 0; ; offset += 100) {
+      const r = Checks.checksList({ batch: "7", offset, limit: 100, brief: true });
+      expect(r.offset).toBe(offset);
+      expect(r.total).toBe(610);
+      paged.push(...r.items.map((it) => it.key));
+      if (!r.truncated) break;
+    }
+    expect(paged).toEqual(all);
+    expect(new Set(paged).size).toBe(610);
+    const warn = Checks.checksList({ batch: "7", severity: "warn", offset: "0", limit: "20" });
+    expect(warn.total).toBe(300);
+    expect(warn.items).toHaveLength(20);
+    expect(warn.items.every((it) => it.severity === "warn")).toBe(true);
+    expect(warn.bySeverity).toEqual({ error: 10, warn: 300, info: 300 });
+    expect(warn.counts).toEqual({ open: 310, errors: 10, warnings: 300, resolved: 0 });
+    const rule = Checks.checksList({ batch: "7", rule: "NET_NEGATIVE", offset: 0, limit: 5 });
+    expect(rule.total).toBe(10);
+    expect(rule.items).toHaveLength(5);
+    expect(rule.bySeverity).toEqual({ error: 10, warn: 0, info: 0 });
+    expect(Checks.checksList({ batch: "7", offset: 700, limit: 100 }).items).toEqual([]);
+  });
+
+  test("ô tìm phía máy chủ: mã, tên nhân viên (không dấu), tên cảnh báo, ghi chú; lọc theo trạng thái", () => {
+    big(300);
+    expect(Checks.checksList({ batch: "7", q: "lt0123", offset: 0, limit: 50 }).items.map((it) => it.employeeCode)).toEqual(["LT0123", "LT0123"]);
+    expect(Checks.checksList({ batch: "7", q: "nhan vien 299", offset: 0, limit: 50 }).total).toBe(2);
+    expect(Checks.checksList({ batch: "7", q: "khong co gi khop", offset: 0, limit: 50 })).toMatchObject({ total: 0, items: [], truncated: false });
+    Checks.resolveCheck({ batch: "7", rule: "MISSING_TAX_CODE", employee: "1007", status: "accepted", note: "Đã bổ sung hồ sơ giấy" });
+    expect(Checks.checksList({ batch: "7", status: "accepted", offset: 0, limit: 50 }).items.map((it) => it.key)).toEqual(["MISSING_TAX_CODE:1007"]);
+    expect(Checks.checksList({ batch: "7", q: "ho so giay", offset: 0, limit: 50 }).total).toBe(1);
+    expect(Checks.checksList({ batch: "7", status: "open", rule: "MISSING_TAX_CODE", offset: 0, limit: 1 }).total).toBe(299);
+  });
+
+  test("groups: số lượng theo quy tắc trên toàn bộ cảnh báo, kèm số mục đóng tay được", () => {
+    big(300);
+    const r = Checks.checksList({ batch: "7", rule: "NET_NEGATIVE", offset: 0, limit: 1, brief: true });
+    const by = {};
+    for (const g of r.groups) by[g.rule] = g;
+    expect(by.NET_NEGATIVE).toMatchObject({ severity: "error", total: 10, open: 10, closable: 0 });
+    expect(by.MISSING_TAX_CODE).toMatchObject({ severity: "warn", total: 300, open: 300, closable: 300 });
+    expect(by.NEW_EMPLOYEE).toMatchObject({ severity: "info", total: 300 });
+    expect(by.MISSING_TAX_CODE.title).toBeTruthy();
+  });
+
+  test("runView dùng limit + brief: 200 mục cần xử lý trước, byEmployee đếm trên toàn bộ, mục gọn", () => {
+    big(1000);
+    const r = Checks.checksList({ batch: "7", limit: 200, brief: true });
+    expect(r.items).toHaveLength(200);
+    expect(r.items.slice(0, 10).every((it) => it.severity === "error")).toBe(true);
+    expect(r.items[10].severity).toBe("warn");
+    expect(Object.keys(r.byEmployee)).toHaveLength(1000);
+    expect(r.byEmployee["1001"]).toEqual({ open: 2, errors: 1 });
+    expect(r.byEmployee["1500"]).toEqual({ open: 1 });
+    expect("note" in r.items[0]).toBe(false);
+    expect(r.items[0]).toMatchObject({ key: expect.any(String), title: expect.any(String), status: "open" });
+  });
+
+  test("resolveCheckGroup: đóng cả nhóm theo lượt, ghi chú bắt buộc, không đóng được lỗi", () => {
+    big(150);
+    expect(() => Checks.resolveCheckGroup({ batch: "7", rule: "MISSING_TAX_CODE", status: "accepted", note: " " })).toThrow(/ghi chú/);
+    expect(() => Checks.resolveCheckGroup({ batch: "7", rule: "NET_NEGATIVE", status: "accepted", note: "x" })).toThrow(/không đóng tay/);
+    expect(() => Checks.resolveCheckGroup({ batch: "7", rule: "MISSING_TAX_CODE", status: "open", note: "x" })).toThrow(/không hợp lệ/);
+    expect(() => Checks.resolveCheckGroup({ batch: "7", rule: "KHONG_CO", status: "accepted", note: "x" })).toThrow(/không còn/);
+    expect(db.writes).toEqual([]);
+    // Lượt gọi như lib/api.js post(): lặp cùng nội dung khi more = true, cộng dồn closed
+    const body = { batch: "7", rule: "MISSING_TAX_CODE", status: "accepted", note: "Đã rà cả nhóm với nhân sự" };
+    const fresh = () => {
+      jest.resetModules();
+      Checks = require(path.join(API, "Checks"));
+    };
+    let closed = 0;
+    let turns = 0;
+    let last;
+    do {
+      fresh();
+      last = Checks.resolveCheckGroup(body);
+      closed += last.closed;
+      turns++;
+      expect(last.closed).toBeLessThanOrEqual(60);
+    } while (last.more && turns < 10);
+    expect(closed).toBe(150);
+    expect(turns).toBe(3);
+    expect(last).toMatchObject({ ok: true, rule: "MISSING_TAX_CODE", status: "accepted", more: false, left: { open: 0 } });
+    expect(last.counts).toEqual({ open: 10, errors: 10, warnings: 0, resolved: 150 });
+    expect(db.check_result).toHaveLength(150);
+    const saved = db.check_result[0];
+    expect(saved).toMatchObject({ batch: "7", rule: "MISSING_TAX_CODE", status: "A", note: "Đã rà cả nhóm với nhân sự" });
+    expect(saved.stamp).toBeTruthy();
+    expect(JSON.parse(saved.history)).toHaveLength(1);
+    // gọi lại khi không còn mục mở: không ghi gì thêm
+    fresh();
+    expect(Checks.resolveCheckGroup(body)).toMatchObject({ closed: 0, more: false });
+    expect(db.check_result).toHaveLength(150);
+    // mục đã đóng rồi mở lại (đã có lịch sử) được cập nhật, không tạo record mới
+    Checks.resolveCheck({ batch: "7", rule: "MISSING_TAX_CODE", employee: "1001", status: "open" });
+    fresh();
+    expect(Checks.resolveCheckGroup(body)).toMatchObject({ closed: 1, more: false });
+    expect(db.check_result).toHaveLength(150);
+    expect(JSON.parse(db.check_result.find((r) => r.employee === "1001").history)).toHaveLength(3);
   });
 });
 

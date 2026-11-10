@@ -8,6 +8,10 @@
  * tổng 0;
  * thiếu tài khoản -> lỗi nêu diễn giải; tổng khác 0 -> lỗi không cân; khác chi nhánh khi chưa bật liên chi nhánh -> lỗi.
  *
+ * Trích trước lương tháng 13 (dòng Nợ chi phí): nhân viên có `accrualAllocations` (dòng chia do splitAccrual dựng lúc tính
+ * lương, lưu trong chi tiết dòng lương) thì mỗi dòng mang đủ tài khoản, phòng ban, dự án, địa điểm, class như chi phí lương
+ * của chính người đó; không có thì ghi như trước: tài khoản chi phí (và phòng ban) của hồ sơ, không có thì tài khoản mặc định.
+ *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
@@ -39,6 +43,56 @@ define(["./Money", "./Errors"], (Money, Errors) => {
 	// Khóa gộp gồm cả work center (class trên NetSuite): hai phân bổ chỉ khác class phải ra hai dòng, mỗi dòng đúng class
 	function lineKey(l) {
 		return [l.account, l.sub, l.project, l.task, l.costCode, l.memo, l.branch, l.workCenter].map(norm).join("|");
+	}
+
+	const ACCRUAL_KEYS = ["account", "sub", "project", "task", "costCode", "branch", "workCenter"];
+
+	/**
+	 * Chia trích trước lương tháng 13 của MỘT nhân viên theo cơ cấu phân bổ chi phí lương (phần GROSS) của chính người đó.
+	 *
+	 * Dòng phân bổ GROSS được gộp theo (tài khoản, phòng ban, dự án, task, cost code, địa điểm, class); nhóm có tổng dương là
+	 * đích, tỷ lệ theo số tiền của nhóm. Làm tròn đến đồng, chênh lệch dồn vào nhóm lớn nhất nên tổng các dòng = số trích
+	 * tuyệt đối (số trích quá nhỏ làm nhóm lớn nhất âm thì các nhóm khác làm tròn xuống). BH phần doanh nghiệp (ERINS) không
+	 * tham gia. Không có nhóm dương nào (không có dòng phân bổ, hoặc tổng không dương) -> mảng rỗng: nơi gọi giữ cách ghi cũ.
+	 * @param {number|string} accrued số trích của nhân viên trong kỳ
+	 * @param {Array<{component, amount, account, sub, project, task, costCode, branch, workCenter}>} allocations
+	 * @returns {Array<{account, sub, project, task, costCode, branch, workCenter, amount: number}>}
+	 */
+	function splitAccrual(accrued, allocations) {
+		const total = D(accrued);
+		if (!total.gt(0)) return [];
+		const groups = new Map();
+		for (const a of allocations || []) {
+			if (!a || norm(a.component) === "ERINS" || D(a.amount).isZero()) continue;
+			const row = {};
+			for (const k of ACCRUAL_KEYS) row[k] = a[k] === null || a[k] === undefined ? "" : a[k];
+			const key = ACCRUAL_KEYS.map((k) => norm(row[k])).join("|");
+			const cur = groups.get(key);
+			if (cur) cur.weight = cur.weight.plus(D(a.amount));
+			else groups.set(key, { row, weight: D(a.amount) });
+		}
+		const rows = [...groups.values()].filter((g) => g.weight.gt(0));
+		if (!rows.length) return [];
+		const weight = Money.sum(rows, (g) => g.weight);
+		let big = 0;
+		rows.forEach((g, i) => {
+			if (g.weight.gt(rows[big].weight)) big = i;
+		});
+		const share = (down) => {
+			let used = D(0);
+			const parts = rows.map((g, i) => {
+				if (i === big) return null;
+				const raw = total.times(g.weight).div(weight);
+				const v = down ? raw.floor() : D(Money.round(raw));
+				used = used.plus(v);
+				return v;
+			});
+			parts[big] = total.minus(used);
+			return parts;
+		};
+		let parts = share(false);
+		if (parts[big].lt(0)) parts = share(true);
+		return rows.map((g, i) => Object.assign({}, g.row, { amount: parts[i].toNumber() })).filter((r) => r.amount !== 0);
 	}
 
 	/**
@@ -80,7 +134,8 @@ define(["./Money", "./Errors"], (Money, Errors) => {
 	 * @param {{batchNbr, periodId, branch, date, grossTotal, employerInsTotal,
 	 *   employees: Array<{employee, employmentType, netPay, accrued13th, expenseAccount, expenseSub, pit,
 	 *     insurance: Array<{code, employeeAmount, employerAmount}>, deductions: Array<{code, name, amount, account}>,
-	 *     advanceOffsets: Array<{refNbr, amount}>, allocations: Array<{component, amount, account, sub, project, task, costCode, branch, workCenter}>}>}} batch
+	 *     advanceOffsets: Array<{refNbr, amount}>, allocations: Array<{component, amount, account, sub, project, task, costCode, branch, workCenter}>,
+	 *     accrualAllocations?: Array<{amount, account, sub, project, task, costCode, branch, workCenter}> (splitAccrual)}>}} batch
 	 * @param {{payableAccount, payableSub, contractorPayableAccount, pitPayableAccount, otherDeductionAccount, advanceAccount,
 	 *   accrued13thAccount, defaultExpenseAccount, defaultExpenseSub, components: Object<string, {name, liabilityAccount}>,
 	 *   interBranch?: boolean, requireSub?: boolean, lang?: 'en'|'vi'}} config
@@ -124,7 +179,19 @@ define(["./Money", "./Errors"], (Money, Errors) => {
 			for (const o of e.advanceOffsets || []) offsets.push(o);
 			if (!contractor && D(e.accrued13th).gt(0)) {
 				accrual = accrual.plus(D(e.accrued13th));
-				add(e.expenseAccount || cfg.defaultExpenseAccount, e.expenseAccount ? e.expenseSub : cfg.defaultExpenseSub, e.accrued13th, label(lang, "accrual", { p }));
+				const memo = label(lang, "accrual", { p });
+				const own = (e.accrualAllocations || []).filter((a) => a && !D(a.amount).isZero());
+				if (own.length) {
+					// Dòng chia đã lưu lúc tính lương: tổng phải đúng số trích của nhân viên, lệch thì dữ liệu đã bị sửa sau khi tính
+					const split = Money.sum(own, (a) => a.amount);
+					if (!split.eq(D(e.accrued13th))) {
+						throw Errors.invalid(`The 13th-month accrual split ${split.toString()} differs from the accrued amount ${D(e.accrued13th).toString()}; recalculate the batch.`,
+							`Tổng dòng chia trích tháng 13 ${split.toString()} khác số trích ${D(e.accrued13th).toString()}; tính lại bảng lương.`);
+					}
+					for (const a of own) add(a.account, a.sub, a.amount, memo, { project: a.project || "", task: a.task || "", costCode: a.costCode || "", branch: a.branch || batch.branch || "", workCenter: a.workCenter || "" });
+				} else {
+					add(e.expenseAccount || cfg.defaultExpenseAccount, e.expenseAccount ? e.expenseSub : cfg.defaultExpenseSub, e.accrued13th, memo);
+				}
 			}
 		}
 		add(cfg.payableAccount, cfg.payableSub, netE.neg(), label(lang, "wages", { p }));
@@ -224,5 +291,5 @@ define(["./Money", "./Errors"], (Money, Errors) => {
 		return { bills, skipped };
 	}
 
-	return { buildRelease, buildReversal, buildAdvance, buildAgencyBills, finalize, LABELS };
+	return { buildRelease, buildReversal, buildAdvance, buildAgencyBills, finalize, splitAccrual, LABELS };
 });

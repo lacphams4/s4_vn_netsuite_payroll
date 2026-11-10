@@ -33,6 +33,8 @@ function journalDebits(lines) {
       return {
         employee: l.employee, employmentType: l.employment_type, netPay: gross, pit: 0, accrued13th: l.accrued13 || 0, expenseAccount: x.expenseAccount || "", expenseSub: x.expenseSub || "",
         insurance: [{ code: "ER", employeeAmount: 0, employerAmount: er }], deductions: [], advanceOffsets: [], allocations: x.allocations,
+        // Như api/Payroll.releaseModel: dòng chia trích tháng 13 lưu trong chi tiết dòng lương (bảng lương cũ không có)
+        accrualAllocations: Array.isArray(x.accrual13) ? x.accrual13 : [],
       };
     }),
   };
@@ -318,5 +320,87 @@ describe("Kế hoạch ghi record (plan)", () => {
     const p = F.plan([stored(1, facts[0], { active: false }), stored(2, facts[1], { month: "202702" })], facts, header);
     expect(p.update.map((u) => u.id)).toEqual(["1", "2"]);
     expect(p.create).toEqual([]);
+  });
+});
+
+describe("Trích tháng 13 theo cơ cấu phân bổ (chi tiết dòng lương có accrual13)", () => {
+  const detail = () => ({
+    earnings: [{ earningType: "LUONG", amount: 30880000, source: "S" }],
+    allocations: [
+      { component: "GROSS", amount: 20000000, account: "642", sub: "D1", project: "", branch: "", workCenter: "WC1", source: "P", hours: 0 },
+      { component: "GROSS", amount: 10880000, account: "632", sub: "D2", project: "P1", branch: "L1", workCenter: "WC2", source: "P", hours: 0 },
+      { component: "ERINS", amount: 7050000, account: "642", sub: "D1", project: "", branch: "", workCenter: "WC1" },
+    ],
+    expenseAccount: "6421", expenseSub: "D9",
+  });
+
+  test("accrued13 đi theo đúng dòng chia: tài khoản, phòng ban, class, địa điểm (trống -> mặc định), dự án", () => {
+    const d = detail();
+    d.accrual13 = J.splitAccrual(2500000, d.allocations);
+    const acc = F.employeeFacts(line("7", d, { accrued13: 2500000 }), options).filter((f) => f.component === "accrued13");
+    expect(acc.map((f) => [f.account, f.department, f.class, f.location, f.project, f.amount])).toEqual([
+      ["632", "D2", "WC2", "L1", "P1", 880829], ["642", "D1", "WC1", "L0", "", 1619171],
+    ]);
+    const lines = [line("7", d, { accrued13: 2500000 })];
+    const r = F.build(lines, options);
+    expect(r.check.ok).toBe(true);
+    expect(factDebits(r.facts)).toEqual(journalDebits(lines));
+  });
+
+  test("không có accrual13, hoặc tổng dòng chia lệch số trích, hoặc cộng tác viên -> cách cũ / không trích", () => {
+    const old = F.employeeFacts(line("7", detail(), { accrued13: 2500000 }), options).filter((f) => f.component === "accrued13");
+    expect(old.map((f) => [f.account, f.department, f.class, f.project, f.amount])).toEqual([["6421", "D9", "", "", 2500000]]);
+    const bad = detail();
+    bad.accrual13 = [{ account: "642", sub: "D1", amount: 2400000 }];
+    expect(F.employeeFacts(line("7", bad, { accrued13: 2500000 }), options).filter((f) => f.component === "accrued13")).toEqual(old);
+    expect(F.accrualRows(bad, 2400000)).toHaveLength(1);
+    expect(F.accrualRows({}, 100)).toEqual([]);
+    const c = detail();
+    c.accrual13 = [{ account: "642", sub: "D1", amount: 100 }];
+    expect(F.employeeFacts(line("7", c, { accrued13: 100, employment_type: "C" }), options).some((f) => f.component === "accrued13")).toBe(false);
+  });
+
+  test("bất biến trên 250 nhân viên ngẫu nhiên có dòng chia: tổng số liệu = tổng Nợ chi phí bút toán, khớp từng khóa", () => {
+    let seed = 20271231;
+    const rnd = (n) => {
+      seed = (Math.imul(seed ^ (seed >>> 15), 2246822507) + 0x9e3779b9) | 0;
+      return ((seed ^ (seed >>> 13)) >>> 0) % n;
+    };
+    const lines = [];
+    let accruedTotal = 0;
+    let split = 0;
+    for (let i = 0; i < 250; i++) {
+      const contractor = rnd(10) === 0;
+      const gross = 3000000 + rnd(40000000);
+      const parts = rnd(8) === 0 ? 0 : 1 + rnd(4);
+      const allocations = [];
+      let left = gross;
+      for (let k = 0; k < parts; k++) {
+        const amount = k === parts - 1 ? left : rnd(Math.max(1, Math.floor(left / 2)));
+        left -= amount;
+        allocations.push({ component: "GROSS", amount, account: ["642", "632", "641"][rnd(3)], sub: `D${rnd(3)}`, project: rnd(3) ? "" : `P${rnd(2)}`, branch: rnd(3) ? "" : "L1", workCenter: rnd(2) ? "" : `WC${rnd(2)}`, source: "P", hours: rnd(40) });
+      }
+      const er = contractor || !parts ? 0 : Math.round(gross * 0.215);
+      if (er) allocations.push({ component: "ERINS", amount: er, account: "642", sub: `D${rnd(3)}`, project: "", branch: "", workCenter: "" });
+      const accrued13 = contractor || rnd(4) === 0 ? 0 : Math.round(gross / 12);
+      const d = { earnings: parts ? [{ earningType: "LUONG", amount: gross, source: "S", project: "" }] : [], allocations, expenseAccount: rnd(2) ? "6421" : "", expenseSub: "D7" };
+      // Một phần nhân viên là dòng lương tính theo cách cũ (không có dòng chia) để hai cách cùng tồn tại trong một bảng
+      if (accrued13 && rnd(5)) {
+        const rows = J.splitAccrual(accrued13, allocations);
+        if (rows.length) {
+          d.accrual13 = rows;
+          split++;
+        }
+      }
+      accruedTotal += accrued13;
+      lines.push(line(String(i + 1), d, { employment_type: contractor ? "C" : "E", accrued13 }));
+    }
+    expect(split).toBeGreaterThan(100);
+    const r = F.build(lines, options);
+    const debits = journalDebits(lines);
+    expect(r.check.ok).toBe(true);
+    expect(factDebits(r.facts)).toEqual(debits);
+    expect(by(r.facts, "component").accrued13).toBe(accruedTotal);
+    expect(F.expected(lines).accrued13).toBe(accruedTotal);
   });
 });

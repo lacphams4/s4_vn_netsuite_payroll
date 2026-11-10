@@ -470,6 +470,51 @@ describe("pack / unpack - nén ô ngày", () => {
   });
 });
 
+describe("packRows / unpackRows - nén cả lưới cho 1.000 nhân viên", () => {
+  test("dãy ô và bộ số tổng giống nhau gửi một lần; trường mặc định không gửi; bung ra đúng như lưới gốc", () => {
+    const employees = [];
+    for (let i = 1; i <= 400; i++) employees.push(emp(i, i === 7 ? { hireDate: "2027-03-15" } : {}));
+    employees.push(emp(900, { employmentType: "C", salaryType: "H" }));
+    const g = Grid.build(base({ employees, leaves: [{ id: 1, employee: "1", from: "2027-03-02", to: "2027-03-02", leave_type: "10", status: "A" }] }));
+    const p = Grid.packRows(g.rows);
+    // Lịch chung, người có đơn nghỉ, người vào làm giữa kỳ, cộng tác viên: 4 dãy ô cho 401 dòng
+    expect(p.cellRows).toHaveLength(4);
+    expect(p.rows).toHaveLength(401);
+    expect(p.rows[1]).toEqual({ employee: "2", code: g.rows[1].code, name: g.rows[1].name, cells: p.rows[2].cells, totals: p.rows[2].totals, estimated: true });
+    expect(p.totalsKeys).toEqual(["std_days", "paid_leave", "unpaid_leave", "si_leave", "trip_days", "late_days", "adjust_days", "work_days", "ot_hours"]);
+    expect(p.totalsTable.length).toBeLessThanOrEqual(3);
+    expect(p.rows[400]).toMatchObject({ contractor: true, salaryType: "H", source: "time" });
+    expect(p.rows[400].totals).toBeUndefined();
+    expect(JSON.stringify(p).length).toBeLessThan(JSON.stringify(Grid.pack(g.rows)).length / 3);
+    // Bung lại: cùng ô, cùng số tổng, cùng cờ (cờ false của lưới gốc có thể vắng mặt)
+    const back = Grid.unpackRows(p);
+    expect(back).toHaveLength(401);
+    back.forEach((r, i) => {
+      expect(r.cells).toEqual(g.rows[i].cells);
+      expect(r.totals).toEqual(g.rows[i].totals);
+      for (const k of ["employee", "code", "name", "department", "contractor", "salaryType", "source", "hasSummary", "locked", "open"]) expect(r[k]).toEqual(g.rows[i][k]);
+      expect(!!r.estimated).toBe(!!g.rows[i].estimated);
+      expect(!!r.stale).toBe(!!g.rows[i].stale);
+    });
+    expect(Grid.packRows(null)).toEqual({ cellTable: [], cellRows: [], totalsKeys: p.totalsKeys, totalsTable: [], rows: [] });
+    expect(Grid.unpackRows(null)).toEqual([]);
+  });
+
+  test("nhân viên không có chứng từ dùng chung kết quả tính: số liệu giống hệt khi tính riêng từng người", () => {
+    const many = Grid.build(base({ employees: [emp(1), emp(2), emp(3, { hireDate: "2027-03-15" }), emp(4, { hireDate: "2027-03-15" })] }));
+    for (const r of many.rows) {
+      const alone = Grid.build(base({ employees: [emp(Number(r.employee), r.employee === "3" || r.employee === "4" ? { hireDate: "2027-03-15" } : {})] })).rows[0];
+      expect(r.cells).toEqual(alone.cells);
+      expect(r.totals).toEqual(alone.totals);
+    }
+    // Đơn làm thêm của một người không lẫn sang người khác cùng lịch
+    const g = Grid.build(base({ employees: [emp(1), emp(2), emp(5)], overtime: [{ id: 9, employee: "2", work_date: "2027-03-03", hours: 2, status: "A" }] }));
+    expect(g.rows[1].cells[2].ot).toBe(2);
+    expect(g.rows[0].cells[2].ot).toBeUndefined();
+    expect(g.rows[2].cells[2].ot).toBeUndefined();
+  });
+});
+
 describe("defaultPeriod - kỳ mặc định", () => {
   const P = (id, start, end, status = "O", attStatus = "O") => ({ id, start, end, status, attStatus });
   const list = [P(3, "2027-03-01", "2027-03-31"), P(1, "2027-01-01", "2027-01-31", "C", "L"), P(2, "2027-02-01", "2027-02-28", "O", "L"), P(4, "2027-04-01", "2027-04-30")];

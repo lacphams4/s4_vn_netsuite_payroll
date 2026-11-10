@@ -15,24 +15,22 @@
  *                                       trạng thái P; duyệt / từ chối / mở lại của api/Payroll đã nhận trạng thái P.
  * Mọi thao tác khác (tải nhân viên, đồng bộ giờ, tính, giữ, duyệt, từ chối, mở lại, ghi sổ, đảo...) dùng action cũ.
  *
- * Governance: số truy vấn không phụ thuộc số nhân viên (dòng kỳ này, dòng kỳ trước, thông tin nhân viên mỗi thứ một truy
- * vấn theo lô 900); chi tiết JSON của dòng chỉ đọc khi mở một nhân viên (runLine).
+ * Governance: số truy vấn không phụ thuộc số nhân viên. runView đọc dòng kỳ này + kỳ trước kèm mã, họ tên, phòng ban trong
+ * MỘT truy vấn (api/Lean.batchLines, cùng câu lệnh với phân hệ Kiểm tra nên lượt GET chỉ đọc một lần), bảng lương kỳ trước
+ * bằng một truy vấn nhỏ (Lean.batchesNear); chi tiết JSON của dòng chỉ đọc khi mở một nhân viên (runLine).
+ * Dòng gửi về trình duyệt được thu gọn (xem leanLine): 1.000 dòng dưới 0,5 MB.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../core/RunSteps", "../core/PayCompare", "../core/Money"], (Store, Payroll, Settings, Checks, TimeLines, RunSteps, PayCompare, Money) => {
+define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "./Lean", "../core/RunSteps", "../core/PayCompare", "../core/Money"], (Store, Payroll, Settings, Checks, TimeLines, Lean, RunSteps, PayCompare, Money) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(blank(s) ? "" : s).trim().toUpperCase();
 	const DEFAULT_THRESHOLD = 0.1;
 	const COMPARE_KEYS = ["gross", "ee_ins", "er_ins", "pit", "net"];
-	// Cột của dòng nhân viên đưa lên lưới (không có trường detail: JSON chi tiết chỉ đọc ở runLine)
-	const LINE_FIELDS = [
-		"employee", "employment_type", "std_days", "work_days", "paid_leave", "unpaid_leave", "ot_hours", "gross", "exempt", "ee_ins", "er_ins", "family_ded",
-		"assessable", "pit", "other_ded", "net_before", "advance", "net", "att_locked", "warnings", "error",
-	];
-	const PREV_FIELDS = ["employee"].concat(COMPARE_KEYS);
 	const TOTAL_KEYS = ["gross", "exempt", "ee_ins", "er_ins", "pit", "other_ded", "advance", "net"];
+	// Số tiền của dòng đưa lên lưới: bằng 0 thì không gửi (giao diện coi thiếu là 0)
+	const LINE_MONEY = ["gross", "ee_ins", "pit", "net"];
 
 	function fail(en, vi) {
 		const e = new Error(`${en} / ${vi}`);
@@ -49,25 +47,27 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../cor
 		}
 	}
 
-	/** Dòng nhân viên của một bảng lương, chỉ các cột cần (một truy vấn, không đọc JSON chi tiết). */
-	function leanLines(batchId, fields) {
-		const def = Store.rec("batch_emp");
-		const cols = ["t.id AS id"].concat(fields.map((k) => `t.${def.fields[k].id} AS c_${k}`));
-		const rows = Store.run(`SELECT ${cols.join(", ")} FROM ${def.type} t WHERE t.${def.fields.batch.id} = ? AND t.isinactive = 'F' ORDER BY t.id`, [batchId], "s4vp_run_lines");
-		return rows.map((r) => {
-			const o = { id: String(r.id) };
-			for (const k of fields) {
-				const f = def.fields[k];
-				let v = r[`c_${k}`];
-				if (v === undefined) v = null;
-				if (f.type === "check") v = v === "T" || v === true;
-				else if (f.type === "select" && f.target && f.target.indexOf("list:") === 0) v = Store.codeOf(f.target.slice(5), v);
-				else if (f.type === "select" && v !== null) v = String(v);
-				else if (["float", "currency", "int", "percent"].indexOf(f.type) >= 0 && v !== null && v !== "") v = Number(v);
-				o[k] = v;
-			}
-			return o;
-		});
+	/**
+	 * Dòng nhân viên thu gọn cho lưới của màn Chạy lương: chỉ các trường giao diện dùng, bỏ giá trị rỗng (null, chuỗi rỗng,
+	 * số tiền bằng 0, cờ false). cmp chỉ còn {kind, diff?, pct?, over?}; số chi tiết của một nhân viên lấy bằng runLine.
+	 */
+	function leanLine(l, c) {
+		const out = { id: l.id, employee: l.employee };
+		if (!blank(l.code)) out.code = l.code;
+		if (!blank(l.name)) out.name = l.name;
+		if (!blank(l.department)) out.department = l.department;
+		if (!blank(l.employment_type)) out.employment_type = l.employment_type;
+		if (!blank(l.std_days)) out.std_days = l.std_days;
+		if (!blank(l.work_days)) out.work_days = l.work_days;
+		for (const k of LINE_MONEY) if (!blank(l[k]) && Number(l[k]) !== 0) out[k] = l[k];
+		if (!blank(l.error)) out.error = l.error;
+		if (!blank(l.warnings)) out.warnings = l.warnings;
+		const cmp = { kind: c.kind };
+		if (c.diff !== null && c.diff !== undefined) cmp.diff = c.diff;
+		if (c.pct !== null && c.pct !== undefined) cmp.pct = c.pct;
+		if (c.over) cmp.over = true;
+		out.cmp = cmp;
+		return out;
 	}
 
 	/** Số cảnh báo của bảng lương từ phân hệ Kiểm tra (mục 9); null khi phân hệ chưa có hoặc lỗi. */
@@ -99,6 +99,21 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../cor
 		return { id: prev.id, name: prev.name, status: prev.status, period: prev.period, periodName: p.name || "", periodEnd: p.end || "" };
 	}
 
+	/**
+	 * Như previousBatch nhưng cho runView: một truy vấn nhỏ (bảng lương của công ty con kèm kỳ) thay cho đọc mọi cột của mọi kỳ
+	 * và mọi bảng lương. Cùng quy tắc chọn (core/PayCompare.pickPrevious).
+	 */
+	function previousOf(batch, period) {
+		const list = Lean.batchesNear(batch.id);
+		const periods = {};
+		for (const x of list) if (!blank(x.period)) periods[x.period] = { id: x.period, name: x.periodName, end: x.periodEnd };
+		if (period) periods[period.id] = { id: period.id, name: period.name, end: period.end };
+		const prev = PayCompare.pickPrevious(batch, list, periods);
+		if (!prev) return null;
+		const p = periods[prev.period] || {};
+		return { id: prev.id, name: prev.name, status: prev.status, period: prev.period, periodName: p.name || "", periodEnd: p.end || "" };
+	}
+
 	function sumOf(lines, key, filter) {
 		return Money.round(Money.sum(filter ? lines.filter(filter) : lines, (l) => l[key] || 0));
 	}
@@ -111,12 +126,12 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../cor
 	 *   paygroup: object|null,    {id, code, description}
 	 *   steps: Array, progress: object,   theo core/RunSteps.payrollSteps / progress
 	 *   checks: object|null,      {open, errors, warnings, resolved} từ Checks.summary; null khi chưa có phân hệ Kiểm tra
-	 *   lines: Array,             dòng nhân viên: {id, employee, code, name, department, employment_type, std_days, work_days, ...,
-	 *                             gross, ee_ins, er_ins, pit, other_ded, advance, net, error, warnings,
-	 *                             cmp: {kind: "new"|"both", previous, diff, pct, over, values: {gross|ee_ins|er_ins|pit|net: {current, previous, diff, pct}}}}
+	 *   lines: Array,             dòng nhân viên thu gọn (leanLine): {id, employee, code, name, department, employment_type, std_days,
+	 *                             work_days, gross, ee_ins, pit, net, error, warnings, cmp: {kind: "new"|"both", diff, pct, over}};
+	 *                             trường rỗng / bằng 0 / false không gửi
 	 *   totals: object,           {count, errors, warned, gross, exempt, ee_ins, er_ins, pit, other_ded, advance, net, insurance, cost,
 	 *                             pitEmployee, pitContractor, netEmployee, netContractor}
-	 *   compare: {previous: {id, name, status, period, periodName, periodEnd}|null, threshold, summary, leavers: [{employee, code, name, previous, values}]}
+	 *   compare: {previous: {id, name, status, period, periodName, periodEnd}|null, threshold, summary, leavers: [{employee, kind, code, name, previous}]}
 	 *   transactions: object      {<id>: {tranid, approval, posting, voided}} của bút toán ghi sổ, bút toán đảo, bill
 	 * }}
 	 */
@@ -126,34 +141,39 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../cor
 		const b = Payroll.getBatch(id);
 		const period = Store.get("period", b.period);
 		const group = blank(b.paygroup) ? null : Store.get("paygroup", b.paygroup);
-		const lines = leanLines(id, LINE_FIELDS);
 		const limit = threshold(params.threshold);
 
 		let prev = null;
-		let prevLines = null;
 		try {
-			prev = previousBatch(b);
-			if (prev) prevLines = leanLines(prev.id, PREV_FIELDS);
+			prev = previousOf(b, period);
 		} catch (e) {
 			// Không đọc được kỳ trước: màn hình vẫn mở, chỉ thiếu số so sánh
 			prev = null;
-			prevLines = null;
 		}
+		// Dòng kỳ này và kỳ trước trong một truy vấn (kèm mã, họ tên, phòng ban)
+		const all = Lean.batchLines([id, prev ? prev.id : null]);
+		const lines = all.filter((l) => l.batch === id);
+		const prevLines = prev ? all.filter((l) => l.batch === String(prev.id)) : null;
 		const cmp = PayCompare.compareLines(lines, prevLines, { key: "net", keys: COMPARE_KEYS, threshold: limit });
-		const info = Payroll.employeesInfo(lines.map((l) => l.employee).concat(cmp.leavers.map((l) => l.employee)));
+		const prevInfo = {};
+		for (const l of prevLines || []) if (!prevInfo[l.employee]) prevInfo[l.employee] = l;
 
-		const checks = checksSummary(id);
-		// Danh sách cảnh báo trả kèm (Checks đã tính ở trên, nhớ trong lượt chạy): giao diện khỏi gọi checksList lần nữa
+		// Danh sách cảnh báo trả kèm: gọi checksList trước rồi lấy số đếm từ đó (một lần tính, giao diện khỏi gọi checksList).
+		// Bảng lương lớn có thể có vài nghìn cảnh báo: chỉ gửi 200 mục đầu (lỗi và mục chưa đóng trước) kèm tổng theo quy tắc.
+		let checks = null;
 		let checksList = null;
 		try {
-			if (checks && typeof Checks.checksList === "function") {
-				// Bảng lương lớn có thể có vài nghìn cảnh báo: chỉ gửi 200 mục đầu (lỗi và mục chưa đóng trước) kèm tổng theo quy tắc
+			if (Checks && typeof Checks.checksList === "function") {
 				const cl = Checks.checksList({ batch: id, limit: 200, brief: true });
 				checksList = { counts: cl.counts || null, items: cl.items || [], total: cl.total || 0, truncated: !!cl.truncated, groups: cl.groups || [], byEmployee: cl.byEmployee || null };
+				const n = (v) => (isFinite(Number(v)) && Number(v) > 0 ? Math.floor(Number(v)) : 0);
+				if (cl.counts) checks = { open: n(cl.counts.open), errors: n(cl.counts.errors), warnings: n(cl.counts.warnings), resolved: n(cl.counts.resolved) };
 			}
 		} catch (e) {
 			checksList = null;
 		}
+		if (!checks) checks = checksSummary(id);
+		if (!checks) checksList = null;
 		const steps = RunSteps.payrollSteps(b, period, { employees: lines.length, openChecks: checks ? checks.open : undefined });
 		const bills = safeJson(b.bills, []);
 		const tx = Payroll.transactionsInfo([b.journal, b.reversal].concat((Array.isArray(bills) ? bills : []).map((x) => x && x.id)));
@@ -181,17 +201,13 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../cor
 			progress: RunSteps.progress(steps),
 			checks,
 			checksList,
-			lines: lines.map((l, i) => {
-				const e = info[l.employee] || {};
-				const c = cmp.rows[i];
-				return Object.assign({}, l, { code: e.code || "", name: e.name || "", department: e.departmentName || "", cmp: { kind: c.kind, previous: c.previous, diff: c.diff, pct: c.pct, over: c.over, values: c.values } });
-			}),
+			lines: lines.map((l, i) => leanLine(l, cmp.rows[i])),
 			totals,
 			compare: {
 				previous: prev,
 				threshold: limit,
 				summary: cmp.summary,
-				leavers: cmp.leavers.map((l) => Object.assign({}, l, { code: (info[l.employee] || {}).code || "", name: (info[l.employee] || {}).name || "" })),
+				leavers: cmp.leavers.map((l) => ({ employee: l.employee, kind: l.kind, previous: l.previous, code: (prevInfo[l.employee] || {}).code || "", name: (prevInfo[l.employee] || {}).name || "" })),
 			},
 			transactions: tx,
 		};
@@ -202,8 +218,9 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../cor
 
 	/**
 	 * Số liệu tính thuế TNCN của dòng: chỉ lấy số gói đã tính và lưu trên dòng / trong JSON chi tiết, không tính lại.
-	 * method đọc từ hồ sơ lương hiện tại (dòng không lưu phương pháp); selfDeduction / dependentDeduction chỉ có khi JSON
-	 * chi tiết của dòng lưu (d.pit), ngược lại null và giao diện hiện tổng giảm trừ gia cảnh.
+	 * Ưu tiên khối d.pit {method, selfDeduction, dependentDeduction} lưu lúc tính lương (phương pháp đúng tại thời điểm tính).
+	 * Bảng lương tính trước khi có khối này: method đọc từ hồ sơ lương hiện tại, selfDeduction / dependentDeduction = null và
+	 * giao diện hiện tổng giảm trừ gia cảnh.
 	 */
 	function taxOf(l, d) {
 		let method = null;
@@ -218,6 +235,7 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "../cor
 			method = null;
 		}
 		const p = d.pit && typeof d.pit === "object" ? d.pit : {};
+		if (!blank(p.method)) method = norm(p.method);
 		return {
 			method,
 			flatCommitment,

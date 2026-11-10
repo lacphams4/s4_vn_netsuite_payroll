@@ -3372,6 +3372,195 @@ define([], () => {
 					"target": null
 				}
 			}
+		},
+		"contract": {
+			"type": "customrecord_s4vp_contract",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_hrc_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"profile": {
+					"id": "custrecord_s4vp_hrc_profile",
+					"type": "select",
+					"target": "rec:employee"
+				},
+				"number": {
+					"id": "custrecord_s4vp_hrc_number",
+					"type": "text",
+					"target": null
+				},
+				"type": {
+					"id": "custrecord_s4vp_hrc_type",
+					"type": "select",
+					"target": "list:hrc_type"
+				},
+				"parent": {
+					"id": "custrecord_s4vp_hrc_parent",
+					"type": "select",
+					"target": "rec:contract"
+				},
+				"sign_date": {
+					"id": "custrecord_s4vp_hrc_sign_date",
+					"type": "date",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_hrc_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiry": {
+					"id": "custrecord_s4vp_hrc_expiry",
+					"type": "date",
+					"target": null
+				},
+				"title": {
+					"id": "custrecord_s4vp_hrc_title",
+					"type": "text",
+					"target": null
+				},
+				"base_salary": {
+					"id": "custrecord_s4vp_hrc_base_salary",
+					"type": "currency",
+					"target": null
+				},
+				"insurance_wage": {
+					"id": "custrecord_s4vp_hrc_insurance_wage",
+					"type": "currency",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_hrc_status",
+					"type": "select",
+					"target": "list:hrc_status"
+				},
+				"terminated": {
+					"id": "custrecord_s4vp_hrc_terminated",
+					"type": "date",
+					"target": null
+				},
+				"term_reason": {
+					"id": "custrecord_s4vp_hrc_term_reason",
+					"type": "text",
+					"target": null
+				},
+				"note": {
+					"id": "custrecord_s4vp_hrc_note",
+					"type": "textarea",
+					"target": null
+				}
+			}
+		},
+		"decision": {
+			"type": "customrecord_s4vp_decision",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_hrd_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"profile": {
+					"id": "custrecord_s4vp_hrd_profile",
+					"type": "select",
+					"target": "rec:employee"
+				},
+				"number": {
+					"id": "custrecord_s4vp_hrd_number",
+					"type": "text",
+					"target": null
+				},
+				"type": {
+					"id": "custrecord_s4vp_hrd_type",
+					"type": "select",
+					"target": "list:hrd_type"
+				},
+				"sign_date": {
+					"id": "custrecord_s4vp_hrd_sign_date",
+					"type": "date",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_hrd_effective",
+					"type": "date",
+					"target": null
+				},
+				"old_department": {
+					"id": "custrecord_s4vp_hrd_old_department",
+					"type": "select",
+					"target": "department"
+				},
+				"new_department": {
+					"id": "custrecord_s4vp_hrd_new_department",
+					"type": "select",
+					"target": "department"
+				},
+				"old_title": {
+					"id": "custrecord_s4vp_hrd_old_title",
+					"type": "text",
+					"target": null
+				},
+				"new_title": {
+					"id": "custrecord_s4vp_hrd_new_title",
+					"type": "text",
+					"target": null
+				},
+				"old_salary": {
+					"id": "custrecord_s4vp_hrd_old_salary",
+					"type": "currency",
+					"target": null
+				},
+				"new_salary": {
+					"id": "custrecord_s4vp_hrd_new_salary",
+					"type": "currency",
+					"target": null
+				},
+				"old_ins_wage": {
+					"id": "custrecord_s4vp_hrd_old_ins_wage",
+					"type": "currency",
+					"target": null
+				},
+				"new_ins_wage": {
+					"id": "custrecord_s4vp_hrd_new_ins_wage",
+					"type": "currency",
+					"target": null
+				},
+				"old_allowance": {
+					"id": "custrecord_s4vp_hrd_old_allowance",
+					"type": "currency",
+					"target": null
+				},
+				"new_allowance": {
+					"id": "custrecord_s4vp_hrd_new_allowance",
+					"type": "currency",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_hrd_status",
+					"type": "select",
+					"target": "list:hrd_status"
+				},
+				"applied_date": {
+					"id": "custrecord_s4vp_hrd_applied_date",
+					"type": "date",
+					"target": null
+				},
+				"applied_by": {
+					"id": "custrecord_s4vp_hrd_applied_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"note": {
+					"id": "custrecord_s4vp_hrd_note",
+					"type": "textarea",
+					"target": null
+				}
+			}
 		}
 	};
 	const lists = {
@@ -3817,6 +4006,44 @@ define([], () => {
 				"O": "val_s4vp_bck_status_o",
 				"A": "val_s4vp_bck_status_a",
 				"R": "val_s4vp_bck_status_r"
+			}
+		},
+		"hrc_type": {
+			"type": "customlist_s4vp_hrc_type",
+			"values": {
+				"P": "val_s4vp_hrc_type_p",
+				"F": "val_s4vp_hrc_type_f",
+				"U": "val_s4vp_hrc_type_u",
+				"S": "val_s4vp_hrc_type_s",
+				"C": "val_s4vp_hrc_type_c"
+			}
+		},
+		"hrc_status": {
+			"type": "customlist_s4vp_hrc_status",
+			"values": {
+				"D": "val_s4vp_hrc_status_d",
+				"A": "val_s4vp_hrc_status_a",
+				"X": "val_s4vp_hrc_status_x",
+				"T": "val_s4vp_hrc_status_t"
+			}
+		},
+		"hrd_type": {
+			"type": "customlist_s4vp_hrd_type",
+			"values": {
+				"H": "val_s4vp_hrd_type_h",
+				"T": "val_s4vp_hrd_type_t",
+				"P": "val_s4vp_hrd_type_p",
+				"S": "val_s4vp_hrd_type_s",
+				"R": "val_s4vp_hrd_type_r",
+				"D": "val_s4vp_hrd_type_d",
+				"X": "val_s4vp_hrd_type_x"
+			}
+		},
+		"hrd_status": {
+			"type": "customlist_s4vp_hrd_status",
+			"values": {
+				"D": "val_s4vp_hrd_status_d",
+				"A": "val_s4vp_hrd_status_a"
 			}
 		}
 	};

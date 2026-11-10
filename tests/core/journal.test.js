@@ -160,3 +160,112 @@ describe("Tạm ứng và bill cơ quan thu", () => {
     expect(() => J.buildAgencyBills({ batchNbr: "X", pitTotal: 0, insuranceTotals: {} }, { components })).toThrow();
   });
 });
+
+describe("Trích trước tháng 13 theo cơ cấu phân bổ GROSS", () => {
+  const sumOf = (rows) => rows.reduce((s, r) => s + r.amount, 0);
+
+  test("splitAccrual: tỷ lệ theo số tiền dòng GROSS, mang đủ phân đoạn, chênh lệch làm tròn dồn vào dòng lớn nhất", () => {
+    const allocations = [
+      { component: "GROSS", amount: 20000000, account: "642", sub: "D1", project: "", branch: "", workCenter: "WC1", source: "P", hours: 100 },
+      { component: "GROSS", amount: 10880000, account: "632", sub: "D2", project: "P1", branch: "L1", workCenter: "WC2", task: "T1", costCode: "C1" },
+      { component: "ERINS", amount: 7050000, account: "642", sub: "D1" },
+    ];
+    const rows = J.splitAccrual(2500000, allocations);
+    // 2.500.000 x 10.880.000 / 30.880.000 = 880.829,02 -> 880.829; dòng lớn nhất nhận phần còn lại
+    expect(rows).toEqual([
+      { account: "642", sub: "D1", project: "", task: "", costCode: "", branch: "", workCenter: "WC1", amount: 1619171 },
+      { account: "632", sub: "D2", project: "P1", task: "T1", costCode: "C1", branch: "L1", workCenter: "WC2", amount: 880829 },
+    ]);
+    expect(sumOf(rows)).toBe(2500000);
+  });
+
+  test("splitAccrual: gộp dòng cùng phân đoạn, bỏ nhóm không dương, BH doanh nghiệp không tham gia", () => {
+    const rows = J.splitAccrual(1000000, [
+      { component: "GROSS", amount: 6000000, account: "642", sub: "D1" }, { component: "GROSS", amount: 2000000, account: "642", sub: " d1 " },
+      { component: "GROSS", amount: -500000, account: "642", sub: "D2" }, { component: "GROSS", amount: 2000000, account: "641", sub: "D3" },
+      { component: "ERINS", amount: 9000000, account: "627", sub: "D9" },
+    ]);
+    expect(rows.map((r) => [r.account, r.sub, r.amount])).toEqual([["642", "D1", 800000], ["641", "D3", 200000]]);
+  });
+
+  test("splitAccrual: không có dòng phân bổ dương, số trích không dương -> rỗng (giữ cách cũ)", () => {
+    expect(J.splitAccrual(2500000, [])).toEqual([]);
+    expect(J.splitAccrual(2500000, undefined)).toEqual([]);
+    expect(J.splitAccrual(2500000, [{ component: "ERINS", amount: 100, account: "642" }])).toEqual([]);
+    expect(J.splitAccrual(2500000, [{ component: "GROSS", amount: -100, account: "642" }, { component: "GROSS", amount: 0, account: "641" }])).toEqual([]);
+    expect(J.splitAccrual(0, [{ component: "GROSS", amount: 100, account: "642" }])).toEqual([]);
+    expect(J.splitAccrual(-5, [{ component: "GROSS", amount: 100, account: "642" }])).toEqual([]);
+  });
+
+  test("splitAccrual: tổng luôn khớp tuyệt đối, không dòng âm - kể cả số trích rất nhỏ và tỷ lệ lẻ", () => {
+    const four = [1, 2, 3, 4].map((i) => ({ component: "GROSS", amount: 250, account: "642", sub: `D${i}` }));
+    // 2 đồng chia bốn phần bằng nhau: làm tròn thường cho 1 + 1 + 1 và dòng lớn nhất -1 -> chuyển sang làm tròn xuống
+    expect(J.splitAccrual(2, four).map((r) => [r.sub, r.amount])).toEqual([["D1", 2]]);
+    let seed = 13;
+    const rnd = (n) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    for (let i = 0; i < 500; i++) {
+      const n = 1 + rnd(6);
+      const allocations = [];
+      for (let k = 0; k < n; k++) allocations.push({ component: "GROSS", amount: 1 + rnd(40000000), account: ["642", "632"][rnd(2)], sub: `D${rnd(4)}`, project: rnd(2) ? "" : `P${rnd(3)}`, workCenter: rnd(2) ? "" : `WC${rnd(2)}`, branch: rnd(3) ? "" : "L1" });
+      const accrued = 1 + rnd(i % 5 === 0 ? 10 : 5000000);
+      const rows = J.splitAccrual(accrued, allocations);
+      expect(sumOf(rows)).toBe(accrued);
+      expect(rows.every((r) => Number.isInteger(r.amount) && r.amount > 0)).toBe(true);
+    }
+  });
+
+  test("bút toán: dòng Nợ trích tháng 13 mang phòng ban, dự án, địa điểm, class của chi phí lương; Có 335 không đổi", () => {
+    const b = batch();
+    b.employees[0].allocations = [
+      { component: "GROSS", amount: 20000000, account: "642", sub: "D1", project: "", branch: "", workCenter: "WC1" },
+      { component: "GROSS", amount: 10880000, account: "632", sub: "D2", project: "P1", branch: "S4VN", workCenter: "WC2" },
+      { component: "ERINS", amount: 7050000, account: "642", sub: "D1", workCenter: "WC1" },
+    ];
+    const before = J.buildRelease(b, config);
+    // Trước: một dòng Nợ ở tài khoản mặc định, không phân đoạn
+    expect(before.lines.filter((l) => l.memo.startsWith("13th-month") && l.debit > 0).map((l) => [l.account, l.sub, l.project, l.workCenter, l.debit])).toEqual([["642", "", "", "", 2500000]]);
+    b.employees[0].accrualAllocations = J.splitAccrual(2500000, b.employees[0].allocations);
+    const je = J.buildRelease(b, config);
+    const accr = je.lines.filter((l) => l.memo === "13th-month salary accrual 202610");
+    expect(accr.filter((l) => l.debit > 0).map((l) => [l.account, l.sub, l.project, l.branch, l.workCenter, l.debit])).toEqual([
+      ["642", "D1", "", "S4VN", "WC1", 1619171], ["632", "D2", "P1", "S4VN", "WC2", 880829],
+    ]);
+    expect(accr.filter((l) => l.credit > 0).map((l) => [l.account, l.credit])).toEqual([["335", 2500000]]);
+    expect(je.lines.reduce((s, l) => s + l.debit - l.credit, 0)).toBe(0);
+    // Mọi dòng khác giống hệt bút toán cũ
+    const rest = (x) => x.lines.filter((l) => !(l.memo.startsWith("13th-month") && l.debit > 0));
+    expect(rest(je)).toEqual(rest(before));
+    // Đảo: âm bản từng dòng, giữ phân đoạn
+    const rev = J.buildReversal(je.lines, { batchNbr: "BL000001", periodId: "202610" });
+    rev.lines.forEach((l, i) => expect(l).toEqual(Object.assign({}, je.lines[i], { debit: je.lines[i].credit, credit: je.lines[i].debit })));
+  });
+
+  test("bút toán: không có dòng chia (bảng lương cũ, nhân viên không có phân bổ) -> ghi như cũ theo hồ sơ / mặc định", () => {
+    const b = batch();
+    b.employees[0].expenseAccount = "6421";
+    b.employees[0].expenseSub = "D9";
+    b.employees[0].accrualAllocations = [];
+    const je = J.buildRelease(b, config);
+    expect(je.lines.filter((l) => l.memo.startsWith("13th-month") && l.debit > 0).map((l) => [l.account, l.sub, l.debit])).toEqual([["6421", "D9", 2500000]]);
+    expect(je).toEqual(J.buildRelease(batch_with((e) => Object.assign(e, { expenseAccount: "6421", expenseSub: "D9" })), config));
+  });
+
+  test("bút toán: tổng dòng chia lệch số trích -> chặn, yêu cầu tính lại; cộng tác viên không trích dù có dòng chia", () => {
+    const b = batch();
+    b.employees[0].accrualAllocations = [{ account: "642", sub: "D1", amount: 2499999 }];
+    expect(() => J.buildRelease(b, config)).toThrow(/accrual split/);
+    const c = batch();
+    c.employees[1].accrued13th = 500000;
+    c.employees[1].accrualAllocations = [{ account: "642", amount: 500000 }];
+    expect(J.buildRelease(c, config)).toEqual(J.buildRelease(batch(), config));
+  });
+
+  function batch_with(fn) {
+    const b = batch();
+    fn(b.employees[0]);
+    return b;
+  }
+});

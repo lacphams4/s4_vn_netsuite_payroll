@@ -72,7 +72,7 @@ const TAB_OF = {
 	profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputs: 'more', permits: 'more',
 };
 // View mở khi bấm tab
-const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'profiles', advances: 'advances', analytics: 'laborAnalytics', reports: 'reports', setup: 'setup'};
+const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setup'};
 const DEFAULT_VIEW = 'home';
 const known = (view) => !!VIEWS[view] || LEGACY.indexOf(view) >= 0;
 
