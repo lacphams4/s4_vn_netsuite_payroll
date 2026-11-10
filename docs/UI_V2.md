@@ -297,3 +297,14 @@ Khung đã có sẵn và đã đăng ký (view trong PayrollApp, mô-đun route 
 Tab điều hướng vẫn trỏ về màn cũ cho tới khi người điều phối chuyển (VIEW_OF_TAB). Màn cũ tương ứng nằm trong views/legacy.js (`profiles`, `reports`, `advances`, `setup`) - đọc để biết action và dữ liệu sẵn có, không sửa.
 
 Đợt 1 đã gộp (10/11/2026): tab Nhân sự -> `employees` (hồ sơ `employee`), Tạm ứng -> `advancesV2`, Báo cáo -> `reportsHub`; màn cũ vẫn mở được bằng `app.go('profiles' | 'advances' | 'reports')`. Route mới: HrCore (`employeesPage`, `employeeCard`, `hrLookups`, `hrSaveContract`, `hrActivateContract`, `hrTerminateContract`, `hrSaveDecision`, `hrApplyDecision`, `hrSaveDependent`), ReportsHub (`reportsCatalog`, `reportsHtkk`, `reportsFund`, `reportsPitLedger`), AdvancesV2 (`advancesView`, `employeeSearch`), Checks (`resolveCheckGroup`; `checksList` nhận `severity`, `status`, `q`, `offset`), LaborAnalytics (`laborDrill` trả `batch`, `line`; `fresh=1`). Record mới: `contract` (hrc), `decision` (hrd). `api/Lean.js`: bộ đọc gọn (chỉ cột cần, id ghép thẳng). runView `lines[]` chỉ còn các trường lưới dùng; attendanceMonth nén thêm `cellRows`, `totalsTable`. Trích tháng 13 chia theo cơ cấu phân bổ GROSS của nhân viên (`detail.accrual13`), `detail.pit` tách giảm trừ bản thân / người phụ thuộc - chỉ với bảng lương tính sau thay đổi.
+
+Đợt 2 (phân công file; cùng quy tắc mục 14):
+
+| Phân hệ | File | Tiền tố |
+| --- | --- | --- |
+| Thiết lập | views/setupHub.js (`setupHub`, params `section`), api/SetupHub.js | `s4vp-st-` |
+| Sản lượng - lương khoán | views/outputsV2.js (`outputsV2`), api/OutputsV2.js | `s4vp-out-` |
+| Bản in | core/PrintModel.js, core/Print*.js mới, scripts/s4vp_sl_print.js, mẫu in | - |
+| Duyệt nhiều cấp, nhật ký nhân sự, thông báo hai ngôn ngữ | api/Approvals.js, tools/schema/approvals.mjs (`apv`), api/AuditLog.js, phần approve / reject / submit trong api/Payroll.js và api/PayrollRun.js, views/payrollRun.js (chỉ phần duyệt) | `apv` |
+| Tự phục vụ | scripts/s4vp_sl_my_payroll.js, core/SelfService*.js | - |
+| Tính lương nền nhanh hơn | scripts/s4vp_mr_calculate.js, phần calculate trong api/Payroll.js | - |

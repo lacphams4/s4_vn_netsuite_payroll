@@ -2,7 +2,7 @@
 
 Bước 1: record mới (chưa có trong git HEAD) bỏ khối <permissions>, tạm dùng CUSTRECORDENTRYPERM, role lấy bản ở HEAD -> deploy.
 Bước 2: trả lại file đầy đủ -> deploy.
-Cách dùng (thư mục gốc repo): python tools/deploy_two_pass.py
+Cách dùng (thư mục gốc repo): python tools/deploy_two_pass.py (đã commit record mới rồi thì: S4VP_BASE=<commit đã deploy> python tools/deploy_two_pass.py)
 """
 import os
 import re
@@ -26,8 +26,12 @@ def deploy():
 
 
 def main():
+    # Mốc so sánh: mặc định HEAD (record mới = file chưa commit). Đã commit trước khi deploy thì đặt biến môi trường
+    # S4VP_BASE = commit cuối cùng đã deploy (ví dụ HEAD~1): record mới = file thêm từ mốc đó, role lấy bản ở mốc đó.
+    base = os.environ.get("S4VP_BASE", "HEAD")
     untracked = [l[3:].strip() for l in git("status", "--porcelain", "src/Objects").splitlines() if l.startswith("??")]
-    new_records = [p for p in untracked if os.path.basename(p).startswith("customrecord_")]
+    added = [l.strip() for l in git("diff", "--name-only", "--diff-filter=A", base, "HEAD", "--", "src/Objects").splitlines() if l.strip()] if base != "HEAD" else []
+    new_records = [p for p in dict.fromkeys(untracked + added) if os.path.basename(p).startswith("customrecord_")]
     roles = [os.path.join("src", "Objects", f) for f in os.listdir(OBJ) if f.startswith("customrole_")]
     backup = tempfile.mkdtemp(prefix="s4vp_deploy_")
     touched = []
@@ -44,7 +48,7 @@ def main():
             s = s.replace("<accesstype>USEPERMISSIONLIST</accesstype>", "<accesstype>CUSTRECORDENTRYPERM</accesstype>")
             open(full, "w", encoding="utf8", newline="").write(s)
         for p in roles:
-            head = git("show", f"HEAD:{p.replace(os.sep, '/')}")
+            head = git("show", f"{base}:{p.replace(os.sep, '/')}")
             if head:
                 open(os.path.join(ROOT, p), "w", encoding="utf8", newline="").write(head)
         print("Pass 1:")

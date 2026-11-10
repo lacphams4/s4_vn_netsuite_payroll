@@ -789,7 +789,7 @@ select.s4vp-in{padding-right:28px}
         return { rows: out, count: out.length };
     }
 
-    const TEXT$c = {
+    const TEXT$d = {
         vi: { search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}` },
         en: { search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', back: 'Back', backTo: (name) => `Back to ${name}` },
     };
@@ -833,7 +833,7 @@ select.s4vp-in{padding-right:28px}
      * làm nút quay lại; hoặc truyền thẳng `back` {label, onClick}. Tiêu đề dài bị cắt bằng dấu ba chấm, có title đầy đủ.
      */
     function PageHeader({ crumbs, back, title, status, sub, actions }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         const parents = (crumbs || []).filter((c) => c && c.onClick);
         const up = back && back.onClick ? back : parents.length ? parents[parents.length - 1] : null;
         const upLabel = up ? (blank$3(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
@@ -901,7 +901,7 @@ select.s4vp-in{padding-right:28px}
     // ------------------------------------------------------------------ thanh bước, thẻ số, bộ lọc nhanh, tab
     /** steps: [{label, note, state, noteTone, onClick}]; state: 'done' | 'current' | 'todo'. */
     function Stepper({ steps, label }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         return (jsx("ol", { class: "s4vp-steps", "aria-label": label || t.steps, children: (steps || []).filter(Boolean).map((s, i) => {
                 const state = s.state === 'done' || s.state === 'current' ? s.state : 'todo';
                 const attrs = { class: cx$1('s4vp-step', `s4vp-step-${state}`) };
@@ -950,7 +950,7 @@ select.s4vp-in{padding-right:28px}
         return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$3(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$1('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
     }
     function Empty({ text: label }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         return jsx("div", { class: "s4vp-empty", children: text(label) || t.empty });
     }
     // ------------------------------------------------------------------ ô nhập
@@ -1048,7 +1048,7 @@ select.s4vp-in{padding-right:28px}
     }
     /** Ô tìm kiếm: {value, onInput(chuỗi), placeholder, width, label}. */
     function SearchBox({ value, onInput, placeholder, width, label }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         return jsx(InputImpl, { type: "search", value: value, onInput: onInput, placeholder: placeholder || t.search, ariaLabel: label || placeholder || t.search, width: width || 260 });
     }
     /** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. */
@@ -1076,7 +1076,7 @@ select.s4vp-in{padding-right:28px}
     // nên ô ghi lại thời điểm bấm và dòng bỏ qua lượt bấm vừa được ô nhận.
     let cellClickAt = 0;
     function TableImpl({ columns, rows, keyOf, onRowClick, selectedKey, total, empty, search, maxHeight, toolbar, searchPlaceholder, label }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         const [query, setQuery] = core.useState('');
         const cols = (columns || []).filter(Boolean);
         const all = Array.isArray(rows) ? rows : [];
@@ -1142,7 +1142,7 @@ select.s4vp-in{padding-right:28px}
     // ------------------------------------------------------------------ hộp thoại, khung bên phải
     /** Hộp thoại giữa màn hình; actions: mảng nút ở chân; onClose: nút đóng góc phải và phím Esc. */
     function Dialog({ title, children, actions, onClose, width }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         const panel = { class: 's4vp-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': text(title) };
         if (width)
             panel.style = { width: px(width) };
@@ -1150,11 +1150,11 @@ select.s4vp-in{padding-right:28px}
     }
     /** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols"> (tỷ lệ 6:4), hoặc trong <div class="s4vp-col-side"> khi cột phải có nhiều khối. */
     function SidePanel({ title, sub, onClose, children, actions }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         return (jsxs("aside", { class: "s4vp-side", "aria-label": text(title), children: [jsxs("div", { class: "s4vp-side-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-side-t", children: text(title) }), blank$3(sub) || sub === '' ? null : jsx("div", { class: "s4vp-side-s", children: sub })] }), jsxs("div", { class: "s4vp-actions", children: [keyed(actions), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] })] }), children] }));
     }
 
-    const TEXT$b = {
+    const TEXT$c = {
         vi: {
             title: 'Việc hôm nay',
             weekdays: ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
@@ -1543,7 +1543,7 @@ select.s4vp-in{padding-right:28px}
         };
     }
     function HomeView({ app }) {
-        const t = pick(TEXT$b);
+        const t = pick(TEXT$c);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const role = roleKey(boot.user);
@@ -1692,7 +1692,7 @@ select.s4vp-in{padding-right:28px}
                                     ], children: [shownRuns.length ? (jsx("div", { style: S.runList, children: shownRuns.slice(0, RUN_LIMIT).map((r, i) => (jsxs("div", { style: S.run, children: [jsxs("div", { style: S.runHead, children: [jsx("div", { style: S.runTitle, children: r.title }), jsx("div", { class: "s4vp-muted", style: S.small, children: r.sub })] }), r.step ? (jsxs("div", { style: S.runProgress, children: [jsx("div", { style: S.small, children: r.step }), jsx("div", { role: "img", "aria-label": t.progressLabel(r.done, r.total), style: S.track, children: jsx("div", { style: S.bar(r.percent) }) })] })) : null, jsxs("div", { style: S.runEnd, children: [r.badge ? jsx(Badge, { text: r.badge.text, tone: r.badge.tone }) : null, jsx(Button, { kind: i === 0 && r.group === 'running' ? 'primary' : 'default', label: r.group === 'running' ? t.resume : t.open, ariaLabel: `${r.group === 'running' ? t.resume : t.open}: ${r.title}`, onClick: () => go(r.go) })] })] }, r.key))) })) : (jsx(Empty, { text: inGroup.length ? t.runNoMatch : t.runEmpty[activeGroup] })), shownRuns.length > RUN_LIMIT || (activeGroup !== 'upcoming' && count(runCounts[activeGroup]) > shownRuns.length && !query) ? (jsxs("div", { style: S.runBar, children: [jsx("span", { class: "s4vp-small", children: t.runMore(Math.min(shownRuns.length, RUN_LIMIT), Math.max(count(runCounts[activeGroup]), shownRuns.length)) }), jsx(Button, { kind: "link", label: t.seeAll, onClick: () => app.go('payrollList') })] })) : null] }), jsx(Card, { title: t.todos(todos.length), sub: t.todoSub, flush: true, children: jsx(Table, { columns: todoColumns, rows: todos, keyOf: (r) => r.id, onRowClick: (r) => go(r), empty: t.todoEmpty, search: true, searchPlaceholder: t.todoSearch, label: t.todos(todos.length) }) })] }), jsxs(SidePanel, { title: t.deadlines, sub: period ? t.deadlinesSub(period.code) : '', children: [sideItems.length ? (sideItems.map((d, i) => (jsxs("div", { style: S.deadline(i === sideItems.length - 1 && data.statutoryDeadlines !== false), children: [jsxs("div", { style: S.deadlineTitle(d.tone), children: [jsx("span", { children: d.title }), d.badge ? jsx(Badge, { text: d.badge, tone: d.tone }) : null] }), jsx("div", { class: "s4vp-muted", style: S.small, children: d.text }), d.link ? (jsx("div", { style: S.linkRow, children: jsx(Button, { kind: "link", label: d.link.label, ariaLabel: `${d.link.label}: ${d.title}`, onClick: () => go(d.link.go) }) })) : null] }, d.key)))) : (jsx("div", { class: "s4vp-muted", style: S.small, children: t.deadlineEmpty })), data.statutoryDeadlines === false ? jsx("div", { class: "s4vp-small", children: t.noStatutory }) : null] })] })] }));
     }
 
-    const TEXT$a = {
+    const TEXT$b = {
         vi: {
             crumb: 'Chấm công',
             title: (code) => `Công kỳ ${code}`,
@@ -2009,7 +2009,7 @@ select.s4vp-in{padding-right:28px}
     /** Chữ trong ô: ký hiệu; ô chờ xử lý mà chưa có ký hiệu hiện "!". */
     const cellText = (c) => (c.s === '' && (c.p || c.hp) ? '!' : c.k === 'M' ? '·' : c.s);
     function AttendanceView({ app }) {
-        const t = pick(TEXT$a);
+        const t = pick(TEXT$b);
         ensureGridCss();
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
@@ -2624,7 +2624,7 @@ select.s4vp-in{padding-right:28px}
         return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb }, { label: t.periodCrumb(period.code) }], title: t.title(period.code), status: status, sub: subLine, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: menuItems }), showRebuild ? jsx(Button, { label: t.act.rebuild, disabled: !canEdit || busy, title: editTitle, onClick: build }) : null, primary] }), jobCard, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: gridCard }), panel || excCard ? (jsxs("div", { class: "s4vp-col-side", children: [panel, excCard] })) : null] }), dialog] }));
     }
 
-    const TEXT$9 = {
+    const TEXT$a = {
         vi: {
             title: 'Chạy lương',
             sub: 'Bảng lương theo kỳ của công ty con đang chọn. Bấm một dòng để mở.',
@@ -2692,7 +2692,7 @@ select.s4vp-in{padding-right:28px}
     };
     const SUM_KEYS = ['emp_count', 'gross', 'ee_ins', 'er_ins', 'pit', 'net'];
     function PayrollListView({ app }) {
-        const t = pick(TEXT$9);
+        const t = pick(TEXT$a);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const periods = Array.isArray(boot.periods) ? boot.periods : [];
@@ -2784,7 +2784,7 @@ select.s4vp-in{padding-right:28px}
                     ] }), jsx(Card, { flush: true, label: t.title, children: jsx(Table, { columns: columns, rows: data, keyOf: (r) => r.id, onRowClick: (r) => app.go('payrollRun', { id: r.id }), total: total, empty: t.empty, search: true, searchPlaceholder: t.search, toolbar: jsx(Select, { value: period, onInput: setPeriod, options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 300 }) }) }), dialog ? (jsxs(Dialog, { title: t.newBatch, onClose: () => setDialog(false), actions: [jsx(Button, { label: t.cancel, onClick: () => setDialog(false) }), jsx(Button, { label: t.create, kind: "primary", disabled: !form.period || !!app.busy, onClick: create })], children: [jsx(Field, { label: t.period, children: jsx(Select, { value: form.period, onInput: setField('period'), options: periodOptions, placeholder: t.pickPeriod }) }), jsx(Field, { label: t.description, hint: t.descriptionHint, children: jsx(TextInput, { value: form.description, onInput: setField('description'), onEnter: create }) })] })) : null] }));
     }
 
-    const TEXT$8 = {
+    const TEXT$9 = {
         vi: {
             title: 'Phân tích chi phí lương',
             month: 'Tháng',
@@ -3271,7 +3271,7 @@ select.s4vp-in{padding-right:28px}
     }
     // ------------------------------------------------------------------ màn hình
     function LaborAnalyticsView({ app }) {
-        const t = pick(TEXT$8);
+        const t = pick(TEXT$9);
         const user = (app.boot && app.boot.user) || {};
         const allowed = user.role === 'administrator' || user.isAccountant === true || user.role === 'customrole_s4vp_accountant';
         const subsidiary = app.subsidiary || '';
@@ -3630,7 +3630,7 @@ select.s4vp-in{padding-right:28px}
         return (jsxs(Page, { children: [header, jsxs("div", { class: loading ? 's4vp-la s4vp-la-stale' : 's4vp-la', children: [error ? (jsxs("div", { class: "s4vp-la-note s4vp-la-note-error", role: "alert", children: [jsx("span", { children: error }), jsx(Button, { label: t.retry, small: true, onClick: reload })] })) : null, has('FACTS_OUTDATED') && !noFacts ? (jsxs("div", { class: "s4vp-la-note", role: "status", children: [jsx("span", { children: t.outdated }), jsx(Button, { label: t.rebuildNow, small: true, onClick: () => rebuild(curMonth) })] })) : null, noFacts ? (jsxs(Card, { title: t.noFactsTitle, tone: "warn", children: [jsx("div", { children: t.noFacts }), jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { label: t.rebuildNow, kind: "primary", onClick: () => rebuild(curMonth) }), jsx(Button, { label: t.goPayroll, onClick: () => app.go('payrollList', {}) })] })] })) : null, noGl && !noFacts ? (jsx("div", { class: "s4vp-la-note s4vp-la-note-info", role: "status", children: jsx("span", { children: t.noGl }) })) : null, noCompare && !noFacts ? (jsx("div", { class: "s4vp-la-note s4vp-la-note-info", role: "status", children: jsx("span", { children: t.noCompare(cmpName) }) })) : null, noFacts ? null : jsx(StatCards, { cards: cards }), noFacts && !months.length ? null : (jsxs("div", { class: "s4vp-cols s4vp-la-pair", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { title: t.trend.title, children: jsx(TrendChart, { months: months, selected: curMonth, compareMonth: noCompare ? '' : cmpMonth, noGl: noGl, onPick: (m) => go({ month: m }), t: t }) }) }), noFacts ? null : (jsx("div", { class: "s4vp-col-side", children: jsx(Card, { title: noCompare ? t.bridge.title : t.bridge.titleFor(cmpName, monthLabel$1(curMonth)), children: noCompare ? jsx(Empty, { text: t.bridge.none }) : jsx(BridgeChart, { bridge: d.bridge, t: t }) }) }))] })), noFacts ? null : (jsx(Card, { title: t.breakdown.title, sub: t.breakdown.sub, flush: true, children: jsx(Table, { columns: breakdownCols, rows: bdRows, total: bdRows.length ? bdTotal : null, search: true, searchPlaceholder: t.breakdown.search, empty: t.breakdown.empty, maxHeight: 372, label: t.breakdown.title, toolbar: jsx(Chips, { items: dimList.map((k) => ({ value: k, label: t.dims[k] })), value: shownDim, onPick: (k) => k !== dim && go({ dim: k }), label: t.dimLabel }), onRowClick: openDrill, selectedKey: drill ? drill.row.id : '' }) })), noFacts ? null : (jsxs("div", { class: "s4vp-cols s4vp-la-pair", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { title: t.pnl.title, sub: t.pnl.sub, flush: true, actions: [jsx(Button, { label: t.csv, small: true, onClick: exportPnl, disabled: !pnlRows.length })], children: jsx(Table, { columns: pnlCols, rows: pnlRows, search: true, searchPlaceholder: t.pnl.search, label: t.pnl.title }) }) }), jsx("div", { class: "s4vp-col-side", children: jsxs(Card, { title: t.recon.title, sub: t.recon.sub, tone: noGl || recOk || !recRows.length ? '' : 'warn', flush: true, actions: recActions, children: [jsx("div", { class: "s4vp-la-summary", children: recSummary }), recShown && recRows.length ? jsx(Table, { columns: recCols, rows: recRows, total: recTotal, search: true, searchPlaceholder: t.recon.search, maxHeight: 300, label: t.recon.title }) : null] }) })] }))] }), drillDialog] }));
     }
 
-    const TEXT$7 = {
+    const TEXT$8 = {
         vi: {
             title: 'Nhân sự',
             sub: 'Tìm một người, xem việc sắp đến hạn. Bấm một dòng để mở hồ sơ.',
@@ -4062,7 +4062,7 @@ select.s4vp-in{padding-right:28px}
     };
     // ------------------------------------------------------------------ danh sách
     function EmployeeList({ app }) {
-        const t = pick(TEXT$7);
+        const t = pick(TEXT$8);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const [typing, setTyping] = core.useState('');
@@ -4183,7 +4183,7 @@ select.s4vp-in{padding-right:28px}
     }
     // ------------------------------------------------------------------ hồ sơ một người
     function EmployeeCard({ app, id }) {
-        const t = pick(TEXT$7);
+        const t = pick(TEXT$8);
         const boot = app.boot || {};
         const params = (app.route && app.route.params) || {};
         const [data, setData] = core.useState(null);
@@ -4775,7 +4775,7 @@ select.s4vp-in{padding-right:28px}
         return id ? jsx(EmployeeCard, { app: app, id: String(id) }, `e${id}`) : jsx(EmployeeList, { app: app }, "list");
     }
 
-    const TEXT$6 = {
+    const TEXT$7 = {
         vi: {
             title: 'Báo cáo - tờ khai',
             sub: 'Chọn hồ sơ theo kỳ hạn. Mỗi mục mở sẵn kỳ gần nhất có số liệu.',
@@ -5021,7 +5021,7 @@ select.s4vp-in{padding-right:28px}
     const gridColumns = (columns, over) => (columns || []).map((c) => Object.assign({ key: c.key, label: localized(c), type: c.type, nowrap: true }, (over || {})[c.key] || {}));
     // ------------------------------------------------------------------ lưới có ô tìm, phân trang, dòng tổng, xuất CSV
     function GridImpl({ columns, rows, total, empty, placeholder, toolbar, label, exportName, pin, height, plain }) {
-        const t = pick(TEXT$6).grid;
+        const t = pick(TEXT$7).grid;
         const [query, setQuery] = core.useState('');
         const [page, setPage] = core.useState(0);
         const cols = (columns || []).filter(Boolean);
@@ -5076,7 +5076,7 @@ select.s4vp-in{padding-right:28px}
         return (jsxs("div", { class: "s4vp-rp-grid", children: [jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: toolbar || null }), jsxs("div", { class: "s4vp-tbl-bar-r", children: [shown.rows.length > PAGE_SIZE$1 ? (jsxs("span", { class: "s4vp-rp-pager", children: [jsx("span", { class: "s4vp-tbl-count", children: t.rows(num(at * PAGE_SIZE$1 + 1), num(Math.min((at + 1) * PAGE_SIZE$1, shown.rows.length)), num(shown.rows.length)) }), jsx("button", { ...prevAttrs, children: '‹' }), jsx("button", { ...nextAttrs, children: '›' })] })) : (jsx("span", { class: "s4vp-tbl-count", children: shown.count === null ? t.count(num(all.length)) : t.matches(num(shown.count)) })), jsx(SearchBox, { value: query, onInput: (v) => {
                                         setQuery(v);
                                         setPage(0);
-                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$1(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$6).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$1(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
+                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$1(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$7).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$1(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
     }
     function Grid(props) {
         return jsx(GridImpl, { ...props });
@@ -5114,7 +5114,7 @@ select.s4vp-in{padding-right:28px}
     }
     // ------------------------------------------------------------------ màn hình
     function ReportsHubView({ app }) {
-        const t = pick(TEXT$6);
+        const t = pick(TEXT$7);
         const params = (app.route && app.route.params) || {};
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
@@ -5600,7 +5600,7 @@ select.s4vp-in{padding-right:28px}
         return (jsxs(Page, { children: [jsx(PageHeader, { back: { label: t.back, onClick: () => app.go('reportsHub', {}) }, title: period ? `${info.title} - ${period}` : info.title, sub: report === 'print' ? t.print.sub : info.desc, actions: controls }), jsx("div", { class: "s4vp-rp", children: body.length ? body : (jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : pending || app.busy ? t.waiting : t.empty }) })) })] }));
     }
 
-    const TEXT$5 = {
+    const TEXT$6 = {
         vi: {
             title: 'Tạm ứng lương',
             sub: 'HR lập phiếu, kế toán ghi sổ Nợ 141 / Có tiền, bảng lương kỳ sau tự cấn trừ. Bấm một dòng để xem chi tiết.',
@@ -5858,7 +5858,7 @@ select.s4vp-in{padding-right:28px}
     const empLabel = (r) => `${r.employeeCode || r.code || ''} ${r.employeeName || r.name || ''}`.trim();
     const list = (v) => (Array.isArray(v) ? v : []);
     function AdvancesView({ app }) {
-        const t = pick(TEXT$5);
+        const t = pick(TEXT$6);
         const boot = app.boot || {};
         const user = boot.user || {};
         const subsidiary = app.subsidiary || '';
@@ -6141,13 +6141,22 @@ select.s4vp-in{padding-right:28px}
                     ] }), jsx(StatCards, { cards: statCards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => setSelected(String(r.id) === String(selected) ? '' : String(r.id)), selectedKey: current ? current.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: "max(260px, calc(100vh - 384px))", toolbar: jsx(Chips, { items: chipItems, value: filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: "s4vp-col-side s4vp-adv-side", children: detailPanel(current) }) : null] }), dialog ? dialogBody() : null] }));
     }
 
-    const TEXT$4 = {
+    const TEXT$5 = {
         vi: { title: 'Thiết lập', building: 'Màn hình này đang được dựng lại với giao diện mới.', openOld: 'Mở màn hình hiện tại' },
         en: { title: 'Setup', building: 'This screen is being rebuilt with the new interface.', openOld: 'Open the current screen' },
     };
     function SetupHubView({ app }) {
-        const t = pick(TEXT$4);
+        const t = pick(TEXT$5);
         return (jsxs(Page, { children: [jsx(PageHeader, { title: t.title }), jsxs(Card, { children: [jsx(Empty, { text: t.building }), jsx(Button, { label: t.openOld, onClick: () => app.go('setup') })] })] }));
+    }
+
+    const TEXT$4 = {
+        vi: { title: 'Sản lượng - lương khoán', building: 'Màn hình này đang được dựng lại với giao diện mới.', openOld: 'Mở màn hình hiện tại' },
+        en: { title: 'Output - piecework', building: 'This screen is being rebuilt with the new interface.', openOld: 'Open the current screen' },
+    };
+    function OutputsView({ app }) {
+        const t = pick(TEXT$4);
+        return (jsxs(Page, { children: [jsx(PageHeader, { title: t.title }), jsxs(Card, { children: [jsx(Empty, { text: t.building }), jsx(Button, { label: t.openOld, onClick: () => app.go('outputs') })] })] }));
     }
 
     const TEXT$3 = {
@@ -9425,12 +9434,12 @@ select.s4vp-in{padding-right:28px}
         },
     };
     // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
-    const VIEWS = { home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView };
+    const VIEWS = { home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView };
     const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
     // Tab đang sáng theo view
     const TAB_OF = {
         home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
-        profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputs: 'more', permits: 'more',
+        profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
     };
     // View mở khi bấm tab
     const VIEW_OF_TAB = { home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setup' };
