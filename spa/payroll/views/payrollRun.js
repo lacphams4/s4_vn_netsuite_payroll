@@ -159,7 +159,7 @@ const TEXT = {
 			delete: 'Xóa',
 			cols: {
 				item: 'Khoản', amount: 'Số tiền', exempt: 'Miễn thuế', code: 'Mã', memo: 'Diễn giải', base: 'Căn cứ', eeRate: 'Tỷ lệ NLĐ', ee: 'NLĐ đóng', erRate: 'Tỷ lệ DN', er: 'DN đóng',
-				project: 'Dự án / khách hàng', projectOnly: 'Dự án', task: 'Công việc', branch: 'Địa điểm', workCenter: 'Phòng ban', source: 'Nguồn', allocHours: 'Số giờ',
+				project: 'Dự án / khách hàng', projectOnly: 'Dự án', task: 'Công việc', branch: 'Địa điểm', workCenter: 'Class', source: 'Nguồn', allocHours: 'Số giờ',
 				entries: 'Số dòng', hours: 'Giờ tính lương', sourceHours: 'Giờ timesheet', reason: 'Lý do sửa', date: 'Ngày', sheetHours: 'Số giờ', approval: 'Trạng thái duyệt', counted: 'Tính lương',
 				note: 'Ghi chú', component: 'Khoản trích', ratio: 'Tỷ lệ', current: 'Kỳ này', previous: 'Kỳ trước', diff: 'Chênh', label: 'Chỉ tiêu', value: 'Giá trị',
 				advanceNbr: 'Số tạm ứng', offset: 'Đã cấn trừ', balanceAfter: 'Số dư còn lại', document: 'Chứng từ',
@@ -353,7 +353,7 @@ const TEXT = {
 			delete: 'Delete',
 			cols: {
 				item: 'Item', amount: 'Amount', exempt: 'Tax exempt', code: 'Code', memo: 'Description', base: 'Wage base', eeRate: 'Employee rate', ee: 'Employee', erRate: 'Employer rate', er: 'Employer',
-				project: 'Project / customer', projectOnly: 'Project', task: 'Task', branch: 'Location', workCenter: 'Department', source: 'Source', allocHours: 'Hours',
+				project: 'Project / customer', projectOnly: 'Project', task: 'Task', branch: 'Location', workCenter: 'Class', source: 'Source', allocHours: 'Hours',
 				entries: 'Entries', hours: 'Payroll hours', sourceHours: 'Timesheet hours', reason: 'Reason for change', date: 'Date', sheetHours: 'Hours', approval: 'Approval status', counted: 'Counted',
 				note: 'Memo', component: 'Component', ratio: 'Ratio', current: 'This period', previous: 'Previous', diff: 'Change', label: 'Item', value: 'Value',
 				advanceNbr: 'Advance number', offset: 'Offset', balanceAfter: 'Remaining balance', document: 'Document',

@@ -1,7 +1,7 @@
 <mapreducescript scriptid="customscript_s4vp_mr_attendance">
   <name>S4VP Attendance and Leave (Map/Reduce)</name>
   <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_mr_attendance.js]</scriptfile>
-  <description>Builds, locks or unlocks the attendance summary of a pay period, or runs annual leave accrual, in chunks of 50 employees.</description>
+  <description>Builds, locks or unlocks the attendance summary of a pay period, processes machine punches of a period, or runs annual leave accrual, in chunks of employees.</description>
   <isinactive>F</isinactive>
   <notifyadmins>F</notifyadmins>
   <notifyowner>T</notifyowner>
@@ -9,7 +9,7 @@
     <scriptcustomfield scriptid="custscript_s4vp_mra_op">
       <label>Operation</label>
       <fieldtype>TEXT</fieldtype>
-      <description>build, lock, unlock or accrue (set by the payroll screen).</description>
+      <description>build, lock, unlock, punches or accrue (set by the payroll screen).</description>
       <ismandatory>F</ismandatory>
       <storevalue>T</storevalue>
       <displaytype>NORMAL</displaytype>
@@ -17,7 +17,7 @@
     <scriptcustomfield scriptid="custscript_s4vp_mra_period">
       <label>Pay period internal ID</label>
       <fieldtype>TEXT</fieldtype>
-      <description>Pay period for build, lock and unlock.</description>
+      <description>Pay period for build, lock, unlock and punches.</description>
       <ismandatory>F</ismandatory>
       <storevalue>T</storevalue>
       <displaytype>NORMAL</displaytype>

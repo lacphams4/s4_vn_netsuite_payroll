@@ -99,5 +99,11 @@
       <linktasktype>LIST</linktasktype>
       <shortlist>F</shortlist>
     </link>
+    <link>
+      <linklabel>Tài khoản chi phí lương theo đích</linklabel>
+      <linkobject>[scriptid=customrecord_s4vp_cost_account]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
   </links>
 </centercategory>

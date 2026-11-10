@@ -15,10 +15,13 @@
  *        unemploymentApplicable, isUnionMember, region, accrue13, isActive, seniorityDate, hireDate, terminationDate, salesTarget,
  *        compensation: {effectiveDate, baseSalary, insuranceWage, fixedAllowance, package}, dependents: [{deductFrom, deductTo}],
  *        line: {standardDays, workDays, absenceDays, unpaidLeaveDays, otherTaxDeductions, lateCount},
- *        timeLines, manualEarnings: [{earningType, quantity, rate, multiplier, amount, amountLocked, description, project, branch, workCenter}],
+ *        timeLines, manualEarnings: [{earningType, quantity, rate, multiplier, amount, amountLocked, description, project, branch, workCenter, sub}],
  *        deductions: [{code, name, amount, account}], openAdvances: [{refNbr, date, balance}], prior: {earnings, absenceWorkingDays, otherTaxDeductions},
  *        leaveRemaining, yearToDateOvertimeHours, outputAmounts, salesAmount, outputShares, shiftCounts, rosterDays, allocationVersions,
- *        defaults: {project, task, branch, workCenter}, accounts: {workCenters, projects, employeeAccount, employeeSub, defaultAccount, defaultSub}}
+ *        defaults: {project, task, branch, workCenter},
+ *        accounts: {workCenters, projects, departments, employeeAccount, employeeSub, defaultAccount, defaultSub}}
+ *        (workCenters / projects / departments: bảng của core/CostAccountRules.buildMaps; loại lao động do hàm này tự điền)
+ *        Phòng ban riêng của đích phân bổ: manualEarnings[].sub, allocationVersions[].lines[].sub, outputShares[].sub.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
@@ -168,7 +171,9 @@ define([
 		});
 		const allocations = CostAllocation.build({
 			grossPay: pay.grossPay, employerInsurance: pay.employerInsurance, earnings, outputShares: emp.outputShares || [], targets,
-			defaultBranch: defaults.branch || "", defaultWorkCenter: defaults.workCenter || "", accounts: emp.accounts || {},
+			defaultBranch: defaults.branch || "", defaultWorkCenter: defaults.workCenter || "",
+			// Loại lao động để tra tài khoản chi phí theo đích (CostAccountRules): lớp gọi không cần truyền
+			accounts: Object.assign({ laborType: emp.employmentType || "E" }, emp.accounts || {}),
 		});
 
 		const insurance = (pay.insurance && pay.insurance.lines) || [];

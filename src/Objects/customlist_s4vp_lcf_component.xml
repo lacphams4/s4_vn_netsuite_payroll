@@ -1,0 +1,44 @@
+<customlist scriptid="customlist_s4vp_lcf_component">
+  <name>S4VP lcf_component</name>
+  <description>S4 VN Payroll code list lcf_component; values keep the Acumatica codes (wages, overtime, allowance, bonus, piecework, other, employerIns, accrued13, contractor).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_lcf_component_wages">
+      <value>wages - Lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_overtime">
+      <value>overtime - Làm thêm, làm đêm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_allowance">
+      <value>allowance - Phụ cấp</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_bonus">
+      <value>bonus - Thưởng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_piecework">
+      <value>piecework - Lương khoán, sản lượng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_other">
+      <value>other - Thu nhập khác</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_employerins">
+      <value>employerIns - BH, KPCĐ doanh nghiệp đóng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_accrued13">
+      <value>accrued13 - Trích trước lương tháng 13</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_lcf_component_contractor">
+      <value>contractor - Thù lao cộng tác viên</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

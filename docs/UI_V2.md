@@ -261,3 +261,37 @@ Thử tải trên td2937310 (công ty con 13, 1.000 nhân viên thử "S4VP TEST
 | Lọc nhanh trên lưới 1.004 dòng | 0,2 giây |
 
 Đã sửa trong lượt thử: `loadEmployees` chạy theo lượt và bỏ qua dòng không đổi; `employeesInfo` ghép id thẳng vào câu lệnh và lấy tên phòng ban bằng JOIN (1,06 -> 0,25 giây cho 900 nhân viên); giới hạn danh sách cảnh báo trong runView. Chưa làm: thu gọn dữ liệu dòng của runView (0,9 MB), phân trang phía máy chủ cho màn Kiểm tra và Nhân sự, tăng tốc attendanceMonth và homeSummary; chưa thử duyệt, ghi sổ, in phiếu lương, file ngân hàng với 1.000 dòng.
+
+## 13. Phân tích chi phí lương (hợp đồng dữ liệu)
+
+Mục tiêu (người dùng, 10/11/2026): thế mạnh của gói là tích hợp kế toán, hạch toán chi phí lương rất mịn; báo cáo và dashboard phải khai thác điều đó để phân tích sâu biến động chi phí lao động so với giá vốn và lãi lỗ.
+
+Thực trạng dữ liệu: chi tiết đầy đủ nằm ở `batch_emp.detail` (earnings theo loại thu nhập, insurance theo thành phần, allocations theo tài khoản - phòng ban - dự án - địa điểm - class, giờ); bút toán gộp theo tài khoản x phòng ban x dự án x địa điểm (x class), không có nhân viên hay loại thu nhập. Vì vậy phân tích đọc từ BẢNG SỐ LIỆU (fact) do gói ghi khi ghi sổ, và đối chiếu với sổ cái.
+
+Bảng số liệu `cost_fact` (tools/schema/analytics.mjs, tiền tố `lcf`): mỗi dòng = một bảng lương x tháng kế toán (YYYYMM theo ngày bút toán) x tài khoản chi phí x phòng ban x class x địa điểm x dự án x loại lao động (E / C) x thành phần chi phí; giá trị: số tiền, số giờ (nếu có). Thành phần (`component`): `wages` (lương, phụ cấp cố định theo công), `overtime`, `allowance`, `bonus`, `piecework` (lương khoán, sản lượng), `other`, `employerIns` (BH, KPCĐ doanh nghiệp đóng), `accrued13` (trích lương tháng 13), `contractor` (thù lao cộng tác viên). Ghi khi ghi sổ bảng lương; đảo bảng lương thì đánh dấu dòng không còn hiệu lực (không xóa). Số người (headcount) và chi phí theo nhân viên lấy từ `batch_emp` (trường vô hướng), không lưu trong fact.
+
+Phân loại lao động trong giá vốn / chi phí hoạt động: theo LOẠI TÀI KHOẢN NetSuite của tài khoản chi phí (COGS -> trong giá vốn; còn lại -> chi phí hoạt động), tức đúng cách báo cáo lãi lỗ của NetSuite phân loại. Không gắn cứng số hiệu 622 / 627 / 641 / 642.
+
+Số liệu sổ cái (doanh thu, giá vốn, chi phí, lãi) đọc bằng SuiteQL theo công ty con và kỳ kế toán, gom theo loại tài khoản; vai trò không có quyền đọc giao dịch thì trả `notes: ['NO_GL_ACCESS']` và các tỷ lệ theo doanh thu để trống.
+
+Route (api/LaborAnalytics.js, roles "acct"):
+
+- GET `laborAnalytics` `{subsidiary, month?: 'YYYY-MM', compare?: 'YYYY-MM' | 'prev' | 'yoy', dim?: 'department'|'project'|'class'|'location'|'account'|'component'|'employmentType'}` ->
+  `{subsidiary, month, compare, months: [{month, labor, laborCogs, laborOpex, wages, overtime, allowance, bonus, piecework, other, employerIns, accrued13, contractor, headcount, hours, revenue, cogs, opex, netIncome, hasGl}]` (12 tháng đến `month`), `kpis: {labor, laborToRevenue, laborInCogs, laborInOpex, headcount, costPerHead, overtimeShare, costPerHour}` (mỗi mục `{cur, prev, yoy}`), `bridge: [{key, amount}]` (từ kỳ so sánh đến kỳ này: `start`, `headcount` (thay đổi số người x chi phí bình quân kỳ trước), `wages` (thay đổi mức lương bình quân), `overtime`, `allowance`, `bonus`, `piecework`, `other`, `employerIns`, `accrued13`, `contractor`, `end`; tổng các bước = `end - start`), `breakdown: {dim, dims, rows: [{key, label, cur, prev, diff, pct, share, headcount, prevHeadcount, perHead, components}]}`, `pnl: [{key: 'revenue'|'cogs'|'laborCogs'|'grossProfit'|'opex'|'laborOpex'|'operatingProfit', cur, prev, diff, pct, ofRevenue}]`, `reconcile: {rows: [{account, accountNumber, accountName, payroll, gl, difference}], ok}`, `notes: [mã]}`. Mã `notes`: `NO_FACTS`, `NO_GL_ACCESS`, `NO_COMPARE`, `FACTS_OUTDATED`.
+- GET `laborDrill` `{subsidiary, month, compare, dim, key}` -> `{rows: [{employee, code, name, department, cur, prev, diff, pct, components}]}` (tính từ chi tiết dòng bảng lương của các bảng lương trong tháng, cho đúng một nhóm).
+- POST `rebuildLaborFacts` `{subsidiary, month?}` (roles "acct") -> lập lại fact cho các bảng lương đã ghi sổ (theo lượt, trả `more: true` khi chưa xong - lib/api.js tự gọi lại).
+
+Màn `laborAnalytics` (tab "Phân tích chi phí", params `month`, `compare`, `dim`): thẻ chỉ số, xu hướng 12 tháng, cầu biến động, bảng phân rã theo chiều có ô tìm và bấm dòng để xem tới nhân viên, bảng lãi lỗ có tách phần lao động, đối chiếu sổ cái.
+
+## 14. Backlog đợt 1 và 2 (phân công file)
+
+Khung đã có sẵn và đã đăng ký (view trong PayrollApp, mô-đun route trong RESTlet): người làm chỉ điền vào file của mình, KHÔNG sửa PayrollApp.js, scripts/s4vp_rl_api.js, ui/kit.js (thiếu gì tự làm trong view và ghi vào báo cáo); ui/css.js chỉ THÊM lớp có tiền tố riêng.
+
+| Phân hệ | File | Tiền tố CSS / schema |
+| --- | --- | --- |
+| Nhân sự | views/employees.js (view `employees` danh sách, `employee` hồ sơ một người với params `id`, `tab`), api/HrCore.js, core/Hr*.js, tools/schema/hr.mjs | `s4vp-hr-`, `hrc` (hợp đồng), `hrd` (quyết định) |
+| Báo cáo - tờ khai | views/reportsHub.js (view `reportsHub`, params `report`), api/ReportsHub.js | `s4vp-rp-` |
+| Tạm ứng | views/advancesV2.js (view `advancesV2`), api/AdvancesV2.js | `s4vp-adv-` |
+| Thiết lập | views/setupHub.js (view `setupHub`, params `section`), api/SetupHub.js | `s4vp-st-` |
+
+Tab điều hướng vẫn trỏ về màn cũ cho tới khi người điều phối chuyển (VIEW_OF_TAB). Màn cũ tương ứng nằm trong views/legacy.js (`profiles`, `reports`, `advances`, `setup`) - đọc để biết action và dữ liệu sẵn có, không sửa.

@@ -19,7 +19,7 @@ Phân loại: **Xong** (có trên NetSuite và đã chạy thử trên account),
 | VP102040 | Bảng đơn giá | Xong | Record bảng + dòng theo ngày hiệu lực, dự án; thang hoa hồng cho quy tắc nguồn T. Màn hình: danh sách NetSuite |
 | VP102050, VP102060 | Ca, mẫu xoay ca | Xong | Record ca (giờ vào / ra HH:mm, nghỉ, ân hạn, OT tối thiểu), mẫu xoay ca (chu kỳ mã ca) |
 | VP102070 | Work center | Ánh xạ | Dùng Class của NetSuite |
-| VP102080 | Tài khoản lương theo dự án | Chưa làm | Lõi CostAllocationBuilder đã hỗ trợ ưu tiên tài khoản dự án |
+| VP102080 | Tài khoản lương theo dự án | Xong (record + lõi) | Record `cost_account` "Tài khoản chi phí lương theo đích": theo dự án, class (work center) hoặc phòng ban, tùy chọn theo công ty con, loại lao động, ngày hiệu lực. Ưu tiên: class -> dự án -> phòng ban -> hồ sơ -> mặc định (docs/ARCHITECTURE.md mục 4.1). Màn hình: danh sách NetSuite; chờ nối `api/CostAccounts.forPayroll` vào `api/Payroll.js` |
 | VP201000 | Kỳ lương | Xong | Sinh kỳ, đóng kỳ, khóa / mở khóa công |
 | VP203000 | Hồ sơ lương nhân viên | Xong | Hồ sơ + lịch sử lương + người phụ thuộc; danh sách trên SPA |
 | VP204000 | Giấy phép lao động | Xong (API) | Lập, nộp, cấp, thu hồi, gia hạn theo chuỗi, cập nhật hết hạn; cảnh báo / chặn khi tính lương (đã chạy). Chưa có màn hình SPA riêng |

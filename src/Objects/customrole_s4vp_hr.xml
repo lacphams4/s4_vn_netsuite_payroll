@@ -227,6 +227,14 @@
       <permlevel>FULL</permlevel>
     </permission>
     <permission>
+      <permkey>[customrecord_s4vp_cost_account]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_cost_fact]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
       <permkey>[customrecord_s4vp_check_result]</permkey>
       <permlevel>EDIT</permlevel>
     </permission>

@@ -207,10 +207,11 @@ define([
 	}
 
 	/**
-	 * Process Punches (VP502000): khớp lượt chấm với phân ca của kỳ, sinh phiếu ngoại lệ và đơn OT đề xuất ở Tạm giữ.
-	 * Chạy lại chỉ thay chứng từ Tạm giữ do lần trước sinh; chứng từ khác (kể cả nhập tay) không sinh trùng.
+	 * Ngữ cảnh xử lý chấm công của kỳ - bước "cả kỳ", chạy một lần: kiểm tra kỳ (đã đóng, công đã khóa) và xác định nhân viên
+	 * thuộc nhóm lương của kỳ. Chạy nền: gọi ở getInputData để chia lô; mỗi lô dựng lại ngữ cảnh ở reduce.
+	 * @returns {{period, from, to, days, prof: Object<string, object>, empIds: string[], cells: number}}
 	 */
-	function processPunches(periodId) {
+	function punchContext(periodId) {
 		const period = getPeriod(periodId);
 		if (period.status === "C") throw fail("The pay period is closed", "Kỳ lương đã đóng");
 		if (period.att_status === "L") throw fail("Attendance of the period is locked", "Kỳ công đã khóa");
@@ -221,9 +222,33 @@ define([
 		for (const p of profiles) prof[p.employee] = p;
 		const empIds = Object.keys(prof);
 		const days = Dates.diff(from, to) + 1;
-		if (empIds.length * days > SYNC_CELLS) {
-			throw fail(`Too many employees x days (${empIds.length} x ${days}); run punch processing in the background`, `Quá nhiều nhân viên x ngày (${empIds.length} x ${days}), cần chạy xử lý chấm công nền`);
-		}
+		return { period, from, to, days, prof, empIds, cells: empIds.length * days };
+	}
+
+	/** Cỡ việc xử lý chấm công của kỳ (nhân viên x ngày): RESTlet quyết định chạy ngay hay chạy nền. */
+	function punchSize(periodId) {
+		const c = punchContext(periodId);
+		return { employees: c.empIds.length, days: c.days, cells: c.cells };
+	}
+
+	/** Nhân viên của kỳ để Map/Reduce chia lô (kèm kiểm tra kỳ). */
+	function punchEmployees(periodId) {
+		return punchContext(periodId).empIds;
+	}
+
+	/**
+	 * Xử lý chấm công cho một lô nhân viên của kỳ. Mọi bước chỉ đụng tới dữ liệu của chính các nhân viên trong lô (khớp ca
+	 * tính riêng từng người), nên chạy nhiều lô rời nhau cho cùng kết quả với chạy một lần và chạy lại một lô không sinh trùng.
+	 * @param {string} periodId
+	 * @param {string[]} employeeIds nhân viên của lô; ai không thuộc nhóm lương của kỳ bị bỏ qua
+	 * @param {object} [ctx] ngữ cảnh dựng sẵn (punchContext)
+	 * @returns {{employees, deleted, exceptions, overtime, kept, results: Object<string, number>}}
+	 */
+	function processPunchChunk(periodId, employeeIds, ctx) {
+		const c = ctx || punchContext(periodId);
+		const { period, from, to, prof } = c;
+		const empIds = [...new Set((employeeIds || []).map(String))].filter((e) => prof[e]);
+		if (!empIds.length) return { employees: 0, deleted: 0, exceptions: 0, overtime: 0, kept: 0, results: {} };
 		const inPeriod = (d) => d.work_date && Dates.within(d.work_date, from, to);
 
 		// 1. Xóa chứng từ Tạm giữ do lần chạy trước sinh; phần còn lại (khác Từ chối / Hủy) là "đã giữ"
@@ -278,7 +303,33 @@ define([
 		}
 		const counts = {};
 		for (const r of results) counts[r.status] = (counts[r.status] || 0) + 1;
-		return { period: period.name, employees: empIds.length, deleted, exceptions: proposal.exceptions.length, overtime: proposal.overtime.length, kept: proposal.kept, results: counts, processedOn: Clock.today() };
+		return { employees: empIds.length, deleted, exceptions: proposal.exceptions.length, overtime: proposal.overtime.length, kept: proposal.kept, results: counts };
+	}
+
+	/** Cộng kết quả của các lô (processPunchChunk) thành kết quả cả kỳ. */
+	function mergePunchResults(list) {
+		const out = { employees: 0, deleted: 0, exceptions: 0, overtime: 0, kept: 0, results: {} };
+		for (const r of list || []) {
+			if (!r) continue;
+			for (const k of ["employees", "deleted", "exceptions", "overtime", "kept"]) out[k] += Number(r[k]) || 0;
+			for (const [k, n] of Object.entries(r.results || {})) out.results[k] = (out.results[k] || 0) + (Number(n) || 0);
+		}
+		return out;
+	}
+
+	/**
+	 * Process Punches (VP502000): khớp lượt chấm với phân ca của kỳ, sinh phiếu ngoại lệ và đơn OT đề xuất ở Tạm giữ.
+	 * Chạy lại chỉ thay chứng từ Tạm giữ do lần trước sinh; chứng từ khác (kể cả nhập tay) không sinh trùng.
+	 * Chạy ngay trong RESTlet cho kỳ đến SYNC_CELLS nhân viên x ngày; kỳ lớn hơn do Map/Reduce s4vp_mr_attendance (op punches)
+	 * gọi processPunchChunk theo lô - RESTlet xếp hàng bằng Attendance.queue(kỳ, "punches").
+	 */
+	function processPunches(periodId) {
+		const ctx = punchContext(periodId);
+		if (ctx.cells > SYNC_CELLS) {
+			throw fail(`Too many employees x days (${ctx.empIds.length} x ${ctx.days}); run punch processing in the background`, `Quá nhiều nhân viên x ngày (${ctx.empIds.length} x ${ctx.days}), cần chạy xử lý chấm công nền`);
+		}
+		const r = processPunchChunk(periodId, ctx.empIds, ctx);
+		return { period: ctx.period.name, employees: ctx.empIds.length, deleted: r.deleted, exceptions: r.exceptions, overtime: r.overtime, kept: r.kept, results: r.results, processedOn: Clock.today() };
 	}
 
 	// ------------------------------------------------------------------ bảng công ký hiệu
@@ -373,5 +424,9 @@ define([
 		});
 	}
 
-	return { shifts, patterns, generateRoster, setRosterCell, roster, importPunches, processPunches, loadSheetEmployees, saveSheet, sheetSummaries, symbols };
+	return {
+		SYNC_CELLS, shifts, patterns, generateRoster, setRosterCell, roster, importPunches, processPunches, loadSheetEmployees, saveSheet, sheetSummaries, symbols,
+		// Xử lý chấm công theo lô (Map/Reduce s4vp_mr_attendance, op punches)
+		punchContext, punchSize, punchEmployees, processPunchChunk, mergePunchResults,
+	};
 });

@@ -13,6 +13,11 @@ import {Button, Menu, Select, Dialog} from './ui/kit.js';
 import HomeView from './views/home.js';
 import AttendanceView from './views/attendance.js';
 import PayrollListView from './views/payrollList.js';
+import LaborAnalyticsView from './views/laborAnalytics.js';
+import EmployeesView from './views/employees.js';
+import ReportsHubView from './views/reportsHub.js';
+import AdvancesView from './views/advancesV2.js';
+import SetupHubView from './views/setupHub.js';
 import PayrollRunView from './views/payrollRun.js';
 import CheckDetailView from './views/checkDetail.js';
 import LegacyView from './views/legacy.js';
@@ -21,7 +26,7 @@ const TEXT = {
 	vi: {
 		title: 'Lương VN',
 		nav: 'Phân hệ',
-		tabs: {home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập'},
+		tabs: {home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập'},
 		more: 'Khác',
 		outputs: 'Sản lượng - khoán tổ',
 		permits: 'Giấy phép lao động',
@@ -40,7 +45,7 @@ const TEXT = {
 	en: {
 		title: 'VN Payroll',
 		nav: 'Module',
-		tabs: {home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', reports: 'Reports - declarations', setup: 'Setup'},
+		tabs: {home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup'},
 		more: 'More',
 		outputs: 'Output - team piecework',
 		permits: 'Work permits',
@@ -59,15 +64,15 @@ const TEXT = {
 };
 
 // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
-const VIEWS = {home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView};
+const VIEWS = {home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView};
 const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
 // Tab đang sáng theo view
 const TAB_OF = {
 	home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
-	profiles: 'profiles', advances: 'advances', reports: 'reports', setup: 'setup', outputs: 'more', permits: 'more',
+	profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputs: 'more', permits: 'more',
 };
 // View mở khi bấm tab
-const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'profiles', advances: 'advances', reports: 'reports', setup: 'setup'};
+const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'profiles', advances: 'advances', analytics: 'laborAnalytics', reports: 'reports', setup: 'setup'};
 const DEFAULT_VIEW = 'home';
 const known = (view) => !!VIEWS[view] || LEGACY.indexOf(view) >= 0;
 

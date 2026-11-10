@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_pca_target">
+  <name>S4VP pca_target</name>
+  <description>S4 VN Payroll code list pca_target; values keep the Acumatica codes (P, W, D).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_pca_target_p">
+      <value>P - Dự án</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_pca_target_w">
+      <value>W - Class (work center)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_pca_target_d">
+      <value>D - Phòng ban</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

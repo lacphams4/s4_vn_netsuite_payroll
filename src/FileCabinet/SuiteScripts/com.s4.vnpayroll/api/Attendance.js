@@ -308,23 +308,56 @@ define([
 		return periodId ? `period_${periodId}` : "accrue";
 	}
 
+	function resultKey(periodId) {
+		return `result_${jobKey(periodId)}`;
+	}
+
+	/** Cờ tác vụ nền trong cache: JSON {job, op}; bản cũ chỉ lưu chuỗi id tác vụ. */
+	function parseJob(raw) {
+		if (!raw) return null;
+		const text = String(raw);
+		if (text.charAt(0) === "{") {
+			try {
+				const o = JSON.parse(text);
+				return o && o.job ? { job: String(o.job), op: String(o.op || "") } : null;
+			} catch (e) {
+				return null;
+			}
+		}
+		return { job: text, op: "" };
+	}
+
+	/** Trạng thái tác vụ Map/Reduce; không đọc được thì coi như đã kết thúc. */
+	function taskState(taskId) {
+		const out = { status: "", stage: "", percent: null, running: false };
+		try {
+			const s = task.checkStatus({ taskId });
+			out.status = String(s.status || "");
+			out.stage = String(s.stage || "");
+			out.running = out.status === String(task.TaskStatus.PENDING) || out.status === String(task.TaskStatus.PROCESSING);
+			try {
+				const pct = typeof s.getPercentageCompleted === "function" ? Number(s.getPercentageCompleted()) : NaN;
+				if (isFinite(pct)) out.percent = pct;
+			} catch (e) {
+				// không có tiến độ ở giai đoạn này
+			}
+		} catch (e) {
+			// tác vụ không còn tra được
+		}
+		return out;
+	}
+
 	/** Từ chối khi tác vụ nền của kỳ (hoặc cấp phép năm) còn PENDING / PROCESSING; tác vụ đã xong thì xóa cờ. */
 	function assertNotQueued(periodId) {
 		const key = jobKey(periodId);
-		let taskId = null;
+		let cur = null;
 		try {
-			taskId = jobCache().get({ key });
+			cur = parseJob(jobCache().get({ key }));
 		} catch (e) {
 			return;
 		}
-		if (!taskId) return;
-		let status = "";
-		try {
-			status = String(task.checkStatus({ taskId }).status || "");
-		} catch (e) {
-			status = "";
-		}
-		if (status === String(task.TaskStatus.PENDING) || status === String(task.TaskStatus.PROCESSING)) {
+		if (!cur) return;
+		if (taskState(cur.job).running) {
 			throw fail("The attendance of this period is being processed in the background; refresh later", "Bảng công của kỳ đang được xử lý nền, hãy tải lại sau");
 		}
 		clearQueued(periodId);
@@ -337,6 +370,49 @@ define([
 		} catch (e) {
 			// cache không dùng được: bỏ qua
 		}
+	}
+
+	/**
+	 * Kết thúc tác vụ nền (summarize của Map/Reduce): lưu kết quả 1 giờ để màn hình báo lại, rồi gỡ cờ của kỳ.
+	 * @param {string|null} periodId null = cấp phép năm
+	 * @param {{op, ok, employees, errors, message?}} [result] chỉ số đếm và thông báo lỗi, không có dữ liệu lương
+	 */
+	function finishJob(periodId, result) {
+		try {
+			if (result) jobCache().put({ key: resultKey(periodId), value: JSON.stringify(result), ttl: 3600 });
+		} catch (e) {
+			// cache không dùng được: màn hình chỉ báo "đã xong"
+		}
+		clearQueued(periodId);
+	}
+
+	/**
+	 * Tác vụ nền của kỳ cho màn hình (action jobStatus có period): đang chạy thì trả tiến độ; đã xong thì gỡ cờ và trả kết
+	 * quả lần chạy gần nhất (nếu còn trong cache).
+	 * @param {string} periodId
+	 * @param {string} [jobId] id tác vụ màn hình đang theo dõi: dùng khi cờ của kỳ không ghi được vào cache lúc xếp hàng
+	 * @returns {{running: boolean, job?: string, op?: string, status?: string, stage?: string, percent?: number|null, result?: object|null}}
+	 */
+	function jobState(periodId, jobId) {
+		let cur = null;
+		let result = null;
+		let status = "";
+		try {
+			const c = jobCache();
+			const flagged = parseJob(c.get({ key: jobKey(periodId) }));
+			cur = flagged || (jobId ? { job: String(jobId), op: "" } : null);
+			if (cur) {
+				const s = taskState(cur.job);
+				if (s.running) return { running: true, job: cur.job, op: cur.op, status: s.status, stage: s.stage, percent: s.percent };
+				status = s.status;
+				if (flagged) clearQueued(periodId);
+			}
+			const raw = c.get({ key: resultKey(periodId) });
+			result = raw ? JSON.parse(String(raw)) : null;
+		} catch (e) {
+			result = null;
+		}
+		return { running: false, op: (cur && cur.op) || (result && result.op) || "", status, result };
 	}
 
 	/** Số nhân viên của bảng công kỳ: RESTlet quyết định chạy đồng bộ hay Map/Reduce. */
@@ -502,12 +578,14 @@ define([
 	}
 
 	/**
-	 * Chạy nền bằng Map/Reduce: op build | lock | unlock (periodId) hoặc accrue (year, policyCode, runDate, subsidiary).
-	 * @returns {{queued: true, job: string}}
+	 * Chạy nền bằng Map/Reduce: op build | lock | unlock | punches (periodId) hoặc accrue (year, policyCode, runDate, subsidiary).
+	 * Mỗi kỳ chỉ một tác vụ nền tại một thời điểm (assertNotQueued), bất kể op.
+	 * @returns {{queued: true, job: string, op: string}}
 	 */
 	function queue(periodId, op, extra = {}) {
-		if (!["build", "lock", "unlock", "accrue"].includes(op)) throw fail(`Unknown operation ${op}`, `Thao tác không hợp lệ ${op}`);
-		if (op !== "accrue") (op === "unlock" ? unlockContext(periodId) : buildContext(periodId, { allowLocked: op === "lock" }));
+		if (!["build", "lock", "unlock", "punches", "accrue"].includes(op)) throw fail(`Unknown operation ${op}`, `Thao tác không hợp lệ ${op}`);
+		if (op === "punches") Shifts.punchContext(periodId);
+		else if (op !== "accrue") (op === "unlock" ? unlockContext(periodId) : buildContext(periodId, { allowLocked: op === "lock" }));
 		const params = { custscript_s4vp_mra_op: op, custscript_s4vp_mra_period: periodId ? String(periodId) : "" };
 		if (op === "accrue") {
 			params.custscript_s4vp_mra_year = String(extra.year || "");
@@ -519,11 +597,15 @@ define([
 		const t = task.create({ taskType: task.TaskType.MAP_REDUCE, scriptId: MR.scriptId, deploymentId: MR.deploymentId, params });
 		const job = t.submit();
 		try {
-			jobCache().put({ key: jobKey(op === "accrue" ? null : periodId), value: String(job), ttl: 3600 });
+			const c = jobCache();
+			const owner = op === "accrue" ? null : periodId;
+			// Kết quả của lần chạy trước không còn đúng với tác vụ mới
+			c.remove({ key: resultKey(owner) });
+			c.put({ key: jobKey(owner), value: JSON.stringify({ job: String(job), op }), ttl: 3600 });
 		} catch (e) {
 			log.error({ title: "s4vp attendance job cache", details: String(e.message || e) });
 		}
-		return { queued: true, job };
+		return { queued: true, job, op };
 	}
 
 	// ------------------------------------------------------------------ sổ phép
@@ -742,5 +824,5 @@ define([
 		RECORD, INPUT, SYNC_LIMIT, reference, derive, save, act, build, lock, unlock, accrue, expire, adjust, balances, remainingPaidLeave, available, list,
 		// Chạy theo lô (Map/Reduce s4vp_mr_attendance)
 		sizeOf, queue, buildContext, eligibleProfiles, cleanupStale, buildChunk, lockChunk, unlockContext, unlockEmployees, unlockChunk, setSummaryLocked,
-		accrualProfiles, accrueFor, unlockSize, assertNotQueued, clearQueued };
+		accrualProfiles, accrueFor, unlockSize, assertNotQueued, clearQueued, finishJob, jobState };
 });

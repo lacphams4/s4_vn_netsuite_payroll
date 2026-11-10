@@ -18,8 +18,8 @@
 define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
-	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines", "./Checks",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks) => {
+	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines", "./Checks", "./LaborAnalytics", "./CostAccounts",
+], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -389,6 +389,8 @@ define([
 		ectx.rateTables = outputs.rateTables || {};
 		const permits = WorkPermits.forPayroll(empIds, c.period.start, c.period.end);
 		const plans = AllocationPlans.forPayroll(empIds);
+		// Tài khoản chi phí theo đích (class / dự án / phòng ban): đọc một lần cho cả lô; không đọc được thì bảng rỗng, tính như cũ
+		const costAccounts = CostAccounts.forPayroll(c.batch.subsidiary, c.period.end);
 		const leaveLeft = paidLeaveRemaining(empIds.filter((id) => profiles[id] && EmploymentDays.terminatesIn(profiles[id].termination_date, c.period.start, c.period.end)), Dates.year(c.period.end));
 		const etById = c.earningTypes.byId;
 		const errors = [];
@@ -432,7 +434,7 @@ define([
 					defaults: { project: prof.project || "", task: "", branch: prof.location || e.location || "", workCenter: prof.class || e.cls || "" },
 					accounts: {
 						employeeAccount: prof.expense_account || "", employeeSub: prof.department || e.department || "", defaultAccount: c.settings.accounts.acc_expense || "",
-						defaultSub: prof.department || e.department || "", workCenters: {}, projects: {},
+						defaultSub: prof.department || e.department || "", workCenters: costAccounts.workCenters, projects: costAccounts.projects, departments: costAccounts.departments,
 					},
 				};
 				const r = Engine.calculateEmployee(ectx, emp);
@@ -857,6 +859,20 @@ define([
 		}));
 	}
 
+	/**
+	 * Số liệu phân tích chi phí lương (docs/UI_V2.md mục 13) sau khi ghi sổ / đảo: lập hoặc bỏ hiệu lực dòng cost_fact của bảng
+	 * lương. Lỗi ở đây không làm hỏng ghi sổ: kết quả chỉ thêm notes FACTS_OUTDATED để người dùng lập lại số liệu sau.
+	 */
+	function withLaborFacts(batchId, result) {
+		let ok = false;
+		try {
+			ok = !!(LaborAnalytics.refreshFacts(batchId) || {}).ok;
+		} catch (e) {
+			ok = false;
+		}
+		return ok ? result : Object.assign({}, result, { notes: ((result && result.notes) || []).concat(["FACTS_OUTDATED"]) });
+	}
+
 	function release(batchId) {
 		const b = getBatch(batchId);
 		// Đã ghi sổ: chạy lại các bước sau JE còn thiếu (idempotent)
@@ -864,7 +880,7 @@ define([
 			assertNoJob(b, "release");
 			claim(batchId, "release");
 			try {
-				return Object.assign(finishRelease(batchId), { resumed: true });
+				return withLaborFacts(batchId, Object.assign(finishRelease(batchId), { resumed: true }));
 			} finally {
 				clearJob(batchId);
 			}
@@ -898,7 +914,7 @@ define([
 			throw e;
 		}
 		try {
-			return finishRelease(batchId);
+			return withLaborFacts(batchId, finishRelease(batchId));
 		} finally {
 			clearJob(batchId);
 		}
@@ -993,7 +1009,7 @@ define([
 			assertNoJob(b, "reverse");
 			claim(batchId, "reverse");
 			try {
-				return Object.assign(finishReverse(batchId), { resumed: true });
+				return withLaborFacts(batchId, Object.assign(finishReverse(batchId), { resumed: true }));
 			} finally {
 				clearJob(batchId);
 			}
@@ -1035,7 +1051,7 @@ define([
 			throw e;
 		}
 		try {
-			return finishReverse(batchId);
+			return withLaborFacts(batchId, finishReverse(batchId));
 		} finally {
 			clearJob(batchId);
 		}

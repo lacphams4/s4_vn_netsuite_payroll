@@ -17,7 +17,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth) => {
+define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth", "../api/LaborAnalytics", "../api/HrCore", "../api/ReportsHub", "../api/AdvancesV2", "../api/SetupHub"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
@@ -54,7 +54,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 
 	// ---------------------------------------------------------------- mô-đun route của giao diện bản 2
 	// Thứ tự đăng ký quyết định mô-đun nào thắng khi trùng tên action (không nên trùng); action cũ luôn được ưu tiên.
-	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth];
+	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub];
 	const ROLE_SETS = {
 		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
 		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
@@ -411,8 +411,12 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 					return Shifts.setRosterCell(body.employee, body.workDate, body.shift, body.location, body.workCenter);
 				case "importPunches":
 					return Shifts.importPunches(body.rows || [], body.source || "I");
-				case "processPunches":
+				case "processPunches": {
+					// Kỳ lớn (nhân viên x ngày vượt ngưỡng) chạy nền bằng Map/Reduce chấm công, op punches; mỗi kỳ một tác vụ nền
+					if (body.background || Shifts.punchSize(body.id).cells > Shifts.SYNC_CELLS) return Attendance.queue(body.id, "punches");
+					Attendance.assertNotQueued(body.id);
 					return Shifts.processPunches(body.id);
+				}
 				case "loadSheetEmployees":
 					return Shifts.loadSheetEmployees(body.id);
 				case "saveSheet":
@@ -436,6 +440,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 				case "calculate":
 					return calculate(body.id, !!body.background);
 				case "jobStatus": {
+					// Chấm công: tác vụ nền theo kỳ (lập / khóa / mở khóa / xử lý chấm công máy), kèm kết quả khi xong
+					if (body.period) return Attendance.jobState(body.period, body.job || null);
 					const s = task.checkStatus({ taskId: body.job });
 					return { status: s.status, stage: s.stage };
 				}

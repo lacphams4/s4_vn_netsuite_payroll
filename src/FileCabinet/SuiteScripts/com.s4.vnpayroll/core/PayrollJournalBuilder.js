@@ -4,7 +4,8 @@
  *
  * Dòng: {account, sub, debit, credit, memo, branch, project, task, costCode, workCenter}. sub là tiểu khoản (trên
  * NetSuite ánh xạ sang Department hoặc phân đoạn khác theo cấu hình của lớp ghi).
- * Quy tắc chung: gộp dòng cùng (tài khoản, tiểu khoản, dự án, task, cost code, diễn giải, chi nhánh); bỏ dòng tổng 0;
+ * Quy tắc chung: gộp dòng cùng (tài khoản, tiểu khoản, dự án, task, cost code, diễn giải, chi nhánh, work center); bỏ dòng
+ * tổng 0;
  * thiếu tài khoản -> lỗi nêu diễn giải; tổng khác 0 -> lỗi không cân; khác chi nhánh khi chưa bật liên chi nhánh -> lỗi.
  *
  * @NApiVersion 2.1
@@ -35,8 +36,9 @@ define(["./Money", "./Errors"], (Money, Errors) => {
 		return t.replace("{p}", vars.p || "").replace("{b}", vars.b || "").replace("{n}", vars.n || "").trim();
 	}
 
+	// Khóa gộp gồm cả work center (class trên NetSuite): hai phân bổ chỉ khác class phải ra hai dòng, mỗi dòng đúng class
 	function lineKey(l) {
-		return [l.account, l.sub, l.project, l.task, l.costCode, l.memo, l.branch].map(norm).join("|");
+		return [l.account, l.sub, l.project, l.task, l.costCode, l.memo, l.branch, l.workCenter].map(norm).join("|");
 	}
 
 	/**

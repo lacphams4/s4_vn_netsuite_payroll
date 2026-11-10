@@ -5,7 +5,9 @@
  * Phương pháp: T timesheet, F bảng tỷ lệ cố định, R phân ca. Fallback: P bảng tỷ lệ rồi dự án mặc định, D dự án mặc
  * định. Chế độ phiên bản: E phiên bản hiệu lực cuối kỳ, D chia theo số ngày lịch.
  * Phiên bản: {versionNbr, status (D/A/S), effectiveDate, expirationDate, usedByReleasedBatch,
- *             lines: [{project, task, costCode, branch, workCenter, percent}]}.
+ *             lines: [{project, task, costCode, branch, workCenter, sub, percent}]}.
+ * sub = phòng ban riêng của dòng (record alloc_line.department): có thì chi phí của dòng đi về phòng ban đó, trống thì về
+ * phòng ban của nhân viên (CostAllocationBuilder.resolveAccount).
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
@@ -32,10 +34,16 @@ define(["./Money", "./Dates", "./Errors"], (Money, Dates, Errors) => {
 	function planTargets(versions, mode, from, to) {
 		const list = (versions || []).filter((v) => usable(v, from, to));
 		if (!list.length) return [];
-		const toTarget = (v, l, weight) => ({
-			project: l.project || "", task: l.task || "", costCode: l.costCode || "", branch: l.branch || "", workCenter: l.workCenter || "",
-			source: "P", version: v.versionNbr, weight, hours: 0,
-		});
+		const toTarget = (v, l, weight) => {
+			const t = {
+				project: l.project || "", task: l.task || "", costCode: l.costCode || "", branch: l.branch || "", workCenter: l.workCenter || "",
+				source: "P", version: v.versionNbr, weight, hours: 0,
+			};
+			// Phòng ban riêng của dòng kế hoạch: chỉ ghi khi có
+			const sub = blank(l.sub) ? l.department : l.sub;
+			if (!blank(sub)) t.sub = sub;
+			return t;
+		};
 		if (norm(mode) === "D") {
 			const periodDays = Dates.diff(from, to) + 1;
 			const out = [];
@@ -109,10 +117,10 @@ define(["./Money", "./Dates", "./Errors"], (Money, Dates, Errors) => {
 		if (!(lines || []).length) errors.push("Phiên bản phải có ít nhất một dòng.");
 		const seen = new Set();
 		for (const l of lines || []) {
-			if (blank(l.project) && blank(l.branch) && blank(l.workCenter)) errors.push("Mỗi dòng phải có dự án, chi nhánh hoặc work center.");
+			if (blank(l.project) && blank(l.branch) && blank(l.workCenter) && blank(l.sub)) errors.push("Mỗi dòng phải có dự án, phòng ban, chi nhánh hoặc work center.");
 			const p = D(l.percent);
 			if (p.lte(0) || p.gt(100)) errors.push("Tỷ lệ mỗi dòng phải lớn hơn 0 và không quá 100.");
-			const key = [l.project, l.task, l.costCode, l.branch, l.workCenter].map(norm).join("|");
+			const key = [l.project, l.task, l.costCode, l.branch, l.workCenter, l.sub].map(norm).join("|");
 			if (seen.has(key)) errors.push("Đích phân bổ bị trùng.");
 			seen.add(key);
 		}

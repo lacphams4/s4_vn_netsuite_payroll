@@ -107,6 +107,37 @@ describe("Bút toán ghi sổ bảng lương 4.6.2", () => {
     expect(() => J.finalize([{ account: "642", amount: 100, memo: "a" }])).toThrow(/not balanced/);
     expect(() => J.finalize([{ account: "", amount: 100, memo: "x" }, { account: "1", amount: -100, memo: "y" }])).toThrow(/"x"/);
   });
+
+  test("hai phân bổ chỉ khác work center (class) ra hai dòng đúng class; cùng class thì gộp", () => {
+    const b = batch();
+    b.employees[0].allocations = [
+      { component: "GROSS", amount: 12000000, account: "642", sub: "D1", workCenter: "WC1" },
+      { component: "GROSS", amount: 8000000, account: "642", sub: "D1", workCenter: "WC2" },
+      { component: "GROSS", amount: 10880000, account: "642", sub: "D1", workCenter: "WC1" },
+      { component: "ERINS", amount: 7050000, account: "642", sub: "D1", workCenter: "WC2" },
+    ];
+    const je = J.buildRelease(b, config);
+    const exp = je.lines.filter((l) => l.memo === "Payroll expense 202610");
+    expect(exp).toHaveLength(2);
+    expect(exp.find((l) => l.workCenter === "WC1").debit).toBe(22880000);
+    expect(exp.find((l) => l.workCenter === "WC2").debit).toBe(8000000);
+    expect(je.lines.find((l) => l.memo.startsWith("Employer"))).toMatchObject({ workCenter: "WC2", debit: 7050000 });
+    // Tổng theo tài khoản x tiểu khoản không đổi so với trước khi tách theo class (báo cáo chi phí theo tài khoản không lệch)
+    const d1 = je.lines.filter((l) => l.account === "642" && l.sub === "D1").reduce((s, l) => s + l.debit - l.credit, 0);
+    expect(d1).toBe(12000000 + 8000000 + 10880000 + 7050000);
+    expect(je.lines.reduce((s, l) => s + l.debit - l.credit, 0)).toBe(0);
+    // Bút toán đảo giữ class của từng dòng
+    const rev = J.buildReversal(je.lines, { batchNbr: "BL000001", periodId: "202610" });
+    expect(rev.lines.filter((l) => l.memo === "Payroll expense 202610").map((l) => [l.workCenter, l.credit]).sort()).toEqual([["WC1", 22880000], ["WC2", 8000000]]);
+  });
+
+  test("finalize: khác work center không gộp, không phân biệt hoa thường và khoảng trắng", () => {
+    const lines = J.finalize([
+      { account: "642", amount: 100, memo: "a", workCenter: "wc1" }, { account: "642", amount: 50, memo: "a", workCenter: " WC1 " },
+      { account: "642", amount: 25, memo: "a", workCenter: "WC2" }, { account: "642", amount: 5, memo: "a" }, { account: "334", amount: -180, memo: "b" },
+    ]);
+    expect(lines.filter((l) => l.account === "642").map((l) => [l.workCenter, l.debit])).toEqual([["wc1", 150], ["WC2", 25], ["", 5]]);
+  });
 });
 
 describe("Tạm ứng và bill cơ quan thu", () => {

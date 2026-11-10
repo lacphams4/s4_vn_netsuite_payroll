@@ -14,6 +14,10 @@
  * Hiệu năng: lưới chỉ vẽ một phần số dòng (ROW_STEP, có nút hiện thêm và ô tìm); ô ngày không có handler riêng - một
  * listener DOM trên khung lưới đọc chỉ số dòng / cột của ô được bấm, dự phòng là onClick của dòng (chọn nhân viên).
  * CSS riêng của lưới chèn bằng thẻ <style id="s4vp-css-atd"> (không sửa ui/css.js).
+ *
+ * Tác vụ nền: buildAttendance, lockAttendance, unlockAttendance, processPunches trả {queued, job, op} khi kỳ đông nhân viên
+ * (Map/Reduce chấm công). Màn hiện thẻ "đang xử lý nền", hỏi POST jobStatus {period, job} định kỳ, khóa các nút ghi và tự
+ * nạp lại khi xong; mở màn khi kỳ đang có tác vụ nền (do người khác hoặc lần trước) cũng theo dõi như vậy.
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord} from '../lib/api.js';
@@ -58,7 +62,19 @@ const TEXT = {
 			saved: 'Đã lưu công.', docCreated: 'Đã lập phiếu điều chỉnh công và gửi duyệt.',
 			docHeld: 'Đã lập phiếu điều chỉnh công (tạm giữ). Gửi duyệt ở danh sách ngoại lệ.',
 		},
-		queued: 'Kỳ có nhiều nhân viên nên đang chạy nền. Bấm Tải lại sau ít phút.',
+		job: {
+			title: 'Đang xử lý nền',
+			ops: {build: 'Tổng hợp công', lock: 'Khóa công', unlock: 'Mở khóa công', punches: 'Xử lý chấm công máy', other: 'Tác vụ chấm công'},
+			queued: (op) => `Đã chuyển sang xử lý nền: ${op}. Kỳ có nhiều nhân viên nên việc này chạy theo lô; màn hình tự cập nhật khi xong.`,
+			running: (op) => `${op} đang chạy nền`,
+			waiting: 'Đang chờ trong hàng đợi.',
+			stage: (st, pct) => `Giai đoạn ${st}${pct === null || pct === undefined ? '' : ` - ${pct}%`}.`,
+			auto: 'Màn hình tự nạp lại khi xong; trong lúc này không sửa được công của kỳ.',
+			lockedHint: 'Kỳ đang có tác vụ chạy nền, chờ xong rồi thao tác tiếp',
+			done: (op) => `${op}: tác vụ nền đã xong.`,
+			failed: (op, msg) => `${op}: tác vụ nền kết thúc có lỗi, dữ liệu có thể mới xử lý một phần. Hãy chạy lại.${msg ? ` Chi tiết: ${msg}` : ''}`,
+			slow: 'Tác vụ nền chạy lâu hơn dự kiến. Bấm Tải lại sau ít phút để xem kết quả.',
+		},
 		cards: {
 			issues: 'Ngoại lệ chờ xử lý', none: 'Không còn ngoại lệ', docs: 'Đơn từ trong kỳ', paid: 'Công hưởng lương', ctv: 'Giờ cộng tác viên', ot: 'Giờ làm thêm',
 			pendingDocs: (n) => `${n} chứng từ chờ`, rebuild: (n) => `${n} cần tổng hợp lại`, sheet: (n) => `${n} dòng bảng công`, hours: (n) => `${n} giờ chờ duyệt`, info: (n) => `${n} để biết`,
@@ -160,7 +176,19 @@ const TEXT = {
 			saved: 'Attendance saved.', docCreated: 'The adjustment was created and submitted for approval.',
 			docHeld: 'The adjustment was created (on hold). Submit it from the exception list.',
 		},
-		queued: 'The period has many employees, so the job runs in the background. Click Refresh in a few minutes.',
+		job: {
+			title: 'Background processing',
+			ops: {build: 'Build attendance', lock: 'Lock attendance', unlock: 'Unlock attendance', punches: 'Process punches', other: 'Attendance job'},
+			queued: (op) => `Moved to background processing: ${op}. The period has many employees, so it runs in chunks; this screen updates when it finishes.`,
+			running: (op) => `${op} is running in the background`,
+			waiting: 'Waiting in the queue.',
+			stage: (st, pct) => `Stage ${st}${pct === null || pct === undefined ? '' : ` - ${pct}%`}.`,
+			auto: 'This screen reloads when it finishes; the attendance of the period cannot be changed meanwhile.',
+			lockedHint: 'A background job is running for this period; wait until it finishes',
+			done: (op) => `${op}: the background job finished.`,
+			failed: (op, msg) => `${op}: the background job ended with errors; data may be partly processed. Run it again.${msg ? ` Details: ${msg}` : ''}`,
+			slow: 'The background job is taking longer than expected. Click Refresh in a few minutes to see the result.',
+		},
 		cards: {
 			issues: 'Open exceptions', none: 'No exceptions left', docs: 'Requests in the period', paid: 'Paid work days', ctv: 'Contractor hours', ot: 'Overtime hours',
 			pendingDocs: (n) => `pending documents: ${n}`, rebuild: (n) => `to rebuild: ${n}`, sheet: (n) => `sheet rows: ${n}`, hours: (n) => `hours pending: ${n}`, info: (n) => `for information: ${n}`,
@@ -236,6 +264,11 @@ const DAY_W = 30;
 const NAME_W = 210;
 const SUM_W = 56;
 const RECORD_OF = {leave: 'leave_request', ot: 'ot_request', trip: 'business_trip', exception: 'att_exception'};
+// Thao tác của kỳ có thể chạy nền -> op của Map/Reduce chấm công
+const JOB_OP = {buildAttendance: 'build', lockAttendance: 'lock', unlockAttendance: 'unlock', processPunches: 'punches'};
+// Hỏi trạng thái tác vụ nền: 5 giây một lần trong 5 phút đầu, sau đó 15 giây, tối đa khoảng 1 giờ
+const JOB_FAST_TICKS = 60;
+const JOB_MAX_TICKS = 280;
 
 const CSS = `
 .s4vp-atd-bar{padding:8px 12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
@@ -331,6 +364,9 @@ export default function AttendanceView({app}) {
 	const [excLimit, setExcLimit] = useState(EXC_STEP);
 	const [edit, setEdit] = useState(null);
 	const editRef = useRef({});
+	const [job, setJob] = useState(null);
+	const jobRef = useRef(null);
+	jobRef.current = job;
 	const alive = useRef(true);
 	const request = useRef(0);
 	const detailRequest = useRef(0);
@@ -364,6 +400,7 @@ export default function AttendanceView({app}) {
 		setDetail(null);
 		setLimit(ROW_STEP);
 		setExcLimit(EXC_STEP);
+		setJob(null);
 		load();
 		return () => {
 			alive.current = false;
@@ -386,6 +423,78 @@ export default function AttendanceView({app}) {
 			});
 		return undefined;
 	}, [selEmployee, periodId]);
+
+	// Tác vụ nền của kỳ: khi mở kỳ thì hỏi một lần xem có tác vụ đang chạy không (người khác xếp hàng, hoặc vừa tải lại trang)
+	useEffect(() => {
+		if (!periodId) return undefined;
+		let on = true;
+		post({action: 'jobStatus', period: periodId}).then(
+			(s) => {
+				if (on && alive.current && s && s.running && !jobRef.current) setJob({job: String(s.job || ''), op: String(s.op || ''), status: String(s.status || ''), stage: String(s.stage || ''), percent: s.percent});
+			},
+			() => undefined
+		);
+		return () => {
+			on = false;
+		};
+	}, [periodId]);
+
+	// Tác vụ nền kết thúc: gỡ thẻ tiến độ, nạp lại số liệu rồi báo kết quả (lỗi báo sau khi nạp để không bị xóa)
+	const endJob = (s) => {
+		const was = jobRef.current || {};
+		const res = s && s.result ? s.result : null;
+		const op = String((res && res.op) || was.op || (s && s.op) || '');
+		const opText = t.job.ops[op] || t.job.ops.other;
+		const failed = (res && res.ok === false) || (!res && /FAILED/i.test(String((s && s.status) || '')));
+		setJob(null);
+		if (op === 'lock' || op === 'unlock') app.reloadBoot();
+		const done = alive.current ? load() : Promise.resolve();
+		Promise.resolve(done).then(() => {
+			if (failed) app.notify(t.job.failed(opText, String((res && res.message) || '')), 'error');
+			else if (!res || res.op !== op) app.notify(t.job.done(opText), 'ok');
+			else if (op === 'build') app.notify(t.done.build(res), 'ok');
+			else if (op === 'lock') app.notify(t.done.lock, 'ok');
+			else if (op === 'unlock') app.notify(t.done.unlock, 'ok');
+			else if (op === 'punches') app.notify(t.done.punches(res), 'ok');
+			else app.notify(t.job.done(opText), 'ok');
+		});
+	};
+	const endJobRef = useRef(endJob);
+	endJobRef.current = endJob;
+
+	// Đang có tác vụ nền: hỏi trạng thái định kỳ, tự nạp lại khi xong
+	const jobOn = !!job;
+	useEffect(() => {
+		if (!jobOn || !periodId) return undefined;
+		let on = true;
+		let timer = null;
+		let ticks = 0;
+		const tick = () => {
+			if (!on) return;
+			ticks += 1;
+			const cur = jobRef.current || {};
+			post({action: 'jobStatus', period: periodId, job: cur.job || ''})
+				.then((s) => s, () => null)
+				.then((s) => {
+					if (!on || !alive.current) return;
+					if (s && s.running === false) {
+						endJobRef.current(s);
+						return;
+					}
+					if (s && s.running) setJob(Object.assign({}, jobRef.current || {}, {op: String(s.op || (jobRef.current || {}).op || ''), status: String(s.status || ''), stage: String(s.stage || ''), percent: s.percent}));
+					if (ticks < JOB_MAX_TICKS) timer = setTimeout(tick, ticks < JOB_FAST_TICKS ? 5000 : 15000);
+					else {
+						setJob(null);
+						app.notify(t.job.slow, 'warn');
+					}
+				});
+		};
+		timer = setTimeout(tick, 3000);
+		return () => {
+			on = false;
+			if (timer) clearTimeout(timer);
+		};
+	}, [periodId, jobOn]);
 
 	// Bấm ô: một listener DOM trên khung lưới (không tạo handler cho từng ô). rowIndex / cellIndex là thuộc tính DOM chuẩn.
 	pickRef.current = (rowIndex, cellIndex) => {
@@ -449,7 +558,9 @@ export default function AttendanceView({app}) {
 	const stats = data.stats || {};
 	const locked = !!data.locked;
 	const sheetMode = period.mode === 'S';
-	const canEdit = !!data.canEdit && !locked && !data.closed;
+	// Trong lúc tác vụ nền của kỳ chạy: khóa mọi nút ghi (máy chủ cũng từ chối)
+	const mayEdit = !!data.canEdit && !jobOn;
+	const canEdit = mayEdit && !locked && !data.closed;
 	const busy = !!app.busy;
 	const rowOf = {};
 	rows.forEach((r) => (rowOf[r.employee] = r));
@@ -469,13 +580,20 @@ export default function AttendanceView({app}) {
 
 	const after = (r, text) => {
 		if (!r) return r;
-		if (r.queued) app.notify(t.queued, 'warn');
-		else if (text) app.notify(text, 'ok');
+		if (text) app.notify(text, 'ok');
 		if (alive.current) load();
+		return r;
+	};
+	// Kỳ đông nhân viên: máy chủ xếp hàng chạy nền (không phải lỗi) - báo trung tính, hiện thẻ tiến độ và theo dõi đến khi xong
+	const track = (r, action) => {
+		const op = String(r.op || JOB_OP[action] || '');
+		if (alive.current) setJob({job: String(r.job || ''), op, status: '', stage: '', percent: null});
+		app.notify(t.job.queued(t.job.ops[op] || t.job.ops.other), 'ok');
 		return r;
 	};
 	const periodAction = (action, done, reboot) => () =>
 		app.run(t.working, post({action, id: period.id})).then((r) => {
+			if (r && r.queued) return track(r, action);
 			if (r && reboot) app.reloadBoot();
 			return after(r, r ? (typeof done === 'function' ? done(r) : done) : '');
 		});
@@ -555,7 +673,7 @@ export default function AttendanceView({app}) {
 	const cur = (data.steps || []).find((s) => s.state === 'current');
 	const curKey = cur ? cur.key : 'done';
 	const noSheet = sheetMode && rows.length > 0 && rows.every((r) => r.source !== 'sheet' || !r.hasSheet);
-	const editTitle = !data.canEdit ? t.act.readOnly : locked ? t.act.lockedHint : '';
+	const editTitle = !data.canEdit ? t.act.readOnly : jobOn ? t.job.lockedHint : locked ? t.act.lockedHint : '';
 	let primary;
 	if (locked || curKey === 'handoff' || curKey === 'done') primary = <Button label={t.act.toPayroll} kind="primary" onClick={() => app.go('payrollList')} />;
 	else if (curKey === 'collect' && noSheet) primary = <Button label={t.act.loadSheet} kind="primary" disabled={!canEdit || busy} title={editTitle} onClick={loadSheet} />;
@@ -565,7 +683,7 @@ export default function AttendanceView({app}) {
 	const menuItems = [
 		{label: t.act.punches, onClick: processPunches, disabled: !canEdit || busy, title: editTitle},
 		sheetMode ? {label: t.act.loadSheet, onClick: loadSheet, disabled: !canEdit || busy, title: editTitle} : null,
-		locked ? {label: t.act.unlock, onClick: unlock, disabled: !data.canEdit || !data.canUnlock || data.closed || busy, title: !data.canEdit ? t.act.readOnly : !data.canUnlock ? t.act.noUnlock : ''} : null,
+		locked ? {label: t.act.unlock, onClick: unlock, disabled: !mayEdit || !data.canUnlock || data.closed || busy, title: !data.canEdit ? t.act.readOnly : jobOn ? t.job.lockedHint : !data.canUnlock ? t.act.noUnlock : ''} : null,
 		legacyItem,
 		{label: t.reload, onClick: () => load(), disabled: busy},
 	];
@@ -816,7 +934,7 @@ export default function AttendanceView({app}) {
 		if (e.status === 'H') out.push(<Button small={true} kind="primary" label={t.exc.submit} disabled={!canEdit || busy} title={editTitle} onClick={() => docAct(e, 'submit')} />);
 		if (e.status === 'P') {
 			out.push(<Button small={true} kind="primary" label={t.exc.approve} disabled={!canEdit || busy} title={editTitle} onClick={() => docAct(e, 'approve')} />);
-			out.push(<Button small={true} label={t.exc.reject} disabled={!data.canEdit || busy} onClick={() => docAct(e, 'reject')} />);
+			out.push(<Button small={true} label={t.exc.reject} disabled={!mayEdit || busy} title={jobOn ? t.job.lockedHint : ''} onClick={() => docAct(e, 'reject')} />);
 		}
 		out.push(<Button small={true} kind="ghost" label={t.exc.openDoc} onClick={() => openRecord(`customrecord_s4vp_${RECORD_OF[type]}`, id)} />);
 		return out;
@@ -1060,6 +1178,19 @@ export default function AttendanceView({app}) {
 		);
 	}
 
+	const jobOpText = job ? t.job.ops[job.op] || t.job.ops.other : '';
+	const jobStage = job && job.stage ? t.job.stage(job.stage, job.percent) : job && /PENDING/i.test(job.status || '') ? t.job.waiting : '';
+	const jobCard = job ? (
+		<Card tone="warn" label={t.job.title}>
+			<div style={{display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap'}} role="status" aria-live="polite">
+				<span class="s4vp-spin" />
+				<span style={{fontWeight: '600'}}>{t.job.running(jobOpText)}</span>
+				{jobStage ? <span>{jobStage}</span> : null}
+				<span class="s4vp-muted">{t.job.auto}</span>
+			</div>
+		</Card>
+	) : null;
+
 	return (
 		<Page>
 			<PageHeader
@@ -1069,6 +1200,7 @@ export default function AttendanceView({app}) {
 				sub={subLine}
 				actions={[periodSelect, <Menu label={t.more} align="right" items={menuItems} />, showRebuild ? <Button label={t.act.rebuild} disabled={!canEdit || busy} title={editTitle} onClick={build} /> : null, primary]}
 			/>
+			{jobCard}
 			<Stepper steps={steps} label={t.stepsLabel} />
 			<StatCards cards={cards} />
 			<div class="s4vp-cols">

@@ -1,9 +1,13 @@
 /**
  * Dòng phân bổ chi phí của một nhân viên (đặc tả mục 4.5.4 "nguồn nào đích đó" và 4.5.6 tài khoản chi phí).
  *
- * Thứ tự: thu nhập có đích riêng (dòng tay có chi nhánh / work center, dòng quy tắc sản lượng O, doanh số S) ->
+ * Thứ tự: thu nhập có đích riêng (dòng tay có chi nhánh / work center / phòng ban, dòng quy tắc sản lượng O, doanh số S) ->
  * dòng OT có dự án khi nguồn đã chọn không phải timesheet -> phần còn lại (GROSS) và BH phần DN (ERINS) chia theo đích
  * của phương pháp đã chọn. BH DN không đi theo "nguồn nào đích đó". Trích trước tháng 13 không phân bổ.
+ *
+ * Phòng ban (sub) của dòng phân bổ: đích có phòng ban riêng (dòng bảng tỷ lệ, dòng nhập tay, phần sản lượng) thì chi phí
+ * đi theo phòng ban đó; đích không khai thì dùng phòng ban của nhân viên / mặc định (resolveAccount).
+ * Bất biến: tổng dòng phân bổ = gross + BH phần doanh nghiệp.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
@@ -12,14 +16,17 @@ define(["./Money", "./ProjectCostAllocator"], (Money, Allocator) => {
 	const D = Money.D;
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (s) => norm(s) === "";
-	const hasContent = (t) => !blank(t.project) || !blank(t.branch) || !blank(t.workCenter);
+	const hasContent = (t) => !blank(t.project) || !blank(t.branch) || !blank(t.workCenter) || !blank(t.sub);
+	// Phòng ban riêng chỉ ghi vào đích / dòng khi có: đích không khai phòng ban giữ nguyên dạng cũ
+	const withSub = (o, sub) => (blank(sub) ? o : Object.assign(o, { sub }));
 
 	/**
 	 * @param {{grossPay, employerInsurance,
-	 *   earnings: Array<{earningType, amount, source (S/T/M), quantitySource, rateTable, project, task, costCode, branch, workCenter, hours}>,
-	 *   outputShares: Array<{rateTable, isSales, project, branch, workCenter, amount}>,
-	 *   targets: Array (AllocationSourceResolver.resolve), defaultBranch, defaultWorkCenter,
-	 *   accounts: {workCenters: {ID: {account, sub}}, projects: {ID: {account, sub}}, employeeAccount, employeeSub, defaultAccount, defaultSub}}} input
+	 *   earnings: Array<{earningType, amount, source (S/T/M), quantitySource, rateTable, project, task, costCode, branch, workCenter, sub, hours}>,
+	 *   outputShares: Array<{rateTable, isSales, project, branch, workCenter, sub, amount}>,
+	 *   targets: Array (AllocationSourceResolver.resolve; đích có thể mang sub), defaultBranch, defaultWorkCenter,
+	 *   accounts: {workCenters, projects, departments: {ID: {account, byLabor: {E, C}, sub}} (CostAccountRules.buildMaps), laborType (E/C),
+	 *              employeeAccount, employeeSub, defaultAccount, defaultSub}}} input
 	 * @returns {Array} dòng phân bổ {component, amount, account, sub, project, task, costCode, branch, workCenter, source, version, hours, weight, ratio}
 	 */
 	function build(input) {
@@ -36,14 +43,14 @@ define(["./Money", "./ProjectCostAllocator"], (Money, Allocator) => {
 			earnings.forEach((e, idx) => {
 				if (D(e.amount).isZero()) return;
 				let own = [];
-				if (!blank(e.branch) || !blank(e.workCenter)) {
-					own = [{ project: e.project || "", task: e.task || "", costCode: e.costCode || "", branch: e.branch || "", workCenter: e.workCenter || "", source: "S", weight: 1 }];
+				if (!blank(e.branch) || !blank(e.workCenter) || !blank(e.sub)) {
+					own = [withSub({ project: e.project || "", task: e.task || "", costCode: e.costCode || "", branch: e.branch || "", workCenter: e.workCenter || "", source: "S", weight: 1 }, e.sub)];
 				} else if (norm(e.quantitySource) === "O" && norm(e.source) === "S") {
 					own = (input.outputShares || []).filter((s) => blank(e.rateTable) || norm(s.rateTable) === norm(e.rateTable))
-						.map((s) => ({ project: s.project || "", task: "", costCode: "", branch: s.branch || "", workCenter: s.workCenter || "", source: "S", weight: s.amount }));
+						.map((s) => withSub({ project: s.project || "", task: "", costCode: "", branch: s.branch || "", workCenter: s.workCenter || "", source: "S", weight: s.amount }, s.sub));
 				} else if (norm(e.quantitySource) === "S" && norm(e.source) === "S") {
 					own = (input.outputShares || []).filter((s) => s.isSales)
-						.map((s) => ({ project: s.project || "", task: "", costCode: "", branch: s.branch || "", workCenter: s.workCenter || "", source: "S", weight: s.amount }));
+						.map((s) => withSub({ project: s.project || "", task: "", costCode: "", branch: s.branch || "", workCenter: s.workCenter || "", source: "S", weight: s.amount }, s.sub));
 				}
 				if (!own.some(hasContent)) return;
 				handled.add(idx);
@@ -52,7 +59,7 @@ define(["./Money", "./ProjectCostAllocator"], (Money, Allocator) => {
 				merged.forEach((t, i) => {
 					if (!hasContent(t) || parts[i] === 0) return;
 					const f = fill(t);
-					out.push({ component: "GROSS", amount: parts[i], project: f.project, task: f.task, costCode: f.costCode, branch: f.branch, workCenter: f.workCenter, source: "S", version: null, hours: 0, weight: Money.roundTo(t.weight, 6), ratio: Money.roundTo(D(parts[i]).div(gross), 6) });
+					out.push(withSub({ component: "GROSS", amount: parts[i], project: f.project, task: f.task, costCode: f.costCode, branch: f.branch, workCenter: f.workCenter, source: "S", version: null, hours: 0, weight: Money.roundTo(t.weight, 6), ratio: Money.roundTo(D(parts[i]).div(gross), 6) }, t.sub));
 					pool = pool.minus(parts[i]);
 				});
 			});
@@ -80,16 +87,36 @@ define(["./Money", "./ProjectCostAllocator"], (Money, Allocator) => {
 	}
 
 	/**
-	 * Tài khoản chi phí của dòng phân bổ (4.5.6): work center -> tài khoản dự án -> tài khoản hồ sơ nhân viên -> mặc định.
-	 * sub (tiểu khoản / department) mặc định = tiểu khoản nhân viên nếu nhân viên có tài khoản, ngược lại mặc định.
+	 * Tài khoản chi phí và phòng ban của dòng phân bổ (4.5.6).
+	 *
+	 * Phòng ban (sub): phòng ban riêng của dòng (line.sub) -> sub khai kèm bản ghi tài khoản (nếu có) -> phòng ban của nhân viên
+	 * khi nhân viên có tài khoản riêng, ngược lại phòng ban mặc định.
+	 * Tài khoản, theo thứ tự ưu tiên:
+	 *   1. work center (class) của dòng        - acc.workCenters
+	 *   2. dự án của dòng                      - acc.projects
+	 *   3. phòng ban riêng của dòng            - acc.departments
+	 *   4. tài khoản của hồ sơ nhân viên       - acc.employeeAccount
+	 *   5. phòng ban của nhân viên / mặc định  - acc.departments (chỉ khi dòng không có phòng ban riêng)
+	 *   6. tài khoản mặc định                  - acc.defaultAccount
+	 * Mỗi bảng tra theo (đích, loại lao động acc.laborType) rồi (đích, mọi loại): {account, byLabor: {E, C}}.
+	 * Không khai bảng nào thì kết quả như trước: tài khoản hồ sơ -> mặc định, phòng ban nhân viên / mặc định.
 	 */
 	function resolveAccount(line, acc) {
+		const own = blank(line.sub) ? "" : line.sub;
 		const subDefault = acc.employeeAccount ? acc.employeeSub || "" : acc.defaultSub || "";
-		const wc = !blank(line.workCenter) && acc.workCenters ? acc.workCenters[line.workCenter] || acc.workCenters[norm(line.workCenter)] : null;
-		if (wc && wc.account) return { account: wc.account, sub: blank(wc.sub) ? subDefault : wc.sub };
-		const pa = !blank(line.project) && acc.projects ? acc.projects[line.project] || acc.projects[norm(line.project)] : null;
-		if (pa && pa.account) return { account: pa.account, sub: blank(pa.sub) ? subDefault : pa.sub };
-		return { account: acc.employeeAccount || acc.defaultAccount || "", sub: subDefault };
+		const labor = norm(acc.laborType);
+		const pick = (table, key) => {
+			if (!table || blank(key)) return null;
+			const e = table[key] || table[norm(key)];
+			if (!e) return null;
+			const account = (labor && e.byLabor && e.byLabor[labor]) || e.account;
+			return account ? { account, sub: e.sub } : null;
+		};
+		const hit = pick(acc.workCenters, line.workCenter) || pick(acc.projects, line.project) || pick(acc.departments, own);
+		if (hit) return { account: hit.account, sub: own || (blank(hit.sub) ? subDefault : hit.sub) };
+		if (acc.employeeAccount) return { account: acc.employeeAccount, sub: own || subDefault };
+		const dept = own ? null : pick(acc.departments, subDefault);
+		return { account: (dept && dept.account) || acc.defaultAccount || "", sub: own || subDefault };
 	}
 
 	return { build, resolveAccount };

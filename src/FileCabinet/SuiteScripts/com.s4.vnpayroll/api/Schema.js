@@ -3125,6 +3125,135 @@ define([], () => {
 				}
 			}
 		},
+		"cost_account": {
+			"type": "customrecord_s4vp_cost_account",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_pca_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"target_type": {
+					"id": "custrecord_s4vp_pca_target_type",
+					"type": "select",
+					"target": "list:pca_target"
+				},
+				"project": {
+					"id": "custrecord_s4vp_pca_project",
+					"type": "select",
+					"target": "project"
+				},
+				"work_center": {
+					"id": "custrecord_s4vp_pca_work_center",
+					"type": "select",
+					"target": "class"
+				},
+				"department": {
+					"id": "custrecord_s4vp_pca_department",
+					"type": "select",
+					"target": "department"
+				},
+				"labor_type": {
+					"id": "custrecord_s4vp_pca_labor_type",
+					"type": "select",
+					"target": "list:employment_type"
+				},
+				"account": {
+					"id": "custrecord_s4vp_pca_account",
+					"type": "select",
+					"target": "account"
+				},
+				"effective": {
+					"id": "custrecord_s4vp_pca_effective",
+					"type": "date",
+					"target": null
+				},
+				"note": {
+					"id": "custrecord_s4vp_pca_note",
+					"type": "textarea",
+					"target": null
+				}
+			}
+		},
+		"cost_fact": {
+			"type": "customrecord_s4vp_cost_fact",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"batch": {
+					"id": "custrecord_s4vp_lcf_batch",
+					"type": "select",
+					"target": "rec:batch"
+				},
+				"subsidiary": {
+					"id": "custrecord_s4vp_lcf_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"month": {
+					"id": "custrecord_s4vp_lcf_month",
+					"type": "text",
+					"target": null
+				},
+				"posting_date": {
+					"id": "custrecord_s4vp_lcf_posting_date",
+					"type": "date",
+					"target": null
+				},
+				"account": {
+					"id": "custrecord_s4vp_lcf_account",
+					"type": "select",
+					"target": "account"
+				},
+				"department": {
+					"id": "custrecord_s4vp_lcf_department",
+					"type": "select",
+					"target": "department"
+				},
+				"class": {
+					"id": "custrecord_s4vp_lcf_class",
+					"type": "select",
+					"target": "class"
+				},
+				"location": {
+					"id": "custrecord_s4vp_lcf_location",
+					"type": "select",
+					"target": "location"
+				},
+				"project": {
+					"id": "custrecord_s4vp_lcf_project",
+					"type": "select",
+					"target": "project"
+				},
+				"employment_type": {
+					"id": "custrecord_s4vp_lcf_employment_type",
+					"type": "select",
+					"target": "list:employment_type"
+				},
+				"component": {
+					"id": "custrecord_s4vp_lcf_component",
+					"type": "select",
+					"target": "list:lcf_component"
+				},
+				"amount": {
+					"id": "custrecord_s4vp_lcf_amount",
+					"type": "currency",
+					"target": null
+				},
+				"hours": {
+					"id": "custrecord_s4vp_lcf_hours",
+					"type": "float",
+					"target": null
+				},
+				"active": {
+					"id": "custrecord_s4vp_lcf_active",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
 		"check_result": {
 			"type": "customrecord_s4vp_check_result",
 			"includeName": false,
@@ -3658,6 +3787,28 @@ define([], () => {
 			"values": {
 				"A": "val_s4vp_time_source_a",
 				"M": "val_s4vp_time_source_m"
+			}
+		},
+		"pca_target": {
+			"type": "customlist_s4vp_pca_target",
+			"values": {
+				"P": "val_s4vp_pca_target_p",
+				"W": "val_s4vp_pca_target_w",
+				"D": "val_s4vp_pca_target_d"
+			}
+		},
+		"lcf_component": {
+			"type": "customlist_s4vp_lcf_component",
+			"values": {
+				"wages": "val_s4vp_lcf_component_wages",
+				"overtime": "val_s4vp_lcf_component_overtime",
+				"allowance": "val_s4vp_lcf_component_allowance",
+				"bonus": "val_s4vp_lcf_component_bonus",
+				"piecework": "val_s4vp_lcf_component_piecework",
+				"other": "val_s4vp_lcf_component_other",
+				"employerIns": "val_s4vp_lcf_component_employerins",
+				"accrued13": "val_s4vp_lcf_component_accrued13",
+				"contractor": "val_s4vp_lcf_component_contractor"
 			}
 		},
 		"bck_status": {

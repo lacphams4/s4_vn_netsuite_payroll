@@ -75,6 +75,35 @@ Hồ sơ lương là custom record 1-1 với Employee (đặc tả 5.2.2 phươn
 | Numbering sequence | Auto numbering custom record (BL, TU, NP, OT, CT, NL) | |
 | Time Activities | (chưa nối) | Giờ OT / CTV hiện nhập tay trên bảng lương; nối Time Bill ở giai đoạn sau |
 
+### 4.1 Phân đoạn của dòng chi phí lương khi ghi sổ
+
+Mỗi dòng phân bổ (`allocations` trong chi tiết dòng lương) mang tài khoản chi phí, phòng ban (`sub`), chi nhánh, class và dự án; bút toán lương lấy đúng các giá trị này. Bất biến: tổng dòng phân bổ = gross + BH phần doanh nghiệp. Trích trước tháng 13 không phân bổ, vẫn ghi theo tài khoản và phòng ban của hồ sơ nhân viên.
+
+Phòng ban của dòng (`core/CostAllocationBuilder.js`):
+
+- Đích phân bổ có phòng ban riêng thì chi phí đi theo phòng ban đó: dòng bảng tỷ lệ phân bổ (`alloc_line.department`), dòng nhập tay của bảng lương (`batch_input.department`), phần sản lượng nếu nguồn có cấp phòng ban (phiếu sản lượng hiện chưa có trường này).
+- Đích không khai phòng ban thì dùng phòng ban của nhân viên (hồ sơ lương, không có thì Employee) như trước.
+- BH phần doanh nghiệp chia theo đích của phương pháp phân bổ nên theo phòng ban của dòng bảng tỷ lệ; không theo dòng nhập tay.
+- Dòng bảng tỷ lệ được phép chỉ khai phòng ban (người làm cho hai phòng ban: hai dòng, mỗi dòng một phòng ban); hai dòng chỉ khác phòng ban không bị coi là trùng đích.
+
+Tài khoản chi phí của dòng, theo thứ tự ưu tiên (`CostAllocationBuilder.resolveAccount`):
+
+1. class (work center) của dòng
+2. dự án của dòng
+3. phòng ban riêng của dòng
+4. tài khoản chi phí của hồ sơ lương nhân viên
+5. phòng ban của nhân viên (khi dòng không có phòng ban riêng)
+6. tài khoản chi phí mặc định của thiết lập công ty
+
+Mức 1, 2, 3, 5 tra record `cost_account` "Tài khoản chi phí lương theo đích" (VP102080, `tools/schema/accounts.mjs`, tiền tố `pca`; HR xem, kế toán toàn quyền). Quy tắc chọn bản ghi (`core/CostAccountRules.js`, đọc bằng `api/CostAccounts.forPayroll(subsidiary, periodEnd)`):
+
+- Tra theo (đích, loại lao động của nhân viên) trước, rồi (đích, mọi loại lao động).
+- Bản ghi có công ty con cụ thể thắng bản ghi dùng chung (công ty con trống); bản ghi của công ty con khác không áp dụng.
+- Có ngày hiệu lực thì lấy bản ghi hiệu lực muộn nhất không sau ngày cuối kỳ lương.
+- Bản ghi inactive hoặc trỏ tới tài khoản inactive bị bỏ qua, dòng rơi về mức ưu tiên kế tiếp; không đọc được record thì tính lương chạy như khi chưa khai.
+
+Không khai phòng ban riêng và không có bản ghi `cost_account` thì kết quả giống hệt trước khi có quy tắc này. Bảng lương đã tính giữ dòng phân bổ cũ cho tới khi tính lại; bảng lương đã ghi sổ không đổi.
+
 ## 5. Xử lý (script)
 
 | Quy trình | Thành phần |
