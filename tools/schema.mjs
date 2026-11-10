@@ -4,6 +4,12 @@
 // Quy ước: tiền tố s4vp; record customrecord_s4vp_<id>; trường custrecord_s4vp_<prefix>_<field>; list customlist_s4vp_<id>
 // với giá trị scriptid val_<mã viết thường> (mã gốc H, B, C... như Acumatica, logic dùng mã, không dùng internal id).
 // Nhãn tiếng Việt (thị trường chính); mô tả tiếng Anh giữ nghĩa gốc của đặc tả để đối chiếu.
+//
+// Giao diện bản 2 (docs/UI_V2.md mục 6): mỗi phân hệ khai list, record mới ở file riêng tools/schema/<tên>.mjs; cuối file này
+// nạp và gộp các phần đó vào lists, records (xem "phần mở rộng theo phân hệ").
+import fs from "fs";
+import path from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 
 // ---------------------------------------------------------------- custom list (mã: [nhãn])
 export const lists = {
@@ -814,3 +820,28 @@ export const roles = [
 	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"]] },
 	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"]] },
 ];
+
+// ---------------------------------------------------------------- phần mở rộng theo phân hệ (tools/schema/*.mjs)
+// Mỗi file xuất { lists, records } cùng dạng với file này: export default { lists, records }, hoặc export const lists / records,
+// hoặc export default (shared) => ({ lists, records }) khi cần hằng quyền dùng chung (shared bên dưới). File tên bắt đầu bằng
+// "_" bị bỏ qua. Nạp theo thứ tự tên file; list hoặc record trùng id với phần đã có thì báo lỗi (prefix trường trùng do
+// gen_objects.mjs kiểm tra).
+const shared = { ROLE_HR, ROLE_ACCT, SETUP, PAYROLL, PROFILE, DOC_COMMON };
+const PARTS = path.join(path.dirname(fileURLToPath(import.meta.url)), "schema");
+const partFiles = fs.existsSync(PARTS) ? fs.readdirSync(PARTS).filter((f) => f.endsWith(".mjs") && !f.startsWith("_")).sort() : [];
+for (const file of partFiles) {
+	const mod = await import(pathToFileURL(path.join(PARTS, file)).href);
+	let part = mod.default !== undefined ? mod.default : mod;
+	if (typeof part === "function") part = part(shared);
+	part = part || {};
+	const partLists = part.lists || mod.lists || {};
+	const partRecords = part.records || mod.records || [];
+	for (const [id, def] of Object.entries(partLists)) {
+		if (lists[id]) throw new Error(`tools/schema/${file}: list ${id} already defined`);
+		lists[id] = def;
+	}
+	for (const rec of partRecords) {
+		if (records.some((r) => r.id === rec.id)) throw new Error(`tools/schema/${file}: record ${rec.id} already defined`);
+		records.push(rec);
+	}
+}

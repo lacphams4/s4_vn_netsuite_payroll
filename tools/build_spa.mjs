@@ -52,14 +52,27 @@ async function buildApp(name) {
 		await fs.writeFile(target, outputText);
 	}
 
+	const safeFile = path.join(buildDir, "lib", "jsx-safe.js");
+	const safeJsx = (await fs.stat(safeFile).catch(() => null)) ? path.resolve(safeFile) : null;
 	for (const entry of ["SpaClient.js", "SpaServer.js"]) {
 		const input = path.join(buildDir, entry);
 		const original = await fs.readFile(path.join(srcDir, entry), "utf8");
 		const header = (original.match(HEADER) || [""])[0];
 		const bundle = await rollup({
 			input,
-			external: EXTERNAL,
-			plugins: [{ name: "strip-header", transform: (code) => code.replace(HEADER, "") }],
+			// Rollup xét external trước plugin: jsx-runtime chỉ là external khi được import từ chính lớp bọc
+			external: (id, importer) => {
+				if (id === "@uif-js/core/jsx-runtime" && safeJsx) return !!importer && path.resolve(importer) === safeJsx;
+				return EXTERNAL.some((e) => (e instanceof RegExp ? e.test(id) : e === id));
+			},
+			plugins: [
+				{ name: "strip-header", transform: (code) => code.replace(HEADER, "") },
+				// jsx-runtime của UIF sập khi children là true / false: trỏ về lớp bọc lib/jsx-safe.js nếu app có file này
+				{
+					name: "jsx-safe",
+					resolveId: (source, importer) => (source === "@uif-js/core/jsx-runtime" && safeJsx && importer && path.resolve(importer) !== safeJsx ? safeJsx : null),
+				},
+			],
 		});
 		const { output } = await bundle.generate({ format: "amd" });
 		await fs.mkdir(outDir, { recursive: true });

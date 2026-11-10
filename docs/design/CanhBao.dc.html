@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Chi tiết cảnh báo và nhật ký kỳ lương</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#24566B}a:hover{color:#16394A}
+.t th{font-size:12px;font-weight:600;color:#55616B;text-align:right;padding:10px 12px;border-bottom:1px solid #D9DEE2;white-space:nowrap;background:#F7F8F9}
+.t td{font-size:14px;padding:11px 12px;border-bottom:1px solid #E8EBEE;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.t th.l,.t td.l{text-align:left}
+.t td.w{white-space:normal}
+</style>
+</helmet>
+<div style="font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #1D2730; background: #F3F4F2; display: flex; flex-wrap: wrap; min-height: 1180px; align-content: flex-start">
+
+  <div style="flex: 1 1 100%; background: #35596B; color: #FFFFFF; padding: 10px 28px; box-sizing: border-box; font-size: 13px">Thanh menu NetSuite (giữ nguyên của hệ thống) · tab Lương VN đang mở</div>
+  <nav aria-label="Phân hệ" style="flex: 1 1 100%; background: #FFFFFF; border-bottom: 1px solid #D9DEE2; padding: 0 28px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center">
+    <div style="font-size: 17px; font-weight: 700; padding: 0 18px 0 0">Lương VN</div>
+    <a href="TrangChu.dc.html" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Trang chủ</a>
+    <a href="TinhCong.dc.html" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Chấm công</a>
+    <a href="Main.dc.html" aria-current="page" style="color: #16394A; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid #24566B; font-size: 14px; font-weight: 700">Chạy lương</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Nhân sự</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Tạm ứng</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Báo cáo, tờ khai</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Thiết lập</a>
+  </nav>
+
+  <main style="flex: 1 1 100%; min-width: 0; padding: 24px 28px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; color: #55616B"><a href="Main.dc.html">Chạy lương</a> / <a href="Main.dc.html">BL000007</a> / Kiểm tra / Thu nhập lệch trên 20% so kỳ trước</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+          <h1 style="margin: 0; font-size: 24px; font-weight: 700">E013 NV02 Công nhân · thực lĩnh tăng 31,7%</h1>
+          <span style="font-size: 13px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 4px 10px; border-radius: 999px">Chưa xử lý</span>
+        </div>
+        <div style="font-size: 13px; color: #55616B">Kỳ 03/2027 so với kỳ 02/2027 · Người xử lý: Kế toán lương · Ví dụ minh họa</div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+        <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Trường hợp trước</button>
+        <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Trường hợp sau</button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+        <section aria-label="So sánh hai kỳ" style="background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; display: flex; flex-direction: column">
+          <div style="padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between">
+            <div style="font-size: 16px; font-weight: 700">So sánh từng khoản với kỳ trước</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px">
+              <a href="#" style="font-weight: 600">Phiếu lương kỳ 02/2027</a>
+              <a href="#" style="font-weight: 600">Phiếu lương nháp kỳ 03/2027</a>
+            </div>
+          </div>
+          <div style="overflow-x: auto">
+            <table class="t" style="border-collapse: collapse; width: 100%">
+              <thead><tr><th class="l">Khoản</th><th>Kỳ 02/2027</th><th>Kỳ 03/2027</th><th>Chênh lệch</th></tr></thead>
+              <tbody>
+                <tr><td class="l">Lương cơ bản</td><td>10.400.000</td><td>10.400.000</td><td style="color: #55616B">-</td></tr>
+                <tr style="background: #FFF6E9"><td class="l" style="font-weight: 600">Thưởng đột xuất (nhập tay)</td><td>-</td><td>2.500.000</td><td style="font-weight: 700; color: #6B3A00">+2.500.000</td></tr>
+                <tr style="background: #FFF6E9"><td class="l" style="font-weight: 600">Làm thêm ngày nghỉ hằng tuần</td><td>-</td><td>452.174</td><td style="font-weight: 700; color: #6B3A00">+452.174</td></tr>
+                <tr><td class="l" style="font-weight: 700">Tổng thu nhập</td><td style="font-weight: 700">10.400.000</td><td style="font-weight: 700">13.352.174</td><td style="font-weight: 700">+2.952.174</td></tr>
+                <tr><td class="l">Bảo hiểm người lao động</td><td>1.092.000</td><td>1.092.000</td><td style="color: #55616B">-</td></tr>
+                <tr><td class="l">Thuế TNCN</td><td>-</td><td>-</td><td style="color: #55616B">-</td></tr>
+                <tr><td class="l" style="font-weight: 700; border-bottom: 0">Thực lĩnh</td><td style="font-weight: 700; border-bottom: 0">9.308.000</td><td style="font-weight: 700; border-bottom: 0">12.260.174</td><td style="font-weight: 700; border-bottom: 0; color: #6B3A00">+2.952.174 (31,7%)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section aria-label="Thay đổi trong kỳ" style="background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 16px; font-weight: 700">Dữ liệu đã thay đổi trong kỳ</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px 20px; justify-content: space-between; font-size: 14px"><span>28/03 · Nhân sự thêm khoản nhập tay "Thưởng đột xuất" 2.500.000</span><a href="#" style="font-weight: 600">Mở khoản nhập tay</a></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px 20px; justify-content: space-between; font-size: 14px"><span>21/03 · Quản lý duyệt đơn làm thêm 4 giờ ngày Chủ nhật 20/03</span><a href="#" style="font-weight: 600">Mở đơn làm thêm</a></div>
+          <div style="font-size: 13px; color: #55616B">Hồ sơ lương, hợp đồng và người phụ thuộc không đổi trong kỳ.</div>
+        </section>
+      </div>
+
+      <aside aria-label="Xử lý cảnh báo" style="flex: 1 1 340px; max-width: 440px; min-width: 0; background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px">
+        <div style="font-size: 16px; font-weight: 700">Xử lý</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+          <a href="#" style="font-weight: 600">Mở hồ sơ lương của nhân viên</a>
+          <a href="#" style="font-weight: 600">Sửa khoản thưởng đột xuất</a>
+          <a href="TinhCong.dc.html" style="font-weight: 600">Xem công và giờ làm thêm trong kỳ</a>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #55616B">Ghi chú (bắt buộc khi đóng cảnh báo)
+          <textarea rows="3" style="font: inherit; font-size: 14px; color: #1D2730; padding: 10px 12px; border: 1px solid #B8C1C8; border-radius: 8px; resize: vertical">Đã hỏi Nhân sự: thưởng theo quyết định ngày 27/03, hợp lệ.</textarea>
+        </label>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <button type="button" style="font: inherit; font-size: 14px; font-weight: 600; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #24566B; background: #24566B; color: #FFFFFF">Hợp lệ, đóng cảnh báo</button>
+          <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Giao cho người khác</button>
+        </div>
+        <div style="font-size: 12px; color: #55616B">Sửa dữ liệu rồi tính lại thì cảnh báo tự đóng nếu không còn vi phạm. Mọi lần đóng đều ghi vào nhật ký.</div>
+      </aside>
+    </div>
+
+    <section aria-label="Nhật ký kỳ lương" style="background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; display: flex; flex-direction: column">
+      <div style="padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between">
+        <div style="font-size: 16px; font-weight: 700">Nhật ký bảng lương BL000007</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+          <input type="search" aria-label="Tìm trong nhật ký" placeholder="Tìm người, thao tác, nhân viên" style="font: inherit; font-size: 14px; min-height: 44px; width: 280px; max-width: 100%; padding: 0 12px; border: 1px solid #B8C1C8; border-radius: 8px; box-sizing: border-box">
+          <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Tải xuống</button>
+        </div>
+      </div>
+      <div style="overflow-x: auto">
+        <table class="t" style="border-collapse: collapse; width: 100%">
+          <thead><tr><th class="l">Thời điểm</th><th class="l">Người thực hiện</th><th class="l">Thao tác</th><th class="l">Chi tiết</th></tr></thead>
+          <tbody>
+            <tr><td class="l">30/03/2027 09:42</td><td class="l">Kế toán lương</td><td class="l">Tính lương</td><td class="l w">4 nhân viên, không lỗi; 3 quy tắc kiểm tra có trường hợp cần xử lý</td></tr>
+            <tr><td class="l">30/03/2027 09:40</td><td class="l">Kế toán lương</td><td class="l">Nạp giờ công</td><td class="l w">Nhận 10/11 dòng timesheet; 1 dòng chưa duyệt</td></tr>
+            <tr><td class="l">29/03/2027 16:05</td><td class="l">Nhân sự</td><td class="l">Khóa công kỳ 03/2027</td><td class="l w">4 nhân viên, 0 ngoại lệ còn mở</td></tr>
+            <tr><td class="l">28/03/2027 10:12</td><td class="l">Nhân sự</td><td class="l">Thêm khoản nhập tay</td><td class="l w">E013 · Thưởng đột xuất 2.500.000</td></tr>
+            <tr><td class="l" style="border-bottom: 0">25/03/2027 08:30</td><td class="l" style="border-bottom: 0">Kế toán lương</td><td class="l" style="border-bottom: 0">Tạo bảng lương, nạp nhân viên</td><td class="l w" style="border-bottom: 0">Nhóm lương Mặc định, 4 nhân viên</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div style="font-size: 12px; color: #55616B">Mẫu thiết kế. Số liệu trên trang này là minh họa cho cách hiển thị, không phải số của bảng lương thử.</div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

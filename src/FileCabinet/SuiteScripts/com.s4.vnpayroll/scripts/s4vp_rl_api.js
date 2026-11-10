@@ -7,11 +7,17 @@
  *       reject | reopen | release | reverse | agencyBills | closePeriod | reopenPeriod | lockAttendance | unlockAttendance, ...}
  * Lỗi trả {error, errorVi}; số tiền lương không ghi vào log.
  *
+ * Giao diện bản 2 (docs/UI_V2.md mục 5): action không có trong hai switch bên dưới được tra trong các mô-đun route đã đăng ký
+ * (ROUTE_MODULES); mỗi mô-đun xuất routes: { get: { tên: { roles, run(params) } }, post: { tên: { roles, run(body) } } }.
+ * roles: "all" | "payroll" (administrator, HR, kế toán), "hr" (administrator + HR), "acct" (administrator + kế toán), "admin".
+ * Sau mỗi POST thành công (action cũ lẫn mới) gọi AuditLog.record({action, batch, period, id, lineId, result}); ghi nhật ký lỗi
+ * không làm hỏng thao tác.
+ *
  * @NApiVersion 2.1
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts) => {
+define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth"], (runtime, log, task, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
@@ -44,6 +50,64 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 
 	function isHr() {
 		return role() === "customrole_s4vp_hr";
+	}
+
+	// ---------------------------------------------------------------- mô-đun route của giao diện bản 2
+	// Thứ tự đăng ký quyết định mô-đun nào thắng khi trùng tên action (không nên trùng); action cũ luôn được ưu tiên.
+	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth];
+	const ROLE_SETS = {
+		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
+		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
+		hr: ["administrator", "customrole_s4vp_hr"],
+		acct: ["administrator", "customrole_s4vp_accountant"],
+		admin: ["administrator"],
+	};
+	// Action POST của switch cũ (đã có ma trận quyền riêng): không tra trong mô-đun route
+	const LEGACY_POST = new Set(HR_ACTIONS.concat(ACCOUNTANT_ACTIONS, ADMIN_ONLY));
+
+	/** Tìm route theo phương thức ("get" | "post") và tên action; null nếu không mô-đun nào khai. */
+	function findRoute(method, action) {
+		const name = String(action || "");
+		if (!name) return null;
+		for (const m of ROUTE_MODULES) {
+			const table = m && m.routes && m.routes[method];
+			if (table && Object.prototype.hasOwnProperty.call(table, name) && table[name] && typeof table[name].run === "function") return table[name];
+		}
+		return null;
+	}
+
+	/** Chạy route sau khi kiểm tra vai trò; roles thiếu hoặc lạ thì chỉ administrator được chạy. */
+	function runRoute(route, action, input) {
+		const roles = ROLE_SETS[route.roles] || ROLE_SETS.admin;
+		if (!roles.includes(role())) {
+			log.audit({ title: "s4vp_rl_api denied", details: `${role()} ${action}` });
+			const e = new Error("Your role is not allowed to perform this action");
+			e.userMessage = { en: "Your role is not allowed to perform this action", vi: "Vai trò của bạn không được thực hiện thao tác này" };
+			throw e;
+		}
+		const out = route.run(input || {});
+		return out === undefined || out === null ? { ok: true } : out;
+	}
+
+	// Action cũ nhận id bảng lương / id kỳ ở body.id: suy ra batch, period cho nhật ký
+	const BATCH_ID_ACTIONS = ["loadEmployees", "syncTime", "calculate", "removeHold", "hold", "approve", "reject", "reopen", "release", "reverse", "agencyBills", "clearJob"];
+	const PERIOD_ID_ACTIONS = ["closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance", "processPunches", "loadSheetEmployees"];
+
+	/** Ghi nhật ký sau POST thành công; lỗi ở đây chỉ ghi log, không ảnh hưởng kết quả thao tác. */
+	function audit(action, body, result) {
+		try {
+			if (!AuditLog || typeof AuditLog.record !== "function") return;
+			const b = body || {};
+			const values = b.values || {};
+			let batch = b.batch || values.batch || null;
+			let period = b.period || values.period || null;
+			if (BATCH_ID_ACTIONS.includes(action)) batch = b.id || batch;
+			else if (PERIOD_ID_ACTIONS.includes(action)) period = b.id || period;
+			else if (action === "createBatch") batch = (result && result.id) || batch;
+			AuditLog.record({ action, batch: batch || null, period: period || null, id: b.id || null, lineId: b.lineId || null, result });
+		} catch (e) {
+			log.error({ title: "s4vp_rl_api audit", details: String((e && e.message) || e).slice(0, 300) });
+		}
 	}
 
 	function wrap(fn) {
@@ -154,8 +218,11 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return { employees: Profiles.list(params.subsidiary) };
 				case "lookups":
 					return { accounts: Profiles.accounts(), vendors: Profiles.vendors(params.subsidiary), setup: Settings.tenant(), company: Settings.company(params.subsidiary), components: Store.find("ins_comp") };
-				default:
+				default: {
+					const route = findRoute("get", params.action);
+					if (route) return runRoute(route, params.action, params);
 					return { error: `Unknown action ${params.action}`, errorVi: `Thao tác không hợp lệ ${params.action}` };
+				}
 			}
 		});
 	}
@@ -179,8 +246,20 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 	}
 
 	function post(body) {
+		const out = postAction(body);
+		// Thành công = không có khóa lỗi (s4vpError của wrap, error của các nhánh từ chối cũ)
+		if (out && !out.s4vpError && !out.error) audit(body && body.action, body, out);
+		return out;
+	}
+
+	function postAction(body) {
 		return wrap(() => {
 			const a = body && body.action;
+			// Action của giao diện bản 2: quyền theo roles của route, không theo ma trận action cũ
+			if (!LEGACY_POST.has(a)) {
+				const route = findRoute("post", a);
+				if (route) return runRoute(route, a, body);
+			}
 			if (!allowed(a)) {
 				log.audit({ title: "s4vp_rl_api denied", details: `${role()} ${a}` });
 				return { error: "Your role is not allowed to perform this action", errorVi: "Vai trò của bạn không được thực hiện thao tác này" };

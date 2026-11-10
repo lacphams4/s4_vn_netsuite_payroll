@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Tính lương - bảng lương 03/2027</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#24566B}a:hover{color:#16394A}
+.t th{font-size:12px;font-weight:600;color:#55616B;text-align:right;padding:10px 12px;border-bottom:1px solid #D9DEE2;white-space:nowrap;background:#F7F8F9}
+.t td{font-size:14px;padding:12px;border-bottom:1px solid #E8EBEE;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.t th.l,.t td.l{text-align:left}
+</style>
+</helmet>
+<div style="font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #1D2730; background: #F3F4F2; display: flex; flex-wrap: wrap; min-height: 1180px">
+
+  <div style="flex: 1 1 100%; background: #35596B; color: #FFFFFF; padding: 10px 28px; box-sizing: border-box; font-size: 13px">Thanh menu NetSuite (giữ nguyên của hệ thống) · tab Lương VN đang mở</div>
+  <nav aria-label="Phân hệ" style="flex: 1 1 100%; background: #FFFFFF; border-bottom: 1px solid #D9DEE2; padding: 0 28px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center">
+    <div style="font-size: 17px; font-weight: 700; padding: 0 18px 0 0">Lương VN</div>
+    <a href="TrangChu.dc.html" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Trang chủ</a>
+    <a href="TinhCong.dc.html" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Chấm công</a>
+    <a href="#" aria-current="page" style="color: #16394A; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid #24566B; font-size: 14px; font-weight: 700">Chạy lương</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Nhân sự</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Tạm ứng</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Báo cáo, tờ khai</a>
+    <a href="#" style="color: #3A4650; text-decoration: none; padding: 14px 12px 11px; border-bottom: 3px solid transparent; font-size: 14px">Thiết lập</a>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 24px 28px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; color: #55616B"><a href="#">Chạy lương</a> / BL000007</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+          <h1 style="margin: 0; font-size: 26px; font-weight: 700">Lương tháng 03/2027</h1>
+          <span style="font-size: 13px; font-weight: 600; color: #0F5132; background: #DDF1E4; padding: 4px 10px; border-radius: 999px">Đã tính, chờ soát</span>
+        </div>
+        <div style="font-size: 13px; color: #55616B">Kỳ 01/03 - 31/03/2027 · Nhóm lương Mặc định · Ngày chi 05/04/2027 · 4 nhân viên</div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+        <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">In</button>
+        <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Thao tác khác</button>
+        <a href="CanhBao.dc.html" style="font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730; text-decoration: none; display: inline-flex; align-items: center; box-sizing: border-box">Nhật ký</a>
+        <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Tính lại</button>
+        <button type="button" style="font: inherit; font-size: 14px; font-weight: 600; min-height: 44px; padding: 0 20px; border-radius: 8px; border: 1px solid #24566B; background: #24566B; color: #FFFFFF">Gửi duyệt</button>
+      </div>
+    </div>
+
+    <ol aria-label="Các bước chạy lương" style="list-style: none; margin: 0; padding: 14px 18px; background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: 14px">
+      <li style="display: flex; gap: 8px; align-items: center; color: #0F5132"><span style="width: 24px; height: 24px; border-radius: 50%; background: #DDF1E4; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">1</span>Chuẩn bị<span style="font-size: 12px; color: #55616B">4 người</span></li>
+      <li style="display: flex; gap: 8px; align-items: center; color: #0F5132"><span style="width: 24px; height: 24px; border-radius: 50%; background: #DDF1E4; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">2</span>Công và giờ<span style="font-size: 12px; color: #55616B">đã khóa</span></li>
+      <li style="display: flex; gap: 8px; align-items: center; color: #0F5132"><span style="width: 24px; height: 24px; border-radius: 50%; background: #DDF1E4; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">3</span>Tính lương<span style="font-size: 12px; color: #55616B">09:42 hôm nay</span></li>
+      <li aria-current="step" style="display: flex; gap: 8px; align-items: center; font-weight: 700; color: #1D2730"><span style="width: 24px; height: 24px; border-radius: 50%; background: #24566B; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">4</span>Soát<span style="font-size: 12px; font-weight: 600; color: #8A4B00">3 điểm cần xem</span></li>
+      <li style="display: flex; gap: 8px; align-items: center; color: #55616B"><span style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #B8C1C8; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 12px">5</span>Duyệt</li>
+      <li style="display: flex; gap: 8px; align-items: center; color: #55616B"><span style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #B8C1C8; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 12px">6</span>Chi lương và ghi sổ</li>
+    </ol>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px">
+      <div style="background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; color: #55616B">Thực lĩnh phải chi</div>
+        <div style="font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums">100.766.900</div>
+        <div style="font-size: 12px; color: #55616B">Giảm 1,2% so với kỳ 01/2027</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; color: #55616B">Bảo hiểm phải nộp</div>
+        <div style="font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums">29.928.000</div>
+        <div style="font-size: 12px; color: #55616B">Người lao động 9.049.000 · Công ty 20.879.000</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; color: #55616B">Thuế TNCN phải nộp</div>
+        <div style="font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums">6.264.100</div>
+        <div style="font-size: 12px; color: #55616B">Lũy tiến 4.696.100 · Khấu trừ 10% 1.568.000</div>
+      </div>
+      <div style="background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; color: #55616B">Tổng chi phí công ty</div>
+        <div style="font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums">136.959.000</div>
+        <div style="font-size: 12px; color: #55616B">Tổng thu nhập 116.080.000 + BH công ty</div>
+      </div>
+    </div>
+
+    <section aria-label="Kiểm tra trước khi duyệt" style="background: #FFFFFF; border: 1px solid #F0D3A6; border-radius: 12px; display: flex; flex-direction: column">
+      <div style="padding: 14px 16px 10px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+          <div style="font-size: 16px; font-weight: 700; padding-right: 8px">Kiểm tra trước khi duyệt</div>
+          <button type="button" aria-pressed="true" style="font: inherit; font-size: 13px; font-weight: 600; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #C97A12; background: #FFE9C7; color: #6B3A00">Cần xử lý 3</button>
+          <button type="button" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Đã xử lý 0</button>
+          <button type="button" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Đạt 5</button>
+        </div>
+        <input type="search" aria-label="Tìm quy tắc kiểm tra" placeholder="Tìm quy tắc, nhân viên" style="font: inherit; font-size: 14px; min-height: 44px; width: 260px; max-width: 100%; padding: 0 12px; border: 1px solid #B8C1C8; border-radius: 8px; box-sizing: border-box">
+      </div>
+      <div style="overflow-x: auto">
+        <table class="t" style="border-collapse: collapse; width: 100%">
+          <thead>
+            <tr><th class="l">Quy tắc kiểm tra</th><th>Số trường hợp</th><th class="l">Nhân viên</th><th class="l">Trạng thái</th><th class="l">Người xử lý</th><th class="l">Xử lý</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="l" style="font-weight: 600">Giờ timesheet chưa duyệt trong kỳ</td><td>1</td><td class="l">E014 CTV03 Theo giờ · 4 giờ ngày 15/03</td><td class="l"><span style="font-size: 12px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 3px 8px; border-radius: 999px">Chưa xử lý</span></td><td class="l" style="color: #55616B">Chưa giao</td><td class="l"><a href="CanhBao.dc.html" style="font-weight: 600">Mở</a></td></tr>
+            <tr><td class="l" style="font-weight: 600">Khoản nhập tay bằng 0 đồng</td><td>2</td><td class="l">E012 NV01 Văn phòng, E013 NV02 Công nhân</td><td class="l"><span style="font-size: 12px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 3px 8px; border-radius: 999px">Chưa xử lý</span></td><td class="l">Kế toán lương</td><td class="l"><a href="CanhBao.dc.html" style="font-weight: 600">Mở</a></td></tr>
+            <tr><td class="l" style="font-weight: 600; border-bottom: 0">Giấy phép lao động hết hạn</td><td style="border-bottom: 0">1</td><td class="l" style="border-bottom: 0">E015 NV04 Nước ngoài · hết hạn 15/02/2027</td><td class="l" style="border-bottom: 0"><span style="font-size: 12px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 3px 8px; border-radius: 999px">Chưa xử lý</span></td><td class="l" style="border-bottom: 0">Nhân sự</td><td class="l" style="border-bottom: 0"><a href="CanhBao.dc.html" style="font-weight: 600">Mở</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding: 10px 16px 14px; font-size: 13px; color: #55616B; border-top: 1px solid #E8EBEE">5 quy tắc đạt: thu nhập lệch trên 20% so kỳ trước, thiếu tài khoản ngân hàng, thiếu mã số thuế, lương dưới mức tối thiểu vùng, nhân viên nghỉ việc còn trong bảng lương. Kiểm tra chạy lại mỗi lần tính lương hoặc tính thử.</div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start">
+
+      <section aria-label="Nhân viên" style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; display: flex; flex-direction: column">
+        <div style="padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between">
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <button type="button" aria-pressed="true" style="font: inherit; font-size: 13px; font-weight: 600; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #24566B; background: #E6EFF3; color: #16394A">Tất cả 4</button>
+            <button type="button" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Cần xem 3</button>
+            <button type="button" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Lỗi 0</button>
+            <button type="button" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730">Lệch trên 10% so kỳ trước 0</button>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+            <label style="display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #55616B">Tìm nhân viên
+              <input type="search" placeholder="Tên, mã, số tiền" style="font: inherit; font-size: 14px; min-height: 44px; width: 200px; padding: 0 12px; border: 1px solid #B8C1C8; border-radius: 8px; box-sizing: border-box">
+            </label>
+            <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid #B8C1C8; background: #FFFFFF; color: #1D2730; align-self: flex-end">Nhập hàng loạt</button>
+          </div>
+        </div>
+        <div style="overflow-x: auto">
+          <table class="t" style="border-collapse: collapse; width: 100%">
+            <thead>
+              <tr><th class="l">Nhân viên</th><th>Công</th><th>Tổng thu nhập</th><th>BH NLĐ</th><th>Thuế TNCN</th><th>Khấu trừ</th><th>Thực lĩnh</th><th>So kỳ trước</th><th class="l">Ghi chú</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="l"><a href="#" style="font-weight: 600">E012</a> NV01 Văn phòng<div style="font-size: 12px; color: #55616B">Nhân viên · lương tháng</div></td><td>23 / 23</td><td>30.000.000</td><td>3.150.000</td><td>257.500</td><td>-</td><td style="font-weight: 600">26.592.500</td><td style="color: #55616B">0%</td><td class="l"><span style="font-size: 12px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 3px 8px; border-radius: 999px">1 cần xem</span></td></tr>
+              <tr><td class="l"><a href="#" style="font-weight: 600">E013</a> NV02 Công nhân<div style="font-size: 12px; color: #55616B">Nhân viên · lương tháng</div></td><td>23 / 23</td><td>10.400.000</td><td>1.092.000</td><td>-</td><td>-</td><td style="font-weight: 600">9.308.000</td><td style="color: #55616B">0%</td><td class="l"><span style="font-size: 12px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 3px 8px; border-radius: 999px">1 cần xem</span></td></tr>
+              <tr style="background: #EAF2F5"><td class="l" style="box-shadow: inset 3px 0 0 #24566B"><a href="#" style="font-weight: 600">E014</a> CTV03 Theo giờ<div style="font-size: 12px; color: #55616B">Cộng tác viên · lương giờ</div></td><td>80 giờ</td><td>15.680.000</td><td>-</td><td>1.568.000</td><td>-</td><td style="font-weight: 600">14.112.000</td><td style="color: #55616B">Kỳ đầu</td><td class="l"><span style="font-size: 12px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 3px 8px; border-radius: 999px">1 cần xem</span></td></tr>
+              <tr><td class="l"><a href="#" style="font-weight: 600">E015</a> NV04 Nước ngoài<div style="font-size: 12px; color: #55616B">Nhân viên · lương tháng</div></td><td>23 / 23</td><td>60.000.000</td><td>4.807.000</td><td>4.438.600</td><td>-</td><td style="font-weight: 600">50.754.400</td><td style="color: #55616B">0%</td><td class="l"><span style="font-size: 12px; font-weight: 600; color: #6B3A00; background: #FFE9C7; padding: 3px 8px; border-radius: 999px">1 cần xem</span></td></tr>
+              <tr><td class="l" style="font-weight: 700; border-bottom: 0">Tổng 4 nhân viên</td><td style="border-bottom: 0"></td><td style="font-weight: 700; border-bottom: 0">116.080.000</td><td style="font-weight: 700; border-bottom: 0">9.049.000</td><td style="font-weight: 700; border-bottom: 0">6.264.100</td><td style="font-weight: 700; border-bottom: 0">-</td><td style="font-weight: 700; border-bottom: 0">100.766.900</td><td style="border-bottom: 0"></td><td style="border-bottom: 0"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside aria-label="Chi tiết nhân viên đang chọn" style="flex: 1 1 340px; max-width: 420px; min-width: 0; background: #FFFFFF; border: 1px solid #E1E5E8; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start">
+          <div>
+            <div style="font-size: 17px; font-weight: 700">E014 CTV03 Theo giờ</div>
+            <div style="font-size: 13px; color: #55616B">Cộng tác viên · 196.000 / giờ · khấu trừ thuế 10%</div>
+          </div>
+          <a href="#" style="font-size: 13px; font-weight: 600; white-space: nowrap">Xem phiếu lương</a>
+        </div>
+        <div role="tablist" aria-label="Chi tiết" style="display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid #E1E5E8">
+          <button type="button" role="tab" aria-selected="true" style="font: inherit; font-size: 13px; font-weight: 600; min-height: 44px; padding: 0 10px; border: 0; border-bottom: 3px solid #24566B; background: none; color: #16394A">Thu nhập</button>
+          <button type="button" role="tab" aria-selected="false" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 10px; border: 0; border-bottom: 3px solid transparent; background: none; color: #55616B">Khấu trừ</button>
+          <button type="button" role="tab" aria-selected="false" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 10px; border: 0; border-bottom: 3px solid transparent; background: none; color: #55616B">Bảo hiểm</button>
+          <button type="button" role="tab" aria-selected="false" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 10px; border: 0; border-bottom: 3px solid transparent; background: none; color: #55616B">Giờ công</button>
+          <button type="button" role="tab" aria-selected="false" style="font: inherit; font-size: 13px; min-height: 44px; padding: 0 10px; border: 0; border-bottom: 3px solid transparent; background: none; color: #55616B">Phân bổ</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; border: 1px solid #E8EBEE; border-radius: 10px; padding: 12px 14px">
+          <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14px"><span style="font-weight: 600">Lương theo giờ</span><span style="font-weight: 600; font-variant-numeric: tabular-nums">15.680.000</span></div>
+          <div style="font-size: 13px; color: #55616B">80 giờ × 196.000 · từ giờ công đã duyệt</div>
+        </div>
+        <button type="button" style="font: inherit; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px dashed #8FA0AB; background: #FFFFFF; color: #24566B; font-weight: 600">Thêm khoản thu nhập</button>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; border-top: 1px solid #E1E5E8; padding-top: 12px">
+          <div style="display: flex; justify-content: space-between"><span style="color: #55616B">Tổng thu nhập</span><span style="font-variant-numeric: tabular-nums">15.680.000</span></div>
+          <div style="display: flex; justify-content: space-between"><span style="color: #55616B">Thuế TNCN khấu trừ 10%</span><span style="font-variant-numeric: tabular-nums">1.568.000</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 700"><span>Thực lĩnh</span><span style="font-variant-numeric: tabular-nums">14.112.000</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <div style="font-size: 12px; color: #55616B">Mẫu thiết kế, số liệu lấy từ bảng lương thử BL000007 trên td2937310. Số so sánh kỳ trước và giờ tính lương là minh họa.</div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
