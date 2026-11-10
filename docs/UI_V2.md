@@ -71,7 +71,7 @@ app.run(label, promise)     chạy thao tác: hiện "đang xử lý", bắt l�
 app.notify(text, kind)      thông báo ('ok' | 'warn' | 'error')
 app.confirm(text, onYes)    hộp xác nhận cho thao tác khó hoàn tác
 app.busy                    chuỗi đang xử lý hoặc ''
-app.lang                    'vi' | 'en'
+app.lang                    mã ngôn ngữ 2 chữ ('vi', 'en', hoặc mã khác khi có bảng chữ)
 app.reloadBoot()            nạp lại bootstrap (sau khi đổi thiết lập, sinh kỳ, khóa công); trả promise bootstrap mới
 ```
 
@@ -219,3 +219,10 @@ Bổ sung sau khi dựng (10/11/2026):
 - Chấm công: thêm GET `attendanceEmployee` `{period, employee}`; `attendanceMonth` không truyền `period` thì máy chủ chọn kỳ mở, chưa khóa công, gần hôm nay nhất. Không có POST mới.
 - RESTlet: mọi lỗi (kể cả từ chối quyền, action lạ) trả `s4vpError` / `s4vpErrorVi`; không còn nhánh trả `error`.
 - Trình duyệt giữ bản SpaClient cũ sau deploy: đổi hash không tải lại trang, phải tải lại hẳn (F5).
+
+## 10. Đa ngôn ngữ
+
+- Có sẵn tiếng Việt và tiếng Anh; ngôn ngữ theo tùy chọn LANGUAGE của người dùng NetSuite. `lib/i18n.js`: `language()` trả mã 2 chữ; `pick(TEXT)` gộp sâu theo thứ tự ngôn ngữ đang dùng -> en -> vi. Thêm ngôn ngữ thứ ba: thêm `TEXT.<mã>` trong từng view, không sửa cơ chế.
+- Không so sánh `language() === 'vi'` trong view: dùng `isVi()`, `serverText(en, vi)`, `localized({vi, en})`, `serverLanguage()` (máy chủ hiện chỉ có vi / en nên ngôn ngữ khác gửi 'en').
+- Mọi chữ hiển thị nằm trong TEXT với đủ khóa vi và en. `node tools/check_i18n.mjs` (và test `tests/tools/check_i18n.test.js`) báo khóa thiếu, chữ Việt trong bản en, chữ Việt viết cứng ngoài TEXT; phải thoát mã 0 trước khi commit.
+- Chưa đa ngôn ngữ (ngoài SPA): nhãn object SDF (tên record, trường, giá trị list, menu chỉ tiếng Việt), tên dữ liệu mặc định khi nạp (ghi một bản theo ngôn ngữ người nạp), diễn giải bút toán (chốt theo người ghi sổ), một số lỗi máy chủ ghép "English / Tiếng Việt" trong một chuỗi.

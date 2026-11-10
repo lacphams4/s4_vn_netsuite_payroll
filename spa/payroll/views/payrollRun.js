@@ -11,7 +11,7 @@
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, openJournal, printUrl, download} from '../lib/api.js';
 import {money, num, pct, fmtDate, toNumber, quickFilter} from '../lib/format.js';
-import {pick, language} from '../lib/i18n.js';
+import {pick, serverText} from '../lib/i18n.js';
 import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, Tabs, Table, Badge, SearchBox, SidePanel, Dialog, Field, Select, TextInput, NumberInput, Empty} from '../ui/kit.js';
 
 const TEXT = {
@@ -365,7 +365,7 @@ const signedMoney = (v) => {
 // POST action cũ: lỗi phân quyền trả ở khóa error / errorVi (không ném) - đổi thành lỗi để app.run báo
 const send = (body) =>
 	post(body).then((r) => {
-		if (r && r.error) throw {message: language() === 'vi' ? r.errorVi || r.error : r.error};
+		if (r && r.error) throw {message: serverText(r.error, r.errorVi)};
 		return r;
 	});
 // Danh sách cảnh báo (mục 9): API chưa có hoặc lỗi thì coi như rỗng
@@ -559,7 +559,7 @@ export default function PayrollRunView({app}) {
 	const act = (action, extra, message) =>
 		app.run(t.working, send(Object.assign({action, id}, extra || {}))).then((r) => {
 			if (!r || !alive.current) return undefined;
-			const warn = (r.warnings || []).map((w) => (app.lang === 'vi' ? w.messageVi || w.message : w.message || w.messageVi)).filter(Boolean);
+			const warn = (r.warnings || []).map((w) => serverText(w.message, w.messageVi)).filter(Boolean);
 			let text = t.done.ok;
 			let kind = 'ok';
 			try {

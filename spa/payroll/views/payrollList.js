@@ -5,7 +5,7 @@
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openJournal} from '../lib/api.js';
 import {fmtDate} from '../lib/format.js';
-import {pick, language} from '../lib/i18n.js';
+import {pick, serverText} from '../lib/i18n.js';
 import {Page, PageHeader, Card, Button, Table, Badge, Select, Field, TextInput, Dialog} from '../ui/kit.js';
 
 const TEXT = {
@@ -119,7 +119,7 @@ export default function PayrollListView({app}) {
 		if (!v.period) return;
 		// Lỗi phân quyền của action cũ trả ở khóa error / errorVi (không ném): đổi thành lỗi để app.run báo
 		const work = post({action: 'createBatch', subsidiary, period: v.period, description: v.description}).then((r) => {
-			if (r && r.error) throw {message: language() === 'vi' ? r.errorVi || r.error : r.error};
+			if (r && r.error) throw {message: serverText(r.error, r.errorVi)};
 			return r;
 		});
 		app.run(t.working, work).then((r) => {

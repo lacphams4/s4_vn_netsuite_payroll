@@ -4,7 +4,7 @@
  */
 import url from 'N/url';
 import https from 'N/https';
-import {language} from './i18n.js';
+import {serverText, serverLanguage} from './i18n.js';
 
 export const RESTLET = {scriptId: 'customscript_s4vp_rl_api', deploymentId: 'customdeploy_s4vp_rl_api'};
 export const PRINT = {scriptId: 'customscript_s4vp_sl_print', deploymentId: 'customdeploy_s4vp_sl_print'};
@@ -25,7 +25,7 @@ export function errorText(e) {
 export function unwrap(response) {
 	const body = typeof response.body === 'string' ? JSON.parse(response.body || '{}') : response.body;
 	// Ném đối tượng thường: Error trong môi trường SPA của NetSuite bị bọc lại, mất message (chỉ còn {userFacing: false})
-	if (body && body.s4vpError) throw {message: language() === 'vi' ? body.s4vpErrorVi || body.s4vpError : body.s4vpError};
+	if (body && body.s4vpError) throw {message: serverText(body.s4vpError, body.s4vpErrorVi)};
 	return body;
 }
 
@@ -49,7 +49,7 @@ export function openJournal(id) {
 
 // Đường dẫn Suitelet in (phiếu lương, bảng thanh toán, quyết toán CTV) của một bảng lương
 export function printUrl(batchId, doc) {
-	return url.resolveScript(Object.assign({}, PRINT, {params: {batch: batchId, doc, lang: language()}}));
+	return url.resolveScript(Object.assign({}, PRINT, {params: {batch: batchId, doc, lang: serverLanguage()}}));
 }
 
 // Tải nội dung văn bản (CSV, file ngân hàng) về máy người dùng

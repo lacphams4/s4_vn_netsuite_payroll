@@ -18,7 +18,7 @@
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord} from '../lib/api.js';
 import {num, fmtDate, toNumber, fold} from '../lib/format.js';
-import {pick} from '../lib/i18n.js';
+import {pick, serverText} from '../lib/i18n.js';
 import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, SearchBox, Tabs, Badge, Table, Field, TextInput, NumberInput, Select, Dialog, SidePanel, Empty} from '../ui/kit.js';
 
 const TEXT = {
@@ -486,7 +486,7 @@ export default function AttendanceView({app}) {
 	const unlock = () => app.confirm(t.confirmUnlock, periodAction('unlockAttendance', t.done.unlock, true));
 	const processPunches = periodAction('processPunches', t.done.punches);
 	const loadSheet = periodAction('loadSheetEmployees', t.done.loadSheet);
-	const warnText = (r) => (r && Array.isArray(r.warnings) && r.warnings.length ? r.warnings.map((w) => (app.lang === 'en' ? w.message : w.messageVi || w.message)).join('; ') : '');
+	const warnText = (r) => (r && Array.isArray(r.warnings) && r.warnings.length ? r.warnings.map((w) => serverText(w.message, w.messageVi)).join('; ') : '');
 	const docAct = (e, op) =>
 		app.run(t.working, post({action: 'docAction', type: e.docType || e.type, id: e.docId || e.id, op})).then((r) => {
 			if (!r) return;

@@ -68,22 +68,101 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
     const jsxs = (type, props, key) => rt__namespace.jsxs(type, fix(type, props), key);
 
     /**
-     * Ngôn ngữ giao diện: theo tùy chọn LANGUAGE của người dùng NetSuite (vi hoặc en), mặc định tiếng Việt khi không đọc được.
+     * Ngôn ngữ giao diện: theo tùy chọn LANGUAGE của người dùng NetSuite (vi_VN -> vi, en_US -> en, fr_FR -> fr...).
      * Mỗi view tự mang bảng chữ `const TEXT = {vi: {...}, en: {...}}` và lấy bảng đang dùng bằng pick(TEXT).
+     * Thêm ngôn ngữ thứ ba: thêm bảng `TEXT.<mã>` (ví dụ `ja`) vào bảng chữ của view, không phải sửa mã vẽ; khóa chưa dịch
+     * tự lấy bản tiếng Anh rồi bản tiếng Việt. Độ phủ vi / en được kiểm bằng `node tools/check_i18n.mjs`.
      */
+    // Thứ tự lùi khi bảng của ngôn ngữ đang dùng thiếu chữ
+    const FALLBACK = ['en', 'vi'];
+    // Mã ngôn ngữ 2 chữ thường; không đọc được tùy chọn thì tiếng Việt, tùy chọn rỗng hoặc lạ thì tiếng Anh
     function language() {
         try {
-            return String(runtime.getCurrentUser().getPreference({ name: 'LANGUAGE' }) || '').toLowerCase().startsWith('vi') ? 'vi' : 'en';
+            const raw = String(runtime.getCurrentUser().getPreference({ name: 'LANGUAGE' }) || '').toLowerCase();
+            const m = /^[a-z]{2}/.exec(raw);
+            return m ? m[0] : 'en';
         }
         catch (e) {
             return 'vi';
         }
     }
-    // Bảng chữ theo ngôn ngữ; khóa thiếu ở bản tiếng Anh lấy bản tiếng Việt (chỉ bù ở cấp ngoài cùng)
-    function pick(TEXT) {
+    function isVi() {
+        return language() === 'vi';
+    }
+    // Thứ tự tra chữ: ngôn ngữ đang dùng -> en -> vi (không lặp)
+    function chain(lang) {
+        const out = [];
+        [lang || language()].concat(FALLBACK).forEach((l) => {
+            if (l && out.indexOf(l) < 0)
+                out.push(l);
+        });
+        return out;
+    }
+    // Đối tượng thường ({...}): nguyên mẫu là Object.prototype (của bất kỳ khung nào) hoặc không có nguyên mẫu
+    const isPlain = (v) => {
+        if (!v || typeof v !== 'object' || Array.isArray(v))
+            return false;
+        const proto = Object.getPrototypeOf(v);
+        return proto === null || Object.getPrototypeOf(proto) === null;
+    };
+    // Bù khóa thiếu theo chiều sâu: đối tượng thường thì gộp từng khóa con; hàm, mảng, chuỗi, số thì lấy nguyên của bảng ưu tiên
+    function fill(primary, backup) {
+        if (primary === undefined || primary === null)
+            return backup;
+        if (!isPlain(primary) || !isPlain(backup))
+            return primary;
+        const out = {};
+        Object.keys(backup).forEach((k) => {
+            out[k] = backup[k];
+        });
+        Object.keys(primary).forEach((k) => {
+            out[k] = fill(primary[k], backup[k]);
+        });
+        return out;
+    }
+    // Gộp bảng chữ theo thứ tự ưu tiên của `lang` (dùng được ngoài NetSuite, ví dụ trong kiểm thử)
+    function resolve(TEXT, lang) {
         const table = TEXT || {};
+        let out;
+        chain(lang).forEach((l) => {
+            if (isPlain(table[l]))
+                out = out === undefined ? table[l] : fill(out, table[l]);
+        });
+        return out || {};
+    }
+    const cache = typeof WeakMap === 'function' ? new WeakMap() : null;
+    // Bảng chữ theo ngôn ngữ của người dùng; kết quả được giữ lại theo từng TEXT (ngôn ngữ không đổi trong một lần mở trang)
+    function pick(TEXT) {
+        if (!TEXT || typeof TEXT !== 'object')
+            return {};
         const lang = language();
-        return lang === 'vi' || !table[lang] ? table.vi || {} : Object.assign({}, table.vi, table[lang]);
+        const hit = cache && cache.get(TEXT);
+        if (hit && hit.lang === lang)
+            return hit.value;
+        const value = resolve(TEXT, lang);
+        if (cache)
+            cache.set(TEXT, { lang, value });
+        return value;
+    }
+    // Chọn chữ từ đối tượng mang sẵn nhiều ngôn ngữ, ví dụ cột báo cáo {vi: 'Mã NV', en: 'Employee ID'}
+    function localized(obj, lang) {
+        if (!obj || typeof obj !== 'object')
+            return obj;
+        const order = chain(lang);
+        for (let i = 0; i < order.length; i++) {
+            const v = obj[order[i]];
+            if (v !== undefined && v !== null && v !== '')
+                return v;
+        }
+        return undefined;
+    }
+    // Chọn thông báo từ cặp (bản tiếng Anh, bản tiếng Việt) máy chủ trả về: bản Việt chỉ khi người dùng đặt tiếng Việt
+    function serverText(en, vi) {
+        return isVi() ? vi || en : en || vi;
+    }
+    // Mã ngôn ngữ gửi máy chủ (mẫu in, báo cáo): máy chủ hiện chỉ có bản vi và en, ngôn ngữ khác dùng bản tiếng Anh
+    function serverLanguage() {
+        return isVi() ? 'vi' : 'en';
     }
 
     /**
@@ -111,7 +190,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
         const body = typeof response.body === 'string' ? JSON.parse(response.body || '{}') : response.body;
         // Ném đối tượng thường: Error trong môi trường SPA của NetSuite bị bọc lại, mất message (chỉ còn {userFacing: false})
         if (body && body.s4vpError)
-            throw { message: language() === 'vi' ? body.s4vpErrorVi || body.s4vpError : body.s4vpError };
+            throw { message: serverText(body.s4vpError, body.s4vpErrorVi) };
         return body;
     }
     function call(params) {
@@ -132,7 +211,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
     }
     // Đường dẫn Suitelet in (phiếu lương, bảng thanh toán, quyết toán CTV) của một bảng lương
     function printUrl(batchId, doc) {
-        return url.resolveScript(Object.assign({}, PRINT, { params: { batch: batchId, doc, lang: language() } }));
+        return url.resolveScript(Object.assign({}, PRINT, { params: { batch: batchId, doc, lang: serverLanguage() } }));
     }
     // Tải nội dung văn bản (CSV, file ngân hàng) về máy người dùng
     function download(name, content) {
@@ -156,7 +235,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
     const CSS$1 = `
 .s4vp-app{--s4vp-bg:#F3F4F2;--s4vp-surface:#FFFFFF;--s4vp-text:#1D2730;--s4vp-sub:#55616B;--s4vp-accent:#24566B;--s4vp-accent-dark:#16394A;--s4vp-accent-soft:#E6EFF3;--s4vp-line:#E1E5E8;--s4vp-line-soft:#E8EBEE;--s4vp-ctl:#B8C1C8;
 --s4vp-ok:#0F5132;--s4vp-ok-bg:#DDF1E4;--s4vp-warn:#6B3A00;--s4vp-warn-bg:#FFE9C7;--s4vp-warn-line:#C97A12;--s4vp-err:#8A1C14;--s4vp-err-bg:#FBE3E0;--s4vp-info:#16394A;--s4vp-info-bg:#E6EFF3;
-font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);background:var(--s4vp-bg);min-height:80vh;width:100%;flex:0 0 auto;box-sizing:border-box;text-align:left}
+font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);background:var(--s4vp-bg);min-height:80vh;height:max-content;width:100%;flex:0 0 auto;box-sizing:border-box;text-align:left}
 .s4vp-app *,.s4vp-app *::before,.s4vp-app *::after{box-sizing:border-box}
 :where(.s4vp-app) button,:where(.s4vp-app) input,:where(.s4vp-app) select,:where(.s4vp-app) textarea{font:inherit;color:inherit;margin:0}
 .s4vp-app button{cursor:pointer}
@@ -1748,7 +1827,7 @@ select.s4vp-in{padding-right:28px}
         const unlock = () => app.confirm(t.confirmUnlock, periodAction('unlockAttendance', t.done.unlock, true));
         const processPunches = periodAction('processPunches', t.done.punches);
         const loadSheet = periodAction('loadSheetEmployees', t.done.loadSheet);
-        const warnText = (r) => (r && Array.isArray(r.warnings) && r.warnings.length ? r.warnings.map((w) => (app.lang === 'en' ? w.message : w.messageVi || w.message)).join('; ') : '');
+        const warnText = (r) => (r && Array.isArray(r.warnings) && r.warnings.length ? r.warnings.map((w) => serverText(w.message, w.messageVi)).join('; ') : '');
         const docAct = (e, op) => app.run(t.working, post({ action: 'docAction', type: e.docType || e.type, id: e.docId || e.id, op })).then((r) => {
             if (!r)
                 return;
@@ -2190,7 +2269,7 @@ select.s4vp-in{padding-right:28px}
             // Lỗi phân quyền của action cũ trả ở khóa error / errorVi (không ném): đổi thành lỗi để app.run báo
             const work = post({ action: 'createBatch', subsidiary, period: v.period, description: v.description }).then((r) => {
                 if (r && r.error)
-                    throw { message: language() === 'vi' ? r.errorVi || r.error : r.error };
+                    throw { message: serverText(r.error, r.errorVi) };
                 return r;
             });
             app.run(t.working, work).then((r) => {
@@ -2588,7 +2667,7 @@ select.s4vp-in{padding-right:28px}
     // POST action cũ: lỗi phân quyền trả ở khóa error / errorVi (không ném) - đổi thành lỗi để app.run báo
     const send = (body) => post(body).then((r) => {
         if (r && r.error)
-            throw { message: language() === 'vi' ? r.errorVi || r.error : r.error };
+            throw { message: serverText(r.error, r.errorVi) };
         return r;
     });
     // Danh sách cảnh báo (mục 9): API chưa có hoặc lỗi thì coi như rỗng
@@ -2750,7 +2829,7 @@ select.s4vp-in{padding-right:28px}
         const act = (action, extra, message) => app.run(t.working, send(Object.assign({ action, id }, extra || {}))).then((r) => {
             if (!r || !alive.current)
                 return undefined;
-            const warn = (r.warnings || []).map((w) => (app.lang === 'vi' ? w.messageVi || w.message : w.message || w.messageVi)).filter(Boolean);
+            const warn = (r.warnings || []).map((w) => serverText(w.message, w.messageVi)).filter(Boolean);
             let text = t.done.ok;
             let kind = 'ok';
             try {
@@ -3798,26 +3877,168 @@ select.s4vp-in{padding-right:28px}
             },
             cancel: 'Hủy',
         },
-        en: {},
-    };
-    // Bản tiếng Anh: nhãn gốc theo Acumatica
-    TEXT$1.en = Object.assign({}, TEXT$1.vi, {
-        title: 'VN Payroll',
-        views: { batches: 'Payroll Batches', attendance: 'Attendance and Leave', outputs: 'Output Entries', permits: 'Work Permits', reports: 'Reports and Declarations', profiles: 'Employee Payroll Profiles', advances: 'Payroll Advances', setup: 'Setup' },
-        view: 'Screen', subsidiary: 'Subsidiary', period: 'Pay period', allPeriods: '(All periods)', load: 'View', newBatch: 'New batch', description: 'Description',
-        quick: 'Quick filter (name, code, amount...)', quickCount: (n) => `${n} matching rows`, empty: 'No data', loading: 'Loading...', working: 'Working...', done: 'Done', failed: 'Error',
-        back: 'Back to list', openRecord: 'Open record',
-        status: { H: 'On Hold', B: 'Pending Calculation', C: 'Calculated', P: 'Pending Approval', A: 'Approved', J: 'Rejected', R: 'Released', V: 'Reversed' },
-        advStatus: { H: 'On Hold', B: 'Pending Release', O: 'Open for Offset', C: 'Settled' },
-        actions: {
-            loadEmployees: 'Load Employees', calculate: 'Calculate', removeHold: 'Remove Hold', hold: 'Hold', approve: 'Approve', reject: 'Reject', reopen: 'Reopen', release: 'Release',
-            reverse: 'Reverse', agencyBills: 'Create Agency Bills', bankFile: 'Export Bank File', payslips: 'Print Payslips', paymentSheet: 'Print Payment Sheet',
-            contractor: 'Print Contractor Settlement', journal: 'Preview Journal', refresh: 'Refresh',
-            completeRelease: 'Complete Release', completeReverse: 'Complete Reversal', clearJob: 'Clear job lock (admin)',
+        // Bản tiếng Anh: nhãn gốc theo Acumatica; đủ mọi khóa của bản vi (kiểm bằng node tools/check_i18n.mjs)
+        en: {
+            title: 'VN Payroll',
+            subtitle: 'S4 VN Payroll',
+            views: { batches: 'Payroll Batches', attendance: 'Attendance and Leave', outputs: 'Output Entries', permits: 'Work Permits', reports: 'Reports and Declarations', profiles: 'Employee Payroll Profiles', advances: 'Payroll Advances', setup: 'Setup' },
+            view: 'Screen',
+            subsidiary: 'Subsidiary',
+            period: 'Pay period',
+            allPeriods: '(All periods)',
+            load: 'View',
+            newBatch: 'New batch',
+            newBatchDesc: 'Description of the new payroll batch',
+            pickPeriod: 'Select a pay period to create a payroll batch',
+            description: 'Description',
+            quick: 'Quick filter (name, code, amount...)',
+            quickCount: (n) => `${n} matching rows`,
+            empty: 'No data',
+            loading: 'Loading...',
+            working: 'Working...',
+            done: 'Done',
+            failed: 'Error',
+            back: 'Back to list',
+            openRecord: 'Open record',
+            status: { H: 'On Hold', B: 'Pending Calculation', C: 'Calculated', P: 'Pending Approval', A: 'Approved', J: 'Rejected', R: 'Released', V: 'Reversed' },
+            advStatus: { H: 'On Hold', B: 'Pending Release', O: 'Open for Offset', C: 'Settled' },
+            cols: {
+                number: 'Number', period: 'Period', status: 'Status', count: 'Employees', gross: 'Gross pay', eeIns: 'Employee insurance', erIns: 'Employer insurance', pit: 'PIT',
+                otherDed: 'Other deductions', advance: 'Advance offset', net: 'Net pay', journal: 'Journal', code: 'Employee ID', name: 'Full name', dept: 'Department',
+                std: 'Standard days', work: 'Days worked', exempt: 'Tax exempt', taxable: 'Taxable', deps: 'Dependants', family: 'Family deductions', assessable: 'Assessable income',
+                warn: 'Warnings / errors', type: 'Type', earning: 'Item', qty: 'Quantity', rate: 'Rate', mult: 'Multiplier', amount: 'Amount', exemptAmt: 'Tax exempt',
+                source: 'Source', component: 'Contribution', base: 'Base', eeRate: 'Employee rate', erRate: 'Employer rate', account: 'Account', debit: 'Debit', credit: 'Credit',
+                memo: 'Description', dimension: 'Department / location', employment: 'Employment type', salary: 'Contract salary', insWage: 'Insurance salary', effective: 'Effective',
+                pitMethod: 'PIT', profile: 'Profile', docDate: 'Date', balance: 'Balance', offset: 'Offset to date', del: '',
+                erInsShort: 'Employer contributions', netBefore: 'Net pay before advances', earningType: 'Earning type', project: 'Project', task: 'Task', branch: 'Location',
+                workCenter: 'Department', hours: 'Hours', ratio: 'Ratio', advanceNbr: 'Advance number', balanceAfter: 'Remaining balance', document: 'Document',
+            },
+            actions: {
+                loadEmployees: 'Load Employees', calculate: 'Calculate', removeHold: 'Remove Hold', hold: 'Hold', approve: 'Approve', reject: 'Reject', reopen: 'Reopen',
+                release: 'Release', reverse: 'Reverse', agencyBills: 'Create Agency Bills', bankFile: 'Export Bank File', payslips: 'Print Payslips', paymentSheet: 'Print Payment Sheet',
+                contractor: 'Print Contractor Settlement', journal: 'Preview Journal', refresh: 'Refresh',
+                completeRelease: 'Complete Release', completeReverse: 'Complete Reversal', clearJob: 'Clear job lock (admin)',
+            },
+            resumed: 'Remaining steps completed',
+            confirm: { release: 'Release this payroll batch? The system creates the journal entry and offsets advances.', reverse: 'Reverse this payroll batch? The system creates a reversing journal and restores advance balances.', agencyBills: 'Create bills for the social insurance, union and tax agencies?' },
+            detailOf: (c, n) => `Details of ${c} ${n}`,
+            employeesTitle: (n) => `Employees (${n})`,
+            tabs: { earn: 'Earnings', ded: 'Other deductions', ins: 'Insurance', att: 'Attendance', time: 'Hours', alloc: 'Project allocation', adv: 'Advance offset', journal: 'Journal', bills: 'Agency bills' },
+            batchTabs: 'Whole batch:',
+            batchDetail: 'Whole batch',
+            noLine: 'No employees yet - click Load Employees',
+            src: { S: 'System', T: 'Timesheet', M: 'Manual', O: 'Output' },
+            allocSrc: { P: 'Ratio table', T: 'Timesheet', R: 'By team', D: 'Default', S: 'Output' },
+            inputHint: { E: 'Add a manual earning for the selected employee (amount = quantity × rate × multiplier), then click Calculate.', D: 'Add an after-tax deduction for the selected employee, then click Calculate.' },
+            attCols: { std_days: 'Standard days', work_days: 'Paid days', paid_leave: 'Paid leave', unpaid_leave: 'Unpaid leave', si_leave: 'Sick and maternity leave (social insurance)', absence_days: 'Absence days for insurance', ot_hours: 'Overtime hours', att_locked: 'Attendance locked' },
+            journalNotReady: 'The payroll batch has not been calculated; there is no journal preview yet',
+            addInput: 'Add line',
+            kind: { E: 'Earning', D: 'After-tax deduction' },
+            employee: 'Employee',
+            earningType: 'Earning type',
+            deductionCode: 'Deduction code',
+            delete: 'Delete',
+            journalTitle: 'Journal preview (not released)',
+            journalTitleReleased: 'Journal by payroll batch (compare with the released journal entry)',
+            totals: (b) => `Gross pay ${money(b.gross || 0)} · Employee insurance ${money(b.ee_ins || 0)} · Employer insurance ${money(b.er_ins || 0)} · PIT ${money(b.pit || 0)} · Net pay ${money(b.net || 0)}`,
+            netWords: (w) => `Employee net pay in words: ${w}`,
+            unverified: (list) => `Parameters not yet verified against the legal source, pending chief accountant approval: ${list}`,
+            unverifiedShort: (n) => `${n} statutory parameters not yet verified against the legal source, pending chief accountant approval (see Setup)`,
+            notReady: 'Payroll preferences are missing. Open Setup and click Load VN Defaults.',
+            loadDefaults: 'Load VN Defaults',
+            generate: 'Generate Periods',
+            year: 'Year',
+            paygroup: 'Pay group',
+            setupLinks: 'Lists (open the NetSuite screen)',
+            openSetup: 'General Setup',
+            openCompany: 'Company Setup',
+            openList: (n) => n,
+            lists: { param: 'Statutory parameters', pit_bracket: 'PIT brackets', ins_comp: 'Payroll contributions', holiday: 'Public holidays', earning_type: 'Earning types', earning_rule: 'Earning rules', benefit_pkg: 'Benefit packages', leave_type: 'Leave types', paygroup: 'Pay groups', period: 'Pay periods', attendance: 'Attendance summary' },
+            newProfile: 'New Payroll Profile',
+            noProfile: 'No profile',
+            created: (n) => `Created ${n}`,
+            loaded: (r) => `Loaded ${r.added.length} employees${r.skipped.length ? `, skipped ${r.skipped.length} already on another batch of the period: ${r.skipped.join(', ')}` : ''}${r.time ? `. ${TEXT$1.en.timeSynced(r.time)}` : ''}`,
+            timeSynced: (r) => `Hours: ${r.accepted}/${r.entries} timesheet entries accepted${r.pending ? ` (${r.pending} pending or rejected)` : ''}; ${r.inserted} added, ${r.updated} updated, ${r.deleted} removed`,
+            time: {
+                title: 'Payroll hours (grouped by project and task within the period)',
+                hint: 'Hours come from NetSuite Time (timesheets) when you click Load Hours or Load Employees. Editing hours requires a reason; edited hours are kept when hours are loaded again. Regular hours feed hourly pay and project allocation; overtime hours come from approved overtime requests.',
+                project: 'Project / customer', task: 'Task', entries: 'Entries', sourceHours: 'Timesheet hours', hours: 'Payroll hours', reason: 'Reason for change', edit: 'Edit hours',
+                none: '(no project)', save: 'Save hours', cancel: 'Cancel', editTitle: (n) => `Edit hours: ${n}`,
+                detail: (f, to) => `Timesheet details in the period (${f} - ${to}), read directly from NetSuite Time`,
+                date: 'Date', status: 'Approval status', memo: 'Memo', counted: 'Counted for payroll',
+                approval: { A: 'Approved', P: 'Pending / open', R: 'Rejected', N: 'Approval not used' },
+                load: 'Load Hours', loadingSheet: 'Reading timesheets...',
+            },
+            calcDone: (r) => (r.queued ? 'Queued for calculation (large batch) - click Refresh in a few minutes' : r.ok ? 'Calculated with no errors' : `${r.errors.length} employees with errors: ${r.errors.slice(0, 3).join('; ')}`),
+            jeCreated: (id) => `Journal entry ${id} created`,
+            billsCreated: (r) => `Created ${r.created.length} bills${r.skipped.length ? `; no agency vendor for: ${r.skipped.map((s) => s.code).join(', ')}` : ''}`,
+            txPosted: 'posted',
+            txPending: 'not posted, pending approval',
+            txVoided: 'voided',
+            reversalLabel: 'reversal',
+            billsLabel: 'Agency bills',
+            billsSummary: (n, posted) => `Agency bills: ${n} bills (${posted ? 'posted' : 'some not posted'}, see the Agency bills tab)`,
+            att: {
+                build: 'Build Attendance', lock: 'Lock Attendance', unlock: 'Unlock Attendance', summary: 'Attendance summary', docs: 'Documents', docType: 'Document type',
+                types: { leave: 'Leave request', ot: 'Overtime request', trip: 'Business trip request', exception: 'Attendance exception' },
+                reqStatus: { H: 'On Hold', P: 'Pending Approval', A: 'Approved', R: 'Rejected', C: 'Canceled' },
+                ops: { submit: 'Submit', approve: 'Approve', reject: 'Reject', cancel: 'Cancel' },
+                newDoc: 'New document', save: 'Save (on hold)', from: 'From date (dd/mm/yyyy)', to: 'To date (dd/mm/yyyy)', workDate: 'Date (dd/mm/yyyy)',
+                hours: 'Hours', minutes: 'Minutes', adjust: 'Day adjustment (-1..1)', reason: 'Reason', leaveType: 'Leave type', destination: 'Destination',
+                advanceAmount: 'Advance amount', exceptionType: 'Exception type', exTypes: { L: 'Late arrival', E: 'Early leave', A: 'Day adjustment' },
+                half: { A: 'Morning', P: 'Afternoon' }, fromHalf: 'Starts', toHalf: 'Ends', days: 'Days', dayUnit: 'days', dayType: 'Day type',
+                accrue: 'Accrue Annual Leave', expire: 'Expire Carried Leave', balances: 'Leave balances', year: 'Year',
+                cols: { std: 'Standard days', paid: 'Paid leave', unpaid: 'Unpaid', si: 'Social insurance', trip: 'Business trip', late: 'Late / early deduction', adj: 'Adjustment', work: 'Paid days', ot: 'OT hours', status: 'Status',
+                    entitled: 'Entitled', carried: 'Carried over', adjusted: 'Adjusted', used: 'Used', pending: 'Pending approval', available: 'Available' },
+                punches: 'Time clock',
+                noSummary: 'This period has no attendance summary: click Build Attendance (otherwise the payroll batch uses standard days less days outside the contract)',
+                confirmAccrue: (y) => `Accrue annual leave for ${y} for employees with a payroll profile? Running it again does not accrue twice.`,
+                tabs: { summary: 'Attendance summary', docs: 'Documents', punches: 'Time clock', leave: 'Leave balances' },
+                confirmUnlock: 'Unlock attendance for this period? Payroll batches calculated on the old attendance must be recalculated.', punchHint: 'One punch per line: employee ID, time as YYYY-MM-DD HH:mm, device (comma separated). Processing punches creates late / early / absence exceptions and suggested overtime requests in On Hold status; it does not deduct pay by itself.',
+                importPunches: 'Import Punches', processPunches: 'Process punches for the selected period',
+                punchResult: (r) => `Imported ${r.created} punches, skipped ${r.skipped}${r.errors && r.errors.length ? `, errors: ${r.errors.slice(0, 3).map((e) => e.message || e).join('; ')}` : ''}`,
+                processResult: (r) => `Processed ${r.employees} employees: ${r.exceptions} exceptions, ${r.overtime} suggested overtime requests (replaced ${r.deleted} documents from the previous run, kept ${r.kept})`,
+                accrued: (rows) => `Leave accrued: ${rows.filter((r) => r.accrued).length} employees${rows.some((r) => r.message) ? ` · ${rows.filter((r) => r.message).map((r) => r.message).join('; ')}` : ''}`,
+            },
+            out: {
+                entries: 'Output entries', type: { I: 'Individual', T: 'Team' }, status: { H: 'On Hold', P: 'Pending Approval', A: 'Approved', C: 'In payroll batch' },
+                ops: { submit: 'Submit', approve: 'Approve', hold: 'Hold', split: 'Split Team Pay', members: 'Load Team Members' },
+                cols: { date: 'Date', type: 'Type', table: 'Rate table', team: 'Team', total: 'Amount', split: 'Split', lines: 'Output lines', members: 'Members' },
+                hint: 'Create entries and enter output lines on the NetSuite screen (New Output Entry button). Here: load team members, split team pay, submit, approve. Click a row to see its details.',
+                create: 'New Output Entry',
+                detail: (n) => `Details of entry ${n}`,
+                people: (n) => `${n} people`,
+                lineCount: (n) => `${n} lines`,
+                item: 'Product / operation',
+            },
+            wp: {
+                status: { D: 'In preparation', S: 'Submitted', A: 'Valid', E: 'Expired', V: 'Revoked' },
+                ops: { submit: 'Submit', issue: 'Issued', revoke: 'Revoke', extend: 'Create Extension' },
+                cols: { no: 'Permit number', effective: 'Effective', expiry: 'Expires', left: 'Days left', issue: 'Issue type' },
+                issueType: { N: 'New', X: 'Extension', R: 'Reissue' },
+                updateExpired: 'Update Expired Permits',
+                permitNo: 'Permit number', issued: 'Issue date (dd/mm/yyyy)',
+                create: 'New Work Permit',
+                issueForm: 'Issue details (fill in before clicking Issued on the row)',
+                confirmRevoke: 'Revoke this work permit? The employee will be flagged / blocked in payroll calculation.',
+            },
+            rep: {
+                type: 'Report', types: { insurance: 'Insurance payable and D02-LT (VP402000)', pitq: 'Quarterly PIT return 05/KK-TNCN (VP403000)', pita: 'Annual PIT finalization data 05-1/BK, 05-2/BK (VP404000)', cost: 'Payroll cost by account, GL reconciliation (VP405000)' },
+                taxMonth: 'Tax month', year: 'Year', quarter: 'Quarter', schedule: 'Schedule', c12: 'Amount on the C12-TS notice', releasedOnly: 'Released batches only',
+                yesNo: { T: 'Yes', F: 'No' }, run: 'View', csv: 'Export CSV', d02: 'D02-LT changes list', indicators: 'Return line items', c12Diff: (a, d) => `C12-TS notice ${money(a)} · Difference ${money(d)}`,
+                code: 'Line', item: 'Description', value: 'Value',
+            },
+            yes: 'OK',
+            empType: { E: 'Employee (labor contract)', C: 'Contractor' },
+            pitMethods: { P: 'Progressive', F: 'Flat 10% withholding', N: 'Non-resident 20%', X: 'No withholding' },
+            adv: {
+                newTitle: 'New advance (on hold; select the cash account on the record before removing the hold)',
+                date: 'Date (dd/mm/yyyy)', save: 'Create Advance', removeHold: 'Remove Hold', release: 'Release',
+                confirmRelease: 'Release this advance? The system creates the advance payment journal.',
+            },
+            cancel: 'Cancel',
         },
-        resumed: 'Remaining steps completed',
-        notReady: 'Payroll preferences are missing. Open Setup and click Load VN Defaults.', loadDefaults: 'Load VN Defaults', generate: 'Generate Periods', year: 'Year', paygroup: 'Pay group',
-    });
+    };
     const item = (child, key) => (jsx(component.StackPanel.Item, { shrink: 0, children: child }, key));
     function actionRow(buttons, messages) {
         const parts = [];
@@ -3882,7 +4103,7 @@ select.s4vp-in{padding-right:28px}
         legacyActive = true;
         scheduleRelayout();
         const app = props.app || {};
-        const t = core.useRef(TEXT$1[language()] || TEXT$1.vi).current;
+        const t = core.useRef(pick(TEXT$1)).current;
         // Khung cấp bootstrap, công ty con và tên màn; attendanceLegacy là màn chấm công cũ (tên nội bộ: attendance)
         const boot = app.boot || null;
         const subsidiary = String(app.subsidiary || '');
@@ -4034,7 +4255,7 @@ select.s4vp-in{padding-right:28px}
         const act = (action, extra, message, keep) => {
             const id = batch.batch.id;
             return run(t.working, post(Object.assign({ action, id }, extra || {})), (r) => {
-                const warn = ((r && r.warnings) || []).map((w) => (language() === 'vi' ? w.messageVi || w.message : w.message || w.messageVi)).filter(Boolean);
+                const warn = ((r && r.warnings) || []).map((w) => serverText(w.message, w.messageVi)).filter(Boolean);
                 // Thao tác trên cùng bảng lương: giữ nhân viên, tab đang chọn (keep = false mới về mặc định)
                 return openBatch(id, keep !== false).then(() => setNotice([message ? message(r) : t.done].concat(warn).join(' · ')));
             });
@@ -4126,7 +4347,7 @@ select.s4vp-in{padding-right:28px}
             const b = batch.batch;
             const s = b.status;
             const isHr = boot.user.isHr;
-            const printUrl = (doc) => url.resolveScript(Object.assign({}, PRINT, { params: { batch: b.id, doc, lang: language() } }));
+            const printUrl = (doc) => url.resolveScript(Object.assign({}, PRINT, { params: { batch: b.id, doc, lang: serverLanguage() } }));
             const buttons = [jsx(component.Button, { label: t.back, type: component.Button.Type.GHOST, action: () => (setBatch(null), loadBatches()) }), jsx(component.Button, { label: t.actions.refresh, action: refresh })];
             const add = (cond, label, fn, primary) => cond && buttons.push(jsx(component.Button, { label: label, hierarchy: primary ? component.Button.Hierarchy.PRIMARY : component.Button.Hierarchy.SECONDARY, enabled: !busy, action: fn }));
             const editable = ['H', 'B', 'C'].includes(s);
@@ -4651,7 +4872,7 @@ select.s4vp-in{padding-right:28px}
                 const docAct = (r, op) => run(t.working, post({ action: 'docAction', type: docType, id: r.id, op }), (x) => {
                     loadDocs(docType);
                     if (x.warnings && x.warnings.length)
-                        setNotice(x.warnings.map((w) => (language() === 'vi' ? w.messageVi : w.message)).join('; '));
+                        setNotice(x.warnings.map((w) => serverText(w.message, w.messageVi)).join('; '));
                 });
                 const opsFor = (st, locked) => (locked || !boot.user.canAttendance ? [] : st === 'H' ? ['submit'] : st === 'P' ? ['approve', 'reject', 'cancel'] : st === 'A' ? ['cancel'] : []);
                 const range = (r) => (docType === 'leave' || docType === 'trip' ? `${fmtDate(r.from)} - ${fmtDate(r.to)}` : fmtDate(r.work_date));
@@ -4695,7 +4916,7 @@ select.s4vp-in{padding-right:28px}
                                 setDocForm({});
                                 loadDocs(docType);
                                 if (x.warnings && x.warnings.length)
-                                    setNotice(x.warnings.map((w) => (language() === 'vi' ? w.messageVi : w.message)).join('; '));
+                                    setNotice(x.warnings.map((w) => serverText(w.message, w.messageVi)).join('; '));
                             });
                         } }),
                 ]), 'a-new-save'));
@@ -4750,7 +4971,6 @@ select.s4vp-in{padding-right:28px}
         // ------------------------------------------------------------------ báo cáo, tờ khai
         function renderReports() {
             const tr = t.rep;
-            const lang = language();
             const f = repForm;
             const typeItems = Object.keys(tr.types).map((k) => ({ value: k, label: tr.types[k] }));
             const months = [...new Set(boot.periods.map((p) => p.taxMonth).filter(Boolean))].sort().reverse().map((m) => ({ value: m, label: `${m.slice(4, 6)}/${m.slice(0, 4)}` }));
@@ -4790,7 +5010,7 @@ select.s4vp-in{padding-right:28px}
             };
             const toCsv = (table) => {
                 const esc = (x) => `"${String(x === null || x === undefined ? '' : x).replace(/"/g, '""')}"`;
-                const head = table.columns.map((c) => esc(c[lang] || c.vi)).join(',');
+                const head = table.columns.map((c) => esc(localized(c))).join(',');
                 const body = table.rows.map((r) => table.columns.map((c) => esc(r[c.key])).join(','));
                 return '﻿' + [head].concat(body).join('\r\n');
             };
@@ -4801,20 +5021,20 @@ select.s4vp-in{padding-right:28px}
                 buttons.push(jsx(component.Button, { label: `${tr.csv} D02-LT`, action: () => download(`D02-LT_${params().taxMonth}.csv`, toCsv(report.d02)) }));
             const extra = messages.slice();
             for (const w of (report && report.warnings) || [])
-                extra.push({ text: lang === 'vi' ? w.vi : w.en, strong: true });
+                extra.push({ text: localized(w), strong: true });
             if (report && report.c12Amount !== null && report.c12Amount !== undefined)
                 extra.push({ text: tr.c12Diff(report.c12Amount, report.c12Difference) });
             items.push(item(actionRow(buttons, extra), 'r-actions'));
             if (!report)
                 return;
             const grid = (table, key, height) => {
-                const cols = table.columns.map((c) => (c.type === 'money' ? moneyCol(c.key, c[lang] || c.vi, 120) : textCol(c.key, c[lang] || c.vi, c.key.toLowerCase().includes('name') ? 200 : 110, (r) => (r[c.key] === null || r[c.key] === undefined ? '' : typeof r[c.key] === 'number' ? num(r[c.key]) : String(r[c.key])))));
+                const cols = table.columns.map((c) => (c.type === 'money' ? moneyCol(c.key, localized(c), 120) : textCol(c.key, localized(c), c.key.toLowerCase().includes('name') ? 200 : 110, (r) => (r[c.key] === null || r[c.key] === undefined ? '' : typeof r[c.key] === 'number' ? num(r[c.key]) : String(r[c.key])))));
                 const rows = table.totals ? table.rows.concat([Object.assign({ bold: true }, table.totals, { [table.columns[0].key]: '∑' })]) : table.rows;
                 return item(jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(rows), columns: fitCols(cols), columnStretch: true, placeholder: t.empty, rootStyle: { width: '100%', flexShrink: 0, height: autoH(rows.length, height || 420) } }), key);
             };
             if (report.indicators) {
                 items.push(item(jsx(component.Heading, { type: component.Heading.Type.SMALL_HEADING, children: tr.indicators }), 'r-ind-title'));
-                items.push(item(jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(report.indicators), columns: fitCols([textCol('code', tr.code, 70, (r) => r.code), textCol('vi', tr.item, 420, (r) => r[lang] || r.vi), numCol('value', tr.value, 160, (r) => (Number(r.value) >= 1000 ? money(r.value) : num(r.value)))]), columnStretch: true, rootStyle: { width: '100%', flexShrink: 0, height: '420px' } }), 'r-ind'));
+                items.push(item(jsx(component.DataGrid, { dataSource: new core.ArrayDataSource(report.indicators), columns: fitCols([textCol('code', tr.code, 70, (r) => r.code), textCol('vi', tr.item, 420, (r) => localized(r)), numCol('value', tr.value, 160, (r) => (Number(r.value) >= 1000 ? money(r.value) : num(r.value)))]), columnStretch: true, rootStyle: { width: '100%', flexShrink: 0, height: '420px' } }), 'r-ind'));
             }
             items.push(grid(report, 'r-grid'));
             if (report.d02) {
