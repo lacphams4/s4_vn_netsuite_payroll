@@ -33,7 +33,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 		"saveShift", "savePattern", "generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
 	]);
 	const ACCOUNTANT_ACTIONS = BATCH_ACTIONS.concat(ACCOUNTANT_ONLY);
-	const ADMIN_ONLY = ["generateTestData", "generateTestTime", "clearJob"];
+	const ADMIN_ONLY = ["generateTestData", "generateTestTime", "generateTestBulk", "clearJob"];
 
 	function allowed(action) {
 		const r = role();
@@ -349,6 +349,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 					return Profiles.setInsuranceAccount(body.code, body.account, body.vendor);
 				case "generateTestTime":
 					return TestData.timeEntries(body.subsidiary, body.from, body.to);
+				case "generateTestBulk":
+					return TestData.bulk(body.subsidiary, body.from, body.to);
 				case "generateTestData":
 					return TestData.generate(body.subsidiary);
 				case "createAdvance":

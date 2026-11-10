@@ -115,5 +115,48 @@ define(["N/record", "N/runtime", "./Store", "./Profiles"], (record, runtime, Sto
 		return out;
 	}
 
-	return { generate, timeEntries, TAG };
+	/**
+	 * Nhân viên thử tải (kiểm hiệu năng 500 - 1.000 người): "S4VP TEST LT0001"... kèm hồ sơ lương; không có mã số thuế, số
+	 * tài khoản (không dùng dữ liệu người thật). Số liệu suy từ số thứ tự nên chạy lại cho cùng kết quả. Mỗi lượt gọi tạo từ
+	 * `from` đến `to`, dừng sớm khi sắp hết governance; người đã có thì bỏ qua. Gọi lại với `next` cho đến khi `done`.
+	 * @returns {{created: number, skipped: number, next: number, done: boolean}}
+	 */
+	function bulk(subsidiary, from, to) {
+		if (runtime.getCurrentUser().roleId !== "administrator") throw new Error("Administrator only / Chỉ Administrator");
+		const first = Math.max(1, Math.floor(Number(from) || 1));
+		const last = Math.min(2000, Math.floor(Number(to) || first));
+		const script = runtime.getCurrentScript();
+		const have = {};
+		for (const r of Store.run("SELECT id, firstname FROM employee WHERE lastname = ? AND firstname LIKE 'LT%' AND subsidiary = ?", [TAG, subsidiary], "s4vp_test_bulk")) have[r.firstname] = String(r.id);
+		const profiled = new Set(Store.find("employee", { where: "{subsidiary} = ?", params: [subsidiary], includeInactive: true }).map((p) => String(p.employee)));
+		const REGIONS = ["I", "II", "III", "IV"];
+		let created = 0;
+		let skipped = 0;
+		let i = first;
+		for (; i <= last; i++) {
+			if (script.getRemainingUsage() < 400) break;
+			const name = `LT${String(i).padStart(4, "0")}`;
+			let id = have[name];
+			if (id && profiled.has(id)) {
+				skipped++;
+				continue;
+			}
+			if (!id) id = createEmployee(name, subsidiary, "load test");
+			const contractor = i % 10 === 0;
+			const base = contractor ? 8000000 + ((i * 53) % 13) * 1000000 : 8000000 + ((i * 37) % 45) * 1000000;
+			const deps = contractor ? 0 : i % 8 === 3 ? 2 : i % 4 === 1 ? 1 : 0;
+			Profiles.save({
+				employee: id, subsidiary, name: `${TAG} ${name}`,
+				profile: contractor
+					? { employment_type: "C", salary_type: "M", pit_method: "F", ins_applicable: false, ui_applicable: false }
+					: { employment_type: "E", salary_type: "M", pit_method: "P", region: REGIONS[i % 4] },
+				compensation: { effective: "2026-01-01", base_salary: base, insurance_wage: contractor ? 0 : base },
+				dependents: Array.from({ length: deps }, (x, k) => ({ name: `${TAG} NPT ${name}-${k + 1}`, relationship: "Con", from: "2024-01-01" })),
+			});
+			created++;
+		}
+		return { created, skipped, next: i, done: i > last };
+	}
+
+	return { generate, timeEntries, bulk, TAG };
 });
