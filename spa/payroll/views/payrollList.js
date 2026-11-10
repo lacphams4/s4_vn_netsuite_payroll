@@ -5,7 +5,7 @@
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openJournal} from '../lib/api.js';
 import {fmtDate} from '../lib/format.js';
-import {pick} from '../lib/i18n.js';
+import {pick, language} from '../lib/i18n.js';
 import {Page, PageHeader, Card, Button, Table, Badge, Select, Field, TextInput, Dialog} from '../ui/kit.js';
 
 const TEXT = {
@@ -29,7 +29,9 @@ const TEXT = {
 		notReady: 'Chưa có thiết lập lương. Vào Thiết lập, bấm Nạp mặc định VN.',
 		total: (n) => `Tổng ${n} bảng lương`,
 		status: {H: 'Tạm giữ', B: 'Chờ tính', C: 'Đã tính', P: 'Chờ duyệt', A: 'Đã duyệt', J: 'Từ chối', R: 'Đã ghi sổ', V: 'Đã đảo'},
-		cols: {number: 'Số', period: 'Kỳ', status: 'Trạng thái', description: 'Diễn giải', count: 'Số người', gross: 'Tổng thu nhập', eeIns: 'BH NLĐ', erIns: 'BH DN', pit: 'Thuế TNCN', net: 'Thực lĩnh', journal: 'Bút toán'},
+		step: {prepare: 'Chuẩn bị', calculate: 'Tính lương', review: 'Soát', approve: 'Duyệt', post: 'Chi lương và ghi sổ', done: 'Hoàn tất', reversed: 'Đã đảo'},
+		stepOf: (n, name) => `Bước ${n}/6 - ${name}`,
+		cols: {number: 'Số', period: 'Kỳ', status: 'Trạng thái', step: 'Tiến độ', description: 'Diễn giải', count: 'Số người', gross: 'Tổng thu nhập', eeIns: 'BH NLĐ', erIns: 'BH DN', pit: 'Thuế TNCN', net: 'Thực lĩnh', journal: 'Bút toán'},
 	},
 	en: {
 		title: 'Run payroll',
@@ -51,11 +53,23 @@ const TEXT = {
 		notReady: 'Payroll preferences are missing. Open Setup and click Load VN Defaults.',
 		total: (n) => `Total of ${n} batches`,
 		status: {H: 'On hold', B: 'Pending calculation', C: 'Calculated', P: 'Pending approval', A: 'Approved', J: 'Rejected', R: 'Released', V: 'Reversed'},
-		cols: {number: 'Number', period: 'Period', status: 'Status', description: 'Description', count: 'Employees', gross: 'Gross', eeIns: 'Employee insurance', erIns: 'Employer insurance', pit: 'PIT', net: 'Net pay', journal: 'Journal'},
+		step: {prepare: 'Prepare', calculate: 'Calculate', review: 'Review', approve: 'Approve', post: 'Pay and post', done: 'Completed', reversed: 'Reversed'},
+		stepOf: (n, name) => `Step ${n}/6 - ${name}`,
+		cols: {number: 'Number', period: 'Period', status: 'Status', step: 'Progress', description: 'Description', count: 'Employees', gross: 'Gross', eeIns: 'Employee insurance', erIns: 'Employer insurance', pit: 'PIT', net: 'Net pay', journal: 'Journal'},
 	},
 };
 
 const TONE = {H: 'muted', B: 'info', C: 'warn', P: 'warn', A: 'ok', J: 'error', R: 'ok', V: 'muted'};
+// Bước đang làm của bảng lương suy từ trạng thái (rút gọn của core/RunSteps: danh sách không biết công đã khóa hay số cảnh báo)
+const stepOf = (r) => {
+	const s = String(r.status || '');
+	if (s === 'R') return {key: 'done'};
+	if (s === 'V') return {key: 'reversed'};
+	if (s === 'A') return {n: 6, key: 'post'};
+	if (s === 'P') return {n: 5, key: 'approve'};
+	if (s === 'J' || (s === 'C' && r.calculated)) return {n: 4, key: 'review'};
+	return Number(r.emp_count) > 0 ? {n: 3, key: 'calculate'} : {n: 1, key: 'prepare'};
+};
 const SUM_KEYS = ['emp_count', 'gross', 'ee_ins', 'er_ins', 'pit', 'net'];
 
 export default function PayrollListView({app}) {
@@ -103,7 +117,12 @@ export default function PayrollListView({app}) {
 	const create = () => {
 		const v = formRef.current;
 		if (!v.period) return;
-		app.run(t.working, post({action: 'createBatch', subsidiary, period: v.period, description: v.description})).then((r) => {
+		// Lỗi phân quyền của action cũ trả ở khóa error / errorVi (không ném): đổi thành lỗi để app.run báo
+		const work = post({action: 'createBatch', subsidiary, period: v.period, description: v.description}).then((r) => {
+			if (r && r.error) throw {message: language() === 'vi' ? r.errorVi || r.error : r.error};
+			return r;
+		});
+		app.run(t.working, work).then((r) => {
 			if (!r || !alive.current) return;
 			setDialog(false);
 			if (r.id) app.go('payrollRun', {id: r.id});
@@ -119,11 +138,15 @@ export default function PayrollListView({app}) {
 	}, {name: t.total(rows.length)}) : null;
 
 	// Chữ trạng thái đưa vào dữ liệu dòng để ô tìm khớp được "Đã tính", "Chờ duyệt"...
-	const data = rows.map((r) => Object.assign({}, r, {statusText: t.status[r.status] || ''}));
+	const data = rows.map((r) => {
+		const st = stepOf(r);
+		return Object.assign({}, r, {statusText: t.status[r.status] || '', stepText: st.n ? t.stepOf(st.n, t.step[st.key]) : t.step[st.key]});
+	});
 	const columns = [
 		{key: 'name', label: t.cols.number, nowrap: true, render: (r) => <span class="s4vp-link">{r.name || r.id}</span>},
 		{key: 'periodName', label: t.cols.period, nowrap: true},
 		{key: 'status', label: t.cols.status, nowrap: true, render: (r) => <Badge text={t.status[r.status] || r.status || ''} tone={TONE[r.status] || 'muted'} />},
+		{key: 'stepText', label: t.cols.step, nowrap: true, render: (r) => <span class="s4vp-small">{r.stepText}</span>},
 		{key: 'description', label: t.cols.description},
 		{key: 'emp_count', label: t.cols.count, type: 'num', nowrap: true},
 		{key: 'gross', label: t.cols.gross, type: 'money', nowrap: true},

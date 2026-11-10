@@ -18,8 +18,8 @@
 define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
-	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines) => {
+	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines", "./Checks",
+], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -714,6 +714,8 @@ define([
 		if (!["C", "P"].includes(b.status) || !b.calculated) throw fail("Only calculated batches can be approved", "Chỉ duyệt bảng lương đã tính");
 		assertPeriodOpen(Store.get("period", b.period));
 		if (b.calc_stamp && b.calc_stamp !== stamp(batchId)) throw fail("Data changed after calculation; recalculate first", "Dữ liệu đã đổi sau khi tính, cần tính lại");
+		// Còn cảnh báo mức lỗi (thực lĩnh âm, lỗi tính, thiếu hồ sơ...) thì không cho duyệt
+		if (Checks && typeof Checks.assertApprovable === "function") Checks.assertApprovable(batchId);
 		Store.submit("batch", batchId, { status: "A", approved_by: currentEmployee(), approved_date: Clock.today() });
 	}
 

@@ -210,3 +210,12 @@ Chấm công (`api/AttendanceMonth.js`) cung cấp GET `attendanceMonth` `{perio
 Trang chủ (`api/Home.js`) cung cấp GET `homeSummary` `{subsidiary}`; chỉ đọc (kỳ, bảng lương, bảng công, hạn nộp theo `core/Deadlines`), điều hướng bằng `app.go` tới các màn trên.
 
 Các thao tác đã có trên bảng lương và bảng công (createBatch, loadEmployees, syncTime, calculate, hold, removeHold, approve, reject, reopen, release, reverse, lockAttendance, unlockAttendance, buildAttendance...) dùng lại action cũ của RESTlet, không viết lại.
+
+Bổ sung sau khi dựng (10/11/2026):
+
+- `Checks.summary`: `open` = lỗi + cảnh báo chưa đóng, mục mức info không tính. Thêm `Checks.blockers(batchId)`, `Checks.assertApprovable(batchId)`; `Payroll.approve` gọi `assertApprovable` nên còn lỗi mức error thì máy chủ từ chối duyệt.
+- `checksList` trả thêm `batch`, `blocking`, `assignees`; mỗi item thêm `headline`, `employeeCode`, `assigneeName`, `reopened`, `canClose`. Cảnh báo đã đóng tự mở lại khi số liệu đổi.
+- Chạy lương: thêm GET `runLine` `{id, line, prev?}` (chi tiết một nhân viên) và POST `submitRun` `{id}` (gửi duyệt: C -> P). Màn `payrollRun` nhận thêm params `tab`, `line`.
+- Chấm công: thêm GET `attendanceEmployee` `{period, employee}`; `attendanceMonth` không truyền `period` thì máy chủ chọn kỳ mở, chưa khóa công, gần hôm nay nhất. Không có POST mới.
+- RESTlet: mọi lỗi (kể cả từ chối quyền, action lạ) trả `s4vpError` / `s4vpErrorVi`; không còn nhánh trả `error`.
+- Trình duyệt giữ bản SpaClient cũ sau deploy: đổi hash không tải lại trang, phải tải lại hẳn (F5).

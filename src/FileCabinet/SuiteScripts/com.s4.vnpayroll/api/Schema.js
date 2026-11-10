@@ -3124,6 +3124,125 @@ define([], () => {
 					"target": null
 				}
 			}
+		},
+		"check_result": {
+			"type": "customrecord_s4vp_check_result",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"batch": {
+					"id": "custrecord_s4vp_bck_batch",
+					"type": "select",
+					"target": "rec:batch"
+				},
+				"rule": {
+					"id": "custrecord_s4vp_bck_rule",
+					"type": "text",
+					"target": null
+				},
+				"employee": {
+					"id": "custrecord_s4vp_bck_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"status": {
+					"id": "custrecord_s4vp_bck_status",
+					"type": "select",
+					"target": "list:bck_status"
+				},
+				"assignee": {
+					"id": "custrecord_s4vp_bck_assignee",
+					"type": "select",
+					"target": "employee"
+				},
+				"note": {
+					"id": "custrecord_s4vp_bck_note",
+					"type": "textarea",
+					"target": null
+				},
+				"updated_by": {
+					"id": "custrecord_s4vp_bck_updated_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"updated_date": {
+					"id": "custrecord_s4vp_bck_updated_date",
+					"type": "date",
+					"target": null
+				},
+				"key": {
+					"id": "custrecord_s4vp_bck_key",
+					"type": "text",
+					"target": null
+				},
+				"stamp": {
+					"id": "custrecord_s4vp_bck_stamp",
+					"type": "text",
+					"target": null
+				},
+				"history": {
+					"id": "custrecord_s4vp_bck_history",
+					"type": "clob",
+					"target": null
+				}
+			}
+		},
+		"audit_log": {
+			"type": "customrecord_s4vp_audit_log",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"at": {
+					"id": "custrecord_s4vp_blg_at",
+					"type": "text",
+					"target": null
+				},
+				"date": {
+					"id": "custrecord_s4vp_blg_date",
+					"type": "date",
+					"target": null
+				},
+				"user": {
+					"id": "custrecord_s4vp_blg_user",
+					"type": "select",
+					"target": "employee"
+				},
+				"user_name": {
+					"id": "custrecord_s4vp_blg_user_name",
+					"type": "text",
+					"target": null
+				},
+				"action": {
+					"id": "custrecord_s4vp_blg_action",
+					"type": "text",
+					"target": null
+				},
+				"batch": {
+					"id": "custrecord_s4vp_blg_batch",
+					"type": "select",
+					"target": "rec:batch"
+				},
+				"period": {
+					"id": "custrecord_s4vp_blg_period",
+					"type": "select",
+					"target": "rec:period"
+				},
+				"line": {
+					"id": "custrecord_s4vp_blg_line",
+					"type": "text",
+					"target": null
+				},
+				"text_vi": {
+					"id": "custrecord_s4vp_blg_text_vi",
+					"type": "text",
+					"target": null
+				},
+				"text_en": {
+					"id": "custrecord_s4vp_blg_text_en",
+					"type": "text",
+					"target": null
+				}
+			}
 		}
 	};
 	const lists = {
@@ -3539,6 +3658,14 @@ define([], () => {
 			"values": {
 				"A": "val_s4vp_time_source_a",
 				"M": "val_s4vp_time_source_m"
+			}
+		},
+		"bck_status": {
+			"type": "customlist_s4vp_bck_status",
+			"values": {
+				"O": "val_s4vp_bck_status_o",
+				"A": "val_s4vp_bck_status_a",
+				"R": "val_s4vp_bck_status_r"
 			}
 		}
 	};

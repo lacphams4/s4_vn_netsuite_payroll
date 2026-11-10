@@ -5,7 +5,7 @@
  * GET  ?action=bootstrap | batches&subsidiary=&period= | batch&id= | journal&id= | timesheet&id=&employee= | bankfile&id=
  * POST {action: loadDefaults | generatePeriods | createBatch | loadEmployees | syncTime | saveTime | calculate | removeHold | hold | approve |
  *       reject | reopen | release | reverse | agencyBills | closePeriod | reopenPeriod | lockAttendance | unlockAttendance, ...}
- * Lỗi trả {error, errorVi}; số tiền lương không ghi vào log.
+ * Lỗi trả {s4vpError, s4vpErrorVi}; số tiền lương không ghi vào log.
  *
  * Giao diện bản 2 (docs/UI_V2.md mục 5): action không có trong hai switch bên dưới được tra trong các mô-đun route đã đăng ký
  * (ROUTE_MODULES); mỗi mô-đun xuất routes: { get: { tên: { roles, run(params) } }, post: { tên: { roles, run(body) } } }.
@@ -90,7 +90,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 	}
 
 	// Action cũ nhận id bảng lương / id kỳ ở body.id: suy ra batch, period cho nhật ký
-	const BATCH_ID_ACTIONS = ["loadEmployees", "syncTime", "calculate", "removeHold", "hold", "approve", "reject", "reopen", "release", "reverse", "agencyBills", "clearJob"];
+	const BATCH_ID_ACTIONS = ["loadEmployees", "syncTime", "calculate", "removeHold", "hold", "approve", "reject", "reopen", "release", "reverse", "agencyBills", "clearJob", "submitRun"];
 	const PERIOD_ID_ACTIONS = ["closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance", "processPunches", "loadSheetEmployees"];
 
 	/** Ghi nhật ký sau POST thành công; lỗi ở đây chỉ ghi log, không ảnh hưởng kết quả thao tác. */
@@ -221,7 +221,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				default: {
 					const route = findRoute("get", params.action);
 					if (route) return runRoute(route, params.action, params);
-					return { error: `Unknown action ${params.action}`, errorVi: `Thao tác không hợp lệ ${params.action}` };
+					return { s4vpError: `Unknown action ${params.action}`, s4vpErrorVi: `Thao tác không hợp lệ ${params.action}` };
 				}
 			}
 		});
@@ -262,7 +262,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 			}
 			if (!allowed(a)) {
 				log.audit({ title: "s4vp_rl_api denied", details: `${role()} ${a}` });
-				return { error: "Your role is not allowed to perform this action", errorVi: "Vai trò của bạn không được thực hiện thao tác này" };
+				return { s4vpError: "Your role is not allowed to perform this action", s4vpErrorVi: "Vai trò của bạn không được thực hiện thao tác này" };
 			}
 			switch (a) {
 				case "loadDefaults":
@@ -336,7 +336,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					if (op === "issue") return WorkPermits.markIssued(body.id, { permitNo: body.permitNo, issued: body.issued });
 					if (op === "revoke") return WorkPermits.revoke(body.id);
 					if (op === "extend") return WorkPermits.createExtension(body.id);
-					return { error: `Unknown op ${op}`, errorVi: `Thao tác không hợp lệ ${op}` };
+					return { s4vpError: `Unknown op ${op}`, s4vpErrorVi: `Thao tác không hợp lệ ${op}` };
 				}
 				case "updateExpiredPermits":
 					return WorkPermits.updateExpired();
@@ -352,7 +352,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 					return Payroll.clearJob(body.id) || { ok: true };
 				case "saveShift": {
 					const v = body.values || {};
-					if (!/^\d{1,2}:\d{2}$/.test(String(v.start_time || "")) || !/^\d{1,2}:\d{2}$/.test(String(v.end_time || ""))) return { error: "Times must be HH:mm", errorVi: "Giờ vào, giờ ra dạng HH:mm" };
+					if (!/^\d{1,2}:\d{2}$/.test(String(v.start_time || "")) || !/^\d{1,2}:\d{2}$/.test(String(v.end_time || ""))) return { s4vpError: "Times must be HH:mm", s4vpErrorVi: "Giờ vào, giờ ra dạng HH:mm" };
 					return { id: body.id ? (Store.update("shift", body.id, v), body.id) : Store.create("shift", v) };
 				}
 				case "savePattern":
@@ -404,7 +404,7 @@ define(["N/runtime", "N/log", "N/task", "../api/Store", "../api/Settings", "../a
 				case "agencyBills":
 					return Payroll.agencyBills(body.id);
 				default:
-					return { error: `Unknown action ${a}`, errorVi: `Thao tác không hợp lệ ${a}` };
+					return { s4vpError: `Unknown action ${a}`, s4vpErrorVi: `Thao tác không hợp lệ ${a}` };
 			}
 		});
 	}
