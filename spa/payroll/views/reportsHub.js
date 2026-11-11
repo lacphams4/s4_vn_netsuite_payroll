@@ -13,7 +13,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, printUrl, download} from '../lib/api.js';
 import {money, num, pct, localToday, toNumber, quickFilter} from '../lib/format.js';
 import {pick, localized} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, StatCards, Tabs, Chips, Badge, Select, NumberInput, SearchBox, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, StatCards, Tabs, Chips, Badge, Select, AutoSelect, MoneyInput, SearchBox, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -623,7 +623,7 @@ export default function ReportsHubView({app}) {
 	yearValues[today.slice(0, 4)] = true;
 	const yearOptions = Object.keys(yearValues).sort().reverse().map((y) => ({value: y, label: y}));
 	const quarterOptions = ['1', '2', '3', '4'].map((q) => ({value: q, label: t.quarterOf(q, year)}));
-	const monthSelect = <Select value={month} onInput={(v) => v && go({month: v})} options={monthOptions} ariaLabel={t.filter.month} title={t.filter.month} width={118} />;
+	const monthSelect = <AutoSelect value={month} onInput={(v) => v && go({month: v})} options={monthOptions} ariaLabel={t.filter.month} title={t.filter.month} width={118} />;
 	const yearSelect = <Select value={year} onInput={(v) => v && go({year: v})} options={yearOptions} ariaLabel={t.filter.year} title={t.filter.year} width={92} />;
 	const quarterSelect = <Select value={quarter} onInput={(v) => v && go({quarter: v, year})} options={quarterOptions} ariaLabel={t.filter.quarter} title={t.filter.quarter} width={128} />;
 	const relSelect = <Select value={rel} onInput={(v) => v && go({rel: v})} options={[{value: 'F', label: t.filter.rel.F}, {value: 'T', label: t.filter.rel.T}]} ariaLabel={t.filter.released} title={t.filter.released} width={190} />;
@@ -702,8 +702,9 @@ export default function ReportsHubView({app}) {
 		};
 		const c12Tools = (
 			<div class="s4vp-rp-tools">
-				<NumberInput
+				<MoneyInput
 					value={draft}
+					decimals={0}
 					onInput={(v) => {
 						c12Ref.current = v;
 						setC12Draft(v);

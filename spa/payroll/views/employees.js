@@ -15,7 +15,7 @@ import url from 'N/url';
 import {call, post, openRecord, errorText} from '../lib/api.js';
 import {money, num, fmtDate, toNumber, quickFilter} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Chips, Tabs, Select, Field, TextInput, NumberInput, DateInput, TextArea, Dialog, SidePanel, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, Tabs, Select, AutoSelect, Field, TextInput, NumberInput, MoneyInput, DateInput, TextArea, Dialog, SidePanel, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -788,7 +788,7 @@ function EmployeeCard({app, id}) {
 	);
 	const txt = (k, extra) => <TextInput value={str(form[k])} onInput={setField(k)} {...(extra || {})} />;
 	const dat = (k, extra) => <DateInput value={str(form[k])} onInput={setField(k)} {...(extra || {})} />;
-	const amt = (k, extra) => <NumberInput value={str(form[k])} onInput={setField(k)} {...(extra || {})} />;
+	const amt = (k, extra) => <MoneyInput value={str(form[k])} onInput={setField(k)} decimals={0} {...(extra || {})} />;
 	const dialogActions = (buttons) => [<Button label={t.act.cancel} onClick={close} disabled={saving} />].concat(buttons);
 	const serverBox = errs.server ? <div class="s4vp-hr-errbox" role="alert">{errs.server}</div> : null;
 
@@ -1391,7 +1391,7 @@ function EmployeeCard({app, id}) {
 						{F('number', t.f.decisionNumber, txt('number'))}
 						{F('sign_date', t.f.signDate, dat('sign_date'))}
 						{F('effective', `${t.f.effective} *`, dat('effective'))}
-						{org ? F('new_department', t.f.newDepartment, <Select value={str(form.new_department)} onInput={setField('new_department')} options={lk('departments')} placeholder={t.f.keep} />, deptName ? t.f.current(deptName) : '') : null}
+						{org ? F('new_department', t.f.newDepartment, <AutoSelect value={str(form.new_department)} onInput={setField('new_department')} options={lk('departments')} placeholder={t.f.keep} />, deptName ? t.f.current(deptName) : '') : null}
 						{org ? F('new_title', t.f.newTitle, txt('new_title'), data.title ? t.f.current(data.title) : '') : null}
 						{payType ? F('new_salary', isRaise ? `${t.f.newSalary} *` : t.f.newSalary, amt('new_salary'), cur(comp && comp.base_salary)) : null}
 						{payType ? F('new_ins_wage', t.f.newInsWage, amt('new_ins_wage'), cur(comp && comp.insurance_wage)) : null}
@@ -1473,7 +1473,7 @@ function EmployeeCard({app, id}) {
 		if (dlg.kind === 'allocLines') {
 			const lines = form.lines || [];
 			const total = lines.reduce((s, l) => s + (toNumber(l.percent) || 0), 0);
-			const pickOf = (i, k, name, label) => <Select value={str(lines[i][k])} onInput={setLine(i, k)} options={lk(name)} placeholder={t.f.none} ariaLabel={label} />;
+			const pickOf = (i, k, name, label) => <AutoSelect value={str(lines[i][k])} onInput={setLine(i, k)} options={lk(name)} placeholder={t.f.none} ariaLabel={label} />;
 			return (
 				<Dialog title={t.dlg.allocLines(dlg.nbr)} width={900} onClose={close} actions={dialogActions([<Button label={t.act.save} kind="primary" disabled={saving} onClick={saveAllocLines} />])}>
 					{serverBox}
@@ -1493,7 +1493,7 @@ function EmployeeCard({app, id}) {
 									{pickOf(i, 'department', 'departments', t.cols.department)}
 									{pickOf(i, 'location', 'locations', t.cols.location)}
 									{pickOf(i, 'work_center', 'classes', t.cols.cls)}
-									<NumberInput value={str(l.percent)} onInput={setLine(i, 'percent')} ariaLabel={t.cols.percent} />
+									<NumberInput value={str(l.percent)} onInput={setLine(i, 'percent')} ariaLabel={t.cols.percent} min={0} max={100} step="any" />
 									<button type="button" class="s4vp-x" aria-label={t.act.removeLine} title={t.act.removeLine} onClick={() => removeLine(i)}>
 										{'×'}
 									</button>

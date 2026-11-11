@@ -8,8 +8,9 @@
  * tháng tính thuế (không theo đầu mã kỳ - sửa điểm 6.1 #8 của bản Acumatica). Số định danh chỉ trả dạng che. Không ghi số
  * tiền vào log.
  *
- * GET  (không có op)                 -> trang
- * GET  ?op=payslips|payslip|leave|requests|me|boot -> JSON { ok, data } | { ok: false, code, message }
+ * GET  (không có op)                 -> trang; &view=dashboard|pay|leave|requests|me chọn tab mở đầu (mặc định Tổng quan),
+ *      &embed=1 bản gọn chỉ tab Tổng quan để nhúng vào portlet Employee Center (nút "Mở đầy đủ" mở cổng ở tab mới)
+ * GET  ?op=dashboard|payslips|payslip|leave|requests|me|boot -> JSON { ok, data } | { ok: false, code, message }
  * GET  ?op=pdf&batch=<id>&lang=vi|en|bi (hoặc ?batch=<id> như bản cũ) -> PDF phiếu lương của chính mình
  * POST thân JSON { op: saveRequest | requestAction, token, ... } -> JSON; cần mã phiên (token của trang) hoặc tiêu đề
  *      X-S4VP-Request (trang khác nguồn không gửi được cả hai) để chống gửi chéo trang.
@@ -127,12 +128,18 @@ define([
 
 		const boot = ops.handle("GET", { op: "boot" }, null);
 		if (!boot.ok) return page(context.response, { blocked: boot.message });
+		const self = url.resolveScript({ scriptId: "customscript_s4vp_sl_my_payroll", deploymentId: "customdeploy_s4vp_sl_my_payroll" });
+		// view: tab mở đầu (dashboard = Tổng quan); embed=1: bản gọn nhúng trong portlet (scripts/s4vp_pl_my_payroll.js)
+		const VIEW = { dashboard: "home", home: "home", pay: "pay", payslips: "pay", leave: "leave", requests: "req", req: "req", me: "me" };
 		page(context.response, {
-			url: url.resolveScript({ scriptId: "customscript_s4vp_sl_my_payroll", deploymentId: "customdeploy_s4vp_sl_my_payroll" }),
+			url: self,
 			token: sessionToken(true),
 			employee: boot.data.employee,
 			hasProfile: boot.data.hasProfile,
 			today: boot.data.today,
+			view: VIEW[String(p.view || "")] || "home",
+			embed: String(p.embed || "") === "1",
+			fullUrl: self,
 		});
 	}
 

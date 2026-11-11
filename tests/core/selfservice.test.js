@@ -208,7 +208,18 @@ function fakeWorld() {
         { id: "d2", profile: "p2", name: "Người khác", relationship: "Vợ", tax_code: "1111" },
       ],
       ins_comp: [],
+      leave_policy: [],
+      compensation: [
+        { id: "cp1", profile: "p1", effective: "2025-03-01", base_salary: 10000000, insurance_wage: 10000000 },
+        { id: "cp2", profile: "p2", effective: "2025-03-01", base_salary: 45000000 },
+      ],
+      decision: [
+        { id: "q1", employee: "101", number: "QD01", type: "T", status: "A", effective: "2026-06-01", old_department: "7", new_department: "8", new_title: "Kế toán trưởng", note: "Ghi chú nội bộ" },
+        { id: "q2", employee: "101", number: "QD02", type: "S", status: "D", effective: "2027-01-01", new_salary: 99000000 },
+        { id: "q3", employee: "202", number: "QD03", type: "S", status: "A", effective: "2026-06-01", new_salary: 77000000 },
+      ],
     },
+    departments: { 7: "Phòng A", 8: "Phòng B" },
     queries: [],
     saved: [],
     acted: [],
@@ -229,6 +240,7 @@ function fakeWorld() {
   const Store = {
     run: (sql, params, tag) => {
       db.queries.push({ tag, params });
+      if (tag === "s4vp_my_departments") return params.filter((id) => db.departments[id]).map((id) => ({ id, name: db.departments[id] }));
       const e = db.emps[String(params[0])];
       return e ? [e] : [];
     },
@@ -485,5 +497,157 @@ describe("SelfServicePage", () => {
     expect(html).toContain("<title>Employee portal</title>");
     expect(html.split("</script>").length).toBe(2);
     expect(Page.html({}).includes('<html lang="vi">')).toBe(true);
+  });
+});
+
+describe("validateRequest nhận ngày ISO của ô ngày trình duyệt", () => {
+  const ctx = { leaveTypes: { 1: { code: "PN", allowHalf: true } } };
+  test("yyyy-mm-dd được nhận nguyên, dd/mm/yyyy vẫn nhận để tương thích", () => {
+    expect(SS.validateRequest("leave", { leave_type: "1", from: "2026-12-01", to: "2026-12-03" }, ctx).values).toMatchObject({ from: "2026-12-01", to: "2026-12-03" });
+    expect(SS.validateRequest("leave", { leave_type: "1", from: "01/12/2026", to: "2026-12-03" }, ctx).values).toMatchObject({ from: "2026-12-01", to: "2026-12-03" });
+    expect(SS.validateRequest("ot", { work_date: "2026-11-09", hours: "1.5", reason: "Kiểm kê" }).values).toMatchObject({ work_date: "2026-11-09", hours: 1.5 });
+    expect(SS.validateRequest("trip", { from: "2026-11-10", to: "2026-11-12", destination: "Huế", purpose: "Họp" }).errors).toEqual([]);
+  });
+  test("ISO sai ngày hoặc đến trước từ vẫn bị chặn", () => {
+    expect(SS.validateRequest("leave", { leave_type: "1", from: "2026-02-30" }, ctx).errors.map((e) => e.code)).toEqual(["DATE"]);
+    expect(SS.validateRequest("leave", { leave_type: "1", from: "2026-12-05", to: "2026-12-01" }, ctx).errors.map((e) => e.code)).toEqual(["RANGE"]);
+  });
+  test("thông báo lỗi ngày không còn yêu cầu gõ dd/mm/yyyy", () => {
+    const e = SS.validateRequest("ot", { work_date: "x", hours: 1, reason: "a" }).errors[0];
+    expect(`${e.en} ${e.vi}`).not.toMatch(/dd\/mm/);
+  });
+});
+
+describe("loại nghỉ mặc định", () => {
+  test("phép năm (gắn chính sách) trước, rồi mã PN, rồi loại còn số dư", () => {
+    expect(SS.defaultLeaveType([{ id: "2", code: "KL" }, { id: "5", code: "PN" }, { id: "9", code: "PNX", annual: true }])).toBe("9");
+    expect(SS.defaultLeaveType([{ id: "2", code: "KL" }, { id: "5", code: "pn" }])).toBe("5");
+    expect(SS.defaultLeaveType([{ id: "2", code: "KL" }, { id: "3", code: "VR", usesBalance: true, available: 0 }, { id: "4", code: "BU", usesBalance: true, available: 2 }])).toBe("4");
+    expect(SS.defaultLeaveType([{ id: "2", code: "KL" }])).toBe("");
+  });
+  test("op requests trả loại nghỉ mặc định, loại phép năm lên đầu danh sách", () => {
+    const { db, ops } = fakeWorld();
+    db.data.leave_type = [{ id: "2", name: "KL", description: "Nghỉ không lương", allow_half: true }, { id: "1", name: "AN", description: "Phép năm", uses_balance: true }];
+    db.data.leave_policy = [{ id: "lp1", leave_type: "1" }];
+    const r = ops.handle("GET", { op: "requests" });
+    expect(r.data.defaultLeaveType).toBe("1");
+    expect(r.data.leaveTypes.map((t) => [t.id, t.annual])).toEqual([["1", true], ["2", false]]);
+  });
+});
+
+describe("dữ liệu biểu đồ và tab Tổng quan", () => {
+  const slip = (batch, end, gross, net, pit, taxMonth) => ({ batch, periodName: end.slice(0, 7).replace("-", ""), end, gross, net, pit, taxMonth });
+
+  test("niceScale: bước 1 / 2 / 2,5 / 5 x 10^n, đỉnh trục không thấp hơn giá trị lớn nhất", () => {
+    expect(SS.niceScale(26100000, 4)).toEqual({ max: 30000000, step: 10000000, ticks: [0, 10000000, 20000000, 30000000] });
+    expect(SS.niceScale(9000000, 4)).toMatchObject({ max: 10000000, step: 2500000 });
+    expect(SS.niceScale(0)).toEqual({ max: 1, step: 1, ticks: [0, 1] });
+    for (const v of [1, 7, 123456, 98765432]) expect(SS.niceScale(v).max).toBeGreaterThanOrEqual(v);
+  });
+
+  test("payTrend: 12 kỳ gần nhất cũ -> mới, kỳ cao nhất, so kỳ trước, bình quân 6 kỳ, thuế trong năm", () => {
+    const slips = [];
+    for (let m = 1; m <= 14; m++) {
+      const y = m <= 12 ? 2025 : 2026;
+      const mm = String(((m - 1) % 12) + 1).padStart(2, "0");
+      slips.push(slip(String(m), y + "-" + mm + "-28", 10000000 + m * 100000, 9000000 + m * 100000, 100000, y + mm));
+    }
+    slips[5].gross = 50000000;
+    const t = SS.payTrend(slips.reverse(), "2026-03-15", 12);
+    expect(t.points.length).toBe(12);
+    expect(t.points[0].end).toBe("2025-03-28");
+    expect(t.points[11].end).toBe("2026-02-28");
+    expect(t.points[t.highIndex].gross).toBe(50000000);
+    expect(t.latest).toMatchObject({ net: 10400000, previous: 10300000, diff: 100000 });
+    expect(t.avg6).toBe(Math.round((10400000 + 10300000 + 10200000 + 10100000 + 10000000 + 9900000) / 6));
+    expect(t.pitYtd).toBe(200000);
+    expect(t.scale.max).toBeGreaterThanOrEqual(50000000);
+  });
+
+  test("payTrend: chưa có phiếu", () => {
+    expect(SS.payTrend([], "2026-01-01")).toMatchObject({ points: [], latest: null, avg6: null, pitYtd: 0, highIndex: -1 });
+  });
+
+  test("dòng thời gian bỏ nháp và trường nội bộ; người phụ thuộc che mã số thuế, báo sắp hết giảm trừ", () => {
+    const tl = SS.dashboardTimeline([
+      { date: "2026-06-01", kind: "decision", code: "T", ref: "QD01", newTitle: "KTT", note: "x", appliedBy: "9" },
+      { date: "2027-01-01", kind: "decision", code: "S", draft: true, amount: 1 },
+      { date: "2026-01-01", kind: "dependent", ref: "Con" },
+      { date: "2025-01-01", kind: "salary", amount: 10, previous: 8 },
+    ]);
+    expect(tl.map((e) => e.kind)).toEqual(["decision", "salary"]);
+    expect(Object.keys(tl[0])).not.toContain("note");
+    const d = SS.dependentsSummary([{ name: "A", tax_code: "8888777766", from: "2025-01-01", to: "2026-12-01" }, { name: "B", from: "2025-01-01" }, { name: "C", from: "2020-01-01", to: "2021-01-01" }], "2026-11-10", 90);
+    expect(d).toMatchObject({ active: 2, ending: 1 });
+    expect(d.rows[0]).toMatchObject({ name: "A", taxCode: "****7766", ending: true, daysLeft: 21 });
+  });
+
+  test("op dashboard: chỉ dữ liệu của người đăng nhập, mọi truy vấn lọc theo người đó hoặc hồ sơ của người đó", () => {
+    const { db, ops } = fakeWorld();
+    const r = ops.handle("GET", { op: "dashboard" });
+    expect(r.ok).toBe(true);
+    const d = r.data;
+    expect(d.pay.points.map((p) => p.batch)).toEqual(["11", "12"]);
+    expect(d.pay.latest).toMatchObject({ net: 10600000, previous: 9800000, diff: 800000 });
+    expect(d.timeline.find((e) => e.kind === "decision")).toMatchObject({ ref: "QD01", oldDepartment: "Phòng A", newDepartment: "Phòng B", newTitle: "Kế toán trưởng" });
+    expect(d.timeline.some((e) => e.ref === "QD02" || e.ref === "QD03")).toBe(false);
+    expect(d.dependents.rows.map((x) => x.name)).toEqual(["Nguyễn Văn Con"]);
+    expect(d.tasks.requests.map((x) => x.id)).toEqual(["41"]);
+    expect(d.tasks.balances[0]).toMatchObject({ code: "PN", available: 9 });
+    expect(d.tasks.contracts).toEqual([{ kind: "contractExpiry", date: "2026-12-31", daysLeft: 51, overdue: false, ref: "HD01", code: "F" }]);
+    const json = JSON.stringify(r);
+    expect(json).not.toMatch(/45000000|77000000|99000000|50000000|8012345678|8888777766|Ghi chú nội bộ|Người khác/);
+    for (const q of db.queries.filter((x) => x.name && ["batch_emp", "leave_balance", "leave_request", "ot_request", "business_trip", "contract", "decision"].includes(x.name))) {
+      expect(q.where).toMatch(/^\{employee\} = \?/);
+      expect(String(q.params[0])).toBe("101");
+    }
+    for (const q of db.queries.filter((x) => ["compensation", "dependent"].includes(x.name))) {
+      expect(q.where).toBe("{profile} = ?");
+      expect(q.params).toEqual(["p1"]);
+    }
+  });
+
+  test("op dashboard: số truy vấn cố định, không tăng theo số phiếu, đơn, quyết định", () => {
+    const one = fakeWorld();
+    one.ops.handle("GET", { op: "dashboard" });
+    const many = fakeWorld();
+    for (let i = 0; i < 30; i++) {
+      many.db.data.batch.push({ id: String(100 + i), name: "B" + i, status: "R", period: "9", tax_month: "202609" });
+      many.db.data.batch_emp.push({ id: "x" + i, batch: String(100 + i), employee: "101", gross: 1, net: 1, detail: "{}" });
+      many.db.data.leave_request.push({ id: String(900 + i), employee: "101", leave_type: "1", from: "2026-12-01", status: "P" });
+      many.db.data.decision.push({ id: "qq" + i, employee: "101", type: "T", status: "A", effective: "2026-0" + ((i % 9) + 1) + "-01", new_department: "7" });
+      many.db.data.dependent.push({ id: "dd" + i, profile: "p1", name: "D" + i, from: "2025-01-01" });
+    }
+    many.ops.handle("GET", { op: "dashboard" });
+    expect(many.db.queries.length).toBe(one.db.queries.length);
+    expect(one.db.queries.length).toBeLessThanOrEqual(16);
+  });
+
+  test("op dashboard: không có khóa error; người khác gọi thì thấy dữ liệu của chính họ", () => {
+    const keys = (o, out = []) => {
+      if (o && typeof o === "object") for (const k of Object.keys(o)) out.push(k, ...keys(o[k]));
+      return out;
+    };
+    const { db, ops } = fakeWorld();
+    expect(keys(ops.handle("GET", { op: "dashboard" }))).not.toContain("error");
+    expect(ops.handle("GET", { op: "dashboard", employee: "202" })).toMatchObject({ ok: false, code: "FORBIDDEN" });
+    db.user = "202";
+    const r = ops.handle("GET", { op: "dashboard" });
+    expect(r.data.pay.points.map((p) => p.net)).toEqual([40000000]);
+    expect(JSON.stringify(r)).not.toMatch(/10600000|Nguyễn Văn Con|QD01/);
+  });
+});
+
+describe("SelfServicePage - tab Tổng quan và bản nhúng", () => {
+  test("html nhúng view / embed / fullUrl; view lạ về Tổng quan", () => {
+    const boot = (h) => JSON.parse(/\}\)\((\{[\s\S]*\})\);<\/script>/.exec(h)[1]);
+    expect(boot(Page.html({ view: "req" }))).toMatchObject({ view: "req", embed: false });
+    expect(boot(Page.html({ view: "x", embed: true, fullUrl: "/s" }))).toMatchObject({ view: "home", embed: true, fullUrl: "/s" });
+  });
+  test("form đơn dùng ô ngày của trình duyệt và ô số giờ bước 0,5", () => {
+    const code = Page.client.toString();
+    expect(code).toMatch(/type: "date"/);
+    expect(code).toMatch(/step: "0\.5"/);
+    expect(code).toMatch(/defaultLeaveType/);
   });
 });

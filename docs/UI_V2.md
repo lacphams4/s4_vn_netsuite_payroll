@@ -10,7 +10,7 @@ Tài liệu này là hợp đồng chung cho mọi người (và agent) làm gia
 - Việc cần xử lý (lỗi, cảnh báo, ngoại lệ) đưa lên trước, có nút xử lý tại chỗ.
 - **Mọi lưới đều có ô tìm kiếm** (không phân biệt dấu, khớp tên, mã, số tiền), kể cả lưới con.
 - Nhập liệu trong hộp thoại hoặc khung bên phải, không đặt form rời dưới đáy trang.
-- Ngày hiển thị dd/mm/yyyy; ô nhập nhận dd/mm/yyyy (và yyyy-mm-dd). Số tiền căn phải, `font-variant-numeric: tabular-nums`.
+- Ngày hiển thị dd/mm/yyyy; ô nhập ngày là lịch chọn của trình duyệt (`DateInput`, giá trị ISO). Chọn control theo kiểu dữ liệu ở mục 15. Số tiền căn phải, `font-variant-numeric: tabular-nums`.
 - Chạy tốt ở laptop 14 inch (vùng hiển thị khoảng 1536 x 674 CSS px): không đè chữ, bảng rộng cuộn trong khung riêng.
 - Tiếng Việt mặc định, có bản tiếng Anh. Dùng dấu gạch ngắn (-), không dùng gạch dài.
 - Không dùng emoji làm biểu tượng.
@@ -115,11 +115,19 @@ Table({columns, rows, keyOf, onRowClick, selectedKey, total, empty, search, maxH
     selectedKey: so với keyOf(row) (mặc định row.id), dòng được tô nền và có vạch nhấn bên trái
     onRowClick(row): cả dòng bấm được; ô đầu được bọc trong nút thật để chọn bằng bàn phím (tắt bằng rowButton: false)
     maxHeight: thân bảng cuộn dọc, tiêu đề dính
-Field({label, children, hint})                     nhãn + ô nhập (bọc bằng <label>)
-TextInput / NumberInput / DateInput / Select / TextArea ({value, onInput, placeholder, width, disabled, ariaLabel, title})   onInput nhận giá trị đã đọc
-    TextInput thêm type, onEnter; NumberInput căn phải, onInput nhận chuỗi đang gõ (đổi sang số bằng toNumber của lib/format.js)
-    DateInput: value là ISO yyyy-mm-dd, hiện dd/mm/yyyy; onInput nhận ISO khi gõ đủ ngày (dd/mm/yyyy hoặc yyyy-mm-dd), ngược lại chuỗi đang gõ
+Field({label, children, hint, required})           nhãn + ô nhập (bọc bằng <label>); required: dấu * đỏ sau nhãn
+TextInput / NumberInput / MoneyInput / DateInput / MonthInput / TimeInput / Select / SearchSelect / AutoSelect / TextArea
+    ({value, onInput, placeholder, width, disabled, ariaLabel, title})   onInput nhận giá trị đã đọc
+    TextInput thêm type, onEnter; NumberInput căn phải, onInput nhận chuỗi đang gõ (đổi sang số bằng toNumber của lib/format.js);
+        có min / max / step thì là <input type="number"> (ví dụ giờ: step 0.5 min 0), không có thì ô chữ gõ được 1.234,5
+    MoneyInput: ô chữ căn phải, rời ô thì tự phân tách nghìn (15.000.000), value số thì hiện đã phân tách; decimals (mặc định 2)
+    DateInput: <input type="date">, value / onInput là ISO yyyy-mm-dd ('' khi xóa), min / max ISO; trình duyệt không hỗ trợ (hoặc UIF
+        không ghi type) thì ô chữ dd/mm/yyyy như cũ: onInput nhận ISO khi gõ đủ một ngày có thật, ngược lại chuỗi đang gõ
+    MonthInput (YYYY-MM, <input type="month">), TimeInput (HH:MM, <input type="time">): cùng cách lùi về ô chữ
     Select: options [{value, label}], placeholder là dòng trống đầu danh sách (value ''); TextArea thêm rows
+    SearchSelect: cùng props với Select; bấm mở khung có ô lọc (không phân biệt dấu, khớp nhãn và mã), mũi tên / Enter / Esc, tối đa 200 mục
+    AutoSelect: Select khi danh sách có tối đa 15 mục, SearchSelect khi dài hơn (danh sách lớn dần theo dữ liệu: kỳ lương, nhân viên, tài khoản)
+Checkbox({checked, onInput(boolean), label, disabled, ariaLabel, inField})   có / không; inField khi đặt trong Field (không lồng <label>)
 Dialog({title, children, actions, onClose, width}) hộp thoại giữa màn hình; đóng bằng nút góc phải hoặc Esc
 SidePanel({title, sub, onClose, children, actions})   khung chi tiết bên phải (không cố định vị trí)
 Empty({text})
@@ -312,3 +320,33 @@ Tab điều hướng vẫn trỏ về màn cũ cho tới khi người điều ph
 Đợt 2 đã gộp (11/11/2026): tab Thiết lập -> `setupHub` (cũng là đích khi chưa thiết lập), menu Khác -> `outputsV2`. Mới: duyệt nhiều cấp (`approval_step` apv, `approval_log` apl; core/ApprovalFlow; GET `approvalState`, POST `approveStep` / `rejectStep`; mặc định tắt), nhật ký gắn nhân viên (`audit_log.employee`), thông báo máy chủ một ngôn ngữ (`fail(en, vi)`), cổng tự phục vụ (scripts/s4vp_sl_my_payroll.js + core/SelfService*.js; lọc cứng theo người đăng nhập), bản in mới của Suitelet in (`timesheet`, `contractorStatement`, `teamSplit`, `commission`, `contract`, `decision`), tính lương nền theo lô gọn (lô 100, ngữ cảnh tĩnh nhớ N/cache, concurrency 2), PayrollEngine trả `pitDetail`.
 
 Quy tắc bắt buộc (học từ account thật): JSON trả về qua RESTlet KHÔNG có khóa tên `error` ở bất kỳ cấp nào - N/https phía trình duyệt từ chối cả phản hồi và giao diện chỉ thấy "Cannot read properties of undefined (reading 'message')".
+
+## 15. Control nhập liệu (11/11/2026)
+
+Người dùng rà cổng thật: "rà soát các control, vd: data thì phải xài date picker". Quy tắc chọn control theo kiểu dữ liệu, áp cho SPA (ui/kit.js) và cổng tự phục vụ (core/SelfServicePage.js):
+
+| Dữ liệu | Control | Ghi chú |
+| --- | --- | --- |
+| Ngày | `DateInput` = `<input type="date">` | Lịch chọn của trình duyệt, hiển thị theo ngôn ngữ trình duyệt (vi: dd/mm/yyyy), vẫn gõ được; giá trị ISO yyyy-mm-dd; đặt min / max hợp lý; cặp từ / đến thì ô "đến" có min = ô "từ" |
+| Tháng, kỳ thuế dạng YYYY-MM | `MonthInput` = `<input type="month">` | Firefox, Safari desktop không có ô tháng: lùi về ô chữ yyyy-mm (nhận mm/yyyy) |
+| Kỳ dạng mã (YYYYMM, kỳ lương) | `AutoSelect` | Danh sách lấy từ dữ liệu, dài dần theo năm |
+| Giờ trong ngày | `TimeInput` = `<input type="time">` | |
+| Số giờ, số lượng, hệ số | `NumberInput` có `min` / `step` (giờ: step 0.5, min 0) | Ô số căn phải, `inputmode="decimal"`. Giá trị đưa vào ô phải là số dạng dấu chấm ("7.5"); nơi đang giữ chuỗi kiểu Việt ("7,5", ví dụ lưới sản lượng outputsV2) thì giữ ô chữ không có step |
+| Số tiền | `MoneyInput` | Căn phải, rời ô thì phân tách nghìn; khi lưu đọc bằng `toNumber` (nhận cả 15.000.000 và 15000000) |
+| Danh sách dài (hơn khoảng 15 mục: nhân viên, dự án, phòng ban, tài khoản, nhà cung cấp, loại thu nhập, kỳ lương) | `SearchSelect` (hoặc `AutoSelect` khi độ dài thay đổi) | Ô lọc + danh sách bấm chọn; bàn phím: mũi tên, Home / End, Enter, Esc |
+| Danh sách ngắn cố định | `Select` | |
+| Có / không | `Checkbox` | Ba trạng thái (có / không / kế thừa) vẫn là `Select` có dòng trống |
+| Chữ | `TextInput` / `TextArea` | |
+
+Trường bắt buộc: `Field required` (dấu * đỏ) và kiểm tại chỗ (lỗi hiện ngay dưới ô, như các form hiện có). Mặc định hợp lý: ngày làm thêm = hôm nay, loại nghỉ = phép năm, ngày thử tài khoản chi phí = hôm nay của máy chủ.
+
+Kỹ thuật (UIF): thuộc tính HTML thường (`type`, `min`, `max`, `step`, `inputmode`) truyền qua JSX như `type="search"` đang chạy; kit đặt lại `min` / `max` / `step` sau khi vẽ bằng DOM (như cách gán lại `value`) để không phụ thuộc UIF. Sau khi vẽ ô ngày, kit kiểm `input.type === 'date'`; khác thì lùi mọi ô cùng kiểu về ô chữ. UIF không bắn `onBlur` / `onChange`: MoneyInput (rời ô) và Checkbox (đổi) gắn trình nghe gốc `focusout` / `change` một lần cho phần tử. SearchSelect xử lý phím bằng trình nghe gốc trên ô lọc và chặn Esc lan ra hộp thoại bao ngoài. Test: `tests/tools/kit_controls.test.js` (nạp kit.js bằng TypeScript với jsx-runtime giả). Chưa thử trên UIF thật (td2937310): ô ngày, ô số có step, Checkbox, SearchSelect.
+
+Đã áp (11/11/2026): Tạm ứng (ngày bắt buộc, tài khoản tiền -> AutoSelect, số tiền -> MoneyInput), Chấm công (kỳ, ký hiệu -> AutoSelect, điều chỉnh công -> ô số -1..1 bước 0,5), Kiểm tra (người phụ trách -> AutoSelect), Nhân sự (lương -> MoneyInput, phòng ban và các chiều phân bổ -> AutoSelect, tỷ lệ % -> ô số 0..100), Phân tích chi phí (ô gõ YYYY-MM -> MonthInput), Sản lượng (bảng giá, tổ, kỳ, dự án, mặt hàng -> AutoSelect; đơn giá, tiền chia -> MoneyInput), Danh sách bảng lương (kỳ -> AutoSelect), Chạy lương (giờ công -> ô số bước 0,5; loại thu nhập -> AutoSelect; đơn giá, số tiền khấu trừ -> MoneyInput), Báo cáo (tháng -> AutoSelect, số C12-TS -> MoneyInput), Thiết lập (có / không -> Checkbox, tiền -> MoneyInput, tài khoản / nhà cung cấp / đối tượng / người duyệt / công ty con -> AutoSelect, năm sinh kỳ và cấp duyệt -> ô số bước 1).
+
+## 16. Cổng tự phục vụ: tab Tổng quan và portlet Employee Center (11/11/2026)
+
+- Tab đầu tiên và mặc định "Tổng quan" (GET `op=dashboard`, core/SelfServiceOps): biến động thu nhập 12 kỳ đã ghi sổ (SVG nội tuyến: cột tổng thu nhập, đường thực lĩnh, nhãn số ở kỳ mới nhất và kỳ cao nhất; màn hẹp 6 kỳ) với 3 chỉ số (thực lĩnh kỳ gần nhất so kỳ trước, bình quân 6 kỳ, thuế TNCN đã khấu trừ trong năm); dòng thời gian lương (compensation), quyết định đã áp dụng (decision), hợp đồng; người phụ thuộc (số đang giảm trừ, sắp hết giảm trừ trong 90 ngày, mã số thuế che); việc của tôi (đơn đang xử lý, phép còn lại, hạn phép chuyển, hợp đồng hết hạn trong 60 ngày). Dữ liệu biểu đồ dựng ở máy chủ (`SelfService.payTrend`, `niceScale`). Số truy vấn cố định (test).
+- Form đơn: ô ngày `<input type="date">` (min / max: nghỉ, công tác từ đầu năm trước đến hết năm sau; làm thêm từ đầu tháng trước đến 60 ngày tới), số giờ làm thêm ô số bước 0,5; loại nghỉ mặc định là phép năm (loại được chính sách phép năm trỏ tới, không có thì mã PN, không có thì loại đầu tiên còn số dư) và hiện số ngày còn lại dưới ô chọn. Máy chủ nhận ngày ISO (và dd/mm/yyyy cho tương thích).
+- Suitelet: `&view=dashboard|pay|leave|requests|me` chọn tab mở đầu; `&embed=1` bản gọn chỉ tab Tổng quan, không có thanh tab, nút "Mở đầy đủ".
+- Portlet `customscript_s4vp_pl_my_payroll` (scripts/s4vp_pl_my_payroll.js, HTML portlet, chạy bằng quyền người xem nên không đọc record lương): dòng tóm tắt + iframe cao 900 px tới Suitelet `view=dashboard&embed=1&ifrmcntnr=T`. Để hiện sẵn trên tab "Lương của tôi" của Employee Center: quản trị viên mở dashboard của role Employee Center, thêm portlet "S4VP My Payroll" vào tab đó, rồi Publish Dashboard cho role (hoặc từng người tự Personalize > thêm portlet).

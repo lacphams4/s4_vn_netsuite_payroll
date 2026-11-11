@@ -16,7 +16,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, openJournal, printUrl, download, errorText} from '../lib/api.js';
 import {money, num, fmtDate, toNumber, quickFilter} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, Table, Badge, SearchBox, Dialog, Field, Select, TextInput, NumberInput, TextArea, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, Table, Badge, SearchBox, Dialog, Field, Select, AutoSelect, TextInput, NumberInput, MoneyInput, TextArea, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -1115,7 +1115,7 @@ export default function PayrollRunView({app}) {
 		setTimeForm(timeRef.current);
 	};
 	const openTimeEdit = (r) => {
-		timeRef.current = {id: r.id, hours: blank(r.hours) ? '' : num(r.hours), reason: r.reason || '', label: [r.projectText, r.taskText].filter(Boolean).join(' / ')};
+		timeRef.current = {id: r.id, hours: blank(r.hours) ? '' : String(Math.round(Number(r.hours) * 100) / 100), reason: r.reason || '', label: [r.projectText, r.taskText].filter(Boolean).join(' / ')};
 		setTimeForm(timeRef.current);
 		setDialog({kind: 'time'});
 	};
@@ -1615,8 +1615,8 @@ export default function PayrollRunView({app}) {
 				>
 					<div class="s4vp-small">{tm.editHint}</div>
 					<div class="s4vp-form">
-						<Field label={pc.hours}>
-							<NumberInput value={timeForm.hours} onInput={setTimeField('hours')} />
+						<Field label={pc.hours} required={true}>
+							<NumberInput value={timeForm.hours} onInput={setTimeField('hours')} min={0} max={24} step={0.5} />
 						</Field>
 						<Field label={pc.reason}>
 							<TextInput value={timeForm.reason} onInput={setTimeField('reason')} onEnter={saveTime} />
@@ -1638,20 +1638,20 @@ export default function PayrollRunView({app}) {
 				<div class="s4vp-small">{isE ? t.input.hintE : t.input.hintD}</div>
 				{isE ? (
 					<div class="s4vp-form">
-						<Field label={t.input.earningType}>
-							<Select value={form.earning_type} onInput={setField('earning_type')} options={types} placeholder={t.input.pickType} />
+						<Field label={t.input.earningType} required={true}>
+							<AutoSelect value={form.earning_type} onInput={setField('earning_type')} options={types} placeholder={t.input.pickType} />
 						</Field>
 						<Field label={t.input.memo}>
 							<TextInput value={form.description} onInput={setField('description')} />
 						</Field>
 						<Field label={t.input.qty}>
-							<NumberInput value={form.qty} onInput={setField('qty')} />
+							<NumberInput value={form.qty} onInput={setField('qty')} min={0} step="any" />
 						</Field>
 						<Field label={t.input.rate}>
-							<NumberInput value={form.rate} onInput={setField('rate')} />
+							<MoneyInput value={form.rate} onInput={setField('rate')} />
 						</Field>
 						<Field label={t.input.mult}>
-							<NumberInput value={form.multiplier} onInput={setField('multiplier')} placeholder="1" />
+							<NumberInput value={form.multiplier} onInput={setField('multiplier')} placeholder="1" min={0} step="any" />
 						</Field>
 					</div>
 				) : (
@@ -1662,8 +1662,8 @@ export default function PayrollRunView({app}) {
 						<Field label={t.input.memo}>
 							<TextInput value={form.description} onInput={setField('description')} />
 						</Field>
-						<Field label={t.input.amount}>
-							<NumberInput value={form.amount} onInput={setField('amount')} onEnter={saveInput} />
+						<Field label={t.input.amount} required={true}>
+							<MoneyInput value={form.amount} onInput={setField('amount')} onEnter={saveInput} decimals={0} />
 						</Field>
 					</div>
 				)}

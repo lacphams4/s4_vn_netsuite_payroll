@@ -11,7 +11,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, openJournal, errorText} from '../lib/api.js';
 import {money, fmtDate, toNumber, localToday} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, Field, TextInput, NumberInput, DateInput, Dialog, SidePanel, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, AutoSelect, Field, TextInput, MoneyInput, DateInput, Dialog, SidePanel, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -581,14 +581,14 @@ export default function AdvancesView({app}) {
 				]}
 			>
 				<div class="s4vp-adv-top">
-					<Field label={t.form.date} hint={errors.date ? <span class="s4vp-adv-err">{errors.date}</span> : null}>
+					<Field label={t.form.date} required={true} hint={errors.date ? <span class="s4vp-adv-err">{errors.date}</span> : null}>
 						<DateInput value={form.date} onInput={setField('date')} />
 					</Field>
 					<Field label={t.form.cashAccount} hint={t.form.cashHint}>
-						<Select value={form.cashAccount} onInput={setField('cashAccount')} options={accounts} placeholder={t.form.cashLater} />
+						<AutoSelect value={form.cashAccount} onInput={setField('cashAccount')} options={accounts} placeholder={t.form.cashLater} />
 					</Field>
 					<Field label={t.form.amount} hint={t.form.amountHint}>
-						<NumberInput value={form.amount} onInput={setField('amount')} />
+						<MoneyInput value={form.amount} onInput={setField('amount')} decimals={0} />
 					</Field>
 					<Field label={t.form.memo} hint={t.form.memoHint}>
 						<TextInput value={form.memo} onInput={setField('memo')} />
@@ -643,7 +643,7 @@ export default function AdvancesView({app}) {
 											</span>
 										</td>
 										<td class="s4vp-r">
-											<NumberInput value={l.amount} onInput={setLine(l.id, 'amount')} placeholder={commonAmount > 0 ? money(commonAmount) : ''} ariaLabel={t.form.amountOf(label)} />
+											<MoneyInput value={l.amount} onInput={setLine(l.id, 'amount')} decimals={0} placeholder={commonAmount > 0 ? money(commonAmount) : ''} ariaLabel={t.form.amountOf(label)} />
 										</td>
 										<td>
 											<TextInput value={l.memo} onInput={setLine(l.id, 'memo')} placeholder={form.memo || ''} ariaLabel={t.form.memoOf(label)} />

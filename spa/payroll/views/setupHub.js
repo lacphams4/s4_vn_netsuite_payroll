@@ -12,7 +12,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post} from '../lib/api.js';
 import {money, pct, fmtDate, toNumber, fold} from '../lib/format.js';
 import {pick, localized} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Chips, Tabs, Select, Field, TextInput, NumberInput, DateInput, TextArea, SearchBox, Dialog, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, Tabs, Select, AutoSelect, Checkbox, Field, TextInput, NumberInput, MoneyInput, DateInput, TextArea, SearchBox, Dialog, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -1272,14 +1272,15 @@ export default function SetupHubView({app}) {
 		const v = form[k];
 		const on = setField(k);
 		const inherit = scope === 'company' && k !== 'enabled' ? t.inherit : '';
-		if (type === 'bool') return <Select value={v} onInput={on} options={[{value: 'T', label: t.yes}, {value: 'F', label: t.no}]} />;
+		if (type === 'bool') return <Checkbox inField={true} checked={v === 'T'} onInput={(b) => on(b ? 'T' : 'F')} label={t.yes} />;
 		if (type === 'inherit') return <Select value={v} onInput={on} options={[{value: 'Y', label: t.yes}, {value: 'N', label: t.no}]} placeholder={t.inherit} />;
-		if (type === 'num' || type === 'money') return <NumberInput value={v} onInput={on} placeholder={inherit} />;
+		if (type === 'money') return <MoneyInput value={v} onInput={on} placeholder={inherit} decimals={0} />;
+		if (type === 'num') return <NumberInput value={v} onInput={on} placeholder={inherit} />;
 		if (type.indexOf('list:') === 0) {
 			const names = t.lists[type.slice(5)] || {};
 			return <Select value={v} onInput={on} options={Object.keys(names).map((code) => ({value: code, label: names[code]}))} placeholder={inherit || t.notSet} />;
 		}
-		if (type === 'et') return <Select value={v} onInput={on} options={optionsWith(earningOptions, v)} placeholder={t.notSet} />;
+		if (type === 'et') return <AutoSelect value={v} onInput={on} options={optionsWith(earningOptions, v)} placeholder={t.notSet} />;
 		if (type === 'policy') return <Select value={v} onInput={on} options={optionsWith(policyOptions, v)} placeholder={t.notSet} />;
 		return <TextInput value={v} onInput={on} placeholder={inherit} />;
 	};
@@ -1379,7 +1380,7 @@ export default function SetupHubView({app}) {
 						const options = k === 'pit_vendor' ? vendorOptions() : k === 'location' ? locationOptions() : accounts;
 						return (
 							<Field key={k} label={t.accountNames[k]} hint={t.accountHints[k]}>
-								<Select value={form[k]} onInput={setField(k)} options={optionsWith(options, form[k])} placeholder={placeholder} />
+								<AutoSelect value={form[k]} onInput={setField(k)} options={optionsWith(options, form[k])} placeholder={placeholder} />
 							</Field>
 						);
 					})}
@@ -1401,10 +1402,10 @@ export default function SetupHubView({app}) {
 		<Dialog title={t.accounts.ins.editTitle(dialog.code)} width={560} onClose={closeDialog} actions={[<Button label={t.cancel} onClick={closeDialog} />, <Button label={t.save} kind="primary" disabled={!!app.busy} onClick={saveIns} />]}>
 			<div class="s4vp-small">{t.accounts.ins.hint}</div>
 			<Field label={t.accounts.ins.account}>
-				<Select value={form.account} onInput={setField('account')} options={optionsWith(accountOptions(data.accounts), form.account)} placeholder={t.accounts.pickAccount} />
+				<AutoSelect value={form.account} onInput={setField('account')} options={optionsWith(accountOptions(data.accounts), form.account)} placeholder={t.accounts.pickAccount} />
 			</Field>
 			<Field label={t.accounts.ins.vendor} hint={t.accounts.ins.vendorHint}>
-				<Select value={form.vendor} onInput={setField('vendor')} options={optionsWith(vendorOptions(), form.vendor)} placeholder={t.accounts.pickAccount} />
+				<AutoSelect value={form.vendor} onInput={setField('vendor')} options={optionsWith(vendorOptions(), form.vendor)} placeholder={t.accounts.pickAccount} />
 			</Field>
 			{errorLine()}
 		</Dialog>
@@ -1530,17 +1531,17 @@ export default function SetupHubView({app}) {
 					<Field label={t.cost.form.type}>
 						<Select value={form.target_type} onInput={setType} options={['W', 'P', 'D'].map((k) => ({value: k, label: t.cost.types[k]}))} />
 					</Field>
-					<Field label={`${t.cost.form.target} (${t.cost.types[form.target_type] || ''})`}>
-						<Select value={form.target} onInput={setField('target')} options={optionsWith(targetOptions(form.target_type), form.target, dialog.targetName)} placeholder={t.cost.form.targetPick} />
+					<Field label={`${t.cost.form.target} (${t.cost.types[form.target_type] || ''})`} required={true}>
+						<AutoSelect value={form.target} onInput={setField('target')} options={optionsWith(targetOptions(form.target_type), form.target, dialog.targetName)} placeholder={t.cost.form.targetPick} />
 					</Field>
-					<Field label={t.cost.form.account}>
-						<Select value={form.account} onInput={setField('account')} options={optionsWith(accountOptions(cost && cost.accounts), form.account, dialog.accountName)} placeholder={t.cost.form.accountPick} />
+					<Field label={t.cost.form.account} required={true}>
+						<AutoSelect value={form.account} onInput={setField('account')} options={optionsWith(accountOptions(cost && cost.accounts), form.account, dialog.accountName)} placeholder={t.cost.form.accountPick} />
 					</Field>
 					<Field label={t.cost.form.labor} hint={t.cost.form.laborHint}>
 						<Select value={form.labor_type} onInput={setField('labor_type')} options={laborOptions} placeholder={t.cost.labor.all} />
 					</Field>
 					<Field label={t.cost.form.subsidiary} hint={t.cost.form.subsidiaryHint}>
-						<Select value={form.subsidiary} onInput={setField('subsidiary')} options={optionsWith(subs, form.subsidiary)} placeholder={t.cost.shared} />
+						<AutoSelect value={form.subsidiary} onInput={setField('subsidiary')} options={optionsWith(subs, form.subsidiary)} placeholder={t.cost.shared} />
 					</Field>
 					<Field label={t.cost.form.effective} hint={t.cost.form.effectiveHint}>
 						<DateInput value={form.effective} onInput={setField('effective')} />
@@ -1570,19 +1571,19 @@ export default function SetupHubView({app}) {
 			<Card title={t.cost.test.title} sub={t.cost.test.sub}>
 				<div class="s4vp-st-form s4vp-st-form-narrow">
 					<Field label={t.cost.test.workCenter}>
-						<Select value={testForm.workCenter} onInput={setTest('workCenter')} options={targetOptions('W')} placeholder={t.cost.test.any} />
+						<AutoSelect value={testForm.workCenter} onInput={setTest('workCenter')} options={targetOptions('W')} placeholder={t.cost.test.any} />
 					</Field>
 					<Field label={t.cost.test.project}>
-						<Select value={testForm.project} onInput={setTest('project')} options={targetOptions('P')} placeholder={t.cost.test.any} />
+						<AutoSelect value={testForm.project} onInput={setTest('project')} options={targetOptions('P')} placeholder={t.cost.test.any} />
 					</Field>
 					<Field label={t.cost.test.department}>
-						<Select value={testForm.department} onInput={setTest('department')} options={targetOptions('D')} placeholder={t.cost.test.any} />
+						<AutoSelect value={testForm.department} onInput={setTest('department')} options={targetOptions('D')} placeholder={t.cost.test.any} />
 					</Field>
 					<Field label={t.cost.test.labor}>
 						<Select value={testForm.laborType} onInput={setTest('laborType')} options={laborOptions} placeholder={t.cost.labor.all} />
 					</Field>
 					<Field label={t.cost.test.date}>
-						<DateInput value={testForm.date} onInput={setTest('date')} placeholder={fmtDate((cost && cost.today) || '')} />
+						<DateInput value={testForm.date || (cost && cost.today) || ''} onInput={setTest('date')} />
 					</Field>
 					<div class="s4vp-st-test-btn">
 						<Button label={t.cost.test.run} kind="primary" disabled={!!app.busy} onClick={runTest} />
@@ -1696,23 +1697,23 @@ export default function SetupHubView({app}) {
 		return (
 			<Dialog title={dialog.id ? t.apv.form.titleEdit : t.apv.form.titleNew} width={720} onClose={closeDialog} actions={[<Button label={t.cancel} onClick={closeDialog} />, <Button label={t.save} kind="primary" disabled={!!app.busy} onClick={saveApv} />]}>
 				<div class="s4vp-st-form">
-					<Field label={t.apv.form.level} hint={t.apv.form.levelHint}>
-						<NumberInput value={form.level} onInput={setField('level')} />
+					<Field label={t.apv.form.level} hint={t.apv.form.levelHint} required={true}>
+						<NumberInput value={form.level} onInput={setField('level')} min={1} step={1} />
 					</Field>
-					<Field label={t.apv.form.name} hint={t.apv.form.nameHint}>
+					<Field label={t.apv.form.name} hint={t.apv.form.nameHint} required={true}>
 						<TextInput value={form.name} onInput={setField('name')} />
 					</Field>
 					<Field label={t.apv.form.approver} hint={t.apv.form.approverHint}>
-						<Select value={form.approver} onInput={setField('approver')} options={optionsWith(users, form.approver, dialog.approverName)} placeholder={t.apv.form.approverPick} />
+						<AutoSelect value={form.approver} onInput={setField('approver')} options={optionsWith(users, form.approver, dialog.approverName)} placeholder={t.apv.form.approverPick} />
 					</Field>
 					<Field label={t.apv.form.role} hint={t.apv.form.roleHint}>
 						<Select value={form.approver ? '' : form.role} onInput={setField('role')} options={['A', 'H', 'D'].map((k) => ({value: k, label: t.apv.roles[k]}))} placeholder={t.apv.form.rolePick} disabled={!!form.approver} />
 					</Field>
 					<Field label={t.apv.form.minNet} hint={t.apv.form.minNetHint}>
-						<NumberInput value={form.min_net} onInput={setField('min_net')} placeholder={t.apv.always} />
+						<MoneyInput value={form.min_net} onInput={setField('min_net')} placeholder={t.apv.always} decimals={0} />
 					</Field>
 					<Field label={t.apv.form.subsidiary} hint={t.apv.form.subsidiaryHint}>
-						<Select value={form.subsidiary} onInput={setField('subsidiary')} options={optionsWith(subs, form.subsidiary)} placeholder={t.apv.shared} />
+						<AutoSelect value={form.subsidiary} onInput={setField('subsidiary')} options={optionsWith(subs, form.subsidiary)} placeholder={t.apv.shared} />
 					</Field>
 				</div>
 				{errorLine()}
@@ -1823,8 +1824,8 @@ export default function SetupHubView({app}) {
 	const generateDialog = () => (
 		<Dialog title={t.periodsSec.genTitle} width={520} onClose={closeDialog} actions={[<Button label={t.cancel} onClick={closeDialog} />, <Button label={t.periodsSec.genRun(form.year)} kind="primary" disabled={!!app.busy} onClick={saveGenerate} />]}>
 			<div class="s4vp-st-form">
-				<Field label={t.periodsSec.year}>
-					<TextInput value={form.year} onInput={setField('year')} onEnter={saveGenerate} />
+				<Field label={t.periodsSec.year} required={true}>
+					<NumberInput value={form.year} onInput={setField('year')} onEnter={saveGenerate} min={2000} max={2100} step={1} />
 				</Field>
 				<Field label={t.periodsSec.paygroup}>
 					<Select value={form.paygroup} onInput={setField('paygroup')} options={list(boot.paygroups).map((g) => ({value: String(g.id), label: `${g.code}${g.description ? ` - ${g.description}` : ''}`}))} />

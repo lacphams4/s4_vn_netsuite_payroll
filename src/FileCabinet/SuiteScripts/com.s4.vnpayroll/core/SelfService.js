@@ -3,7 +3,10 @@
  *
  * maskTail(value, keep = 4) -> chuỗi che, chỉ giữ `keep` ký tự cuối ("****6789"); chuỗi ngắn giữ ít hơn (không quá nửa
  *   độ dài); rỗng trả "". Dùng cho mã số thuế, số tài khoản, số định danh, số sổ BHXH: giá trị đầy đủ không rời máy chủ.
- * parseDate(text) -> 'YYYY-MM-DD' hoặc null; nhận dd/mm/yyyy và yyyy-mm-dd, kiểm ngày có thật.
+ * parseDate(text) -> 'YYYY-MM-DD' hoặc null; nhận yyyy-mm-dd (ô ngày của trình duyệt gửi dạng này) và dd/mm/yyyy (bản cũ, ô chữ
+ *   dự phòng), kiểm ngày có thật.
+ * defaultLeaveType(types), niceScale(max), payTrend(slips, today), dashboardTimeline(events), dependentsSummary(deps, today):
+ *   mặc định loại nghỉ của form đơn và dữ liệu tab Tổng quan (xem chú thích từng hàm).
  * slipView(line, detail, names) -> phiếu lương một kỳ của một người: { figures, earnings, insurance, deductions }.
  *   line: dòng batch_emp; detail: JSON chi tiết đã parse; names: { earning: {MÃ: tên}, insurance: {MÃ: tên} }.
  * pickPrevious(slips, current) -> phiếu kỳ liền trước theo NGÀY KẾT THÚC KỲ (không theo mã kỳ) hoặc null.
@@ -211,9 +214,9 @@ define(["./Money", "./Dates", "./PayCompare", "./LeaveLedger"], (Money, Dates, P
 			const lt = (c.leaveTypes || {})[v.leave_type];
 			if (blank(v.leave_type) || !lt) err("leave_type", "LEAVE_TYPE", "Select a leave type.", "Chưa chọn loại nghỉ.");
 			else v.leave_type = String(v.leave_type);
-			const from = date("from", "Enter a valid start date (dd/mm/yyyy).", "Nhập ngày bắt đầu hợp lệ (dd/mm/yyyy).");
+			const from = date("from", "Enter a valid start date.", "Chọn ngày bắt đầu hợp lệ.");
 			if (blank(src.to)) v.to = from;
-			const to = blank(src.to) ? from : date("to", "Enter a valid end date (dd/mm/yyyy).", "Nhập ngày kết thúc hợp lệ (dd/mm/yyyy).");
+			const to = blank(src.to) ? from : date("to", "Enter a valid end date.", "Chọn ngày kết thúc hợp lệ.");
 			if (from && to && to < from) err("to", "RANGE", "The end date is before the start date.", "Ngày kết thúc trước ngày bắt đầu.");
 			v.from_half = v.from_half === "P" ? "P" : "A";
 			v.to_half = v.to_half === "A" ? "A" : "P";
@@ -221,7 +224,7 @@ define(["./Money", "./Dates", "./PayCompare", "./LeaveLedger"], (Money, Dates, P
 			if (from && to && from === to && v.from_half === "P" && v.to_half === "A") err("to_half", "HALF", "The leave ends before it starts on the same day.", "Trong cùng một ngày, buổi kết thúc đang trước buổi bắt đầu.");
 			text("reason", 1000);
 		} else if (type === "ot") {
-			date("work_date", "Enter a valid overtime date (dd/mm/yyyy).", "Nhập ngày làm thêm hợp lệ (dd/mm/yyyy).");
+			date("work_date", "Enter a valid overtime date.", "Chọn ngày làm thêm hợp lệ.");
 			const h = Number(String(blank(v.hours) ? "" : v.hours).replace(",", "."));
 			if (blank(v.hours) || isNaN(h) || h <= 0 || h > 12) err("hours", "HOURS", "Overtime hours must be greater than 0 and at most 12.", "Số giờ làm thêm phải lớn hơn 0 và không quá 12.");
 			v.hours = isNaN(h) ? null : Money.roundTo(h, 2);
@@ -229,9 +232,9 @@ define(["./Money", "./Dates", "./PayCompare", "./LeaveLedger"], (Money, Dates, P
 			text("reason", 1000);
 			if (!v.reason) err("reason", "REASON", "Enter the reason for the overtime.", "Nhập lý do làm thêm.");
 		} else {
-			const from = date("from", "Enter a valid start date (dd/mm/yyyy).", "Nhập ngày bắt đầu hợp lệ (dd/mm/yyyy).");
+			const from = date("from", "Enter a valid start date.", "Chọn ngày bắt đầu hợp lệ.");
 			if (blank(src.to)) v.to = from;
-			const to = blank(src.to) ? from : date("to", "Enter a valid end date (dd/mm/yyyy).", "Nhập ngày kết thúc hợp lệ (dd/mm/yyyy).");
+			const to = blank(src.to) ? from : date("to", "Enter a valid end date.", "Chọn ngày kết thúc hợp lệ.");
 			if (from && to && to < from) err("to", "RANGE", "The end date is before the start date.", "Ngày kết thúc trước ngày bắt đầu.");
 			text("destination", 300);
 			text("purpose", 1000);
@@ -244,5 +247,99 @@ define(["./Money", "./Dates", "./PayCompare", "./LeaveLedger"], (Money, Dates, P
 		return { values: v, errors };
 	}
 
-	return { TYPES, FIELDS, FIGURES, TOTAL_KEYS, maskTail, parseDate, slipView, pickPrevious, compareSlips, leaveView, isOwn, requestRow, groupRequests, validateRequest };
+	// ------------------------------------------------------------------ mặc định của form đơn
+
+	/**
+	 * Loại nghỉ mặc định khi tạo đơn: loại phép năm (gắn với chính sách phép năm, cờ `annual`), không có thì loại mã PN,
+	 * không có thì loại đầu tiên còn số dư > 0; không loại nào thỏa thì "" (người dùng tự chọn).
+	 * @param {Array<{id, code, annual?, usesBalance?, available?}>} types
+	 */
+	function defaultLeaveType(types) {
+		const list = (types || []).filter(Boolean);
+		const hit = list.find((t) => t.annual) || list.find((t) => norm(t.code) === "PN") || list.find((t) => t.usesBalance && Number(t.available) > 0);
+		return hit ? String(hit.id) : "";
+	}
+
+	// ------------------------------------------------------------------ tổng quan (dashboard)
+
+	/** Thang trục số "đẹp" (bước 1, 2, 2,5 hoặc 5 x 10^n) cho giá trị lớn nhất `max`: { max, step, ticks }. */
+	function niceScale(max, count) {
+		const want = Math.max(2, Number(count) || 4);
+		const top = Math.max(0, Number(max) || 0);
+		if (top <= 0) return { max: 1, step: 1, ticks: [0, 1] };
+		const raw = top / want;
+		const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+		const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw);
+		const n = Math.ceil(top / step - 1e-9);
+		const ticks = [];
+		for (let i = 0; i <= n; i += 1) ticks.push(Money.roundTo(i * step, 6));
+		return { max: ticks[ticks.length - 1], step, ticks };
+	}
+
+	/**
+	 * Biến động thu nhập cho tab Tổng quan, từ phiếu đã ghi sổ của chính người đăng nhập.
+	 * @param {Array<{batch, periodName, end, taxMonth, gross, net, pit}>} slips (thứ tự bất kỳ)
+	 * @param {string} today 'YYYY-MM-DD'
+	 * @param {number} [n=12] số kỳ của biểu đồ
+	 * @returns {{points, scale, highIndex, lastIndex, latest, avg6, pitYtd, year}}
+	 *   points: kỳ cũ -> mới: {batch, label, end, gross, net, pit}; highIndex: kỳ tổng thu nhập cao nhất (nhãn số trực tiếp);
+	 *   latest: {net, previous, diff, pct} (pct = diff / previous, null khi không có kỳ trước); avg6: bình quân thực lĩnh tối đa
+	 *   6 kỳ gần nhất; pitYtd: tổng thuế TNCN đã khấu trừ trong năm (theo tháng tính thuế, không có thì ngày kết thúc kỳ).
+	 */
+	function payTrend(slips, today, n) {
+		const all = (slips || []).filter((s) => s && s.end).slice().sort((a, b) => String(a.end).localeCompare(String(b.end)) || Number(a.batch) - Number(b.batch));
+		const take = all.slice(-(n || 12));
+		const points = take.map((s) => ({ batch: String(s.batch), label: s.periodName || "", end: s.end, gross: Money.round(num(s.gross)), net: Money.round(num(s.net)), pit: Money.round(num(s.pit)) }));
+		let highIndex = -1;
+		points.forEach((p, i) => {
+			if (highIndex < 0 || p.gross > points[highIndex].gross) highIndex = i;
+		});
+		const last = points[points.length - 1] || null;
+		const prev = points.length > 1 ? points[points.length - 2] : null;
+		const latest = last ? { net: last.net, previous: prev ? prev.net : null, diff: prev ? last.net - prev.net : null, pct: prev && prev.net ? Money.roundTo((last.net - prev.net) / prev.net, 4) : null } : null;
+		const six = points.slice(-6);
+		const avg6 = six.length ? Money.round(six.reduce((s, p) => s + p.net, 0) / six.length) : null;
+		const year = String(today || "").slice(0, 4);
+		const yearOf = (s) => String(s.taxMonth || s.end || "").slice(0, 4);
+		const pitYtd = Money.round(all.filter((s) => yearOf(s) === year).reduce((s, x) => s + num(x.pit), 0));
+		const top = points.reduce((m, p) => Math.max(m, p.gross, p.net), 0);
+		return { points, scale: niceScale(top, 4), highIndex, lastIndex: points.length - 1, latest, avg6, pitYtd, year, count: six.length };
+	}
+
+	const TIMELINE_KINDS = ["salary", "decision", "contract", "appendix", "contractEnd", "contractTerminated", "hire"];
+
+	/**
+	 * Dòng thời gian lương và vị trí của chính mình từ HrTimeline.timeline: chỉ mốc đã hiệu lực / đã áp dụng (bỏ nháp), chỉ các
+	 * trường nhân viên được xem (mức lương của chính mình, chức danh, phòng ban, số chứng từ; không ghi chú nội bộ, người áp dụng).
+	 * @returns {Array<{date, kind, code, ref, title, amount, insuranceWage, allowance, previous, oldTitle, newTitle, oldDepartment, newDepartment, to, future}>}
+	 */
+	function dashboardTimeline(events) {
+		return (events || [])
+			.filter((e) => e && TIMELINE_KINDS.includes(e.kind) && !e.draft)
+			.map((e) => ({
+				date: e.date, kind: e.kind, code: e.code || "", ref: e.ref || "", title: e.title || "",
+				amount: e.amount === undefined ? null : e.amount, insuranceWage: e.insuranceWage === undefined ? null : e.insuranceWage, allowance: e.allowance === undefined ? null : e.allowance, previous: e.previous === undefined ? null : e.previous,
+				oldTitle: e.oldTitle || "", newTitle: e.newTitle || "", oldDepartment: e.oldDepartmentName || "", newDepartment: e.newDepartmentName || "", to: e.to || null, future: !!e.future,
+			}));
+	}
+
+	/**
+	 * Người phụ thuộc cho tab Tổng quan: số người đang giảm trừ, ai sắp hết giảm trừ (ngày `to` trong `days` ngày tới), mã số
+	 * thuế đã che. dependents: dòng record dependent của hồ sơ của chính mình.
+	 */
+	function dependentsSummary(dependents, today, days) {
+		const within = blank(days) ? 90 : Number(days);
+		const rows = (dependents || []).map((d) => {
+			const active = (!d.from || Dates.cmp(d.from, today) <= 0) && (!d.to || Dates.cmp(d.to, today) >= 0);
+			const daysLeft = d.to ? Dates.diff(today, d.to) : null;
+			return { name: d.name || "", relationship: d.relationship || "", taxCode: maskTail(d.tax_code), from: d.from || null, to: d.to || null, active, daysLeft, ending: active && daysLeft !== null && daysLeft <= within };
+		});
+		rows.sort((a, b) => Number(b.active) - Number(a.active) || String(a.from || "").localeCompare(String(b.from || "")));
+		return { active: rows.filter((r) => r.active).length, ending: rows.filter((r) => r.ending).length, rows };
+	}
+
+	return {
+		TYPES, FIELDS, FIGURES, TOTAL_KEYS, maskTail, parseDate, slipView, pickPrevious, compareSlips, leaveView, isOwn, requestRow, groupRequests, validateRequest,
+		defaultLeaveType, niceScale, payTrend, dashboardTimeline, dependentsSummary,
+	};
 });

@@ -12,7 +12,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, errorText} from '../lib/api.js';
 import {money, num, fmtDate, toNumber, localToday, fold} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, Field, TextInput, NumberInput, DateInput, Dialog, SidePanel, SearchBox, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, AutoSelect, Field, TextInput, NumberInput, MoneyInput, DateInput, Dialog, SidePanel, SearchBox, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -859,7 +859,7 @@ export default function OutputsView({app}) {
 										) : null}
 										{m.sales ? null : (
 											<td>
-												<Select value={l.item} onInput={(v) => pickItem(r, l.key, v)} options={itemOptions(l)} placeholder={t.lines.itemPick} ariaLabel={t.lines.itemOf(n)} width={individual ? 130 : 190} />
+												<AutoSelect value={l.item} onInput={(v) => pickItem(r, l.key, v)} options={itemOptions(l)} placeholder={t.lines.itemPick} ariaLabel={t.lines.itemOf(n)} width={individual ? 130 : 190} />
 												{l.uom ? <span class="s4vp-small s4vp-out-uom">{`${t.lines.uom}: ${l.uom}`}</span> : null}
 											</td>
 										)}
@@ -869,7 +869,7 @@ export default function OutputsView({app}) {
 										{m.sales ? null : (
 											<td class="s4vp-r">
 												{l.editable ? (
-													<NumberInput value={l.rate} onInput={(v) => setLine(r, l.key, {rate: v})} ariaLabel={t.lines.rateOf(n)} width={100} placeholder={l.suggested === null ? '' : num(l.suggested)} title={l.item && l.suggested === null && m.rs.state === 'ok' ? t.lines.rateNone : ''} />
+													<MoneyInput value={l.rate} onInput={(v) => setLine(r, l.key, {rate: v})} ariaLabel={t.lines.rateOf(n)} width={100} placeholder={l.suggested === null ? '' : num(l.suggested)} title={l.item && l.suggested === null && m.rs.state === 'ok' ? t.lines.rateNone : ''} />
 												) : (
 													<span class="s4vp-out-fixed">{num(l.effRate)}</span>
 												)}
@@ -1108,7 +1108,7 @@ export default function OutputsView({app}) {
 									{hasPreview ? <td class="s4vp-r s4vp-nw">{m.preview === null || m.preview === undefined ? '' : money(m.preview)}</td> : null}
 									<td class="s4vp-r s4vp-nw">
 										{editable ? (
-											<NumberInput value={m.amountText} onInput={(v) => setMember(r, m.employee, {amountText: v, edited: true}, {amountsDirty: true})} ariaLabel={t.split.amountOf(who(m))} width={124} />
+											<MoneyInput value={m.amountText} decimals={0} onInput={(v) => setMember(r, m.employee, {amountText: v, edited: true}, {amountsDirty: true})} ariaLabel={t.split.amountOf(who(m))} width={124} />
 										) : (
 											money(m.amount)
 										)}
@@ -1370,15 +1370,15 @@ export default function OutputsView({app}) {
 					<Field label={t.form.kind}>
 						<Select value={f.kind} onInput={pickKind} options={KINDS.map((k) => ({value: k, label: t.kind[k]}))} disabled={!isNew} />
 					</Field>
-					<Field label={t.form.date} hint={err('date')}>
+					<Field label={t.form.date} hint={err('date')} required={true}>
 						<DateInput value={f.date} onInput={(v) => putForm({date: v})} />
 					</Field>
-					<Field label={t.form.table} hint={err('rateTable') || (tables.length ? null : t.form.noTables)}>
-						<Select value={f.rateTable} onInput={(v) => putForm({rateTable: v})} options={tableOptions} placeholder={t.form.tablePick} />
+					<Field label={t.form.table} required={true} hint={err('rateTable') || (tables.length ? null : t.form.noTables)}>
+						<AutoSelect value={f.rateTable} onInput={(v) => putForm({rateTable: v})} options={tableOptions} placeholder={t.form.tablePick} />
 					</Field>
 					{f.kind === 'T' ? (
-						<Field label={t.form.team} hint={err('team')}>
-							<Select value={f.team} onInput={pickTeam} options={teamOptions} placeholder={t.form.teamPick} />
+						<Field label={t.form.team} hint={err('team')} required={true}>
+							<AutoSelect value={f.team} onInput={pickTeam} options={teamOptions} placeholder={t.form.teamPick} />
 						</Field>
 					) : null}
 					{f.kind === 'T' ? (
@@ -1387,10 +1387,10 @@ export default function OutputsView({app}) {
 						</Field>
 					) : null}
 					<Field label={t.form.period} hint={t.form.periodHint}>
-						<Select value={f.period} onInput={(v) => putForm({period: v})} options={periodOptions} placeholder={t.form.periodAuto} />
+						<AutoSelect value={f.period} onInput={(v) => putForm({period: v})} options={periodOptions} placeholder={t.form.periodAuto} />
 					</Field>
 					<Field label={t.form.project} hint={lk.projectsMore ? t.form.projectMore : t.form.projectHint}>
-						<Select value={f.project} onInput={(v) => putForm({project: v})} options={projectOptions} placeholder={t.form.projectNone} />
+						<AutoSelect value={f.project} onInput={(v) => putForm({project: v})} options={projectOptions} placeholder={t.form.projectNone} />
 					</Field>
 					<Field label={t.form.description}>
 						<TextInput value={f.description} onInput={(v) => putForm({description: v})} />
@@ -1461,7 +1461,7 @@ export default function OutputsView({app}) {
 				sub={!subsidiary ? t.noSubsidiary : canWrite ? t.sub : t.readOnly}
 				actions={[
 					<span class="s4vp-out-period">
-						<Select value={period} onInput={(v) => (setPeriod(v || ''), pickEntry(''))} options={periodOptions} placeholder={t.allPeriods} ariaLabel={t.period} width={250} />
+						<AutoSelect value={period} onInput={(v) => (setPeriod(v || ''), pickEntry(''))} options={periodOptions} placeholder={t.allPeriods} ariaLabel={t.period} width={250} />
 					</span>,
 					<Button label={t.legacy} kind="ghost" onClick={() => app.go('outputs')} />,
 					<Button label={t.refresh} onClick={() => load()} />,

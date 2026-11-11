@@ -15,7 +15,8 @@
  *   deps: { userId(): string|null, today(): 'YYYY-MM-DD', Store, Attendance, Settings, log?(text) }
  *   handle trả { ok: true, data } hoặc { ok: false, code, message: {en, vi}, fields? }.
  *
- * op (GET): boot, payslips {year}, payslip {batch}, leave {year}, requests, me
+ * op (GET): boot, dashboard (tab Tổng quan: biến động thu nhập, lương và vị trí, người phụ thuộc, việc của tôi), payslips {year},
+ *   payslip {batch}, leave {year}, requests (kèm loại nghỉ mặc định: phép năm), me
  * op (POST): saveRequest {type, id?, values}, requestAction {type, id, action: submit | cancel}
  *
  * Luồng đơn như khi HR tạo hộ rồi gửi duyệt: Attendance.save (Tạm giữ H) -> Attendance.act(submit) (Chờ duyệt P). Gửi duyệt
@@ -85,6 +86,15 @@ define(["./SelfService", "./HrTimeline", "./Dates"], (SS, Timeline, Dates) => {
 				out[l.id] = { id: l.id, code: norm(l.name), name: l.description || l.name || "", allowHalf: l.allow_half !== false, usesBalance: !!l.uses_balance, maxDays: l.max_days || 0, inactive: !!l.isInactive };
 			}
 			return out;
+		}
+
+		/** Loại nghỉ là phép năm: được chính sách phép năm (leave_policy) trỏ tới. Một truy vấn danh mục, không theo nhân viên. */
+		function annualTypeIds() {
+			const ids = {};
+			safe(() => {
+				for (const p of Store.find("leave_policy")) if (!blank(p.leave_type)) ids[String(p.leave_type)] = true;
+			});
+			return ids;
 		}
 
 		// ------------------------------------------------------------------ phiếu lương
@@ -219,11 +229,12 @@ define(["./SelfService", "./HrTimeline", "./Dates"], (SS, Timeline, Dates) => {
 			const year = String(today).slice(0, 4);
 			const bal = {};
 			for (const b of SS.leaveView(Store.find("leave_balance", { where: "{employee} = ?", params: [me] }).filter((x) => SS.isOwn(x, me) && String(x.year) === year), lt)) bal[b.leaveType] = b.available;
-			return {
-				today, hasProfile: !!profileOf(me),
-				requests: SS.groupRequests(rows),
-				leaveTypes: Object.values(lt).filter((t) => !t.inactive).sort((a, b) => a.code.localeCompare(b.code)).map((t) => ({ id: t.id, code: t.code, name: t.name, allowHalf: t.allowHalf, usesBalance: t.usesBalance, maxDays: t.maxDays, available: t.usesBalance ? bal[t.id] || 0 : null })),
-			};
+			const annual = annualTypeIds();
+			const types = Object.values(lt)
+				.filter((t) => !t.inactive)
+				.sort((a, b) => Number(!!annual[b.id]) - Number(!!annual[a.id]) || a.code.localeCompare(b.code))
+				.map((t) => ({ id: t.id, code: t.code, name: t.name, allowHalf: t.allowHalf, usesBalance: t.usesBalance, maxDays: t.maxDays, annual: !!annual[t.id], available: t.usesBalance ? bal[t.id] || 0 : null }));
+			return { today, hasProfile: !!profileOf(me), requests: SS.groupRequests(rows), leaveTypes: types, defaultLeaveType: SS.defaultLeaveType(types) };
 		}
 
 		const userError = (e) => (e && e.userMessage ? e.userMessage : { en: "The request could not be submitted.", vi: "Không gửi duyệt được đơn." });
@@ -309,11 +320,78 @@ define(["./SelfService", "./HrTimeline", "./Dates"], (SS, Timeline, Dates) => {
 			};
 		}
 
+		// ------------------------------------------------------------------ tổng quan
+
+		/** Tên phòng ban cho các quyết định (một truy vấn cho mọi id; không có id thì không truy vấn). */
+		function departmentNames(ids) {
+			const list = [...new Set((ids || []).filter((x) => isId(x)).map(String))];
+			const out = {};
+			if (!list.length) return out;
+			safe(() => {
+				for (const r of Store.run(`SELECT d.id AS id, d.name AS name FROM department d WHERE d.id IN (${list.map(() => "?").join(",")})`, list, "s4vp_my_departments")) out[String(r.id)] = r.name || "";
+			});
+			return out;
+		}
+
+		/**
+		 * Tab Tổng quan: một lượt gọi, số truy vấn cố định (không tăng theo số phiếu, đơn, hợp đồng). Mọi truy vấn lọc theo người
+		 * đăng nhập (employee) hoặc hồ sơ lương của chính người đó (profile); danh mục (leave_type, leave_policy, period, department)
+		 * không chứa dữ liệu cá nhân.
+		 */
+		function opDashboard(ctx) {
+			const me = ctx.me;
+			const today = deps.today();
+			const prof = profileOf(me.id);
+			const slips = mySlips(me.id);
+			const trend = SS.payTrend(slips.map((s) => ({ batch: s.batch, periodName: s.periodName, end: s.end, taxMonth: s.taxMonth, gross: s.line.gross, net: s.line.net, pit: s.line.pit })), today, 12);
+
+			const contracts = safe(() => Store.find("contract", { where: "{employee} = ?", params: [me.id] }).filter((c) => SS.isOwn(c, me.id)), []);
+			const decisions = safe(() => Store.find("decision", { where: "{employee} = ?", params: [me.id] }).filter((d) => SS.isOwn(d, me.id)), []);
+			const comps = prof ? safe(() => Store.find("compensation", { where: "{profile} = ?", params: [prof.id] }).filter((c) => String(c.profile) === String(prof.id)), []) : [];
+			const dependents = prof ? safe(() => Store.find("dependent", { where: "{profile} = ?", params: [prof.id] }).filter((d) => String(d.profile) === String(prof.id)), []) : [];
+			const dept = departmentNames(decisions.reduce((a, d) => a.concat([d.old_department, d.new_department]), []));
+			const applied = decisions.map((d) => Object.assign({}, d, { oldDepartmentName: dept[String(d.old_department)] || "", newDepartmentName: dept[String(d.new_department)] || "" }));
+			const timeline = SS.dashboardTimeline(Timeline.timeline({ profile: prof ? { hire_date: prof.hire_date } : {}, contracts, decisions: applied, compensations: comps }, today));
+			const cur = Timeline.currentContract(contracts, today) || Timeline.latestContract(contracts);
+
+			// Việc của tôi: đơn chờ duyệt / nháp, số dư phép, hạn phép chuyển, hợp đồng sắp hết hạn (60 ngày)
+			const lt = leaveTypes();
+			const annual = annualTypeIds();
+			const pending = [];
+			for (const type of SS.TYPES) {
+				for (const d of Store.find(recordOf(type), { where: "{employee} = ?", params: [me.id], order: "{id} DESC" })) {
+					if (SS.isOwn(d, me.id) && ["H", "P"].includes(d.status || "H")) pending.push(SS.requestRow(type, d, lt));
+				}
+			}
+			const year = String(today).slice(0, 4);
+			const balances = SS.leaveView(Store.find("leave_balance", { where: "{employee} = ?", params: [me.id] }).filter((b) => SS.isOwn(b, me.id) && String(b.year) === year), lt).map((b) =>
+				Object.assign(b, { annual: !!annual[b.leaveType], carryActive: b.carried > 0 && !!b.carryExpiry && Dates.cmp(b.carryExpiry, today) >= 0, carryDaysLeft: b.carryExpiry ? Dates.diff(today, b.carryExpiry) : null })
+			);
+			balances.sort((a, b) => Number(b.annual) - Number(a.annual) || a.code.localeCompare(b.code));
+			const due = Timeline.due({ contracts }, today, { days: 60 }).filter((x) => x.kind === "contractExpiry" || x.kind === "probationEnd");
+
+			return {
+				today, year, hasProfile: !!prof,
+				employee: { code: me.code, name: me.name, department: me.department, jobTitle: me.jobTitle },
+				pay: trend,
+				timeline,
+				contract: cur
+					? { number: cur.number || "", type: cur.type || "", title: cur.title || "", effective: cur.effective || null, expiry: cur.expiry || null, state: Timeline.contractState(cur, today).state, daysLeft: cur.expiry ? Dates.diff(today, cur.expiry) : null }
+					: null,
+				dependents: SS.dependentsSummary(dependents, today, 90),
+				tasks: {
+					requests: SS.groupRequests(pending).open,
+					balances,
+					contracts: due.map((x) => ({ kind: x.kind, date: x.date, daysLeft: x.daysLeft, overdue: x.overdue, ref: x.ref, code: x.code })),
+				},
+			};
+		}
+
 		function opBoot(ctx) {
 			return { today: deps.today(), employee: { code: ctx.me.code, name: ctx.me.name }, hasProfile: !!profileOf(ctx.me.id) };
 		}
 
-		const OPS = { boot: opBoot, payslips: opPayslips, payslip: opPayslip, leave: opLeave, requests: opRequests, me: opMe, saveRequest: opSaveRequest, requestAction: opRequestAction };
+		const OPS = { boot: opBoot, dashboard: opDashboard, payslips: opPayslips, payslip: opPayslip, leave: opLeave, requests: opRequests, me: opMe, saveRequest: opSaveRequest, requestAction: opRequestAction };
 
 		/**
 		 * Một lượt gọi của trang. Luôn xác định lại người đăng nhập và kiểm tham số nhân viên trước khi chạy op.

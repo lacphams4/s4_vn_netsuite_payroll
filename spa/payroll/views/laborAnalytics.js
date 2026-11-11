@@ -13,16 +13,16 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, errorText, download} from '../lib/api.js';
 import {money, num} from '../lib/format.js';
 import {pick} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Menu, StatCards, Chips, Table, Badge, Select, TextInput, Dialog, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Menu, StatCards, Chips, Table, Badge, Select, MonthInput, Dialog, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
 		title: 'Phân tích chi phí lương',
 		month: 'Tháng',
-		monthType: 'Gõ tháng (YYYY-MM)',
+		monthType: 'Chọn tháng bất kỳ',
 		compare: 'So với',
 		compareOpt: {prev: 'Tháng trước', yoy: 'Cùng kỳ năm trước', custom: 'Chọn tháng...'},
-		compareType: 'Gõ tháng so sánh (YYYY-MM)',
+		compareType: 'Tháng so sánh',
 		reload: 'Tải lại',
 		more: 'Thao tác khác',
 		rebuildMonth: (m) => `Lập lại số liệu tháng ${m}`,
@@ -161,10 +161,10 @@ const TEXT = {
 	en: {
 		title: 'Labor cost analysis',
 		month: 'Month',
-		monthType: 'Type a month (YYYY-MM)',
+		monthType: 'Pick any month',
 		compare: 'Compare with',
 		compareOpt: {prev: 'Previous month', yoy: 'Same month last year', custom: 'Pick a month...'},
-		compareType: 'Type the comparison month (YYYY-MM)',
+		compareType: 'Comparison month',
 		reload: 'Refresh',
 		more: 'More actions',
 		rebuildMonth: (m) => `Rebuild analytics data for ${m}`,
@@ -736,12 +736,12 @@ export default function LaborAnalyticsView({app}) {
 		<span class="s4vp-la-ctl">
 			{t.month}
 			<Select value={curMonth} options={monthOptions} onInput={(v) => v && v !== curMonth && go({month: v})} width={112} ariaLabel={t.month} />
-			<TextInput value={curMonth} onInput={typeMonth} placeholder="YYYY-MM" width={96} ariaLabel={t.monthType} title={t.monthType} />
+			<MonthInput value={curMonth} onInput={typeMonth} width={150} ariaLabel={t.monthType} title={t.monthType} />
 		</span>,
 		<span class="s4vp-la-ctl">
 			{t.compare}
 			<Select value={showCustom ? 'custom' : mode} options={['prev', 'yoy', 'custom'].map((k) => ({value: k, label: t.compareOpt[k]}))} onInput={pickCompare} width={178} ariaLabel={t.compare} />
-			{showCustom ? <TextInput value={mode === 'custom' ? compare : ''} onInput={typeCompare} placeholder="YYYY-MM" width={96} ariaLabel={t.compareType} title={t.compareType} /> : null}
+			{showCustom ? <MonthInput value={mode === 'custom' ? compare : ''} onInput={typeCompare} width={150} ariaLabel={t.compareType} title={t.compareType} /> : null}
 		</span>,
 		<Button label={t.reload} onClick={reload} />,
 	];

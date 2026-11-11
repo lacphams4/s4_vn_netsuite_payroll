@@ -4,7 +4,12 @@
  * s4ss-). Mọi chữ hiển thị nằm trong TEXT với đủ hai ngôn ngữ vi / en; máy chủ chọn bảng theo ngôn ngữ người dùng.
  *
  * html(boot) -> chuỗi HTML đầy đủ. boot: { lang: 'vi' | 'en', url (địa chỉ Suitelet), token (chống gửi chéo trang),
- *   employee: {code, name} | null, hasProfile, today, blocked: {en, vi} | null } (thông báo chặn, thay cho các tab).
+ *   employee: {code, name} | null, hasProfile, today, blocked: {en, vi} | null (thông báo chặn, thay cho các tab),
+ *   view: tab mở đầu (home | pay | leave | req | me, mặc định home = Tổng quan), embed: bản gọn để nhúng vào portlet (chỉ tab
+ *   Tổng quan, không có thanh tab), fullUrl: địa chỉ cổng đầy đủ cho nút "Mở đầy đủ" }.
+ * Tab Tổng quan (op dashboard): biến động thu nhập (SVG nội tuyến, 12 kỳ; màn hẹp 6 kỳ), lương và vị trí theo thời gian,
+ *   người phụ thuộc, việc của tôi. Form đơn: ô ngày <input type="date"> (giá trị ISO, min / max theo loại đơn, "đến" không trước
+ *   "từ"), số giờ làm thêm là ô số bước 0,5; loại nghỉ mặc định là phép năm.
  * Mã phía trình duyệt là hàm client() bên dưới, được chèn vào trang bằng Function.prototype.toString(): hàm này KHÔNG được
  * tham chiếu biến nào ngoài tham số BOOT và đối tượng của trình duyệt.
  *
@@ -36,7 +41,7 @@ define([], () => {
 			fType: "Loại đơn", fLeaveType: "Loại nghỉ", fFrom: "Từ ngày", fTo: "Đến ngày", fFromHalf: "Bắt đầu từ", fToHalf: "Kết thúc", halfA: "Buổi sáng", halfP: "Buổi chiều", endA: "Hết buổi sáng", endP: "Hết ngày",
 			fDate: "Ngày làm thêm", fHours: "Số giờ", fNight: "Làm ban đêm", fReason: "Lý do", fDest: "Nơi công tác", fPurpose: "Mục đích", fAdvance: "Đề nghị tạm ứng (đồng)", dateHint: "dd/mm/yyyy",
 			balanceLeft: "Còn {0} ngày", send: "Gửi duyệt", sending: "Đang gửi...", discard: "Bỏ qua", editTitle: "Sửa đơn nháp", newTitle: "Tạo đơn",
-			eRequired: "Bắt buộc nhập.", eDate: "Nhập ngày dạng dd/mm/yyyy.", eRange: "Ngày kết thúc trước ngày bắt đầu.", eHours: "Số giờ phải lớn hơn 0 và không quá 12.", eAmount: "Số tiền phải từ 0 trở lên.",
+			eRequired: "Bắt buộc nhập.", eDate: "Chọn hoặc nhập một ngày hợp lệ.", eRange: "Ngày kết thúc trước ngày bắt đầu.", eHours: "Số giờ phải lớn hơn 0 và không quá 12.", eAmount: "Số tiền phải từ 0 trở lên.",
 			sent: "Đã gửi đơn {0}, đang chờ duyệt.", savedDraft: "Đơn {0} đã lưu nháp nhưng chưa gửi duyệt được: {1}", cancelled: "Đã hủy đơn {0}.",
 			contract: "Hợp đồng hiện tại", noContract: "Chưa có hợp đồng trên hệ thống.", cNumber: "Số hợp đồng", cType: "Loại hợp đồng", cTitle: "Chức danh", cFrom: "Hiệu lực từ", cTo: "Hết hạn", indefinite: "Không thời hạn",
 			ctP: "Thử việc", ctF: "Xác định thời hạn", ctU: "Không xác định thời hạn", ctS: "Thời vụ / khoán việc", ctC: "Cộng tác viên / dịch vụ",
@@ -44,6 +49,16 @@ define([], () => {
 			personal: "Hồ sơ của tôi", code: "Mã nhân viên", name: "Họ và tên", dept: "Phòng ban", jobTitle: "Chức danh", hireDate: "Ngày vào làm",
 			taxCode: "Mã số thuế", personalId: "Số CCCD", siNumber: "Số sổ BHXH", bank: "Ngân hàng", bankAccount: "Số tài khoản", masked: "Số được che, chỉ hiện các ký tự cuối. Cần sửa thông tin, vui lòng liên hệ bộ phận nhân sự.",
 			dependents: "Người phụ thuộc", noDependents: "Chưa đăng ký người phụ thuộc.", relationship: "Quan hệ", birthDate: "Ngày sinh", dedFrom: "Giảm trừ từ", dedTo: "Đến", active: "Đang giảm trừ", inactive: "Không còn giảm trừ",
+			eDateWindow: "Ngày phải trong khoảng {0} - {1}.", noBalanceType: "Loại nghỉ này không trừ số dư phép.", hoursHint: "Bước 0,5 giờ, tối đa 12 giờ.", amountHint: "Bỏ trống nếu không tạm ứng.", required: "bắt buộc",
+			tabHome: "Tổng quan", openFull: "Mở đầy đủ", payTrend: "Biến động thu nhập", kLatest: "Thực lĩnh kỳ gần nhất", kAvg: "Bình quân {0} kỳ gần nhất", kPitYtd: "Thuế TNCN đã khấu trừ năm {0}",
+			chartLabel: "Tổng thu nhập (cột) và thực lĩnh (đường) của {0} kỳ gần nhất", noPay: "Chưa có phiếu lương đã ghi sổ.", unitB: "tỷ", unitM: "tr", unitK: "nghìn", viewSlips: "Xem phiếu lương",
+			career: "Lương và vị trí theo thời gian", noCareer: "Chưa có thay đổi lương, quyết định hay hợp đồng.", upcoming: "Sắp tới",
+			evSalary: "Thay đổi lương", evContract: "Ký hợp đồng", evAppendix: "Phụ lục hợp đồng", evContractEnd: "Hợp đồng hết hạn", evTerminated: "Chấm dứt hợp đồng", evHire: "Ngày vào làm",
+			dH: "Quyết định tiếp nhận", dT: "Quyết định điều chuyển", dP: "Quyết định bổ nhiệm", dS: "Quyết định điều chỉnh lương", dR: "Quyết định khen thưởng", dD: "Quyết định kỷ luật", dX: "Quyết định chấm dứt", dOther: "Quyết định nhân sự",
+			lBase: "Lương cơ bản", lIns: "Lương đóng bảo hiểm", lAllow: "Phụ cấp", was: "trước đó {0}", until: "đến {0}", titleChange: "Chức danh: {0}", deptChange: "Phòng ban: {0}",
+			depActive: "{0} người đang được giảm trừ", depEnding: "{0} người sắp hết giảm trừ trong 90 ngày", endsIn: "Hết giảm trừ sau {0} ngày", endsToday: "Hết giảm trừ hôm nay",
+			tasks: "Việc của tôi", inProgress: "Đơn đang xử lý", noPending: "Không có đơn nào đang chờ duyệt.", leaveLeft: "{0}: còn {1} ngày", carryUntil: "{0} ngày phép chuyển từ năm trước dùng đến {1} (còn {2} ngày)",
+			contractDue: "Hợp đồng {0} hết hạn ngày {1} (còn {2} ngày)", probationDue: "Thử việc kết thúc ngày {0} (còn {1} ngày)", contractOver: "Hợp đồng {0} đã hết hạn ngày {1}, chưa có hợp đồng mới", seeAll: "Xem tất cả",
 		},
 		en: {
 			title: "Employee portal", tabPay: "Payslips", tabLeave: "Leave", tabReq: "My requests", tabMe: "My info",
@@ -68,7 +83,7 @@ define([], () => {
 			fType: "Request type", fLeaveType: "Leave type", fFrom: "From", fTo: "To", fFromHalf: "Starts", fToHalf: "Ends", halfA: "Morning", halfP: "Afternoon", endA: "After the morning", endP: "End of day",
 			fDate: "Overtime date", fHours: "Hours", fNight: "Night work", fReason: "Reason", fDest: "Destination", fPurpose: "Purpose", fAdvance: "Advance requested (VND)", dateHint: "dd/mm/yyyy",
 			balanceLeft: "{0} days available", send: "Submit", sending: "Sending...", discard: "Discard", editTitle: "Edit draft request", newTitle: "New request",
-			eRequired: "This field is required.", eDate: "Enter a date as dd/mm/yyyy.", eRange: "The end date is before the start date.", eHours: "Hours must be greater than 0 and at most 12.", eAmount: "The amount must be zero or more.",
+			eRequired: "This field is required.", eDate: "Pick or enter a valid date.", eRange: "The end date is before the start date.", eHours: "Hours must be greater than 0 and at most 12.", eAmount: "The amount must be zero or more.",
 			sent: "Request {0} was submitted and is waiting for approval.", savedDraft: "Request {0} was saved as a draft but could not be submitted: {1}", cancelled: "Request {0} was cancelled.",
 			contract: "Current contract", noContract: "No contract on file.", cNumber: "Contract number", cType: "Contract type", cTitle: "Job title", cFrom: "Effective from", cTo: "Expires", indefinite: "Indefinite term",
 			ctP: "Probation", ctF: "Fixed term", ctU: "Indefinite term", ctS: "Seasonal / piecework", ctC: "Contractor / service",
@@ -76,6 +91,16 @@ define([], () => {
 			personal: "My record", code: "Employee ID", name: "Full name", dept: "Department", jobTitle: "Job title", hireDate: "Hire date",
 			taxCode: "Tax code", personalId: "ID number", siNumber: "Social insurance number", bank: "Bank", bankAccount: "Bank account", masked: "Numbers are masked; only the last characters are shown. To correct your details, please contact the HR department.",
 			dependents: "Dependents", noDependents: "No dependents registered.", relationship: "Relationship", birthDate: "Date of birth", dedFrom: "Deduction from", dedTo: "To", active: "Deduction active", inactive: "No longer deducted",
+			eDateWindow: "The date must be between {0} and {1}.", noBalanceType: "This leave type does not use the leave balance.", hoursHint: "In steps of 0.5 hours, at most 12 hours.", amountHint: "Leave empty if no advance is needed.", required: "required",
+			tabHome: "Overview", openFull: "Open full portal", payTrend: "Pay trend", kLatest: "Latest net pay", kAvg: "Average of the last {0} periods", kPitYtd: "Income tax withheld in {0}",
+			chartLabel: "Gross pay (bars) and net pay (line) for the last {0} periods", noPay: "No released payslip yet.", unitB: "B", unitM: "M", unitK: "K", viewSlips: "View payslips",
+			career: "Pay and position over time", noCareer: "No pay change, decision or contract yet.", upcoming: "Upcoming",
+			evSalary: "Pay change", evContract: "Contract signed", evAppendix: "Contract appendix", evContractEnd: "Contract ends", evTerminated: "Contract terminated", evHire: "Hire date",
+			dH: "Onboarding decision", dT: "Transfer decision", dP: "Appointment decision", dS: "Salary change decision", dR: "Reward decision", dD: "Disciplinary decision", dX: "Termination decision", dOther: "Personnel decision",
+			lBase: "Base pay", lIns: "Insurance wage", lAllow: "Allowance", was: "previously {0}", until: "until {0}", titleChange: "Title: {0}", deptChange: "Department: {0}",
+			depActive: "{0} with an active deduction", depEnding: "{0} ending within 90 days", endsIn: "Deduction ends in {0} days", endsToday: "Deduction ends today",
+			tasks: "My to-dos", inProgress: "Requests in progress", noPending: "No request is waiting for approval.", leaveLeft: "{0}: {1} days available", carryUntil: "{0} carried-over days usable until {1} ({2} days left)",
+			contractDue: "Contract {0} ends on {1} ({2} days left)", probationDue: "Probation ends on {0} ({1} days left)", contractOver: "Contract {0} ended on {1} and has no successor yet", seeAll: "See all",
 		},
 	};
 
@@ -181,9 +206,46 @@ dl{margin:0}
 .s4ss-check input{width:18px;height:18px}
 .s4ss-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .s4ss-backbtn{align-self:flex-start}
+.s4ss-hint{font-size:12px;color:var(--sub)}
+.s4ss-mark{color:var(--err);font-weight:700}
+input.s4ss-num-in{text-align:right;font-variant-numeric:tabular-nums}
+input[type="date"].s4ss-in{min-height:40px}
+.s4ss-bal-hint{display:inline-block;align-self:flex-start;margin-top:2px;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--ok-bg);color:var(--ok)}
+.s4ss-bal-hint.s4ss-bal-none{background:var(--line-soft);color:var(--sub);font-weight:400}
+.s4ss-home{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.s4ss-stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+.s4ss-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.s4ss-kpis .s4ss-tile:first-child{grid-column:1 / -1}
+.s4ss-kpi-sub{display:block;font-size:12px;margin-top:2px}
+.s4ss-chart{width:100%;height:auto;display:block;overflow:visible}
+.s4ss-ch-grid{stroke:#E8EBEE;stroke-width:1}
+.s4ss-ch-base{stroke:#B8C1C8;stroke-width:1}
+.s4ss-ch-axis{fill:#55616B;font-size:11px}
+.s4ss-ch-bar{fill:#B9CFD9}
+.s4ss-ch-bar-last{fill:#24566B}
+.s4ss-ch-line{fill:none;stroke:#C97A12;stroke-width:2;stroke-linejoin:round}
+.s4ss-ch-dot{fill:#FFFFFF;stroke:#C97A12;stroke-width:2}
+.s4ss-ch-val{fill:#1D2730;font-size:11px;font-weight:700}
+.s4ss-ch-net{fill:#8A4B00;font-size:11px;font-weight:700;paint-order:stroke;stroke:#FFFFFF;stroke-width:3px;stroke-linejoin:round}
+.s4ss-legend{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:6px}
+.s4ss-lg{display:inline-flex;align-items:center;gap:6px}
+.s4ss-lg-bar{display:inline-block;width:12px;height:10px;border-radius:2px;background:#B9CFD9}
+.s4ss-lg-last{background:#24566B}
+.s4ss-lg-line{display:inline-block;width:16px;height:2px;background:#C97A12}
+.s4ss-tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.s4ss-tl li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+.s4ss-tl li:last-child{border-bottom:0}
+.s4ss-tl-date{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+.s4ss-tl-what{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
+.s4ss-items{display:flex;flex-direction:column}
+.s4ss-item{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line-soft);overflow-wrap:anywhere}
+.s4ss-item:last-child{border-bottom:0}
+.s4ss-h3{font-size:13px;font-weight:700;color:var(--sub);margin:10px 0 2px}
+.s4ss-h3:first-of-type{margin-top:0}
+.s4ss-open{font-size:13px;min-height:36px}
 @media (max-width:811px){.s4ss-detail-open .s4ss-col-list{display:none}.s4ss-pick{display:none}}
 @media (min-width:600px){.s4ss-wide{display:table-cell}.s4ss-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}.s4ss-modal{align-items:center;padding:16px}.s4ss-dialog{border-radius:12px}}
-@media (min-width:812px){.s4ss-cols{grid-template-columns:minmax(280px,4fr) minmax(0,6fr)}.s4ss-backbtn{display:none}.s4ss-head{padding-top:10px}.s4ss-tab{flex:0 0 auto;padding-left:14px;padding-right:14px}}
+@media (min-width:812px){.s4ss-home{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}.s4ss-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.s4ss-kpis .s4ss-tile:first-child{grid-column:auto}.s4ss-cols{grid-template-columns:minmax(280px,4fr) minmax(0,6fr)}.s4ss-backbtn{display:none}.s4ss-head{padding-top:10px}.s4ss-tab{flex:0 0 auto;padding-left:14px;padding-right:14px}}
 `;
 
 	/* eslint-disable */
@@ -192,7 +254,7 @@ dl{margin:0}
 		var T = BOOT.text;
 		var EN = BOOT.lang === "en";
 		var root = document.getElementById("s4ss");
-		var S = { tab: "pay", notice: null, pay: { year: null, data: null, sel: null, detail: null, loading: false }, leave: { year: null, data: null }, req: { data: null, type: "" }, me: { data: null }, modal: null };
+		var S = { tab: "home", notice: null, home: { data: null }, pay: { year: null, data: null, sel: null, detail: null, loading: false }, leave: { year: null, data: null }, req: { data: null, type: "" }, me: { data: null }, modal: null };
 
 		function h(tag, attrs, kids) {
 			var el = document.createElement(tag);
@@ -210,6 +272,38 @@ dl{margin:0}
 				el.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
 			});
 			return el;
+		}
+		var SVGNS = "http://www.w3.org/2000/svg";
+		function svg(tag, attrs, kids) {
+			var el = document.createElementNS(SVGNS, tag);
+			var a = attrs || {};
+			Object.keys(a).forEach(function (k) {
+				if (a[k] === null || a[k] === undefined || a[k] === false) return;
+				if (k === "text") el.textContent = a[k];
+				else el.setAttribute(k, String(a[k]));
+			});
+			(kids || []).forEach(function (c) { if (c) el.appendChild(c); });
+			return el;
+		}
+		/** Ngày ISO cộng n ngày (theo lịch UTC, không lệch múi giờ). */
+		function addDays(iso, n) {
+			var p = String(iso || "").split("-");
+			var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n));
+			return d.getUTCFullYear() + "-" + ("0" + (d.getUTCMonth() + 1)).slice(-2) + "-" + ("0" + d.getUTCDate()).slice(-2);
+		}
+		function todayIso() {
+			if (/^\d{4}-\d{2}-\d{2}$/.test(String(BOOT.today || ""))) return BOOT.today;
+			var d = new Date();
+			return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+		}
+		/** Khoảng ngày cho phép theo loại đơn: nghỉ, công tác từ đầu năm trước tới hết năm sau; làm thêm từ đầu tháng trước tới 60 ngày tới. */
+		function windowOf(type) {
+			var t = todayIso(), y = +t.slice(0, 4);
+			if (type === "ot") {
+				var m = +t.slice(5, 7) - 1, py = m < 1 ? y - 1 : y, pm = m < 1 ? 12 : m;
+				return { lo: py + "-" + ("0" + pm).slice(-2) + "-01", hi: addDays(t, 60) };
+			}
+			return { lo: (y - 1) + "-01-01", hi: (y + 1) + "-12-31" };
 		}
 		function fmt(s) {
 			var args = arguments;
@@ -553,17 +647,23 @@ dl{margin:0}
 		function openForm(type, row) {
 			ensureLookups(function () {
 				var r = row || {};
+				var lt = r.leaveType || (S.req.data && S.req.data.defaultLeaveType) || "";
 				S.modal = { kind: "form", type: type, id: r.id || null, errors: {}, busy: false, v: {
-					leave_type: r.leaveType || "", from: day(r.from), to: day(r.to), from_half: r.fromHalf || "A", to_half: r.toHalf || "P",
-					work_date: day(r.from), hours: r.hours || "", is_night: !!r.isNight, reason: r.reason || "", destination: r.destination || "", purpose: row && type === "trip" ? r.reason : "", advance_amount: r.advanceAmount || "",
+					leave_type: lt, from: r.from || "", to: r.to || "", from_half: r.fromHalf || "A", to_half: r.toHalf || "P",
+					work_date: r.from || (row ? "" : todayIso()), hours: r.hours || "", is_night: !!r.isNight, reason: r.reason || "", destination: r.destination || "", purpose: row && type === "trip" ? r.reason : "", advance_amount: r.advanceAmount ? group(Math.round(r.advanceAmount)) : "",
 				} };
 				render();
 			});
 		}
 		function checkForm(m) {
-			var v = m.v, e = {};
+			var v = m.v, e = {}, w = windowOf(m.type);
 			function need(k) { if (!String(v[k] === null || v[k] === undefined ? "" : v[k]).trim()) e[k] = T.eRequired; }
-			function isDay(k) { if (!e[k] && !parseDay(v[k])) e[k] = T.eDate; }
+			function isDay(k) {
+				if (e[k]) return;
+				var d = parseDay(v[k]);
+				if (!d) e[k] = T.eDate;
+				else if (d < w.lo || d > w.hi) e[k] = fmt(T.eDateWindow, day(w.lo), day(w.hi));
+			}
 			if (m.type === "leave" || m.type === "trip") {
 				if (m.type === "leave") need("leave_type");
 				need("from"); isDay("from");
@@ -585,10 +685,11 @@ dl{margin:0}
 			m.errors = checkForm(m);
 			m.error = null;
 			if (Object.keys(m.errors).length) { render(); var bad = document.querySelector('.s4ss-dialog [aria-invalid="true"]'); if (bad) bad.focus(); return; }
-			var v = m.v, values;
-			if (m.type === "leave") values = { leave_type: v.leave_type, from: v.from, to: v.to, from_half: v.from_half, to_half: v.to_half, reason: v.reason };
-			else if (m.type === "ot") values = { work_date: v.work_date, hours: String(v.hours).replace(",", "."), is_night: !!v.is_night, reason: v.reason };
-			else values = { from: v.from, to: v.to, destination: v.destination, purpose: v.purpose, advance_amount: String(v.advance_amount || "").replace(/[.,\s]/g, "") };
+			// Ngày gửi dạng ISO yyyy-mm-dd (ô ngày của trình duyệt đã là ISO; ô chữ dự phòng dd/mm/yyyy được đổi tại đây)
+			var v = m.v, values, iso = function (x) { return parseDay(x) || ""; };
+			if (m.type === "leave") values = { leave_type: v.leave_type, from: iso(v.from), to: iso(v.to), from_half: v.from_half, to_half: v.to_half, reason: v.reason };
+			else if (m.type === "ot") values = { work_date: iso(v.work_date), hours: String(v.hours).replace(",", "."), is_night: !!v.is_night, reason: v.reason };
+			else values = { from: iso(v.from), to: iso(v.to), destination: v.destination, purpose: v.purpose, advance_amount: String(v.advance_amount || "").replace(/[.,\s]/g, "") };
 			m.busy = true;
 			render();
 			post("saveRequest", { type: m.type, id: m.id, values: values }).then(function (d) {
@@ -610,19 +711,56 @@ dl{margin:0}
 				return h("div", { class: "s4ss-modal" }, [h("div", { class: "s4ss-dialog", role: "alertdialog", "aria-modal": "true" }, [h("p", { text: m.text }), h("div", { class: "s4ss-foot" }, [h("button", { class: "s4ss-btn", type: "button", onclick: closeModal, text: T.keep }), h("button", { class: "s4ss-btn s4ss-btn-danger", type: "button", "data-focus": "1", onclick: m.yes, text: T.cancel })])])]);
 			}
 			var v = m.v;
+			var w = windowOf(m.type);
 			var n = 0;
-			function field(key, label, control, full) {
+			/** Ô có nhãn; o: { full, hint (phần tử), req (bắt buộc: dấu * và aria-required) }. */
+			function field(key, label, control, o) {
+				var opt = o || {};
 				var id = "s4ss-f-" + key;
 				control.id = id;
+				if (opt.req) control.setAttribute("aria-required", "true");
 				if (m.errors[key]) { control.setAttribute("aria-invalid", "true"); control.setAttribute("aria-describedby", id + "-e"); }
 				if (!n++ && !m.id) control.setAttribute("data-focus", "1");
-				return h("div", { class: "s4ss-f" + (full ? " s4ss-f-full" : "") }, [h("label", { for: id, text: label }), control, m.errors[key] ? h("div", { class: "s4ss-err", id: id + "-e", text: m.errors[key] }) : null]);
+				return h("div", { class: "s4ss-f" + (opt.full ? " s4ss-f-full" : "") }, [
+					h("label", { for: id }, [label, opt.req ? h("span", { class: "s4ss-mark", title: T.required, text: " *" }) : null]),
+					control, opt.hint || null,
+					m.errors[key] ? h("div", { class: "s4ss-err", id: id + "-e", text: m.errors[key] }) : null,
+				]);
 			}
 			function input(key, attrs) {
 				var el = h("input", Object.assign({ class: "s4ss-in", type: "text", value: v[key] === null || v[key] === undefined ? "" : String(v[key]), oninput: function () { v[key] = el.value; } }, attrs || {}));
 				return el;
 			}
-			function dateIn(key) { return input(key, { placeholder: T.dateHint, inputmode: "numeric", autocomplete: "off", maxlength: 10 }); }
+			/** Ô ngày: lịch chọn của trình duyệt (giá trị ISO), giới hạn trong khoảng cho phép; trình duyệt không có thì ô chữ dd/mm/yyyy. */
+			function dateIn(key) {
+				var el = h("input", { class: "s4ss-in", type: "date", autocomplete: "off" });
+				var iso = parseDay(v[key]);
+				if (el.type === "date") {
+					el.min = w.lo; el.max = w.hi;
+					el.value = iso || "";
+				} else {
+					el.setAttribute("type", "text");
+					el.placeholder = T.dateHint; el.inputMode = "numeric"; el.maxLength = 10;
+					el.value = iso ? day(iso) : v[key] || "";
+				}
+				function take() { v[key] = el.value; }
+				el.addEventListener("input", take);
+				el.addEventListener("change", take);
+				return el;
+			}
+			/** "Đến" không trước "Từ": min của ô đến theo ô từ; đến trống hoặc trước từ thì lấy bằng từ. */
+			function linkRange(fromEl, toEl) {
+				function sync(move) {
+					var f = parseDay(v.from);
+					if (toEl.type === "date") toEl.min = f || w.lo;
+					if (!move || !f) return;
+					var t = parseDay(v.to);
+					if (!t || t < f) { v.to = toEl.type === "date" ? f : day(f); toEl.value = v.to; }
+				}
+				fromEl.addEventListener("change", function () { sync(true); });
+				fromEl.addEventListener("input", function () { sync(fromEl.type === "date"); });
+				sync(false);
+			}
 			function area(key) {
 				var el = h("textarea", { class: "s4ss-in", rows: 3, maxlength: 1000, oninput: function () { v[key] = el.value; } });
 				el.value = v[key] || "";
@@ -636,29 +774,47 @@ dl{margin:0}
 			if (m.type === "leave") {
 				var types = (S.req.data && S.req.data.leaveTypes) || [];
 				var lt = types.filter(function (t) { return String(t.id) === String(v.leave_type); })[0];
-				fields.push(field("leave_type", T.fLeaveType, pick("leave_type", [["", ""]].concat(types.map(function (t) { return [t.id, t.name + (t.available === null ? "" : " - " + fmt(T.balanceLeft, qty(t.available) === "-" ? "0" : qty(t.available)))]; }))), true));
-				fields.push(field("from", T.fFrom, dateIn("from")));
-				fields.push(field("to", T.fTo, dateIn("to")));
+				var left = function (t) { return qty(t.available) === "-" ? "0" : qty(t.available); };
+				var opts = types.map(function (t) { return [t.id, t.name + (t.available === null ? "" : " - " + fmt(T.balanceLeft, left(t)))]; });
+				var balHint = lt ? h("span", { class: "s4ss-bal-hint" + (lt.available === null ? " s4ss-bal-none" : ""), text: lt.available === null ? T.noBalanceType : fmt(T.balanceLeft, left(lt)) }) : null;
+				fields.push(field("leave_type", T.fLeaveType, pick("leave_type", (v.leave_type ? [] : [["", ""]]).concat(opts)), { full: true, req: true, hint: balHint }));
+				var lf = dateIn("from"), lto = dateIn("to");
+				linkRange(lf, lto);
+				fields.push(field("from", T.fFrom, lf, { req: true }));
+				fields.push(field("to", T.fTo, lto));
 				if (!lt || lt.allowHalf) {
 					fields.push(field("from_half", T.fFromHalf, pick("from_half", [["A", T.halfA], ["P", T.halfP]])));
 					fields.push(field("to_half", T.fToHalf, pick("to_half", [["P", T.endP], ["A", T.endA]])));
 				}
-				fields.push(field("reason", T.fReason, area("reason"), true));
+				fields.push(field("reason", T.fReason, area("reason"), { full: true }));
 			} else if (m.type === "ot") {
-				fields.push(field("work_date", T.fDate, dateIn("work_date")));
-				fields.push(field("hours", T.fHours, input("hours", { inputmode: "decimal", maxlength: 5 })));
+				fields.push(field("work_date", T.fDate, dateIn("work_date"), { req: true }));
+				var hrs = input("hours", { type: "number", inputmode: "decimal", min: "0.5", max: "12", step: "0.5", class: "s4ss-in s4ss-num-in" });
+				fields.push(field("hours", T.fHours, hrs, { req: true, hint: h("span", { class: "s4ss-hint", text: T.hoursHint }) }));
 				var cb = h("input", { type: "checkbox", id: "s4ss-f-night", checked: !!v.is_night, onchange: function () { v.is_night = cb.checked; } });
 				fields.push(h("div", { class: "s4ss-f s4ss-f-full" }, [h("div", { class: "s4ss-check" }, [cb, h("label", { for: "s4ss-f-night", style: "font-weight:400", text: T.fNight })])]));
-				fields.push(field("reason", T.fReason, area("reason"), true));
+				fields.push(field("reason", T.fReason, area("reason"), { full: true, req: true }));
 			} else {
-				fields.push(field("from", T.fFrom, dateIn("from")));
-				fields.push(field("to", T.fTo, dateIn("to")));
-				fields.push(field("destination", T.fDest, input("destination", { maxlength: 300 }), true));
-				fields.push(field("purpose", T.fPurpose, area("purpose"), true));
-				fields.push(field("advance_amount", T.fAdvance, input("advance_amount", { inputmode: "numeric", maxlength: 15 }), true));
+				var tf = dateIn("from"), tt = dateIn("to");
+				linkRange(tf, tt);
+				fields.push(field("from", T.fFrom, tf, { req: true }));
+				fields.push(field("to", T.fTo, tt));
+				fields.push(field("destination", T.fDest, input("destination", { maxlength: 300 }), { full: true, req: true }));
+				fields.push(field("purpose", T.fPurpose, area("purpose"), { full: true, req: true }));
+				var amt = input("advance_amount", { inputmode: "numeric", maxlength: 15, class: "s4ss-in s4ss-num-in", autocomplete: "off" });
+				// Rời ô thì thêm phân tách nghìn; khi gửi bỏ phân tách
+				amt.addEventListener("blur", function () {
+					var digits = String(amt.value).replace(/[.,\s]/g, "");
+					if (/^\d+$/.test(digits)) { amt.value = group(Number(digits)); v.advance_amount = amt.value; }
+				});
+				fields.push(field("advance_amount", T.fAdvance, amt, { full: true, hint: h("span", { class: "s4ss-hint", text: T.amountHint }) }));
 			}
 			var seg = m.id ? null : h("div", { class: "s4ss-seg", role: "group", "aria-label": T.fType }, ["leave", "ot", "trip"].map(function (t) {
-				return h("button", { type: "button", "aria-pressed": m.type === t ? "true" : "false", onclick: function () { m.type = t; m.errors = {}; m.error = null; render(); }, text: TYPE_LABEL[t] });
+				return h("button", { type: "button", "aria-pressed": m.type === t ? "true" : "false", onclick: function () {
+					m.type = t; m.errors = {}; m.error = null;
+					if (t === "ot" && !m.v.work_date) m.v.work_date = todayIso();
+					render();
+				}, text: TYPE_LABEL[t] });
 			}));
 			return h("div", { class: "s4ss-modal" }, [h("form", { class: "s4ss-dialog", role: "dialog", "aria-modal": "true", "aria-label": m.id ? T.editTitle : T.newTitle, novalidate: true, onsubmit: function (ev) { ev.preventDefault(); if (!m.busy) sendForm(); } }, [
 				h("div", { class: "s4ss-row s4ss-row-end" }, [h("h2", { text: (m.id ? T.editTitle : T.newTitle) + (m.id ? " - " + TYPE_LABEL[m.type] : "") }), h("button", { class: "s4ss-x", type: "button", "aria-label": T.close, onclick: closeModal, text: "×" })]),
@@ -704,25 +860,215 @@ dl{margin:0}
 			];
 		}
 
+		// ---- Tổng quan
+		function loadHome() {
+			S.home.data = null; S.home.error = null;
+			render();
+			get("dashboard").then(function (d) { S.home.data = d; render(); }, function (e) { S.home.error = e.message; render(); });
+		}
+		var NARROW = "(max-width:599px)";
+		function narrow() { return !!(window.matchMedia && window.matchMedia(NARROW).matches); }
+		/** Số gọn cho trục và nhãn biểu đồ: 21,7 tr / 21.7M. */
+		function compact(v) {
+			var n = Number(v) || 0, a = Math.abs(n), u = "", d = 1;
+			if (a >= 1e9) { d = 1e9; u = T.unitB; } else if (a >= 1e6) { d = 1e6; u = T.unitM; } else if (a >= 1e3) { d = 1e3; u = T.unitK; }
+			var x = Math.round((n / d) * 10) / 10;
+			var s = String(x);
+			if (!EN) s = s.replace(".", ",");
+			return u ? s + " " + u : s;
+		}
+		/** Nhãn kỳ: mã YYYYMM -> mm/yyyy (màn hẹp mm/yy); mã khác giữ nguyên. */
+		function periodLabel(p, short) {
+			var m = /^(\d{4})(\d{2})/.exec(String(p.label || ""));
+			if (m) return m[2] + "/" + (short ? m[1].slice(2) : m[1]);
+			var e = String(p.end || "");
+			return e ? e.slice(5, 7) + "/" + (short ? e.slice(2, 4) : e.slice(0, 4)) : String(p.label || "");
+		}
+		/** Biểu đồ SVG: cột tổng thu nhập, đường thực lĩnh; nhãn số trực tiếp ở kỳ mới nhất và kỳ cao nhất; màn hẹp 6 kỳ. */
+		function payChart(pay) {
+			var thin = narrow();
+			var pts = pay.points.slice(thin ? -6 : -12);
+			var W = thin ? 336 : 640, H = thin ? 210 : 230, L = thin ? 40 : 52, R = 14, TOP = 22, B = 26;
+			var top = 0;
+			pts.forEach(function (p) { top = Math.max(top, p.gross, p.net); });
+			var sc = pay.scale && pay.scale.max >= top ? pay.scale : { max: top || 1, ticks: [0, top || 1] };
+			var ih = H - TOP - B, cw = (W - L - R) / Math.max(pts.length, 1);
+			function y(v) { return TOP + ih * (1 - Math.max(0, v) / sc.max); }
+			function cx(i) { return L + cw * i + cw / 2; }
+			var hi = 0;
+			pts.forEach(function (p, i) { if (p.gross > pts[hi].gross) hi = i; });
+			var last = pts.length - 1;
+			var kids = [svg("title", { text: fmt(T.chartLabel, pts.length) })];
+			sc.ticks.forEach(function (t) {
+				kids.push(svg("line", { class: t === 0 ? "s4ss-ch-base" : "s4ss-ch-grid", x1: L, x2: W - R, y1: y(t), y2: y(t) }));
+				kids.push(svg("text", { class: "s4ss-ch-axis", x: L - 6, y: y(t) + 4, "text-anchor": "end", text: t === 0 ? "0" : compact(t) }));
+			});
+			var bw = Math.min(36, cw * 0.62);
+			pts.forEach(function (p, i) {
+				var top2 = y(p.gross);
+				kids.push(svg("rect", { class: i === last ? "s4ss-ch-bar s4ss-ch-bar-last" : "s4ss-ch-bar", x: cx(i) - bw / 2, y: top2, width: bw, height: Math.max(0, y(0) - top2), rx: 2 }, [svg("title", { text: periodLabel(p) + ": " + T.gross + " " + money(p.gross) + ", " + T.net + " " + money(p.net) })]));
+				kids.push(svg("text", { class: "s4ss-ch-axis", x: cx(i), y: H - 8, "text-anchor": "middle", text: periodLabel(p, thin) }));
+				if (i === last || i === hi) kids.push(svg("text", { class: "s4ss-ch-val", x: cx(i), y: top2 - 6, "text-anchor": "middle", text: compact(p.gross) }));
+			});
+			if (pts.length > 1) kids.push(svg("polyline", { class: "s4ss-ch-line", points: pts.map(function (p, i) { return cx(i) + "," + y(p.net); }).join(" ") }));
+			pts.forEach(function (p, i) { kids.push(svg("circle", { class: "s4ss-ch-dot", cx: cx(i), cy: y(p.net), r: 3.5 })); });
+			if (pts.length) kids.push(svg("text", { class: "s4ss-ch-net", x: cx(last) - 7, y: y(pts[last].net) + 4, "text-anchor": "end", text: compact(pts[last].net) }));
+			return h("div", {}, [
+				svg("svg", { class: "s4ss-chart", viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": fmt(T.chartLabel, pts.length) }, kids),
+				h("div", { class: "s4ss-legend" }, [
+					h("span", { class: "s4ss-lg" }, [h("span", { class: "s4ss-lg-bar" }), T.gross]),
+					h("span", { class: "s4ss-lg" }, [h("span", { class: "s4ss-lg-bar s4ss-lg-last" }), periodLabel(pts[last] || {})]),
+					h("span", { class: "s4ss-lg" }, [h("span", { class: "s4ss-lg-line" }), T.net]),
+				]),
+			]);
+		}
+		function kpiTile(label, value, sub) {
+			return h("div", { class: "s4ss-tile" }, [h("span", { class: "s4ss-sub", text: label }), h("b", { text: value }), sub || null]);
+		}
+		function payCard(d) {
+			var p = d.pay;
+			if (!p.points.length) return h("div", { class: "s4ss-card" }, [h("h2", { text: T.payTrend }), h("div", { class: "s4ss-empty", text: T.noPay })]);
+			var lt = p.latest, trend = null;
+			if (lt && lt.diff !== null) {
+				trend = lt.diff ? h("span", { class: "s4ss-kpi-sub " + (lt.diff > 0 ? "s4ss-up" : "s4ss-down"), text: fmt(lt.diff > 0 ? T.up : T.down, money(Math.abs(lt.diff))) + (lt.pct === null ? "" : " (" + qty(Math.abs(lt.pct) * 100) + "%)") }) : h("span", { class: "s4ss-kpi-sub s4ss-sub", text: T.same });
+			}
+			return h("div", { class: "s4ss-card" }, [
+				h("div", { class: "s4ss-row s4ss-row-end", style: "margin-bottom:8px" }, [h("h2", { style: "margin:0", text: T.payTrend }), BOOT.embed ? null : h("button", { class: "s4ss-btn s4ss-btn-sm", type: "button", onclick: function () { go("pay"); }, text: T.viewSlips })]),
+				h("div", { class: "s4ss-kpis" }, [kpiTile(T.kLatest, money(lt.net), trend), kpiTile(fmt(T.kAvg, p.count), money(p.avg6)), kpiTile(fmt(T.kPitYtd, p.year), money(p.pitYtd))]),
+				payChart(p),
+			]);
+		}
+		function eventText(e) {
+			var bits = [], what;
+			function pay(label, v) { if (v !== null && v !== undefined) bits.push(label + " " + money(v)); }
+			if (e.kind === "salary") {
+				what = T.evSalary;
+				pay(T.lBase, e.amount); pay(T.lIns, e.insuranceWage); pay(T.lAllow, e.allowance);
+				if (e.previous !== null && e.previous !== e.amount) bits.push(fmt(T.was, money(e.previous)));
+			} else if (e.kind === "decision") {
+				what = (T["d" + e.code] || T.dOther) + (e.ref ? " " + e.ref : "");
+				if (e.newTitle && e.newTitle !== e.oldTitle) bits.push(fmt(T.titleChange, (e.oldTitle ? e.oldTitle + " -> " : "") + e.newTitle));
+				if (e.newDepartment && e.newDepartment !== e.oldDepartment) bits.push(fmt(T.deptChange, (e.oldDepartment ? e.oldDepartment + " -> " : "") + e.newDepartment));
+				pay(T.lBase, e.amount); pay(T.lIns, e.insuranceWage); pay(T.lAllow, e.allowance);
+			} else if (e.kind === "contract" || e.kind === "appendix") {
+				what = (e.kind === "appendix" ? T.evAppendix : T.evContract) + (e.ref ? " " + e.ref : "");
+				if (e.kind === "contract" && T["ct" + e.code]) bits.push(T["ct" + e.code]);
+				if (e.title) bits.push(e.title);
+				pay(T.lBase, e.amount);
+				if (e.to) bits.push(fmt(T.until, day(e.to)));
+			} else if (e.kind === "contractEnd" || e.kind === "contractTerminated") {
+				what = (e.kind === "contractEnd" ? T.evContractEnd : T.evTerminated) + (e.ref ? " " + e.ref : "");
+			} else what = T.evHire;
+			return { what: what, detail: bits.join(" · ") };
+		}
+		/** Danh sách có ô tìm nhanh khi dài hơn 5 dòng; rows: phần tử có data-q. */
+		function listCard(title, rows, empty, extra) {
+			var box = h("div", { class: "s4ss-items" }, rows);
+			var find = rows.length > 5 ? search(function () { return box; }) : null;
+			return h("div", { class: "s4ss-card" }, [
+				h("div", { class: "s4ss-row s4ss-row-end", style: "margin-bottom:6px" }, [h("h2", { style: "margin:0", text: title }), find ? find.input : null]),
+				extra || null,
+				rows.length ? box : h("div", { class: "s4ss-empty", text: empty }),
+				find ? find.empty : null,
+			]);
+		}
+		function careerCard(d) {
+			var rows = d.timeline.map(function (e) {
+				var t = eventText(e);
+				return h("li", { "data-q": fold([day(e.date), t.what, t.detail].join(" ")) }, [
+					h("span", { class: "s4ss-tl-date", text: day(e.date) }),
+					h("span", { class: "s4ss-tl-what" }, [h("span", {}, [h("b", { text: t.what }), e.future ? h("span", { class: "s4ss-badge s4ss-b-H", style: "margin-left:6px", text: T.upcoming }) : null]), t.detail ? h("span", { class: "s4ss-sub", text: t.detail }) : null]),
+				]);
+			});
+			var box = h("ul", { class: "s4ss-tl" }, rows);
+			var find = rows.length > 5 ? search(function () { return box; }) : null;
+			return h("div", { class: "s4ss-card" }, [
+				h("div", { class: "s4ss-row s4ss-row-end", style: "margin-bottom:6px" }, [h("h2", { style: "margin:0", text: T.career }), find ? find.input : null]),
+				rows.length ? box : h("div", { class: "s4ss-empty", text: T.noCareer }),
+				find ? find.empty : null,
+			]);
+		}
+		function tasksCard(d) {
+			var t = d.tasks, kids = [];
+			t.contracts.forEach(function (c) {
+				var text = c.overdue ? fmt(T.contractOver, c.ref, day(c.date)) : c.kind === "probationEnd" ? fmt(T.probationDue, day(c.date), c.daysLeft) : fmt(T.contractDue, c.ref, day(c.date), c.daysLeft);
+				kids.push(strip(c.overdue ? "error" : "warn", text));
+			});
+			var bal = t.balances.map(function (b) {
+				return h("div", { class: "s4ss-item", "data-q": fold(b.name + " " + b.code) }, [
+					h("span", {}, [h("b", { text: fmt(T.leaveLeft, b.name || b.code, qty(b.available) === "-" ? "0" : qty(b.available)) }), b.carryActive ? h("div", { class: "s4ss-sub", text: fmt(T.carryUntil, qty(b.carried), day(b.carryExpiry), b.carryDaysLeft) }) : null]),
+				]);
+			});
+			var reqs = t.requests.map(function (r) {
+				var what = r.type === "leave" ? r.leaveName || r.leaveCode : r.type === "trip" ? r.destination : "";
+				return h("div", { class: "s4ss-item", "data-q": fold([r.number, TYPE_LABEL[r.type], what, span(r.from, r.to), T["st" + r.status]].join(" ")) }, [
+					h("span", {}, [h("b", { text: TYPE_LABEL[r.type] + (what ? " - " + what : "") }), h("div", { class: "s4ss-sub", text: span(r.from, r.to) + (r.number ? " · " + r.number : "") })]),
+					badge(r.status),
+				]);
+			});
+			var box = h("div", { class: "s4ss-items" }, reqs);
+			var find = reqs.length > 5 ? search(function () { return box; }) : null;
+			return h("div", { class: "s4ss-card" }, [
+				h("h2", { text: T.tasks }),
+				kids.length ? h("div", { style: "display:flex;flex-direction:column;gap:6px;margin-bottom:8px" }, kids) : null,
+				bal.length ? h("div", { class: "s4ss-items", style: "margin-bottom:6px" }, bal) : null,
+				h("div", { class: "s4ss-row s4ss-row-end" }, [h("h3", { class: "s4ss-h3", text: T.inProgress + " (" + reqs.length + ")" }), find ? find.input : null, BOOT.embed ? null : h("button", { class: "s4ss-btn s4ss-btn-sm", type: "button", onclick: function () { go("req"); }, text: T.seeAll })]),
+				reqs.length ? box : h("div", { class: "s4ss-empty", text: T.noPending }),
+				find ? find.empty : null,
+			]);
+		}
+		function dependentsCard(d) {
+			var dp = d.dependents;
+			var rows = dp.rows.map(function (x) {
+				var tag = x.ending ? h("span", { class: "s4ss-badge s4ss-b-P", text: x.daysLeft === 0 ? T.endsToday : fmt(T.endsIn, x.daysLeft) }) : h("span", { class: "s4ss-badge " + (x.active ? "s4ss-b-A" : ""), text: x.active ? T.active : T.inactive });
+				return h("div", { class: "s4ss-item", "data-q": fold([x.name, x.relationship, span(x.from, x.to)].join(" ")) }, [
+					h("span", {}, [h("b", { text: x.name }), h("div", { class: "s4ss-sub", text: [x.relationship, x.taxCode ? T.taxCode + " " + x.taxCode : "", day(x.from) + (x.to ? " - " + day(x.to) : "")].filter(Boolean).join(" · ") })]),
+					tag,
+				]);
+			});
+			var summary = h("p", { class: "s4ss-sub", style: "margin-bottom:4px" }, [fmt(T.depActive, dp.active) + (dp.ending ? " · " + fmt(T.depEnding, dp.ending) : "")]);
+			return listCard(T.dependents + " (" + dp.rows.length + ")", rows, T.noDependents, dp.rows.length ? summary : null);
+		}
+		function viewHome() {
+			var H0 = S.home;
+			if (H0.error) return [failed(H0.error, loadHome)];
+			if (!H0.data) return [loading()];
+			var d = H0.data;
+			return [
+				d.hasProfile ? null : noProfile(),
+				h("div", { class: "s4ss-home" }, [
+					h("div", { class: "s4ss-stack" }, [payCard(d), careerCard(d)]),
+					h("div", { class: "s4ss-stack" }, [tasksCard(d), dependentsCard(d)]),
+				]),
+				h("p", { class: "s4ss-sub", text: T.confidential }),
+			];
+		}
+
 		// ---- khung trang
-		var TABS = [["pay", T.tabPay, viewPay, function () { loadPay(S.pay.year); }], ["leave", T.tabLeave, viewLeave, function () { loadLeave(S.leave.year); }], ["req", T.tabReq, viewReq, loadReq], ["me", T.tabMe, viewMe, loadMe]];
+		var TABS = [["home", T.tabHome, viewHome, loadHome], ["pay", T.tabPay, viewPay, function () { loadPay(S.pay.year); }], ["leave", T.tabLeave, viewLeave, function () { loadLeave(S.leave.year); }], ["req", T.tabReq, viewReq, loadReq], ["me", T.tabMe, viewMe, loadMe]];
+		// Bản nhúng (portlet Employee Center): chỉ tab Tổng quan, không có thanh tab, có nút mở cổng đầy đủ
+		if (BOOT.embed) TABS = TABS.slice(0, 1);
 		function go(tab) {
-			S.tab = tab; S.notice = null;
-			var t = TABS.filter(function (x) { return x[0] === tab; })[0];
-			var have = tab === "pay" ? S.pay.data : tab === "leave" ? S.leave.data : tab === "req" ? S.req.data : S.me.data;
+			var t = TABS.filter(function (x) { return x[0] === tab; })[0] || TABS[0];
+			S.tab = t[0]; S.notice = null;
+			var have = S.tab === "home" ? S.home.data : S.tab === "pay" ? S.pay.data : S.tab === "leave" ? S.leave.data : S.tab === "req" ? S.req.data : S.me.data;
 			if (have) render(); else t[3]();
 		}
 		function render() {
 			var active = document.activeElement && document.activeElement.id;
 			var kids = [];
-			var head = h("div", { class: "s4ss-top" }, [
-				h("div", { class: "s4ss-head" }, [h("h1", { text: T.title }), BOOT.employee ? h("span", { class: "s4ss-who", text: BOOT.employee.name + (BOOT.employee.code ? " - " + BOOT.employee.code : "") }) : null]),
-				BOOT.blocked ? null : h("div", { class: "s4ss-tabs", role: "tablist" }, TABS.map(function (t) { return h("button", { class: "s4ss-tab", type: "button", role: "tab", "aria-selected": S.tab === t[0] ? "true" : "false", onclick: function () { go(t[0]); }, text: t[1] }); })),
+			var head = h("div", { class: "s4ss-top" + (BOOT.embed ? " s4ss-embed" : "") }, [
+				h("div", { class: "s4ss-head" }, [
+					h("h1", { text: BOOT.embed ? T.tabHome : T.title }),
+					BOOT.employee ? h("span", { class: "s4ss-who", text: BOOT.employee.name + (BOOT.employee.code ? " - " + BOOT.employee.code : "") }) : null,
+					BOOT.embed && BOOT.fullUrl ? h("a", { class: "s4ss-btn s4ss-btn-sm s4ss-open", href: BOOT.fullUrl, target: "_blank", rel: "noopener", text: T.openFull }) : null,
+				]),
+				BOOT.blocked || BOOT.embed ? null : h("div", { class: "s4ss-tabs", role: "tablist" }, TABS.map(function (t) { return h("button", { class: "s4ss-tab", type: "button", role: "tab", "aria-selected": S.tab === t[0] ? "true" : "false", onclick: function () { go(t[0]); }, text: t[1] }); })),
 			]);
 			if (BOOT.blocked) kids = [strip("warn", msg(BOOT.blocked))];
 			else {
 				if (S.notice) kids.push(strip(S.notice.kind, S.notice.text, function () { S.notice = null; render(); }));
-				kids = kids.concat(TABS.filter(function (t) { return t[0] === S.tab; })[0][2]());
+				kids = kids.concat((TABS.filter(function (t) { return t[0] === S.tab; })[0] || TABS[0])[2]());
 			}
 			var modal = BOOT.blocked ? null : viewModal();
 			root.textContent = "";
@@ -735,7 +1081,13 @@ dl{margin:0}
 			}
 		}
 		document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && S.modal && !S.modal.busy) { S.modal = null; render(); } });
-		if (BOOT.blocked) render(); else go("pay");
+		// Biểu đồ đổi số kỳ khi qua ngưỡng màn hẹp: vẽ lại tab Tổng quan
+		try {
+			var mq = window.matchMedia(NARROW);
+			var redraw = function () { if (S.tab === "home" && S.home.data && !S.modal) render(); };
+			if (mq.addEventListener) mq.addEventListener("change", redraw); else if (mq.addListener) mq.addListener(redraw);
+		} catch (e) { /* bỏ qua */ }
+		if (BOOT.blocked) render(); else go(BOOT.view || "home");
 	}
 	/* eslint-enable */
 
@@ -746,7 +1098,8 @@ dl{margin:0}
 	function html(boot) {
 		const b = boot || {};
 		const lang = b.lang === "en" ? "en" : "vi";
-		const data = { lang, text: TEXT[lang], url: String(b.url || ""), token: String(b.token || ""), employee: b.employee || null, hasProfile: !!b.hasProfile, today: b.today || "", blocked: b.blocked || null };
+		const view = ["home", "pay", "leave", "req", "me"].includes(b.view) ? b.view : "home";
+		const data = { lang, text: TEXT[lang], url: String(b.url || ""), token: String(b.token || ""), employee: b.employee || null, hasProfile: !!b.hasProfile, today: b.today || "", blocked: b.blocked || null, view, embed: !!b.embed, fullUrl: String(b.fullUrl || "") };
 		return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${esc(TEXT[lang].title)}</title><style>${CSS}</style></head>
 <body><div id="s4ss"></div><script>(${client.toString()})(${embed(data)});</script></body></html>`;
 	}

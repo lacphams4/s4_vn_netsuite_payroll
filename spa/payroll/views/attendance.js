@@ -23,7 +23,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord} from '../lib/api.js';
 import {num, fmtDate, toNumber, fold} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, SearchBox, Tabs, Badge, Table, Field, TextInput, NumberInput, Select, Dialog, SidePanel, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, SearchBox, Tabs, Badge, Table, Field, TextInput, NumberInput, Select, AutoSelect, Dialog, SidePanel, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -552,7 +552,7 @@ export default function AttendanceView({app}) {
 	const myPeriods = periods.filter((p) => !groupSub[String(p.paygroup)] || groupSub[String(p.paygroup)] === subsidiary);
 	const periodOptions = (myPeriods.length ? myPeriods : periods).map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`}));
 	const current = picked || periodId;
-	const periodSelect = <Select value={current} onInput={(v) => v && v !== current && app.go('attendance', {period: v})} options={periodOptions} placeholder={current ? null : t.period} ariaLabel={t.period} width={250} />;
+	const periodSelect = <AutoSelect value={current} onInput={(v) => v && v !== current && app.go('attendance', {period: v})} options={periodOptions} placeholder={current ? null : t.period} ariaLabel={t.period} width={250} />;
 	const legacyItem = {label: t.legacy, onClick: () => app.go('attendanceLegacy')};
 
 	if (!data) {
@@ -1179,15 +1179,15 @@ export default function AttendanceView({app}) {
 			>
 				{sheetMode ? (
 					<Field label={t.edit.symbol}>
-						<Select value={v.symbol || ''} onInput={setEditField('symbol')} options={symbolOptions} placeholder={t.edit.empty} ariaLabel={t.edit.symbol} />
+						<AutoSelect value={v.symbol || ''} onInput={setEditField('symbol')} options={symbolOptions} placeholder={t.edit.empty} ariaLabel={t.edit.symbol} />
 					</Field>
 				) : (
-					<Field label={t.edit.adjust} hint={t.edit.adjustHint}>
-						<NumberInput value={v.adjust || ''} onInput={setEditField('adjust')} ariaLabel={t.edit.adjust} />
+					<Field label={t.edit.adjust} hint={t.edit.adjustHint} required={true}>
+						<NumberInput value={v.adjust || ''} onInput={setEditField('adjust')} ariaLabel={t.edit.adjust} min={-1} max={1} step={0.5} />
 					</Field>
 				)}
 				{sheetMode ? null : (
-					<Field label={t.edit.reason}>
+					<Field label={t.edit.reason} required={true}>
 						<TextInput value={v.reason || ''} onInput={setEditField('reason')} onEnter={() => valid && !busy && saveEdit()} ariaLabel={t.edit.reason} />
 					</Field>
 				)}

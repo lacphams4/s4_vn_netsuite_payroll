@@ -818,6 +818,22 @@ select.s4vp-in{padding-right:28px}
 .s4vp-st-level-on{background:var(--s4vp-accent-soft);font-weight:600}
 .s4vp-st-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 @media (max-width:812px){.s4vp-st-groups,.s4vp-st-cards{column-width:auto;column-count:1}.s4vp-st-row{grid-template-columns:1fr}.s4vp-st-acts{justify-content:flex-start}}
+.s4vp-req{color:var(--s4vp-err);font-weight:700}
+input[type="date"].s4vp-in,input[type="month"].s4vp-in,input[type="time"].s4vp-in{padding:0 8px 0 10px;font-variant-numeric:tabular-nums}
+input[type="number"].s4vp-in{padding-right:4px}
+.s4vp-check{display:inline-flex;align-items:center;gap:8px;min-height:36px;font-size:14px;color:var(--s4vp-text);cursor:pointer}
+.s4vp-check-in{width:18px;height:18px;margin:0;accent-color:var(--s4vp-accent);flex:0 0 auto}
+.s4vp-ss{position:relative;width:100%;min-width:0}
+.s4vp-ss-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;cursor:pointer;padding-right:10px}
+.s4vp-ss-val{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s4vp-ss-ph .s4vp-ss-val{color:var(--s4vp-sub)}
+.s4vp-ss-caret{flex:0 0 auto;color:var(--s4vp-sub)}
+.s4vp-ss-pop{position:absolute;top:100%;left:0;right:0;min-width:260px;margin-top:4px;background:var(--s4vp-surface);border:1px solid var(--s4vp-line);border-radius:10px;box-shadow:0 8px 24px rgba(29,39,48,.16);padding:6px;z-index:950;display:flex;flex-direction:column;gap:6px}
+.s4vp-ss-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column}
+.s4vp-ss-opt{background:none;border:0;border-radius:6px;text-align:left;min-height:34px;padding:6px 10px;font-size:14px;color:var(--s4vp-text);overflow-wrap:anywhere}
+.s4vp-ss-opt:hover,.s4vp-ss-opt.s4vp-on{background:var(--s4vp-accent-soft)}
+.s4vp-ss-opt.s4vp-sel{font-weight:600;color:var(--s4vp-accent-dark)}
+.s4vp-ss-note{padding:6px 10px;font-size:12px;color:var(--s4vp-sub)}
 `;
     let done = false;
     // Chèn CSS một lần; gọi ở đầu mỗi lần vẽ khung cũng không sao (đã có thẻ thì bỏ qua)
@@ -903,8 +919,14 @@ select.s4vp-in{padding-right:28px}
     }
 
     const TEXT$d = {
-        vi: { search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}` },
-        en: { search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', back: 'Back', backTo: (name) => `Back to ${name}` },
+        vi: {
+            search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}`,
+            choose: 'Chọn...', filter: 'Gõ để lọc', noMatch: 'Không có mục nào khớp', more: (n) => `Còn ${n} mục, gõ thêm để lọc`, required: 'Bắt buộc', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
+        },
+        en: {
+            search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', back: 'Back', backTo: (name) => `Back to ${name}`,
+            choose: 'Select...', filter: 'Type to filter', noMatch: 'No matching items', more: (n) => `${n} more, type to narrow the list`, required: 'Required', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
+        },
     };
     const cx$1 = (...names) => names.filter(Boolean).join(' ');
     const px = (v) => (typeof v === 'number' ? `${v}px` : v);
@@ -1107,6 +1129,25 @@ select.s4vp-in{padding-right:28px}
             attrs.style = { width: px(p.width) };
         return attrs;
     }
+    // Thuộc tính giới hạn của ô số / ngày: đặt qua JSX và đặt lại sau khi vẽ (không phụ thuộc UIF có ghi ra DOM hay không)
+    const LIMIT_ATTRS = ['min', 'max', 'step'];
+    function limitAttrs(p, attrs) {
+        LIMIT_ATTRS.forEach((k) => {
+            if (!blank$4(p[k]) && p[k] !== '')
+                attrs[k] = String(p[k]);
+        });
+    }
+    function syncLimits(el, p) {
+        LIMIT_ATTRS.forEach((k) => {
+            const v = blank$4(p[k]) ? '' : String(p[k]);
+            if (v) {
+                if (el.getAttribute(k) !== v)
+                    el.setAttribute(k, v);
+            }
+            else if (el.hasAttribute(k))
+                el.removeAttribute(k);
+        });
+    }
     function InputImpl(p) {
         const want = text(p.show ? p.show(p.value) : p.value);
         const id = useSyncedId(want);
@@ -1115,8 +1156,371 @@ select.s4vp-in{padding-right:28px}
         attrs.value = want;
         if (p.inputmode)
             attrs.inputmode = p.inputmode;
+        if (attrs.type === 'number')
+            limitAttrs(p, attrs);
+        attrs.autocomplete = 'off';
+        core.useEffect(() => {
+            if (attrs.type !== 'number')
+                return;
+            try {
+                const el = document.getElementById(id);
+                if (el)
+                    syncLimits(el, p);
+            }
+            catch (e) {
+                // bỏ qua: ô vẫn nhập được, chỉ thiếu bước / giới hạn của trình duyệt
+            }
+        });
+        return jsx("input", { ...attrs });
+    }
+    // ------------------------------------------------------------------ ô ngày, tháng, giờ (ô gốc của trình duyệt)
+    // Trình duyệt có ô gốc cho kiểu này không: kiểu không hỗ trợ bị đổi về 'text' và nhận mọi giá trị. Kết quả nhớ theo kiểu;
+    // sau khi vẽ còn kiểm lại input.type thật (UIF không ghi thuộc tính type thì cũng lùi về ô chữ).
+    const NATIVE = {};
+    function nativeType(type) {
+        if (NATIVE[type] !== undefined)
+            return NATIVE[type];
+        let ok = false;
+        try {
+            const el = document.createElement('input');
+            el.setAttribute('type', type);
+            el.value = 'x-not-valid';
+            ok = el.type === type && el.value === '';
+        }
+        catch (e) {
+            ok = false;
+        }
+        NATIVE[type] = ok;
+        return ok;
+    }
+    const pad2 = (n) => String(n).padStart(2, '0');
+    /** Ô chữ dự phòng của ô ngày: dd/mm/yyyy hoặc yyyy-mm-dd -> yyyy-mm-dd (ngày có thật); chưa đủ ngày thì trả nguyên chuỗi đang gõ. */
+    function readDate(raw) {
+        const s = text(raw).trim();
+        const iso = toIso(s);
+        const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(iso);
+        if (!m)
+            return s;
+        const y = Number(m[1]);
+        const mo = Number(m[2]);
+        const d = Number(m[3]);
+        if (mo < 1 || mo > 12 || d < 1 || d > new Date(Date.UTC(y, mo, 0)).getUTCDate())
+            return s;
+        return `${m[1]}-${pad2(mo)}-${pad2(d)}`;
+    }
+    /** Ô chữ dự phòng của ô tháng: yyyy-mm, mm/yyyy -> yyyy-mm; chưa đủ thì trả nguyên chuỗi. */
+    function readMonth(raw) {
+        const s = text(raw).trim();
+        let m = /^(\d{4})[-/.](\d{1,2})$/.exec(s);
+        if (m && Number(m[2]) >= 1 && Number(m[2]) <= 12)
+            return `${m[1]}-${pad2(m[2])}`;
+        m = /^(\d{1,2})[-/.](\d{4})$/.exec(s);
+        if (m && Number(m[1]) >= 1 && Number(m[1]) <= 12)
+            return `${m[2]}-${pad2(m[1])}`;
+        return s;
+    }
+    /** Ô chữ dự phòng của ô giờ: 8:30, 08h30, 8.30 -> 08:30; chưa đủ thì trả nguyên chuỗi. */
+    function readTime(raw) {
+        const s = text(raw).trim();
+        const m = /^(\d{1,2})[:hH.](\d{2})$/.exec(s);
+        if (m && Number(m[1]) < 24 && Number(m[2]) < 60)
+            return `${pad2(m[1])}:${m[2]}`;
+        return s;
+    }
+    const TYPED = {
+        date: { valid: /^\d{4}-\d{2}-\d{2}$/, show: fmtDate, read: readDate, hint: () => 'dd/mm/yyyy', inputmode: 'numeric' },
+        month: { valid: /^\d{4}-\d{2}$/, show: (v) => text(v), read: readMonth, hint: (t) => t.monthHint, inputmode: 'numeric' },
+        time: { valid: /^\d{2}:\d{2}(:\d{2})?$/, show: (v) => text(v), read: readTime, hint: (t) => t.timeHint, inputmode: 'numeric' },
+    };
+    /**
+     * Giá trị ô theo chế độ: ô gốc nhận đúng dạng ISO (khác dạng thì để trống); ô chữ dự phòng hiện dạng gõ được
+     * (ngày dd/mm/yyyy). Xuất ra để kiểm thử.
+     */
+    function typedValue(kind, native, value) {
+        const spec = TYPED[kind];
+        const v = text(value);
+        if (native)
+            return spec.valid.test(v) ? v : '';
+        return text(spec.show(v));
+    }
+    function TypedImpl(p) {
+        const t = pick(TEXT$d);
+        const kind = TYPED[p.kind] ? p.kind : 'date';
+        const spec = TYPED[kind];
+        const [, redraw] = core.useState(0);
+        const native = nativeType(kind);
+        const want = typedValue(kind, native, p.value);
+        const id = useSyncedId(want);
+        core.useEffect(() => {
+            if (!native)
+                return;
+            try {
+                const el = document.getElementById(id);
+                if (!el)
+                    return;
+                // UIF không ghi type hoặc trình duyệt đổi về ô chữ: lùi về ô chữ cho mọi ô cùng kiểu
+                if (el.type !== kind) {
+                    NATIVE[kind] = false;
+                    redraw(Date.now());
+                    return;
+                }
+                syncLimits(el, p);
+            }
+            catch (e) {
+                // bỏ qua
+            }
+        });
+        const attrs = controlAttrs(Object.assign({}, p, { read: native ? (v) => v : spec.read }), id, '');
+        attrs.value = want;
+        attrs.autocomplete = 'off';
+        if (native) {
+            attrs.type = kind;
+            limitAttrs(p, attrs);
+            delete attrs.placeholder;
+            if (!attrs.title && p.placeholder)
+                attrs.title = p.placeholder;
+        }
+        else {
+            attrs.type = 'text';
+            attrs.inputmode = spec.inputmode;
+            attrs.placeholder = p.placeholder || spec.hint(t);
+        }
+        return jsx("input", { ...attrs });
+    }
+    // ------------------------------------------------------------------ ô số tiền, hộp kiểm
+    /** Chuỗi số tiền đã gõ -> có phân tách nghìn theo vi-VN (1.234.567,5); không đọc được số thì null. */
+    function formatAmountText(raw, decimals) {
+        const n = toNumber(raw);
+        if (n === null)
+            return null;
+        return n.toLocaleString('vi-VN', { maximumFractionDigits: blank$4(decimals) ? 2 : decimals });
+    }
+    // Gắn trình nghe sự kiện gốc một lần cho phần tử (UIF không bắn onBlur / onChange): đánh dấu trên phần tử để vẽ lại không gắn lặp
+    function bindOnce(id, mark, event, fn) {
+        try {
+            const el = document.getElementById(id);
+            if (!el || el[mark])
+                return;
+            el[mark] = true;
+            el.addEventListener(event, () => fn(el));
+        }
+        catch (e) {
+            // bỏ qua
+        }
+    }
+    function MoneyImpl(p) {
+        const want = text(typeof p.value === 'number' ? formatAmountText(p.value, p.decimals) : p.value);
+        const id = useSyncedId(want);
+        const latest = core.useRef(p);
+        latest.current = p;
+        core.useEffect(() => {
+            bindOnce(id, '__s4vpMoney', 'focusout', (el) => {
+                const f = formatAmountText(el.value, latest.current.decimals);
+                if (f === null || f === el.value)
+                    return;
+                el.value = f;
+                if (latest.current.onInput)
+                    latest.current.onInput(f);
+            });
+            // Giá trị chương trình đặt dạng số thô ("15000000"): hiện có phân tách khi ô không có con trỏ (toNumber đọc được cả hai dạng)
+            try {
+                const el = document.getElementById(id);
+                if (el && document.activeElement !== el && /^-?\d+(\.\d+)?$/.test(el.value)) {
+                    const f = formatAmountText(el.value, latest.current.decimals);
+                    if (f !== null)
+                        el.value = f;
+                }
+            }
+            catch (e) {
+                // bỏ qua
+            }
+        });
+        const attrs = controlAttrs(Object.assign({}, p, { align: 'right' }), id, '');
+        attrs.type = 'text';
+        attrs.value = want;
+        attrs.inputmode = 'decimal';
         attrs.autocomplete = 'off';
         return jsx("input", { ...attrs });
+    }
+    function CheckImpl(p) {
+        const ref = core.useRef(null);
+        if (!ref.current) {
+            fieldSeq += 1;
+            ref.current = `s4vp-f${fieldSeq}`;
+        }
+        const id = ref.current;
+        const latest = core.useRef(p);
+        latest.current = p;
+        core.useEffect(() => {
+            try {
+                const el = document.getElementById(id);
+                if (el && el.checked !== !!p.checked)
+                    el.checked = !!p.checked;
+            }
+            catch (e) {
+                // bỏ qua
+            }
+            bindOnce(id, '__s4vpCheck', 'change', (el) => latest.current.onInput && latest.current.onInput(!!el.checked));
+        });
+        const attrs = { id, type: 'checkbox', class: 's4vp-check-in' };
+        if (p.checked)
+            attrs.checked = 'checked';
+        if (p.disabled)
+            attrs.disabled = 'disabled';
+        if (p.ariaLabel)
+            attrs['aria-label'] = p.ariaLabel;
+        const body = [jsx("input", { ...attrs }, "i"), blank$4(p.label) || p.label === '' ? null : jsx("span", { children: text(p.label) }, "l")];
+        // Trong Field (đã là <label>) thì không lồng thêm <label>
+        return p.inField ? jsx("span", { class: "s4vp-check", children: body }) : jsx("label", { class: "s4vp-check", children: body });
+    }
+    // ------------------------------------------------------------------ ô chọn có tìm kiếm
+    const normOptions = (options) => (options || []).filter((o) => !blank$4(o)).map((o) => (typeof o === 'object' ? { value: text(o.value), label: text(o.label) } : { value: text(o), label: text(o) }));
+    /** Lọc danh sách chọn: mọi từ gõ phải khớp nhãn hoặc giá trị (không phân biệt dấu); trả tối đa `limit` mục và tổng số khớp. */
+    function filterOptions(options, query, limit) {
+        const list = normOptions(options);
+        const words = fold(query).split(/\s+/).filter((w) => w);
+        const hits = words.length ? list.filter((o) => {
+            const s = fold(`${o.label} ${o.value}`);
+            return words.every((w) => s.indexOf(w) >= 0);
+        }) : list;
+        return { items: hits.slice(0, limit), total: hits.length };
+    }
+    const SEARCH_LIMIT = 200;
+    function SearchSelectImpl(p) {
+        const t = pick(TEXT$d);
+        const [open, setOpen] = core.useState(false);
+        const [query, setQuery] = core.useState('');
+        const [active, setActive] = core.useState(0);
+        const ref = core.useRef(null);
+        if (!ref.current) {
+            fieldSeq += 1;
+            ref.current = `s4vp-ss${fieldSeq}`;
+        }
+        const base = ref.current;
+        const want = text(p.value);
+        const options = normOptions(p.options);
+        const all = blank$4(p.placeholder) ? options : [{ value: '', label: text(p.placeholder) }].concat(options.filter((o) => o.value !== ''));
+        const current = all.filter((o) => o.value === want)[0] || null;
+        const shown = filterOptions(all, query, SEARCH_LIMIT);
+        const close = (focusBack) => {
+            setOpen(false);
+            setQuery('');
+            setActive(0);
+            if (focusBack)
+                setTimeout(() => {
+                    try {
+                        const b = document.getElementById(`${base}-b`);
+                        if (b)
+                            b.focus();
+                    }
+                    catch (e) {
+                        // bỏ qua
+                    }
+                }, 0);
+        };
+        const choose = (o) => {
+            close(true);
+            if (o && p.onInput && o.value !== want)
+                p.onInput(o.value);
+        };
+        // Phím trên ô lọc xử lý bằng trình nghe gốc (mũi tên lặp khi giữ phím; Esc không lan ra hộp thoại bao ngoài)
+        const live = core.useRef(null);
+        live.current = { shown, active, choose, close, setActive };
+        core.useEffect(() => {
+            if (!open)
+                return undefined;
+            let on = true;
+            const outside = (ev) => {
+                try {
+                    const w = document.getElementById(base);
+                    if (on && w && !w.contains(ev.target))
+                        close(false);
+                }
+                catch (e) {
+                    // bỏ qua
+                }
+            };
+            const timer = setTimeout(() => {
+                if (!on)
+                    return;
+                document.addEventListener('click', outside);
+                try {
+                    const q = document.getElementById(`${base}-q`);
+                    if (q)
+                        q.focus();
+                }
+                catch (e) {
+                    // bỏ qua
+                }
+            }, 0);
+            return () => {
+                on = false;
+                clearTimeout(timer);
+                document.removeEventListener('click', outside);
+            };
+        }, [open]);
+        core.useEffect(() => {
+            if (!open)
+                return;
+            try {
+                const q = document.getElementById(`${base}-q`);
+                if (q && !q.__s4vpKeys) {
+                    q.__s4vpKeys = true;
+                    q.addEventListener('keydown', (ev) => {
+                        const L = live.current;
+                        const n = L.shown.items.length;
+                        if (ev.key === 'ArrowDown')
+                            L.setActive(Math.min(L.active + 1, Math.max(n - 1, 0)));
+                        else if (ev.key === 'ArrowUp')
+                            L.setActive(Math.max(L.active - 1, 0));
+                        else if (ev.key === 'Home')
+                            L.setActive(0);
+                        else if (ev.key === 'End')
+                            L.setActive(Math.max(n - 1, 0));
+                        else if (ev.key === 'Enter') {
+                            if (n)
+                                L.choose(L.shown.items[Math.min(L.active, n - 1)]);
+                        }
+                        else if (ev.key === 'Escape')
+                            L.close(true);
+                        else
+                            return;
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    q.addEventListener('keyup', (ev) => {
+                        if (ev.key === 'Escape')
+                            ev.stopPropagation();
+                    });
+                }
+                const opt = document.getElementById(`${base}-o${active}`);
+                if (opt && opt.scrollIntoView)
+                    opt.scrollIntoView({ block: 'nearest' });
+            }
+            catch (e) {
+                // bỏ qua
+            }
+        });
+        const label = current ? current.label : want ? want : t.choose;
+        const btn = { id: `${base}-b`, type: 'button', class: cx$1('s4vp-in', 's4vp-ss-btn', current && current.value !== '' ? '' : 's4vp-ss-ph'), 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false' };
+        if (p.disabled)
+            btn.disabled = 'disabled';
+        else
+            btn.onClick = () => (open ? close(false) : setOpen(true));
+        if (p.ariaLabel)
+            btn['aria-label'] = `${p.ariaLabel}: ${label}`;
+        btn.title = p.title || label;
+        const wrap = { id: base, class: cx$1('s4vp-ss', open ? 's4vp-ss-open' : '') };
+        if (p.width)
+            wrap.style = { width: px(p.width) };
+        const q = { id: `${base}-q`, type: 'search', class: 's4vp-in', value: query, placeholder: t.filter, 'aria-label': p.ariaLabel ? `${p.ariaLabel} - ${t.filter}` : t.filter, autocomplete: 'off', role: 'combobox', 'aria-controls': `${base}-l`, 'aria-expanded': 'true' };
+        q.onInput = (m) => {
+            setQuery(valueOf(m));
+            setActive(0);
+        };
+        if (shown.items.length)
+            q['aria-activedescendant'] = `${base}-o${Math.min(active, shown.items.length - 1)}`;
+        return (jsxs("div", { ...wrap, children: [jsxs("button", { ...btn, children: [jsx("span", { class: "s4vp-ss-val", children: label }), jsx("span", { class: "s4vp-ss-caret", "aria-hidden": "true", children: '▾' })] }), open ? (jsxs("div", { class: "s4vp-ss-pop", children: [jsx("input", { ...q }), jsxs("div", { id: `${base}-l`, class: "s4vp-ss-list", role: "listbox", children: [shown.items.map((o, i) => (jsx("button", { id: `${base}-o${i}`, type: "button", role: "option", tabindex: "-1", class: cx$1('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : ''), "aria-selected": o.value === want ? 'true' : 'false', onClick: () => choose(o), children: o.label || o.value || t.choose }, `o${o.value}`))), shown.total ? null : jsx("div", { class: "s4vp-ss-note", children: t.noMatch }), shown.total > shown.items.length ? jsx("div", { class: "s4vp-ss-note", children: t.more(shown.total - shown.items.length) }) : null] })] })) : null] }));
     }
     function SelectImpl(p) {
         const want = text(p.value);
@@ -1144,17 +1548,42 @@ select.s4vp-in{padding-right:28px}
     function TextInput(props) {
         return jsx(InputImpl, { ...props });
     }
-    /** Ô số: căn phải, onInput nhận chuỗi người dùng gõ (đổi sang số bằng toNumber của lib/format.js khi lưu). */
+    /**
+     * Ô số: căn phải, bàn phím số trên điện thoại; onInput nhận chuỗi người dùng gõ (đổi sang số bằng toNumber khi lưu).
+     * Có min / max / step thì là <input type="number"> (mũi tên lên xuống theo bước, ví dụ giờ step 0.5 min 0); không có thì là ô chữ
+     * (gõ được 1.234,5).
+     */
     function NumberInput(props) {
-        return jsx(InputImpl, { ...props, align: "right", inputmode: "decimal" });
+        const spin = ['min', 'max', 'step'].some((k) => !blank$4(props[k]) && props[k] !== '');
+        return jsx(InputImpl, { ...props, align: "right", inputmode: "decimal", type: spin ? 'number' : 'text' });
     }
-    /** Ô ngày: nhận dd/mm/yyyy hoặc yyyy-mm-dd; onInput nhận chuỗi ISO khi gõ đủ ngày, ngược lại chuỗi đang gõ; value ISO hiện dd/mm/yyyy. */
+    /** Ô số tiền: căn phải, gõ tự do (1234567 hoặc 1.234.567), rời ô thì tự thêm phân tách nghìn; value số thì hiện đã phân tách. decimals: số lẻ tối đa (mặc định 2). */
+    function MoneyInput(props) {
+        return jsx(MoneyImpl, { ...props });
+    }
+    /**
+     * Ô ngày: <input type="date"> (lịch chọn của trình duyệt, hiển thị theo ngôn ngữ trình duyệt, vẫn gõ được); value và onInput là
+     * ISO yyyy-mm-dd ('' khi xóa). min / max ISO. Trình duyệt không có ô ngày (hoặc UIF không ghi type) thì là ô chữ dd/mm/yyyy như cũ:
+     * onInput nhận ISO khi gõ đủ một ngày có thật, ngược lại chuỗi đang gõ.
+     */
     function DateInput(props) {
-        return jsx(InputImpl, { placeholder: "dd/mm/yyyy", ...props, show: fmtDate, read: toIso, inputmode: "numeric" });
+        return jsx(TypedImpl, { ...props, kind: "date" });
+    }
+    /** Ô tháng (kỳ YYYY-MM): <input type="month">; trình duyệt không hỗ trợ thì ô chữ yyyy-mm (nhận cả mm/yyyy). */
+    function MonthInput(props) {
+        return jsx(TypedImpl, { ...props, kind: "month" });
+    }
+    /** Hộp kiểm có / không: {checked, onInput(boolean), label, disabled, ariaLabel, inField (đặt trong Field thì không lồng <label>)}. */
+    function Checkbox(props) {
+        return jsx(CheckImpl, { ...props });
     }
     /** Ô chọn: {value, onInput(value), options: [{value, label}], placeholder (dòng trống đầu danh sách), width, disabled, ariaLabel}. */
     function Select(props) {
         return jsx(SelectImpl, { ...props });
+    }
+    /** Chọn Select hay SearchSelect theo độ dài danh sách (quá 15 mục thì có ô tìm). */
+    function AutoSelect(props) {
+        return (props.options || []).length > 15 ? jsx(SearchSelectImpl, { ...props }) : jsx(SelectImpl, { ...props });
     }
     function TextArea(props) {
         return jsx(TextAreaImpl, { ...props });
@@ -1164,9 +1593,10 @@ select.s4vp-in{padding-right:28px}
         const t = pick(TEXT$d);
         return jsx(InputImpl, { type: "search", value: value, onInput: onInput, placeholder: placeholder || t.search, ariaLabel: label || placeholder || t.search, width: width || 260 });
     }
-    /** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. */
-    function Field({ label, children, hint }) {
-        return (jsxs("label", { class: "s4vp-field", children: [jsx("span", { children: text(label) }), children, blank$4(hint) || hint === '' ? null : jsx("span", { class: "s4vp-field-hint", children: hint })] }));
+    /** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. required: thêm dấu * đỏ sau nhãn. */
+    function Field({ label, children, hint, required }) {
+        const t = pick(TEXT$d);
+        return (jsxs("label", { class: "s4vp-field", children: [jsxs("span", { children: [text(label), required ? jsx("span", { class: "s4vp-req", title: t.required, children: ' *' }) : null] }), children, blank$4(hint) || hint === '' ? null : jsx("span", { class: "s4vp-field-hint", children: hint })] }));
     }
     // ------------------------------------------------------------------ bảng
     const TYPE_FORMAT = { money, num, pct, date: fmtDate };
@@ -2345,7 +2775,7 @@ select.s4vp-in{padding-right:28px}
         const myPeriods = periods.filter((p) => !groupSub[String(p.paygroup)] || groupSub[String(p.paygroup)] === subsidiary);
         const periodOptions = (myPeriods.length ? myPeriods : periods).map((p) => ({ value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})` }));
         const current = picked || periodId;
-        const periodSelect = jsx(Select, { value: current, onInput: (v) => v && v !== current && app.go('attendance', { period: v }), options: periodOptions, placeholder: current ? null : t.period, ariaLabel: t.period, width: 250 });
+        const periodSelect = jsx(AutoSelect, { value: current, onInput: (v) => v && v !== current && app.go('attendance', { period: v }), options: periodOptions, placeholder: current ? null : t.period, ariaLabel: t.period, width: 250 });
         const legacyItem = { label: t.legacy, onClick: () => app.go('attendanceLegacy') };
         if (!data) {
             return (jsxs(Page, { children: [jsx(PageHeader, { title: t.titleNone, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: [legacyItem] }), jsx(Button, { label: t.reload, kind: "primary", disabled: !subsidiary || !!app.busy, onClick: () => load() })] }), jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading }) })] }));
@@ -2729,7 +3159,7 @@ select.s4vp-in{padding-right:28px}
             // Ký hiệu đang có mà không thuộc danh mục vẫn hiện trong danh sách để người dùng thấy giá trị cũ
             if (sheetMode && v.symbol && !symbolOptions.some((o) => o.value === v.symbol))
                 symbolOptions.unshift({ value: v.symbol, label: `${v.symbol} - ${t.kinds['?']}` });
-            dialog = (jsxs(Dialog, { title: sheetMode ? t.edit.titleS(when) : t.edit.titleE(when), onClose: () => setEdit(null), actions: [jsx(Button, { label: t.edit.cancel, onClick: () => setEdit(null) }), jsx(Button, { label: sheetMode ? t.edit.save : t.edit.saveSubmit, kind: "primary", disabled: !valid || busy, onClick: saveEdit })], children: [sheetMode ? (jsx(Field, { label: t.edit.symbol, children: jsx(Select, { value: v.symbol || '', onInput: setEditField('symbol'), options: symbolOptions, placeholder: t.edit.empty, ariaLabel: t.edit.symbol }) })) : (jsx(Field, { label: t.edit.adjust, hint: t.edit.adjustHint, children: jsx(NumberInput, { value: v.adjust || '', onInput: setEditField('adjust'), ariaLabel: t.edit.adjust }) })), sheetMode ? null : (jsx(Field, { label: t.edit.reason, children: jsx(TextInput, { value: v.reason || '', onInput: setEditField('reason'), onEnter: () => valid && !busy && saveEdit(), ariaLabel: t.edit.reason }) })), jsx("div", { class: "s4vp-small", children: sheetMode ? t.edit.noteS : t.edit.noteE })] }));
+            dialog = (jsxs(Dialog, { title: sheetMode ? t.edit.titleS(when) : t.edit.titleE(when), onClose: () => setEdit(null), actions: [jsx(Button, { label: t.edit.cancel, onClick: () => setEdit(null) }), jsx(Button, { label: sheetMode ? t.edit.save : t.edit.saveSubmit, kind: "primary", disabled: !valid || busy, onClick: saveEdit })], children: [sheetMode ? (jsx(Field, { label: t.edit.symbol, children: jsx(AutoSelect, { value: v.symbol || '', onInput: setEditField('symbol'), options: symbolOptions, placeholder: t.edit.empty, ariaLabel: t.edit.symbol }) })) : (jsx(Field, { label: t.edit.adjust, hint: t.edit.adjustHint, required: true, children: jsx(NumberInput, { value: v.adjust || '', onInput: setEditField('adjust'), ariaLabel: t.edit.adjust, min: -1, max: 1, step: 0.5 }) })), sheetMode ? null : (jsx(Field, { label: t.edit.reason, required: true, children: jsx(TextInput, { value: v.reason || '', onInput: setEditField('reason'), onEnter: () => valid && !busy && saveEdit(), ariaLabel: t.edit.reason }) })), jsx("div", { class: "s4vp-small", children: sheetMode ? t.edit.noteS : t.edit.noteE })] }));
         }
         const jobOpText = job ? t.job.ops[job.op] || t.job.ops.other : '';
         const jobStage = job && job.stage ? t.job.stage(job.stage, job.percent) : job && /PENDING/i.test(job.status || '') ? t.job.waiting : '';
@@ -2894,17 +3324,17 @@ select.s4vp-in{padding-right:28px}
                         jsx(Button, { label: t.legacy, kind: "ghost", onClick: () => app.go('batches') }),
                         jsx(Button, { label: t.refresh, onClick: () => load() }),
                         jsx(Button, { label: t.newBatch, kind: "primary", disabled: !subsidiary || boot.setupReady === false || !!app.busy, onClick: openDialog }),
-                    ] }), jsx(Card, { flush: true, label: t.title, children: jsx(Table, { columns: columns, rows: data, keyOf: (r) => r.id, onRowClick: (r) => app.go('payrollRun', { id: r.id }), total: total, empty: t.empty, search: true, searchPlaceholder: t.search, toolbar: jsx(Select, { value: period, onInput: setPeriod, options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 300 }) }) }), dialog ? (jsxs(Dialog, { title: t.newBatch, onClose: () => setDialog(false), actions: [jsx(Button, { label: t.cancel, onClick: () => setDialog(false) }), jsx(Button, { label: t.create, kind: "primary", disabled: !form.period || !!app.busy, onClick: create })], children: [jsx(Field, { label: t.period, children: jsx(Select, { value: form.period, onInput: setField('period'), options: periodOptions, placeholder: t.pickPeriod }) }), jsx(Field, { label: t.description, hint: t.descriptionHint, children: jsx(TextInput, { value: form.description, onInput: setField('description'), onEnter: create }) })] })) : null] }));
+                    ] }), jsx(Card, { flush: true, label: t.title, children: jsx(Table, { columns: columns, rows: data, keyOf: (r) => r.id, onRowClick: (r) => app.go('payrollRun', { id: r.id }), total: total, empty: t.empty, search: true, searchPlaceholder: t.search, toolbar: jsx(AutoSelect, { value: period, onInput: setPeriod, options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 300 }) }) }), dialog ? (jsxs(Dialog, { title: t.newBatch, onClose: () => setDialog(false), actions: [jsx(Button, { label: t.cancel, onClick: () => setDialog(false) }), jsx(Button, { label: t.create, kind: "primary", disabled: !form.period || !!app.busy, onClick: create })], children: [jsx(Field, { label: t.period, required: true, children: jsx(AutoSelect, { value: form.period, onInput: setField('period'), options: periodOptions, placeholder: t.pickPeriod }) }), jsx(Field, { label: t.description, hint: t.descriptionHint, children: jsx(TextInput, { value: form.description, onInput: setField('description'), onEnter: create }) })] })) : null] }));
     }
 
     const TEXT$9 = {
         vi: {
             title: 'Phân tích chi phí lương',
             month: 'Tháng',
-            monthType: 'Gõ tháng (YYYY-MM)',
+            monthType: 'Chọn tháng bất kỳ',
             compare: 'So với',
             compareOpt: { prev: 'Tháng trước', yoy: 'Cùng kỳ năm trước', custom: 'Chọn tháng...' },
-            compareType: 'Gõ tháng so sánh (YYYY-MM)',
+            compareType: 'Tháng so sánh',
             reload: 'Tải lại',
             more: 'Thao tác khác',
             rebuildMonth: (m) => `Lập lại số liệu tháng ${m}`,
@@ -3043,10 +3473,10 @@ select.s4vp-in{padding-right:28px}
         en: {
             title: 'Labor cost analysis',
             month: 'Month',
-            monthType: 'Type a month (YYYY-MM)',
+            monthType: 'Pick any month',
             compare: 'Compare with',
             compareOpt: { prev: 'Previous month', yoy: 'Same month last year', custom: 'Pick a month...' },
-            compareType: 'Type the comparison month (YYYY-MM)',
+            compareType: 'Comparison month',
             reload: 'Refresh',
             more: 'More actions',
             rebuildMonth: (m) => `Rebuild analytics data for ${m}`,
@@ -3496,8 +3926,8 @@ select.s4vp-in{padding-right:28px}
         };
         const showCustom = mode === 'custom' || customOpen;
         const actions = [
-            jsxs("span", { class: "s4vp-la-ctl", children: [t.month, jsx(Select, { value: curMonth, options: monthOptions, onInput: (v) => v && v !== curMonth && go({ month: v }), width: 112, ariaLabel: t.month }), jsx(TextInput, { value: curMonth, onInput: typeMonth, placeholder: "YYYY-MM", width: 96, ariaLabel: t.monthType, title: t.monthType })] }),
-            jsxs("span", { class: "s4vp-la-ctl", children: [t.compare, jsx(Select, { value: showCustom ? 'custom' : mode, options: ['prev', 'yoy', 'custom'].map((k) => ({ value: k, label: t.compareOpt[k] })), onInput: pickCompare, width: 178, ariaLabel: t.compare }), showCustom ? jsx(TextInput, { value: mode === 'custom' ? compare : '', onInput: typeCompare, placeholder: "YYYY-MM", width: 96, ariaLabel: t.compareType, title: t.compareType }) : null] }),
+            jsxs("span", { class: "s4vp-la-ctl", children: [t.month, jsx(Select, { value: curMonth, options: monthOptions, onInput: (v) => v && v !== curMonth && go({ month: v }), width: 112, ariaLabel: t.month }), jsx(MonthInput, { value: curMonth, onInput: typeMonth, width: 150, ariaLabel: t.monthType, title: t.monthType })] }),
+            jsxs("span", { class: "s4vp-la-ctl", children: [t.compare, jsx(Select, { value: showCustom ? 'custom' : mode, options: ['prev', 'yoy', 'custom'].map((k) => ({ value: k, label: t.compareOpt[k] })), onInput: pickCompare, width: 178, ariaLabel: t.compare }), showCustom ? jsx(MonthInput, { value: mode === 'custom' ? compare : '', onInput: typeCompare, width: 150, ariaLabel: t.compareType, title: t.compareType }) : null] }),
             jsx(Button, { label: t.reload, onClick: reload }),
         ];
         // ---------------------------------------------------------------- dữ liệu bảng phân rã (menu xuất CSV dùng)
@@ -4427,7 +4857,7 @@ select.s4vp-in{padding-right:28px}
         const F = (k, label, control, hint) => (jsx(Field, { label: label, hint: errs[k] ? jsx("span", { class: "s4vp-hr-err", children: errs[k] }) : hint, children: control }));
         const txt = (k, extra) => jsx(TextInput, { value: str(form[k]), onInput: setField(k), ...(extra || {}) });
         const dat = (k, extra) => jsx(DateInput, { value: str(form[k]), onInput: setField(k), ...(extra || {}) });
-        const amt = (k, extra) => jsx(NumberInput, { value: str(form[k]), onInput: setField(k), ...(extra || {}) });
+        const amt = (k, extra) => jsx(MoneyInput, { value: str(form[k]), onInput: setField(k), decimals: 0, ...(extra || {}) });
         const dialogActions = (buttons) => [jsx(Button, { label: t.act.cancel, onClick: close, disabled: saving })].concat(buttons);
         const serverBox = errs.server ? jsx("div", { class: "s4vp-hr-errbox", role: "alert", children: errs.server }) : null;
         // -------------------------------------------------------------- điều chỉnh lương, quyết định
@@ -4815,7 +5245,7 @@ select.s4vp-in{padding-right:28px}
                 const org = ['H', 'T', 'P'].indexOf(type) >= 0;
                 const payType = pay && (org || type === 'S');
                 const cur = (v) => (comp && !blank$3(v) ? t.f.current(money(v)) : '');
-                return (jsxs(Dialog, { title: isRaise ? t.dlg.raise : dlg.id ? t.dlg.decisionEdit : t.dlg.decisionNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.saveDraft, disabled: saving, onClick: () => saveDecision(false) }), jsx(Button, { label: t.act.saveApply, kind: "primary", disabled: saving, onClick: () => saveDecision(true) })]), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: isRaise ? t.dlg.raiseHint : t.dlg.decisionHint }), jsxs("div", { class: "s4vp-form", children: [isRaise ? null : F('type', t.f.decisionType, jsx(Select, { value: str(form.type), onInput: setField('type'), options: opt(t.decisionType) })), F('number', t.f.decisionNumber, txt('number')), F('sign_date', t.f.signDate, dat('sign_date')), F('effective', `${t.f.effective} *`, dat('effective')), org ? F('new_department', t.f.newDepartment, jsx(Select, { value: str(form.new_department), onInput: setField('new_department'), options: lk('departments'), placeholder: t.f.keep }), deptName ? t.f.current(deptName) : '') : null, org ? F('new_title', t.f.newTitle, txt('new_title'), data.title ? t.f.current(data.title) : '') : null, payType ? F('new_salary', isRaise ? `${t.f.newSalary} *` : t.f.newSalary, amt('new_salary'), cur(comp && comp.base_salary)) : null, payType ? F('new_ins_wage', t.f.newInsWage, amt('new_ins_wage'), cur(comp && comp.insurance_wage)) : null, payType ? F('new_allowance', t.f.newAllowance, amt('new_allowance'), cur(comp && comp.allowance)) : null] }), F('note', t.f.note, jsx(TextArea, { value: str(form.note), onInput: setField('note'), rows: 2 }))] }));
+                return (jsxs(Dialog, { title: isRaise ? t.dlg.raise : dlg.id ? t.dlg.decisionEdit : t.dlg.decisionNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.saveDraft, disabled: saving, onClick: () => saveDecision(false) }), jsx(Button, { label: t.act.saveApply, kind: "primary", disabled: saving, onClick: () => saveDecision(true) })]), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: isRaise ? t.dlg.raiseHint : t.dlg.decisionHint }), jsxs("div", { class: "s4vp-form", children: [isRaise ? null : F('type', t.f.decisionType, jsx(Select, { value: str(form.type), onInput: setField('type'), options: opt(t.decisionType) })), F('number', t.f.decisionNumber, txt('number')), F('sign_date', t.f.signDate, dat('sign_date')), F('effective', `${t.f.effective} *`, dat('effective')), org ? F('new_department', t.f.newDepartment, jsx(AutoSelect, { value: str(form.new_department), onInput: setField('new_department'), options: lk('departments'), placeholder: t.f.keep }), deptName ? t.f.current(deptName) : '') : null, org ? F('new_title', t.f.newTitle, txt('new_title'), data.title ? t.f.current(data.title) : '') : null, payType ? F('new_salary', isRaise ? `${t.f.newSalary} *` : t.f.newSalary, amt('new_salary'), cur(comp && comp.base_salary)) : null, payType ? F('new_ins_wage', t.f.newInsWage, amt('new_ins_wage'), cur(comp && comp.insurance_wage)) : null, payType ? F('new_allowance', t.f.newAllowance, amt('new_allowance'), cur(comp && comp.allowance)) : null] }), F('note', t.f.note, jsx(TextArea, { value: str(form.note), onInput: setField('note'), rows: 2 }))] }));
             }
             if (dlg.kind === 'contract') {
                 const appendix = !!dlg.parent;
@@ -4842,8 +5272,8 @@ select.s4vp-in{padding-right:28px}
             if (dlg.kind === 'allocLines') {
                 const lines = form.lines || [];
                 const total = lines.reduce((s, l) => s + (toNumber(l.percent) || 0), 0);
-                const pickOf = (i, k, name, label) => jsx(Select, { value: str(lines[i][k]), onInput: setLine(i, k), options: lk(name), placeholder: t.f.none, ariaLabel: label });
-                return (jsxs(Dialog, { title: t.dlg.allocLines(dlg.nbr), width: 900, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: saveAllocLines })]), children: [serverBox, jsxs("div", { class: "s4vp-hr-alloc", children: [jsxs("div", { class: "s4vp-hr-alloc-row s4vp-hr-alloc-head", children: [jsx("span", { children: t.cols.project }), jsx("span", { children: t.cols.department }), jsx("span", { children: t.cols.location }), jsx("span", { children: t.cols.cls }), jsx("span", { children: t.cols.percent }), jsx("span", { children: '' })] }), lines.map((l, i) => (jsxs("div", { children: [jsxs("div", { class: "s4vp-hr-alloc-row", children: [pickOf(i, 'project', 'projects', t.cols.project), pickOf(i, 'department', 'departments', t.cols.department), pickOf(i, 'location', 'locations', t.cols.location), pickOf(i, 'work_center', 'classes', t.cols.cls), jsx(NumberInput, { value: str(l.percent), onInput: setLine(i, 'percent'), ariaLabel: t.cols.percent }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.act.removeLine, title: t.act.removeLine, onClick: () => removeLine(i), children: '×' })] }), errs[`line${i}`] ? jsx("div", { class: "s4vp-hr-err s4vp-small", children: errs[`line${i}`] }) : null] }, `l${i}`)))] }), jsxs("div", { class: "s4vp-line", children: [jsx(Button, { small: true, kind: "dashed", label: t.act.addLine, onClick: addLine }), jsxs("span", { children: [jsx("b", { class: Math.abs(total - 100) > 0.001 ? 's4vp-hr-err' : 's4vp-num', children: t.dlg.allocTotal(num(total)) }), jsx("span", { class: "s4vp-small", children: ` - ${t.dlg.allocTotalHint}` })] })] }), F('reason', t.f.reason, txt('reason'))] }));
+                const pickOf = (i, k, name, label) => jsx(AutoSelect, { value: str(lines[i][k]), onInput: setLine(i, k), options: lk(name), placeholder: t.f.none, ariaLabel: label });
+                return (jsxs(Dialog, { title: t.dlg.allocLines(dlg.nbr), width: 900, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: saveAllocLines })]), children: [serverBox, jsxs("div", { class: "s4vp-hr-alloc", children: [jsxs("div", { class: "s4vp-hr-alloc-row s4vp-hr-alloc-head", children: [jsx("span", { children: t.cols.project }), jsx("span", { children: t.cols.department }), jsx("span", { children: t.cols.location }), jsx("span", { children: t.cols.cls }), jsx("span", { children: t.cols.percent }), jsx("span", { children: '' })] }), lines.map((l, i) => (jsxs("div", { children: [jsxs("div", { class: "s4vp-hr-alloc-row", children: [pickOf(i, 'project', 'projects', t.cols.project), pickOf(i, 'department', 'departments', t.cols.department), pickOf(i, 'location', 'locations', t.cols.location), pickOf(i, 'work_center', 'classes', t.cols.cls), jsx(NumberInput, { value: str(l.percent), onInput: setLine(i, 'percent'), ariaLabel: t.cols.percent, min: 0, max: 100, step: "any" }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.act.removeLine, title: t.act.removeLine, onClick: () => removeLine(i), children: '×' })] }), errs[`line${i}`] ? jsx("div", { class: "s4vp-hr-err s4vp-small", children: errs[`line${i}`] }) : null] }, `l${i}`)))] }), jsxs("div", { class: "s4vp-line", children: [jsx(Button, { small: true, kind: "dashed", label: t.act.addLine, onClick: addLine }), jsxs("span", { children: [jsx("b", { class: Math.abs(total - 100) > 0.001 ? 's4vp-hr-err' : 's4vp-num', children: t.dlg.allocTotal(num(total)) }), jsx("span", { class: "s4vp-small", children: ` - ${t.dlg.allocTotalHint}` })] })] }), F('reason', t.f.reason, txt('reason'))] }));
             }
             if (dlg.kind === 'permit') {
                 return (jsxs(Dialog, { title: t.dlg.permitNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: savePermit })]), children: [serverBox, jsxs("div", { class: "s4vp-form", children: [F('doc_type', t.f.docType, jsx(Select, { value: str(form.doc_type), onInput: setField('doc_type'), options: opt(t.permitDoc) })), F('issue_type', t.f.issueType, jsx(Select, { value: str(form.issue_type), onInput: setField('issue_type'), options: opt({ N: t.permitIssue.N, R: t.permitIssue.R }) })), F('effective', `${t.f.effective} *`, dat('effective')), F('expiry', `${t.f.permitExpiry} *`, dat('expiry')), F('authority', t.f.authority, txt('authority')), F('job', t.f.job, jsx(Select, { value: str(form.job), onInput: setField('job'), options: opt(t.permitJob), placeholder: t.f.pick })), F('title', t.f.title, txt('title')), F('work_location', t.f.workLocation, txt('work_location')), F('passport', t.f.passport, txt('passport')), F('passport_expiry', t.f.passportExpiry, dat('passport_expiry'))] })] }));
@@ -5388,7 +5818,7 @@ select.s4vp-in{padding-right:28px}
         yearValues[today.slice(0, 4)] = true;
         const yearOptions = Object.keys(yearValues).sort().reverse().map((y) => ({ value: y, label: y }));
         const quarterOptions = ['1', '2', '3', '4'].map((q) => ({ value: q, label: t.quarterOf(q, year) }));
-        const monthSelect = jsx(Select, { value: month, onInput: (v) => v && go({ month: v }), options: monthOptions, ariaLabel: t.filter.month, title: t.filter.month, width: 118 });
+        const monthSelect = jsx(AutoSelect, { value: month, onInput: (v) => v && go({ month: v }), options: monthOptions, ariaLabel: t.filter.month, title: t.filter.month, width: 118 });
         const yearSelect = jsx(Select, { value: year, onInput: (v) => v && go({ year: v }), options: yearOptions, ariaLabel: t.filter.year, title: t.filter.year, width: 92 });
         const quarterSelect = jsx(Select, { value: quarter, onInput: (v) => v && go({ quarter: v, year }), options: quarterOptions, ariaLabel: t.filter.quarter, title: t.filter.quarter, width: 128 });
         const relSelect = jsx(Select, { value: rel, onInput: (v) => v && go({ rel: v }), options: [{ value: 'F', label: t.filter.rel.F }, { value: 'T', label: t.filter.rel.T }], ariaLabel: t.filter.released, title: t.filter.released, width: 190 });
@@ -5477,7 +5907,7 @@ select.s4vp-in{padding-right:28px}
                 c12Ref.current = null;
                 go({ c12: v === null ? '' : String(v) });
             };
-            const c12Tools = (jsxs("div", { class: "s4vp-rp-tools", children: [jsx(NumberInput, { value: draft, onInput: (v) => {
+            const c12Tools = (jsxs("div", { class: "s4vp-rp-tools", children: [jsx(MoneyInput, { value: draft, decimals: 0, onInput: (v) => {
                             c12Ref.current = v;
                             setC12Draft(v);
                         }, onEnter: applyC12, placeholder: t.filter.c12, ariaLabel: t.filter.c12, width: 210 }), jsx(Button, { label: t.filter.c12Apply, small: true, onClick: applyC12 }), c12 !== '' ? (jsx(Button, { label: t.filter.c12Clear, small: true, kind: "ghost", onClick: () => {
@@ -6233,7 +6663,7 @@ select.s4vp-in{padding-right:28px}
                     jsx("span", { class: "s4vp-adv-sum", children: lines.length ? t.form.sum(lines.length, sum > 0 ? money(sum) : '0') : '' }),
                     jsx(Button, { label: t.form.cancel, onClick: () => setDialog(false) }),
                     jsx(Button, { label: t.form.create(lines.length), kind: "primary", disabled: !lines.length || !!app.busy, title: lines.length ? '' : t.form.errNoLines, onClick: createAll }),
-                ], children: [jsxs("div", { class: "s4vp-adv-top", children: [jsx(Field, { label: t.form.date, hint: errors.date ? jsx("span", { class: "s4vp-adv-err", children: errors.date }) : null, children: jsx(DateInput, { value: form.date, onInput: setField('date') }) }), jsx(Field, { label: t.form.cashAccount, hint: t.form.cashHint, children: jsx(Select, { value: form.cashAccount, onInput: setField('cashAccount'), options: accounts, placeholder: t.form.cashLater }) }), jsx(Field, { label: t.form.amount, hint: t.form.amountHint, children: jsx(NumberInput, { value: form.amount, onInput: setField('amount') }) }), jsx(Field, { label: t.form.memo, hint: t.form.memoHint, children: jsx(TextInput, { value: form.memo, onInput: setField('memo') }) })] }), jsxs("div", { class: "s4vp-adv-find", children: [jsx(Field, { label: t.form.find, children: jsx(TextInput, { type: "search", value: query, onInput: search, placeholder: t.form.findPlaceholder, onEnter: () => firstNew && addLine(firstNew) }) }), query.trim() ? (jsxs("div", { class: "s4vp-adv-results", role: "group", "aria-label": t.form.results, children: [found.items.map((e) => {
+                ], children: [jsxs("div", { class: "s4vp-adv-top", children: [jsx(Field, { label: t.form.date, required: true, hint: errors.date ? jsx("span", { class: "s4vp-adv-err", children: errors.date }) : null, children: jsx(DateInput, { value: form.date, onInput: setField('date') }) }), jsx(Field, { label: t.form.cashAccount, hint: t.form.cashHint, children: jsx(AutoSelect, { value: form.cashAccount, onInput: setField('cashAccount'), options: accounts, placeholder: t.form.cashLater }) }), jsx(Field, { label: t.form.amount, hint: t.form.amountHint, children: jsx(MoneyInput, { value: form.amount, onInput: setField('amount'), decimals: 0 }) }), jsx(Field, { label: t.form.memo, hint: t.form.memoHint, children: jsx(TextInput, { value: form.memo, onInput: setField('memo') }) })] }), jsxs("div", { class: "s4vp-adv-find", children: [jsx(Field, { label: t.form.find, children: jsx(TextInput, { type: "search", value: query, onInput: search, placeholder: t.form.findPlaceholder, onEnter: () => firstNew && addLine(firstNew) }) }), query.trim() ? (jsxs("div", { class: "s4vp-adv-results", role: "group", "aria-label": t.form.results, children: [found.items.map((e) => {
                                         const added = addedIds.indexOf(String(e.id)) >= 0;
                                         const a = { type: 'button', class: 's4vp-adv-result' };
                                         if (added)
@@ -6244,7 +6674,7 @@ select.s4vp-in{padding-right:28px}
                                     }), found.state === 'searching' && !found.items.length ? jsx("div", { class: "s4vp-adv-hint", children: t.form.searching }) : null, found.state === 'none' ? jsx("div", { class: "s4vp-adv-hint", children: t.form.noResult }) : null, found.state === 'error' ? jsx("div", { class: "s4vp-adv-hint s4vp-adv-err", children: found.error || t.form.noResult }) : null, found.more ? jsx("div", { class: "s4vp-adv-hint", children: t.form.more }) : null] })) : null] }), jsx("div", { class: "s4vp-adv-lines", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.form.lines, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t.form.employee }), jsx("th", { class: "s4vp-r", style: { width: '170px' }, children: t.form.lineAmount }), jsx("th", { style: { width: '250px' }, children: t.form.lineMemo }), jsx("th", { style: { width: '64px' }, children: '' })] }) }), jsxs("tbody", { children: [lines.map((l) => {
                                             const label = `${l.code} ${l.name}`.trim();
                                             const warn = outstanding(l.id);
-                                            return (jsxs("tr", { class: lineErrors[l.id] ? 's4vp-adv-bad' : 's4vp-adv-ok', children: [jsx("td", { children: jsxs("span", { class: "s4vp-adv-emp", children: [jsx("span", { class: "s4vp-adv-emp-n", children: label }), jsx("span", { class: "s4vp-small", children: [l.department, warn].filter(Boolean).join(' · ') }), lineErrors[l.id] ? jsx("span", { class: "s4vp-adv-err", children: lineErrors[l.id] }) : null] }) }), jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: l.amount, onInput: setLine(l.id, 'amount'), placeholder: commonAmount > 0 ? money(commonAmount) : '', ariaLabel: t.form.amountOf(label) }) }), jsx("td", { children: jsx(TextInput, { value: l.memo, onInput: setLine(l.id, 'memo'), placeholder: form.memo || '', ariaLabel: t.form.memoOf(label) }) }), jsx("td", { children: jsx(Button, { small: true, kind: "ghost", label: t.form.remove, ariaLabel: t.form.removeOf(label), onClick: () => removeLine(l.id) }) })] }, `l${l.id}`));
+                                            return (jsxs("tr", { class: lineErrors[l.id] ? 's4vp-adv-bad' : 's4vp-adv-ok', children: [jsx("td", { children: jsxs("span", { class: "s4vp-adv-emp", children: [jsx("span", { class: "s4vp-adv-emp-n", children: label }), jsx("span", { class: "s4vp-small", children: [l.department, warn].filter(Boolean).join(' · ') }), lineErrors[l.id] ? jsx("span", { class: "s4vp-adv-err", children: lineErrors[l.id] }) : null] }) }), jsx("td", { class: "s4vp-r", children: jsx(MoneyInput, { value: l.amount, onInput: setLine(l.id, 'amount'), decimals: 0, placeholder: commonAmount > 0 ? money(commonAmount) : '', ariaLabel: t.form.amountOf(label) }) }), jsx("td", { children: jsx(TextInput, { value: l.memo, onInput: setLine(l.id, 'memo'), placeholder: form.memo || '', ariaLabel: t.form.memoOf(label) }) }), jsx("td", { children: jsx(Button, { small: true, kind: "ghost", label: t.form.remove, ariaLabel: t.form.removeOf(label), onClick: () => removeLine(l.id) }) })] }, `l${l.id}`));
                                         }), lines.length ? null : (jsx("tr", { children: jsx("td", { colSpan: "4", children: jsx("div", { class: "s4vp-empty", children: t.form.noLines }) }) }, "none"))] })] }) }), errors.general ? jsx("div", { class: "s4vp-adv-reason s4vp-adv-err", role: "alert", children: errors.general }) : null] }));
         };
         return (jsxs(Page, { children: [jsx(PageHeader, { title: t.title, sub: subsidiary ? t.sub : t.noSubsidiary, actions: [
@@ -7485,17 +7915,19 @@ select.s4vp-in{padding-right:28px}
             const on = setField(k);
             const inherit = scope === 'company' && k !== 'enabled' ? t.inherit : '';
             if (type === 'bool')
-                return jsx(Select, { value: v, onInput: on, options: [{ value: 'T', label: t.yes }, { value: 'F', label: t.no }] });
+                return jsx(Checkbox, { inField: true, checked: v === 'T', onInput: (b) => on(b ? 'T' : 'F'), label: t.yes });
             if (type === 'inherit')
                 return jsx(Select, { value: v, onInput: on, options: [{ value: 'Y', label: t.yes }, { value: 'N', label: t.no }], placeholder: t.inherit });
-            if (type === 'num' || type === 'money')
+            if (type === 'money')
+                return jsx(MoneyInput, { value: v, onInput: on, placeholder: inherit, decimals: 0 });
+            if (type === 'num')
                 return jsx(NumberInput, { value: v, onInput: on, placeholder: inherit });
             if (type.indexOf('list:') === 0) {
                 const names = t.lists[type.slice(5)] || {};
                 return jsx(Select, { value: v, onInput: on, options: Object.keys(names).map((code) => ({ value: code, label: names[code] })), placeholder: inherit || t.notSet });
             }
             if (type === 'et')
-                return jsx(Select, { value: v, onInput: on, options: optionsWith(earningOptions, v), placeholder: t.notSet });
+                return jsx(AutoSelect, { value: v, onInput: on, options: optionsWith(earningOptions, v), placeholder: t.notSet });
             if (type === 'policy')
                 return jsx(Select, { value: v, onInput: on, options: optionsWith(policyOptions, v), placeholder: t.notSet });
             return jsx(TextInput, { value: v, onInput: on, placeholder: inherit });
@@ -7559,7 +7991,7 @@ select.s4vp-in{padding-right:28px}
             const placeholder = scope === 'company' ? t.inherit : t.accounts.pickAccount;
             return (jsxs(Dialog, { title: scope === 'company' ? t.accounts.titleCompany(subName(subsidiary)) : t.accounts.titleSetup, width: 760, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveAccounts })], children: [scope === 'company' ? jsx("div", { class: "s4vp-small", children: t.accounts.companyHint }) : null, jsx("div", { class: "s4vp-st-form", children: ACCOUNT_KEYS.map((k) => {
                             const options = k === 'pit_vendor' ? vendorOptions() : k === 'location' ? locationOptions() : accounts;
-                            return (jsx(Field, { label: t.accountNames[k], hint: t.accountHints[k], children: jsx(Select, { value: form[k], onInput: setField(k), options: optionsWith(options, form[k]), placeholder: placeholder }) }, k));
+                            return (jsx(Field, { label: t.accountNames[k], hint: t.accountHints[k], children: jsx(AutoSelect, { value: form[k], onInput: setField(k), options: optionsWith(options, form[k]), placeholder: placeholder }) }, k));
                         }) }), errorLine()] }));
         };
         const editIns = (row) => openDialog({ kind: 'ins', code: row.code, before: { account: row.account, vendor: row.vendor } }, { account: row.account, vendor: row.vendor });
@@ -7574,7 +8006,7 @@ select.s4vp-in{padding-right:28px}
                 return closeDialog();
             return submit(post({ action: 'saveInsuranceAccounts', items: [it] }), t.accounts.saved);
         };
-        const insDialog = () => (jsxs(Dialog, { title: t.accounts.ins.editTitle(dialog.code), width: 560, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveIns })], children: [jsx("div", { class: "s4vp-small", children: t.accounts.ins.hint }), jsx(Field, { label: t.accounts.ins.account, children: jsx(Select, { value: form.account, onInput: setField('account'), options: optionsWith(accountOptions(data.accounts), form.account), placeholder: t.accounts.pickAccount }) }), jsx(Field, { label: t.accounts.ins.vendor, hint: t.accounts.ins.vendorHint, children: jsx(Select, { value: form.vendor, onInput: setField('vendor'), options: optionsWith(vendorOptions(), form.vendor), placeholder: t.accounts.pickAccount }) }), errorLine()] }));
+        const insDialog = () => (jsxs(Dialog, { title: t.accounts.ins.editTitle(dialog.code), width: 560, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveIns })], children: [jsx("div", { class: "s4vp-small", children: t.accounts.ins.hint }), jsx(Field, { label: t.accounts.ins.account, children: jsx(AutoSelect, { value: form.account, onInput: setField('account'), options: optionsWith(accountOptions(data.accounts), form.account), placeholder: t.accounts.pickAccount }) }), jsx(Field, { label: t.accounts.ins.vendor, hint: t.accounts.ins.vendorHint, children: jsx(AutoSelect, { value: form.vendor, onInput: setField('vendor'), options: optionsWith(vendorOptions(), form.vendor), placeholder: t.accounts.pickAccount }) }), errorLine()] }));
         const accountsSection = () => {
             if (!data)
                 return jsx(Card, { children: jsx(Empty, { text: t.loading }) });
@@ -7657,7 +8089,7 @@ select.s4vp-in{padding-right:28px}
                 formRef.current = Object.assign({}, formRef.current, { target_type: v, target: '' });
                 setForm(formRef.current);
             };
-            return (jsxs(Dialog, { title: dialog.id ? t.cost.form.titleEdit : t.cost.form.titleNew, width: 720, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveCost })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.cost.form.type, children: jsx(Select, { value: form.target_type, onInput: setType, options: ['W', 'P', 'D'].map((k) => ({ value: k, label: t.cost.types[k] })) }) }), jsx(Field, { label: `${t.cost.form.target} (${t.cost.types[form.target_type] || ''})`, children: jsx(Select, { value: form.target, onInput: setField('target'), options: optionsWith(targetOptions(form.target_type), form.target, dialog.targetName), placeholder: t.cost.form.targetPick }) }), jsx(Field, { label: t.cost.form.account, children: jsx(Select, { value: form.account, onInput: setField('account'), options: optionsWith(accountOptions(cost && cost.accounts), form.account, dialog.accountName), placeholder: t.cost.form.accountPick }) }), jsx(Field, { label: t.cost.form.labor, hint: t.cost.form.laborHint, children: jsx(Select, { value: form.labor_type, onInput: setField('labor_type'), options: laborOptions, placeholder: t.cost.labor.all }) }), jsx(Field, { label: t.cost.form.subsidiary, hint: t.cost.form.subsidiaryHint, children: jsx(Select, { value: form.subsidiary, onInput: setField('subsidiary'), options: optionsWith(subs, form.subsidiary), placeholder: t.cost.shared }) }), jsx(Field, { label: t.cost.form.effective, hint: t.cost.form.effectiveHint, children: jsx(DateInput, { value: form.effective, onInput: setField('effective') }) })] }), jsx(Field, { label: t.cost.form.note, children: jsx(TextArea, { value: form.note, onInput: setField('note'), rows: 2 }) }), errorLine()] }));
+            return (jsxs(Dialog, { title: dialog.id ? t.cost.form.titleEdit : t.cost.form.titleNew, width: 720, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveCost })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.cost.form.type, children: jsx(Select, { value: form.target_type, onInput: setType, options: ['W', 'P', 'D'].map((k) => ({ value: k, label: t.cost.types[k] })) }) }), jsx(Field, { label: `${t.cost.form.target} (${t.cost.types[form.target_type] || ''})`, required: true, children: jsx(AutoSelect, { value: form.target, onInput: setField('target'), options: optionsWith(targetOptions(form.target_type), form.target, dialog.targetName), placeholder: t.cost.form.targetPick }) }), jsx(Field, { label: t.cost.form.account, required: true, children: jsx(AutoSelect, { value: form.account, onInput: setField('account'), options: optionsWith(accountOptions(cost && cost.accounts), form.account, dialog.accountName), placeholder: t.cost.form.accountPick }) }), jsx(Field, { label: t.cost.form.labor, hint: t.cost.form.laborHint, children: jsx(Select, { value: form.labor_type, onInput: setField('labor_type'), options: laborOptions, placeholder: t.cost.labor.all }) }), jsx(Field, { label: t.cost.form.subsidiary, hint: t.cost.form.subsidiaryHint, children: jsx(AutoSelect, { value: form.subsidiary, onInput: setField('subsidiary'), options: optionsWith(subs, form.subsidiary), placeholder: t.cost.shared }) }), jsx(Field, { label: t.cost.form.effective, hint: t.cost.form.effectiveHint, children: jsx(DateInput, { value: form.effective, onInput: setField('effective') }) })] }), jsx(Field, { label: t.cost.form.note, children: jsx(TextArea, { value: form.note, onInput: setField('note'), rows: 2 }) }), errorLine()] }));
         };
         const retireCost = (r) => app.confirm(t.cost.confirmRetire(`${t.cost.types[r.targetType] || ''} ${r.targetName}`.trim(), r.accountName), () => submit(post({ action: 'retireCostAccount', id: r.id }), t.cost.retired));
         const restoreCost = (r) => submit(post({ action: 'retireCostAccount', id: r.id, restore: true }), t.cost.restored);
@@ -7673,7 +8105,7 @@ select.s4vp-in{padding-right:28px}
         };
         const testCard = () => {
             const r = testResult;
-            return (jsxs(Card, { title: t.cost.test.title, sub: t.cost.test.sub, children: [jsxs("div", { class: "s4vp-st-form s4vp-st-form-narrow", children: [jsx(Field, { label: t.cost.test.workCenter, children: jsx(Select, { value: testForm.workCenter, onInput: setTest('workCenter'), options: targetOptions('W'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.project, children: jsx(Select, { value: testForm.project, onInput: setTest('project'), options: targetOptions('P'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.department, children: jsx(Select, { value: testForm.department, onInput: setTest('department'), options: targetOptions('D'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.labor, children: jsx(Select, { value: testForm.laborType, onInput: setTest('laborType'), options: laborOptions, placeholder: t.cost.labor.all }) }), jsx(Field, { label: t.cost.test.date, children: jsx(DateInput, { value: testForm.date, onInput: setTest('date'), placeholder: fmtDate((cost && cost.today) || '') }) }), jsx("div", { class: "s4vp-st-test-btn", children: jsx(Button, { label: t.cost.test.run, kind: "primary", disabled: !!app.busy, onClick: runTest }) })] }), r ? (jsxs("div", { class: "s4vp-st-result", role: "status", children: [jsxs("div", { class: "s4vp-st-result-h", children: [jsx("span", { class: "s4vp-muted", children: t.cost.test.result }), r.account ? jsx("span", { class: "s4vp-st-result-v", children: r.accountName || r.account }) : jsx("span", { class: "s4vp-st-issue s4vp-st-issue-err", children: t.cost.test.none }), r.account && t.cost.test.by[r.level] ? jsx(Badge, { text: t.cost.test.by[r.level], tone: "info" }) : null] }), jsx("ol", { class: "s4vp-st-levels", "aria-label": t.cost.test.steps, children: list$1(r.steps).map((s) => (jsxs("li", { class: s.level === r.level ? 's4vp-st-level s4vp-st-level-on' : 's4vp-st-level', children: [jsx("span", { children: t.cost.test.level[s.level] || s.level }), jsx("span", { class: s.account ? '' : 's4vp-muted', children: s.account ? s.accountName || s.account : s.given ? t.cost.test.noMatch : t.cost.test.notGiven })] }, s.level))) }), jsx("div", { class: "s4vp-small", children: r.warning ? t.cost.test.unreadable : t.cost.test.skip })] })) : null] }));
+            return (jsxs(Card, { title: t.cost.test.title, sub: t.cost.test.sub, children: [jsxs("div", { class: "s4vp-st-form s4vp-st-form-narrow", children: [jsx(Field, { label: t.cost.test.workCenter, children: jsx(AutoSelect, { value: testForm.workCenter, onInput: setTest('workCenter'), options: targetOptions('W'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.project, children: jsx(AutoSelect, { value: testForm.project, onInput: setTest('project'), options: targetOptions('P'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.department, children: jsx(AutoSelect, { value: testForm.department, onInput: setTest('department'), options: targetOptions('D'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.labor, children: jsx(Select, { value: testForm.laborType, onInput: setTest('laborType'), options: laborOptions, placeholder: t.cost.labor.all }) }), jsx(Field, { label: t.cost.test.date, children: jsx(DateInput, { value: testForm.date || (cost && cost.today) || '', onInput: setTest('date') }) }), jsx("div", { class: "s4vp-st-test-btn", children: jsx(Button, { label: t.cost.test.run, kind: "primary", disabled: !!app.busy, onClick: runTest }) })] }), r ? (jsxs("div", { class: "s4vp-st-result", role: "status", children: [jsxs("div", { class: "s4vp-st-result-h", children: [jsx("span", { class: "s4vp-muted", children: t.cost.test.result }), r.account ? jsx("span", { class: "s4vp-st-result-v", children: r.accountName || r.account }) : jsx("span", { class: "s4vp-st-issue s4vp-st-issue-err", children: t.cost.test.none }), r.account && t.cost.test.by[r.level] ? jsx(Badge, { text: t.cost.test.by[r.level], tone: "info" }) : null] }), jsx("ol", { class: "s4vp-st-levels", "aria-label": t.cost.test.steps, children: list$1(r.steps).map((s) => (jsxs("li", { class: s.level === r.level ? 's4vp-st-level s4vp-st-level-on' : 's4vp-st-level', children: [jsx("span", { children: t.cost.test.level[s.level] || s.level }), jsx("span", { class: s.account ? '' : 's4vp-muted', children: s.account ? s.accountName || s.account : s.given ? t.cost.test.noMatch : t.cost.test.notGiven })] }, s.level))) }), jsx("div", { class: "s4vp-small", children: r.warning ? t.cost.test.unreadable : t.cost.test.skip })] })) : null] }));
         };
         const costSection = () => {
             if (!cost)
@@ -7727,7 +8159,7 @@ select.s4vp-in{padding-right:28px}
         const apvDialog = () => {
             const subs = list$1(boot.subsidiaries).map((x) => ({ value: String(x.id), label: x.name }));
             const users = list$1(apv && apv.users).map((u) => ({ value: u.id, label: `${u.code}${u.name ? ` - ${u.name}` : ''}` }));
-            return (jsxs(Dialog, { title: dialog.id ? t.apv.form.titleEdit : t.apv.form.titleNew, width: 720, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveApv })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.apv.form.level, hint: t.apv.form.levelHint, children: jsx(NumberInput, { value: form.level, onInput: setField('level') }) }), jsx(Field, { label: t.apv.form.name, hint: t.apv.form.nameHint, children: jsx(TextInput, { value: form.name, onInput: setField('name') }) }), jsx(Field, { label: t.apv.form.approver, hint: t.apv.form.approverHint, children: jsx(Select, { value: form.approver, onInput: setField('approver'), options: optionsWith(users, form.approver, dialog.approverName), placeholder: t.apv.form.approverPick }) }), jsx(Field, { label: t.apv.form.role, hint: t.apv.form.roleHint, children: jsx(Select, { value: form.approver ? '' : form.role, onInput: setField('role'), options: ['A', 'H', 'D'].map((k) => ({ value: k, label: t.apv.roles[k] })), placeholder: t.apv.form.rolePick, disabled: !!form.approver }) }), jsx(Field, { label: t.apv.form.minNet, hint: t.apv.form.minNetHint, children: jsx(NumberInput, { value: form.min_net, onInput: setField('min_net'), placeholder: t.apv.always }) }), jsx(Field, { label: t.apv.form.subsidiary, hint: t.apv.form.subsidiaryHint, children: jsx(Select, { value: form.subsidiary, onInput: setField('subsidiary'), options: optionsWith(subs, form.subsidiary), placeholder: t.apv.shared }) })] }), errorLine()] }));
+            return (jsxs(Dialog, { title: dialog.id ? t.apv.form.titleEdit : t.apv.form.titleNew, width: 720, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveApv })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.apv.form.level, hint: t.apv.form.levelHint, required: true, children: jsx(NumberInput, { value: form.level, onInput: setField('level'), min: 1, step: 1 }) }), jsx(Field, { label: t.apv.form.name, hint: t.apv.form.nameHint, required: true, children: jsx(TextInput, { value: form.name, onInput: setField('name') }) }), jsx(Field, { label: t.apv.form.approver, hint: t.apv.form.approverHint, children: jsx(AutoSelect, { value: form.approver, onInput: setField('approver'), options: optionsWith(users, form.approver, dialog.approverName), placeholder: t.apv.form.approverPick }) }), jsx(Field, { label: t.apv.form.role, hint: t.apv.form.roleHint, children: jsx(Select, { value: form.approver ? '' : form.role, onInput: setField('role'), options: ['A', 'H', 'D'].map((k) => ({ value: k, label: t.apv.roles[k] })), placeholder: t.apv.form.rolePick, disabled: !!form.approver }) }), jsx(Field, { label: t.apv.form.minNet, hint: t.apv.form.minNetHint, children: jsx(MoneyInput, { value: form.min_net, onInput: setField('min_net'), placeholder: t.apv.always, decimals: 0 }) }), jsx(Field, { label: t.apv.form.subsidiary, hint: t.apv.form.subsidiaryHint, children: jsx(AutoSelect, { value: form.subsidiary, onInput: setField('subsidiary'), options: optionsWith(subs, form.subsidiary), placeholder: t.apv.shared }) })] }), errorLine()] }));
         };
         const retireApv = (r) => app.confirm(t.apv.confirmRetire(`${t.apv.levelName(r.level, r.name)}: ${whoText(r)}`), () => submit(post({ action: 'retireApprovalStep', id: r.id }), t.apv.retired));
         const restoreApv = (r) => submit(post({ action: 'retireApprovalStep', id: r.id, restore: true }), t.apv.restored);
@@ -7786,7 +8218,7 @@ select.s4vp-in{padding-right:28px}
                 return app.reloadBoot();
             });
         };
-        const generateDialog = () => (jsxs(Dialog, { title: t.periodsSec.genTitle, width: 520, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.periodsSec.genRun(form.year), kind: "primary", disabled: !!app.busy, onClick: saveGenerate })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.periodsSec.year, children: jsx(TextInput, { value: form.year, onInput: setField('year'), onEnter: saveGenerate }) }), jsx(Field, { label: t.periodsSec.paygroup, children: jsx(Select, { value: form.paygroup, onInput: setField('paygroup'), options: list$1(boot.paygroups).map((g) => ({ value: String(g.id), label: `${g.code}${g.description ? ` - ${g.description}` : ''}` })) }) })] }), jsx("div", { class: "s4vp-small", children: t.periodsSec.genHint }), errorLine()] }));
+        const generateDialog = () => (jsxs(Dialog, { title: t.periodsSec.genTitle, width: 520, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.periodsSec.genRun(form.year), kind: "primary", disabled: !!app.busy, onClick: saveGenerate })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.periodsSec.year, required: true, children: jsx(NumberInput, { value: form.year, onInput: setField('year'), onEnter: saveGenerate, min: 2000, max: 2100, step: 1 }) }), jsx(Field, { label: t.periodsSec.paygroup, children: jsx(Select, { value: form.paygroup, onInput: setField('paygroup'), options: list$1(boot.paygroups).map((g) => ({ value: String(g.id), label: `${g.code}${g.description ? ` - ${g.description}` : ''}` })) }) })] }), jsx("div", { class: "s4vp-small", children: t.periodsSec.genHint }), errorLine()] }));
         const periodsSection = () => {
             const today = new Date();
             const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -8696,7 +9128,7 @@ select.s4vp-in{padding-right:28px}
             return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [m.d.linesDirty || !(r.total > 0) ? (jsx(Button, { label: t.lines.save, kind: "primary", disabled: !m.d.linesDirty || m.rs.state === 'loading' || !!app.busy, onClick: () => saveLines(r) })) : (nextButton(r, 'lines')), individual ? null : jsx(Button, { label: t.lines.add, onClick: () => addLine(r, null) }), m.d.linesDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null, jsx("span", { class: "s4vp-out-sum", children: `${t.lines.sum}: ${money(m.total) === '-' ? '0' : money(m.total)}` })] }), m.d.error ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: m.d.error }) : null, individual ? finder((e) => addLine(r, e), []) : null, jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: hint }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.lines.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.lines, children: [jsx("thead", { children: jsxs("tr", { children: [individual ? jsx("th", { children: t.lines.employee }) : null, m.sales ? null : jsx("th", { children: t.lines.item }), jsx("th", { class: "s4vp-r", children: m.sales ? t.lines.sales : t.lines.qty }), m.sales ? null : jsx("th", { class: "s4vp-r", children: t.lines.rate }), jsx("th", { class: "s4vp-r", children: t.lines.amount }), jsx("th", { children: '' })] }) }), jsxs("tbody", { children: [shown.map((l) => {
                                             const n = m.rows.indexOf(l) + 1;
                                             const label = individual ? who$1(l) : l.item || String(n);
-                                            return (jsxs("tr", { children: [individual ? (jsx("td", { children: jsxs("span", { class: "s4vp-out-who", children: [jsx("span", { class: "s4vp-out-who-n", children: l.name || l.code }), jsx("span", { class: "s4vp-small", children: l.noProfile ? `${l.code} · ${t.members.noProfile}` : l.code })] }) })) : null, m.sales ? null : (jsxs("td", { children: [jsx(Select, { value: l.item, onInput: (v) => pickItem(r, l.key, v), options: itemOptions(l), placeholder: t.lines.itemPick, ariaLabel: t.lines.itemOf(n), width: individual ? 130 : 190 }), l.uom ? jsx("span", { class: "s4vp-small s4vp-out-uom", children: `${t.lines.uom}: ${l.uom}` }) : null] })), jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: l.qty, onInput: (v) => setLine(r, l.key, { qty: v }), ariaLabel: t.lines.qtyOf(n), width: m.sales ? 140 : 84 }) }), m.sales ? null : (jsx("td", { class: "s4vp-r", children: l.editable ? (jsx(NumberInput, { value: l.rate, onInput: (v) => setLine(r, l.key, { rate: v }), ariaLabel: t.lines.rateOf(n), width: 100, placeholder: l.suggested === null ? '' : num(l.suggested), title: l.item && l.suggested === null && m.rs.state === 'ok' ? t.lines.rateNone : '' })) : (jsx("span", { class: "s4vp-out-fixed", children: num(l.effRate) })) })), jsx("td", { class: "s4vp-r s4vp-nw", children: money(l.amount) }), jsx("td", { class: "s4vp-r", children: jsx(Button, { small: true, kind: "ghost", label: t.lines.remove, ariaLabel: t.lines.removeOf(label), onClick: () => removeLine(r, l.key) }) })] }, l.key));
+                                            return (jsxs("tr", { children: [individual ? (jsx("td", { children: jsxs("span", { class: "s4vp-out-who", children: [jsx("span", { class: "s4vp-out-who-n", children: l.name || l.code }), jsx("span", { class: "s4vp-small", children: l.noProfile ? `${l.code} · ${t.members.noProfile}` : l.code })] }) })) : null, m.sales ? null : (jsxs("td", { children: [jsx(AutoSelect, { value: l.item, onInput: (v) => pickItem(r, l.key, v), options: itemOptions(l), placeholder: t.lines.itemPick, ariaLabel: t.lines.itemOf(n), width: individual ? 130 : 190 }), l.uom ? jsx("span", { class: "s4vp-small s4vp-out-uom", children: `${t.lines.uom}: ${l.uom}` }) : null] })), jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: l.qty, onInput: (v) => setLine(r, l.key, { qty: v }), ariaLabel: t.lines.qtyOf(n), width: m.sales ? 140 : 84 }) }), m.sales ? null : (jsx("td", { class: "s4vp-r", children: l.editable ? (jsx(MoneyInput, { value: l.rate, onInput: (v) => setLine(r, l.key, { rate: v }), ariaLabel: t.lines.rateOf(n), width: 100, placeholder: l.suggested === null ? '' : num(l.suggested), title: l.item && l.suggested === null && m.rs.state === 'ok' ? t.lines.rateNone : '' })) : (jsx("span", { class: "s4vp-out-fixed", children: num(l.effRate) })) })), jsx("td", { class: "s4vp-r s4vp-nw", children: money(l.amount) }), jsx("td", { class: "s4vp-r", children: jsx(Button, { small: true, kind: "ghost", label: t.lines.remove, ariaLabel: t.lines.removeOf(label), onClick: () => removeLine(r, l.key) }) })] }, l.key));
                                         }), m.rows.length ? null : (jsx("tr", { children: jsx("td", { colSpan: "6", children: jsx("div", { class: "s4vp-empty", children: individual ? t.lines.noneIndividual : t.lines.noneTeam }) }) }, "none"))] })] }) })] }));
         };
         // ------------------------------------------------------------------ bước 2: thành viên
@@ -8820,7 +9252,7 @@ select.s4vp-in{padding-right:28px}
                 note = jsx("div", { class: "s4vp-out-warn", role: "note", children: t.split.notYet });
             else
                 note = jsx("div", { class: "s4vp-out-warn", role: "alert", children: `${t.split.mismatch(money(saved), money(r.total), money(Math.abs(diff)))}${anyManual ? ` ${t.split.manualNote}` : ''}` });
-            return (jsxs("div", { class: "s4vp-out-body", children: [editable ? (jsxs("div", { class: "s4vp-out-acts", children: [primary, !d.amountsDirty && diff === 0 && r.total > 0 ? jsx(Button, { label: t.split.rerun, disabled: d.membersDirty || !!r.splitError || !!app.busy, onClick: () => runSplit(r) }) : null, d.amountsDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null] })) : null, d.error && editable ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: d.error }) : null, note, jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: `${t.detail.method}: ${t.method[method] || method}` }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.split.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.split, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t.members.employee }), jsx("th", { children: t.split.basis }), hasPreview ? jsx("th", { class: "s4vp-r", children: t.split.preview }) : null, jsx("th", { class: "s4vp-r", children: t.split.amount })] }) }), jsxs("tbody", { children: [shown.map((m) => (jsxs("tr", { children: [jsx("td", { children: personCell(m) }), jsx("td", { class: "s4vp-nw s4vp-small", children: basisText(m, method) }), hasPreview ? jsx("td", { class: "s4vp-r s4vp-nw", children: m.preview === null || m.preview === undefined ? '' : money(m.preview) }) : null, jsxs("td", { class: "s4vp-r s4vp-nw", children: [editable ? (jsx(NumberInput, { value: m.amountText, onInput: (v) => setMember(r, m.employee, { amountText: v, edited: true }, { amountsDirty: true }), ariaLabel: t.split.amountOf(who$1(m)), width: 124 })) : (money(m.amount)), m.manual || m.edited ? jsx("span", { class: "s4vp-small s4vp-out-uom", children: t.split.manual }) : null] })] }, `s${m.employee}`))), jsxs("tr", { class: "s4vp-total", children: [jsx("td", { children: t.split.sum }), jsx("td", { children: '' }), hasPreview ? jsx("td", { class: "s4vp-r s4vp-nw", children: money(previewSum) }) : null, jsx("td", { class: diff === 0 ? 's4vp-r s4vp-nw' : 's4vp-r s4vp-nw s4vp-out-diff', children: saved === 0 ? '0' : money(saved) })] }, "sum")] })] }) })] }));
+            return (jsxs("div", { class: "s4vp-out-body", children: [editable ? (jsxs("div", { class: "s4vp-out-acts", children: [primary, !d.amountsDirty && diff === 0 && r.total > 0 ? jsx(Button, { label: t.split.rerun, disabled: d.membersDirty || !!r.splitError || !!app.busy, onClick: () => runSplit(r) }) : null, d.amountsDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null] })) : null, d.error && editable ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: d.error }) : null, note, jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: `${t.detail.method}: ${t.method[method] || method}` }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.split.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.split, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t.members.employee }), jsx("th", { children: t.split.basis }), hasPreview ? jsx("th", { class: "s4vp-r", children: t.split.preview }) : null, jsx("th", { class: "s4vp-r", children: t.split.amount })] }) }), jsxs("tbody", { children: [shown.map((m) => (jsxs("tr", { children: [jsx("td", { children: personCell(m) }), jsx("td", { class: "s4vp-nw s4vp-small", children: basisText(m, method) }), hasPreview ? jsx("td", { class: "s4vp-r s4vp-nw", children: m.preview === null || m.preview === undefined ? '' : money(m.preview) }) : null, jsxs("td", { class: "s4vp-r s4vp-nw", children: [editable ? (jsx(MoneyInput, { value: m.amountText, decimals: 0, onInput: (v) => setMember(r, m.employee, { amountText: v, edited: true }, { amountsDirty: true }), ariaLabel: t.split.amountOf(who$1(m)), width: 124 })) : (money(m.amount)), m.manual || m.edited ? jsx("span", { class: "s4vp-small s4vp-out-uom", children: t.split.manual }) : null] })] }, `s${m.employee}`))), jsxs("tr", { class: "s4vp-total", children: [jsx("td", { children: t.split.sum }), jsx("td", { children: '' }), hasPreview ? jsx("td", { class: "s4vp-r s4vp-nw", children: money(previewSum) }) : null, jsx("td", { class: diff === 0 ? 's4vp-r s4vp-nw' : 's4vp-r s4vp-nw s4vp-out-diff', children: saved === 0 ? '0' : money(saved) })] }, "sum")] })] }) })] }));
         };
         // ------------------------------------------------------------------ bước 4 - 6: gửi duyệt, duyệt, vào bảng lương
         const fact = (label, value, strong) => (jsxs("div", { class: "s4vp-line", style: strong ? { fontWeight: '700' } : {}, children: [jsx("span", { class: "s4vp-muted", children: label }), jsx("span", { class: "s4vp-out-val", children: value })] }));
@@ -9016,7 +9448,7 @@ select.s4vp-in{padding-right:28px}
                 putForm(team && isNew ? { team: id, method: team.splitMethod || 'F', project: team.project && projectOptions.some((o) => o.value === String(team.project)) ? String(team.project) : f.project } : { team: id });
             };
             const changed = f.was && (f.was.date !== f.date || f.was.rateTable !== f.rateTable || f.was.project !== f.project);
-            return (jsxs(Dialog, { title: isNew ? t.form.titleNew : t.form.titleEdit(f.name), width: 760, onClose: () => setForm(null), actions: [jsx(Button, { label: t.form.cancel, onClick: () => setForm(null) }), jsx(Button, { label: isNew ? t.form.create : t.form.save, kind: "primary", disabled: !!app.busy, onClick: submitForm })], children: [jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.form.kind, children: jsx(Select, { value: f.kind, onInput: pickKind, options: KINDS.map((k) => ({ value: k, label: t.kind[k] })), disabled: !isNew }) }), jsx(Field, { label: t.form.date, hint: err('date'), children: jsx(DateInput, { value: f.date, onInput: (v) => putForm({ date: v }) }) }), jsx(Field, { label: t.form.table, hint: err('rateTable') || (tables.length ? null : t.form.noTables), children: jsx(Select, { value: f.rateTable, onInput: (v) => putForm({ rateTable: v }), options: tableOptions, placeholder: t.form.tablePick }) }), f.kind === 'T' ? (jsx(Field, { label: t.form.team, hint: err('team'), children: jsx(Select, { value: f.team, onInput: pickTeam, options: teamOptions, placeholder: t.form.teamPick }) })) : null, f.kind === 'T' ? (jsx(Field, { label: t.form.method, children: jsx(Select, { value: f.method, onInput: (v) => putForm({ method: v || 'F' }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })) }) })) : null, jsx(Field, { label: t.form.period, hint: t.form.periodHint, children: jsx(Select, { value: f.period, onInput: (v) => putForm({ period: v }), options: periodOptions, placeholder: t.form.periodAuto }) }), jsx(Field, { label: t.form.project, hint: lk.projectsMore ? t.form.projectMore : t.form.projectHint, children: jsx(Select, { value: f.project, onInput: (v) => putForm({ project: v }), options: projectOptions, placeholder: t.form.projectNone }) }), jsx(Field, { label: t.form.description, children: jsx(TextInput, { value: f.description, onInput: (v) => putForm({ description: v }) }) })] }), changed ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.form.repriced }) : null, jsx("span", { class: "s4vp-small", children: t.form.moreOnRecord })] }));
+            return (jsxs(Dialog, { title: isNew ? t.form.titleNew : t.form.titleEdit(f.name), width: 760, onClose: () => setForm(null), actions: [jsx(Button, { label: t.form.cancel, onClick: () => setForm(null) }), jsx(Button, { label: isNew ? t.form.create : t.form.save, kind: "primary", disabled: !!app.busy, onClick: submitForm })], children: [jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.form.kind, children: jsx(Select, { value: f.kind, onInput: pickKind, options: KINDS.map((k) => ({ value: k, label: t.kind[k] })), disabled: !isNew }) }), jsx(Field, { label: t.form.date, hint: err('date'), required: true, children: jsx(DateInput, { value: f.date, onInput: (v) => putForm({ date: v }) }) }), jsx(Field, { label: t.form.table, required: true, hint: err('rateTable') || (tables.length ? null : t.form.noTables), children: jsx(AutoSelect, { value: f.rateTable, onInput: (v) => putForm({ rateTable: v }), options: tableOptions, placeholder: t.form.tablePick }) }), f.kind === 'T' ? (jsx(Field, { label: t.form.team, hint: err('team'), required: true, children: jsx(AutoSelect, { value: f.team, onInput: pickTeam, options: teamOptions, placeholder: t.form.teamPick }) })) : null, f.kind === 'T' ? (jsx(Field, { label: t.form.method, children: jsx(Select, { value: f.method, onInput: (v) => putForm({ method: v || 'F' }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })) }) })) : null, jsx(Field, { label: t.form.period, hint: t.form.periodHint, children: jsx(AutoSelect, { value: f.period, onInput: (v) => putForm({ period: v }), options: periodOptions, placeholder: t.form.periodAuto }) }), jsx(Field, { label: t.form.project, hint: lk.projectsMore ? t.form.projectMore : t.form.projectHint, children: jsx(AutoSelect, { value: f.project, onInput: (v) => putForm({ project: v }), options: projectOptions, placeholder: t.form.projectNone }) }), jsx(Field, { label: t.form.description, children: jsx(TextInput, { value: f.description, onInput: (v) => putForm({ description: v }) }) })] }), changed ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.form.repriced }) : null, jsx("span", { class: "s4vp-small", children: t.form.moreOnRecord })] }));
         };
         // ------------------------------------------------------------------ bảng phiếu
         const issueCode = filter.indexOf('i:') === 0 ? filter.slice(2) : '';
@@ -9064,7 +9496,7 @@ select.s4vp-in{padding-right:28px}
         const todo = list(view.issues);
         const periodOptions = periods.map((p) => ({ value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})` }));
         return (jsxs(Page, { children: [jsx(PageHeader, { title: t.title, sub: !subsidiary ? t.noSubsidiary : canWrite ? t.sub : t.readOnly, actions: [
-                        jsx("span", { class: "s4vp-out-period", children: jsx(Select, { value: period, onInput: (v) => (setPeriod(v || ''), pickEntry('')), options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 250 }) }),
+                        jsx("span", { class: "s4vp-out-period", children: jsx(AutoSelect, { value: period, onInput: (v) => (setPeriod(v || ''), pickEntry('')), options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 250 }) }),
                         jsx(Button, { label: t.legacy, kind: "ghost", onClick: () => app.go('outputs') }),
                         jsx(Button, { label: t.refresh, onClick: () => load() }),
                         jsx(Button, { label: t.newEntry, kind: "primary", disabled: !subsidiary || !canWrite || !!app.busy, title: canWrite ? '' : t.readOnly, onClick: () => openForm(null) }),
@@ -10153,7 +10585,7 @@ select.s4vp-in{padding-right:28px}
             setTimeForm(timeRef.current);
         };
         const openTimeEdit = (r) => {
-            timeRef.current = { id: r.id, hours: blank(r.hours) ? '' : num(r.hours), reason: r.reason || '', label: [r.projectText, r.taskText].filter(Boolean).join(' / ') };
+            timeRef.current = { id: r.id, hours: blank(r.hours) ? '' : String(Math.round(Number(r.hours) * 100) / 100), reason: r.reason || '', label: [r.projectText, r.taskText].filter(Boolean).join(' / ') };
             setTimeForm(timeRef.current);
             setDialog({ kind: 'time' });
         };
@@ -10434,14 +10866,14 @@ select.s4vp-in{padding-right:28px}
             }
             if (dialog.kind === 'time') {
                 const tm = t.panel.time;
-                return (jsxs(Dialog, { title: tm.editTitle(timeForm.label || ''), onClose: () => setDialog(null), actions: [jsx(Button, { label: t.input.cancel, onClick: () => setDialog(null) }), jsx(Button, { kind: "primary", label: tm.save, disabled: blank(toNumber(timeForm.hours)) || working, onClick: saveTime })], children: [jsx("div", { class: "s4vp-small", children: tm.editHint }), jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: pc.hours, children: jsx(NumberInput, { value: timeForm.hours, onInput: setTimeField('hours') }) }), jsx(Field, { label: pc.reason, children: jsx(TextInput, { value: timeForm.reason, onInput: setTimeField('reason'), onEnter: saveTime }) })] })] }));
+                return (jsxs(Dialog, { title: tm.editTitle(timeForm.label || ''), onClose: () => setDialog(null), actions: [jsx(Button, { label: t.input.cancel, onClick: () => setDialog(null) }), jsx(Button, { kind: "primary", label: tm.save, disabled: blank(toNumber(timeForm.hours)) || working, onClick: saveTime })], children: [jsx("div", { class: "s4vp-small", children: tm.editHint }), jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: pc.hours, required: true, children: jsx(NumberInput, { value: timeForm.hours, onInput: setTimeField('hours'), min: 0, max: 24, step: 0.5 }) }), jsx(Field, { label: pc.reason, children: jsx(TextInput, { value: timeForm.reason, onInput: setTimeField('reason'), onEnter: saveTime }) })] })] }));
             }
             if (!currentLine)
                 return null;
             const isE = dialog.kind === 'E';
             const types = (boot.earningTypes || []).map((e) => ({ value: String(e.id), label: `${e.code} ${e.name || ''}` }));
             const ready = isE ? !!form.earning_type : !blank(toNumber(form.amount));
-            return (jsxs(Dialog, { title: `${isE ? t.panel.addEarning : t.panel.addDeduction} ${t.input.forEmp(nameOf(currentLine))}`, onClose: () => setDialog(null), actions: [jsx(Button, { label: t.input.cancel, onClick: () => setDialog(null) }), jsx(Button, { kind: "primary", label: t.input.save, disabled: !ready || working, onClick: saveInput })], children: [jsx("div", { class: "s4vp-small", children: isE ? t.input.hintE : t.input.hintD }), isE ? (jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.input.earningType, children: jsx(Select, { value: form.earning_type, onInput: setField('earning_type'), options: types, placeholder: t.input.pickType }) }), jsx(Field, { label: t.input.memo, children: jsx(TextInput, { value: form.description, onInput: setField('description') }) }), jsx(Field, { label: t.input.qty, children: jsx(NumberInput, { value: form.qty, onInput: setField('qty') }) }), jsx(Field, { label: t.input.rate, children: jsx(NumberInput, { value: form.rate, onInput: setField('rate') }) }), jsx(Field, { label: t.input.mult, children: jsx(NumberInput, { value: form.multiplier, onInput: setField('multiplier'), placeholder: "1" }) })] })) : (jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.input.code, children: jsx(TextInput, { value: form.code, onInput: setField('code'), placeholder: "KHAC" }) }), jsx(Field, { label: t.input.memo, children: jsx(TextInput, { value: form.description, onInput: setField('description') }) }), jsx(Field, { label: t.input.amount, children: jsx(NumberInput, { value: form.amount, onInput: setField('amount'), onEnter: saveInput }) })] }))] }));
+            return (jsxs(Dialog, { title: `${isE ? t.panel.addEarning : t.panel.addDeduction} ${t.input.forEmp(nameOf(currentLine))}`, onClose: () => setDialog(null), actions: [jsx(Button, { label: t.input.cancel, onClick: () => setDialog(null) }), jsx(Button, { kind: "primary", label: t.input.save, disabled: !ready || working, onClick: saveInput })], children: [jsx("div", { class: "s4vp-small", children: isE ? t.input.hintE : t.input.hintD }), isE ? (jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.input.earningType, required: true, children: jsx(AutoSelect, { value: form.earning_type, onInput: setField('earning_type'), options: types, placeholder: t.input.pickType }) }), jsx(Field, { label: t.input.memo, children: jsx(TextInput, { value: form.description, onInput: setField('description') }) }), jsx(Field, { label: t.input.qty, children: jsx(NumberInput, { value: form.qty, onInput: setField('qty'), min: 0, step: "any" }) }), jsx(Field, { label: t.input.rate, children: jsx(MoneyInput, { value: form.rate, onInput: setField('rate') }) }), jsx(Field, { label: t.input.mult, children: jsx(NumberInput, { value: form.multiplier, onInput: setField('multiplier'), placeholder: "1", min: 0, step: "any" }) })] })) : (jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.input.code, children: jsx(TextInput, { value: form.code, onInput: setField('code'), placeholder: "KHAC" }) }), jsx(Field, { label: t.input.memo, children: jsx(TextInput, { value: form.description, onInput: setField('description') }) }), jsx(Field, { label: t.input.amount, required: true, children: jsx(MoneyInput, { value: form.amount, onInput: setField('amount'), onEnter: saveInput, decimals: 0 }) })] }))] }));
         };
         // ------------------------------------------------------------------ chứng từ, tác vụ nền
         const docLinks = [];
@@ -10961,7 +11393,7 @@ select.s4vp-in{padding-right:28px}
         }
         else {
             const heading = head.employee ? `${who(head) || head.employee}${head.headline ? ` - ${head.headline}` : ''}` : head.title;
-            detailArea = (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '0' }, children: [jsxs(Card, { tone: head.severity === 'error' ? 'error' : head.status === 'open' && head.severity === 'warn' ? 'warn' : '', label: t.why, children: [jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '10px 16px', alignItems: 'flex-start', justifyContent: 'space-between' }, children: [jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '0', flex: '1 1 320px' }, children: [jsx("h2", { style: { fontSize: '20px', fontWeight: '700', lineHeight: '1.25', overflowWrap: 'anywhere' }, children: heading }), jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx(Badge, { text: t.severity[head.severity] || head.severity, tone: SEVERITY_TONE[head.severity] || 'muted', large: true }), head.severity === 'error' ? jsx(Badge, { text: t.blocksApproval, tone: "error", large: true }) : jsx(Badge, { text: t.status[head.status] || head.status, tone: STATUS_TONE[head.status] || 'muted', large: true }), jsx("span", { class: "s4vp-muted", style: { fontSize: '13px' }, children: head.title })] })] }), jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { label: t.prev, small: true, disabled: !prevItem, onClick: () => prevItem && pickItem(prevItem) }), jsx(Button, { label: t.next, small: true, disabled: !nextItem, onClick: () => nextItem && pickItem(nextItem) })] })] }), item && item.description ? jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.description }) : null, item && item.reopened && item.canClose ? jsx("div", { class: "s4vp-small", children: t.reopened }) : null, facts.length ? (jsx("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '6px 28px' }, children: facts.map((f) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { class: "s4vp-muted", children: t.facts[f.key] || f.key }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', textAlign: 'right' }, children: factValue(f) })] }, `f${f.key}`))) })) : null] }), jsxs("div", { class: "s4vp-cols", children: [jsxs("div", { class: "s4vp-col-main", children: [compare ? (jsx(Card, { flush: true, title: t.compareTitle, sub: t.compareSub(compare), children: jsx(Table, { label: t.compareTitle, columns: compareColumns, rows: compareRows, keyOf: (r) => r.key, search: true, searchPlaceholder: t.compareSearch }) })) : null, item && item.employee ? (jsx(Card, { title: t.inputsTitle, children: inputs.length ? (inputs.map((x) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { style: { minWidth: '0', overflowWrap: 'anywhere' }, children: `${t.inputKind[x.kind] || x.kind || ''}${x.description ? ` - ${x.description}` : ''}` }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', whiteSpace: 'nowrap' }, children: money(x.amount) })] }, `i${x.id}`)))) : (jsx("div", { class: "s4vp-muted", style: { fontSize: '13px' }, children: t.inputsNone })) })) : null] }), jsxs(SidePanel, { title: t.handle, children: [item && item.hint ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '4px' }, children: [jsx("div", { class: "s4vp-small", children: t.hint }), jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.hint })] })) : null, jsx("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }, children: links.map((l, i) => (jsx("span", { children: l }, `l${i}`))) }), item ? (jsx(Field, { label: t.assignee, children: jsx(Select, { value: form.assignee, onInput: setField('assignee'), options: assigneeOptions, placeholder: t.unassigned, ariaLabel: t.assignee }) })) : null, item ? (jsx(Field, { label: t.note, hint: needNote ? null : t.noteHint, children: jsx(TextArea, { value: form.note, onInput: setField('note'), rows: 3, ariaLabel: t.note }) })) : null, needNote ? (jsx("div", { role: "alert", style: { color: '#8A1C14', fontSize: '13px', fontWeight: '600' }, children: t.noteRequired })) : null, handleButtons.length ? (jsx("div", { class: "s4vp-actions", children: handleButtons.map((b, i) => (jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`))) })) : null, jsx("div", { class: "s4vp-small", children: item && !item.canClose ? t.errorNoClose : t.footnote }), item ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid #E1E5E8', paddingTop: '12px' }, children: [jsx("div", { style: { fontWeight: '700' }, children: t.history }), history.length ? (history.map((h, i) => (jsxs("div", { style: { fontSize: '13px', overflowWrap: 'anywhere' }, children: [jsx("span", { class: "s4vp-muted", children: `${fmtAt(h.at)} - ${h.user || ''}: ` }), jsx("span", { style: { fontWeight: '600' }, children: t.status[h.status] || h.status || '' }), h.assigneeName ? jsx("span", { children: `, ${t.assignedTo(h.assigneeName)}` }) : null, h.note ? jsx("span", { children: ` - ${h.note}` }) : null] }, `h${i}`)))) : (jsx("div", { class: "s4vp-small", children: t.historyNone }))] })) : null] })] })] }));
+            detailArea = (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '0' }, children: [jsxs(Card, { tone: head.severity === 'error' ? 'error' : head.status === 'open' && head.severity === 'warn' ? 'warn' : '', label: t.why, children: [jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '10px 16px', alignItems: 'flex-start', justifyContent: 'space-between' }, children: [jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '0', flex: '1 1 320px' }, children: [jsx("h2", { style: { fontSize: '20px', fontWeight: '700', lineHeight: '1.25', overflowWrap: 'anywhere' }, children: heading }), jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }, children: [jsx(Badge, { text: t.severity[head.severity] || head.severity, tone: SEVERITY_TONE[head.severity] || 'muted', large: true }), head.severity === 'error' ? jsx(Badge, { text: t.blocksApproval, tone: "error", large: true }) : jsx(Badge, { text: t.status[head.status] || head.status, tone: STATUS_TONE[head.status] || 'muted', large: true }), jsx("span", { class: "s4vp-muted", style: { fontSize: '13px' }, children: head.title })] })] }), jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { label: t.prev, small: true, disabled: !prevItem, onClick: () => prevItem && pickItem(prevItem) }), jsx(Button, { label: t.next, small: true, disabled: !nextItem, onClick: () => nextItem && pickItem(nextItem) })] })] }), item && item.description ? jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.description }) : null, item && item.reopened && item.canClose ? jsx("div", { class: "s4vp-small", children: t.reopened }) : null, facts.length ? (jsx("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '6px 28px' }, children: facts.map((f) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { class: "s4vp-muted", children: t.facts[f.key] || f.key }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', textAlign: 'right' }, children: factValue(f) })] }, `f${f.key}`))) })) : null] }), jsxs("div", { class: "s4vp-cols", children: [jsxs("div", { class: "s4vp-col-main", children: [compare ? (jsx(Card, { flush: true, title: t.compareTitle, sub: t.compareSub(compare), children: jsx(Table, { label: t.compareTitle, columns: compareColumns, rows: compareRows, keyOf: (r) => r.key, search: true, searchPlaceholder: t.compareSearch }) })) : null, item && item.employee ? (jsx(Card, { title: t.inputsTitle, children: inputs.length ? (inputs.map((x) => (jsxs("div", { class: "s4vp-line", children: [jsx("span", { style: { minWidth: '0', overflowWrap: 'anywhere' }, children: `${t.inputKind[x.kind] || x.kind || ''}${x.description ? ` - ${x.description}` : ''}` }), jsx("span", { style: { fontVariantNumeric: 'tabular-nums', fontWeight: '600', whiteSpace: 'nowrap' }, children: money(x.amount) })] }, `i${x.id}`)))) : (jsx("div", { class: "s4vp-muted", style: { fontSize: '13px' }, children: t.inputsNone })) })) : null] }), jsxs(SidePanel, { title: t.handle, children: [item && item.hint ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '4px' }, children: [jsx("div", { class: "s4vp-small", children: t.hint }), jsx("div", { style: { overflowWrap: 'anywhere' }, children: item.hint })] })) : null, jsx("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }, children: links.map((l, i) => (jsx("span", { children: l }, `l${i}`))) }), item ? (jsx(Field, { label: t.assignee, children: jsx(AutoSelect, { value: form.assignee, onInput: setField('assignee'), options: assigneeOptions, placeholder: t.unassigned, ariaLabel: t.assignee }) })) : null, item ? (jsx(Field, { label: t.note, hint: needNote ? null : t.noteHint, children: jsx(TextArea, { value: form.note, onInput: setField('note'), rows: 3, ariaLabel: t.note }) })) : null, needNote ? (jsx("div", { role: "alert", style: { color: '#8A1C14', fontSize: '13px', fontWeight: '600' }, children: t.noteRequired })) : null, handleButtons.length ? (jsx("div", { class: "s4vp-actions", children: handleButtons.map((b, i) => (jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`))) })) : null, jsx("div", { class: "s4vp-small", children: item && !item.canClose ? t.errorNoClose : t.footnote }), item ? (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid #E1E5E8', paddingTop: '12px' }, children: [jsx("div", { style: { fontWeight: '700' }, children: t.history }), history.length ? (history.map((h, i) => (jsxs("div", { style: { fontSize: '13px', overflowWrap: 'anywhere' }, children: [jsx("span", { class: "s4vp-muted", children: `${fmtAt(h.at)} - ${h.user || ''}: ` }), jsx("span", { style: { fontWeight: '600' }, children: t.status[h.status] || h.status || '' }), h.assigneeName ? jsx("span", { children: `, ${t.assignedTo(h.assigneeName)}` }) : null, h.note ? jsx("span", { children: ` - ${h.note}` }) : null] }, `h${i}`)))) : (jsx("div", { class: "s4vp-small", children: t.historyNone }))] })) : null] })] })] }));
         }
         // ------------------------------------------------------------------ nhật ký
         const logItems = log && Array.isArray(log.items) ? log.items : [];

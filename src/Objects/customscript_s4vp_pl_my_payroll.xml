@@ -1,0 +1,20 @@
+<portlet scriptid="customscript_s4vp_pl_my_payroll">
+  <name>S4VP My Payroll (portlet)</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_pl_my_payroll.js]</scriptfile>
+  <portlettype>HTML</portlettype>
+  <description>Employee Center / dashboard portlet: a light header plus the self-service portal overview (customscript_s4vp_sl_my_payroll, view=dashboard, embed=1) in an iframe. Runs as the viewer (no run-as role) and reads no payroll record; the embedded Suitelet filters every query by the logged-in employee.</description>
+  <isinactive>F</isinactive>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_s4vp_pl_my_payroll">
+      <allemployees>T</allemployees>
+      <allroles>T</allroles>
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <status>RELEASED</status>
+      <title>S4VP My Payroll</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</portlet>

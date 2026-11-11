@@ -10,12 +10,18 @@
  * trong nhánh điều kiện vẫn an toàn.
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
-import {money, num, pct, fmtDate, toIso, quickFilter} from '../lib/format.js';
+import {money, num, pct, fmtDate, toIso, toNumber, fold, quickFilter} from '../lib/format.js';
 import {pick} from '../lib/i18n.js';
 
 const TEXT = {
-	vi: {search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}`},
-	en: {search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', back: 'Back', backTo: (name) => `Back to ${name}`},
+	vi: {
+		search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}`,
+		choose: 'Chọn...', filter: 'Gõ để lọc', noMatch: 'Không có mục nào khớp', more: (n) => `Còn ${n} mục, gõ thêm để lọc`, required: 'Bắt buộc', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
+	},
+	en: {
+		search: 'Search (name, code, amount)', matches: (n) => `${n} matching rows`, empty: 'No data', close: 'Close', steps: 'Steps', back: 'Back', backTo: (name) => `Back to ${name}`,
+		choose: 'Select...', filter: 'Type to filter', noMatch: 'No matching items', more: (n) => `${n} more, type to narrow the list`, required: 'Required', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
+	},
 };
 
 const cx = (...names) => names.filter(Boolean).join(' ');
@@ -288,6 +294,22 @@ function controlAttrs(p, id, extraClass) {
 	return attrs;
 }
 
+// Thuộc tính giới hạn của ô số / ngày: đặt qua JSX và đặt lại sau khi vẽ (không phụ thuộc UIF có ghi ra DOM hay không)
+const LIMIT_ATTRS = ['min', 'max', 'step'];
+function limitAttrs(p, attrs) {
+	LIMIT_ATTRS.forEach((k) => {
+		if (!blank(p[k]) && p[k] !== '') attrs[k] = String(p[k]);
+	});
+}
+function syncLimits(el, p) {
+	LIMIT_ATTRS.forEach((k) => {
+		const v = blank(p[k]) ? '' : String(p[k]);
+		if (v) {
+			if (el.getAttribute(k) !== v) el.setAttribute(k, v);
+		} else if (el.hasAttribute(k)) el.removeAttribute(k);
+	});
+}
+
 function InputImpl(p) {
 	const want = text(p.show ? p.show(p.value) : p.value);
 	const id = useSyncedId(want);
@@ -295,8 +317,353 @@ function InputImpl(p) {
 	attrs.type = p.type || 'text';
 	attrs.value = want;
 	if (p.inputmode) attrs.inputmode = p.inputmode;
+	if (attrs.type === 'number') limitAttrs(p, attrs);
+	attrs.autocomplete = 'off';
+	useEffect(() => {
+		if (attrs.type !== 'number') return;
+		try {
+			const el = document.getElementById(id);
+			if (el) syncLimits(el, p);
+		} catch (e) {
+			// bỏ qua: ô vẫn nhập được, chỉ thiếu bước / giới hạn của trình duyệt
+		}
+	});
+	return <input {...attrs} />;
+}
+
+// ------------------------------------------------------------------ ô ngày, tháng, giờ (ô gốc của trình duyệt)
+
+// Trình duyệt có ô gốc cho kiểu này không: kiểu không hỗ trợ bị đổi về 'text' và nhận mọi giá trị. Kết quả nhớ theo kiểu;
+// sau khi vẽ còn kiểm lại input.type thật (UIF không ghi thuộc tính type thì cũng lùi về ô chữ).
+const NATIVE = {};
+export function nativeType(type) {
+	if (NATIVE[type] !== undefined) return NATIVE[type];
+	let ok = false;
+	try {
+		const el = document.createElement('input');
+		el.setAttribute('type', type);
+		el.value = 'x-not-valid';
+		ok = el.type === type && el.value === '';
+	} catch (e) {
+		ok = false;
+	}
+	NATIVE[type] = ok;
+	return ok;
+}
+
+const pad2 = (n) => String(n).padStart(2, '0');
+/** Ô chữ dự phòng của ô ngày: dd/mm/yyyy hoặc yyyy-mm-dd -> yyyy-mm-dd (ngày có thật); chưa đủ ngày thì trả nguyên chuỗi đang gõ. */
+export function readDate(raw) {
+	const s = text(raw).trim();
+	const iso = toIso(s);
+	const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(iso);
+	if (!m) return s;
+	const y = Number(m[1]);
+	const mo = Number(m[2]);
+	const d = Number(m[3]);
+	if (mo < 1 || mo > 12 || d < 1 || d > new Date(Date.UTC(y, mo, 0)).getUTCDate()) return s;
+	return `${m[1]}-${pad2(mo)}-${pad2(d)}`;
+}
+/** Ô chữ dự phòng của ô tháng: yyyy-mm, mm/yyyy -> yyyy-mm; chưa đủ thì trả nguyên chuỗi. */
+export function readMonth(raw) {
+	const s = text(raw).trim();
+	let m = /^(\d{4})[-/.](\d{1,2})$/.exec(s);
+	if (m && Number(m[2]) >= 1 && Number(m[2]) <= 12) return `${m[1]}-${pad2(m[2])}`;
+	m = /^(\d{1,2})[-/.](\d{4})$/.exec(s);
+	if (m && Number(m[1]) >= 1 && Number(m[1]) <= 12) return `${m[2]}-${pad2(m[1])}`;
+	return s;
+}
+/** Ô chữ dự phòng của ô giờ: 8:30, 08h30, 8.30 -> 08:30; chưa đủ thì trả nguyên chuỗi. */
+export function readTime(raw) {
+	const s = text(raw).trim();
+	const m = /^(\d{1,2})[:hH.](\d{2})$/.exec(s);
+	if (m && Number(m[1]) < 24 && Number(m[2]) < 60) return `${pad2(m[1])}:${m[2]}`;
+	return s;
+}
+
+const TYPED = {
+	date: {valid: /^\d{4}-\d{2}-\d{2}$/, show: fmtDate, read: readDate, hint: () => 'dd/mm/yyyy', inputmode: 'numeric'},
+	month: {valid: /^\d{4}-\d{2}$/, show: (v) => text(v), read: readMonth, hint: (t) => t.monthHint, inputmode: 'numeric'},
+	time: {valid: /^\d{2}:\d{2}(:\d{2})?$/, show: (v) => text(v), read: readTime, hint: (t) => t.timeHint, inputmode: 'numeric'},
+};
+
+/**
+ * Giá trị ô theo chế độ: ô gốc nhận đúng dạng ISO (khác dạng thì để trống); ô chữ dự phòng hiện dạng gõ được
+ * (ngày dd/mm/yyyy). Xuất ra để kiểm thử.
+ */
+export function typedValue(kind, native, value) {
+	const spec = TYPED[kind];
+	const v = text(value);
+	if (native) return spec.valid.test(v) ? v : '';
+	return text(spec.show(v));
+}
+
+function TypedImpl(p) {
+	const t = pick(TEXT);
+	const kind = TYPED[p.kind] ? p.kind : 'date';
+	const spec = TYPED[kind];
+	const [, redraw] = useState(0);
+	const native = nativeType(kind);
+	const want = typedValue(kind, native, p.value);
+	const id = useSyncedId(want);
+	useEffect(() => {
+		if (!native) return;
+		try {
+			const el = document.getElementById(id);
+			if (!el) return;
+			// UIF không ghi type hoặc trình duyệt đổi về ô chữ: lùi về ô chữ cho mọi ô cùng kiểu
+			if (el.type !== kind) {
+				NATIVE[kind] = false;
+				redraw(Date.now());
+				return;
+			}
+			syncLimits(el, p);
+		} catch (e) {
+			// bỏ qua
+		}
+	});
+	const attrs = controlAttrs(Object.assign({}, p, {read: native ? (v) => v : spec.read}), id, '');
+	attrs.value = want;
+	attrs.autocomplete = 'off';
+	if (native) {
+		attrs.type = kind;
+		limitAttrs(p, attrs);
+		delete attrs.placeholder;
+		if (!attrs.title && p.placeholder) attrs.title = p.placeholder;
+	} else {
+		attrs.type = 'text';
+		attrs.inputmode = spec.inputmode;
+		attrs.placeholder = p.placeholder || spec.hint(t);
+	}
+	return <input {...attrs} />;
+}
+
+// ------------------------------------------------------------------ ô số tiền, hộp kiểm
+
+/** Chuỗi số tiền đã gõ -> có phân tách nghìn theo vi-VN (1.234.567,5); không đọc được số thì null. */
+export function formatAmountText(raw, decimals) {
+	const n = toNumber(raw);
+	if (n === null) return null;
+	return n.toLocaleString('vi-VN', {maximumFractionDigits: blank(decimals) ? 2 : decimals});
+}
+
+// Gắn trình nghe sự kiện gốc một lần cho phần tử (UIF không bắn onBlur / onChange): đánh dấu trên phần tử để vẽ lại không gắn lặp
+function bindOnce(id, mark, event, fn) {
+	try {
+		const el = document.getElementById(id);
+		if (!el || el[mark]) return;
+		el[mark] = true;
+		el.addEventListener(event, () => fn(el));
+	} catch (e) {
+		// bỏ qua
+	}
+}
+
+function MoneyImpl(p) {
+	const want = text(typeof p.value === 'number' ? formatAmountText(p.value, p.decimals) : p.value);
+	const id = useSyncedId(want);
+	const latest = useRef(p);
+	latest.current = p;
+	useEffect(() => {
+		bindOnce(id, '__s4vpMoney', 'focusout', (el) => {
+			const f = formatAmountText(el.value, latest.current.decimals);
+			if (f === null || f === el.value) return;
+			el.value = f;
+			if (latest.current.onInput) latest.current.onInput(f);
+		});
+		// Giá trị chương trình đặt dạng số thô ("15000000"): hiện có phân tách khi ô không có con trỏ (toNumber đọc được cả hai dạng)
+		try {
+			const el = document.getElementById(id);
+			if (el && document.activeElement !== el && /^-?\d+(\.\d+)?$/.test(el.value)) {
+				const f = formatAmountText(el.value, latest.current.decimals);
+				if (f !== null) el.value = f;
+			}
+		} catch (e) {
+			// bỏ qua
+		}
+	});
+	const attrs = controlAttrs(Object.assign({}, p, {align: 'right'}), id, '');
+	attrs.type = 'text';
+	attrs.value = want;
+	attrs.inputmode = 'decimal';
 	attrs.autocomplete = 'off';
 	return <input {...attrs} />;
+}
+
+function CheckImpl(p) {
+	const ref = useRef(null);
+	if (!ref.current) {
+		fieldSeq += 1;
+		ref.current = `s4vp-f${fieldSeq}`;
+	}
+	const id = ref.current;
+	const latest = useRef(p);
+	latest.current = p;
+	useEffect(() => {
+		try {
+			const el = document.getElementById(id);
+			if (el && el.checked !== !!p.checked) el.checked = !!p.checked;
+		} catch (e) {
+			// bỏ qua
+		}
+		bindOnce(id, '__s4vpCheck', 'change', (el) => latest.current.onInput && latest.current.onInput(!!el.checked));
+	});
+	const attrs = {id, type: 'checkbox', class: 's4vp-check-in'};
+	if (p.checked) attrs.checked = 'checked';
+	if (p.disabled) attrs.disabled = 'disabled';
+	if (p.ariaLabel) attrs['aria-label'] = p.ariaLabel;
+	const body = [<input key="i" {...attrs} />, blank(p.label) || p.label === '' ? null : <span key="l">{text(p.label)}</span>];
+	// Trong Field (đã là <label>) thì không lồng thêm <label>
+	return p.inField ? <span class="s4vp-check">{body}</span> : <label class="s4vp-check">{body}</label>;
+}
+
+// ------------------------------------------------------------------ ô chọn có tìm kiếm
+
+const normOptions = (options) => (options || []).filter((o) => !blank(o)).map((o) => (typeof o === 'object' ? {value: text(o.value), label: text(o.label)} : {value: text(o), label: text(o)}));
+
+/** Lọc danh sách chọn: mọi từ gõ phải khớp nhãn hoặc giá trị (không phân biệt dấu); trả tối đa `limit` mục và tổng số khớp. */
+export function filterOptions(options, query, limit) {
+	const list = normOptions(options);
+	const words = fold(query).split(/\s+/).filter((w) => w);
+	const hits = words.length ? list.filter((o) => {
+		const s = fold(`${o.label} ${o.value}`);
+		return words.every((w) => s.indexOf(w) >= 0);
+	}) : list;
+	return {items: hits.slice(0, limit || 200), total: hits.length};
+}
+
+const SEARCH_LIMIT = 200;
+
+function SearchSelectImpl(p) {
+	const t = pick(TEXT);
+	const [open, setOpen] = useState(false);
+	const [query, setQuery] = useState('');
+	const [active, setActive] = useState(0);
+	const ref = useRef(null);
+	if (!ref.current) {
+		fieldSeq += 1;
+		ref.current = `s4vp-ss${fieldSeq}`;
+	}
+	const base = ref.current;
+	const want = text(p.value);
+	const options = normOptions(p.options);
+	const all = blank(p.placeholder) ? options : [{value: '', label: text(p.placeholder)}].concat(options.filter((o) => o.value !== ''));
+	const current = all.filter((o) => o.value === want)[0] || null;
+	const shown = filterOptions(all, query, SEARCH_LIMIT);
+	const close = (focusBack) => {
+		setOpen(false);
+		setQuery('');
+		setActive(0);
+		if (focusBack)
+			setTimeout(() => {
+				try {
+					const b = document.getElementById(`${base}-b`);
+					if (b) b.focus();
+				} catch (e) {
+					// bỏ qua
+				}
+			}, 0);
+	};
+	const choose = (o) => {
+		close(true);
+		if (o && p.onInput && o.value !== want) p.onInput(o.value);
+	};
+	// Phím trên ô lọc xử lý bằng trình nghe gốc (mũi tên lặp khi giữ phím; Esc không lan ra hộp thoại bao ngoài)
+	const live = useRef(null);
+	live.current = {shown, active, choose, close, setActive};
+	useEffect(() => {
+		if (!open) return undefined;
+		let on = true;
+		const outside = (ev) => {
+			try {
+				const w = document.getElementById(base);
+				if (on && w && !w.contains(ev.target)) close(false);
+			} catch (e) {
+				// bỏ qua
+			}
+		};
+		const timer = setTimeout(() => {
+			if (!on) return;
+			document.addEventListener('click', outside);
+			try {
+				const q = document.getElementById(`${base}-q`);
+				if (q) q.focus();
+			} catch (e) {
+				// bỏ qua
+			}
+		}, 0);
+		return () => {
+			on = false;
+			clearTimeout(timer);
+			document.removeEventListener('click', outside);
+		};
+	}, [open]);
+	useEffect(() => {
+		if (!open) return;
+		try {
+			const q = document.getElementById(`${base}-q`);
+			if (q && !q.__s4vpKeys) {
+				q.__s4vpKeys = true;
+				q.addEventListener('keydown', (ev) => {
+					const L = live.current;
+					const n = L.shown.items.length;
+					if (ev.key === 'ArrowDown') L.setActive(Math.min(L.active + 1, Math.max(n - 1, 0)));
+					else if (ev.key === 'ArrowUp') L.setActive(Math.max(L.active - 1, 0));
+					else if (ev.key === 'Home') L.setActive(0);
+					else if (ev.key === 'End') L.setActive(Math.max(n - 1, 0));
+					else if (ev.key === 'Enter') {
+						if (n) L.choose(L.shown.items[Math.min(L.active, n - 1)]);
+					} else if (ev.key === 'Escape') L.close(true);
+					else return;
+					ev.preventDefault();
+					ev.stopPropagation();
+				});
+				q.addEventListener('keyup', (ev) => {
+					if (ev.key === 'Escape') ev.stopPropagation();
+				});
+			}
+			const opt = document.getElementById(`${base}-o${active}`);
+			if (opt && opt.scrollIntoView) opt.scrollIntoView({block: 'nearest'});
+		} catch (e) {
+			// bỏ qua
+		}
+	});
+	const label = current ? current.label : want ? want : t.choose;
+	const btn = {id: `${base}-b`, type: 'button', class: cx('s4vp-in', 's4vp-ss-btn', current && current.value !== '' ? '' : 's4vp-ss-ph'), 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false'};
+	if (p.disabled) btn.disabled = 'disabled';
+	else btn.onClick = () => (open ? close(false) : setOpen(true));
+	if (p.ariaLabel) btn['aria-label'] = `${p.ariaLabel}: ${label}`;
+	btn.title = p.title || label;
+	const wrap = {id: base, class: cx('s4vp-ss', open ? 's4vp-ss-open' : '')};
+	if (p.width) wrap.style = {width: px(p.width)};
+	const q = {id: `${base}-q`, type: 'search', class: 's4vp-in', value: query, placeholder: t.filter, 'aria-label': p.ariaLabel ? `${p.ariaLabel} - ${t.filter}` : t.filter, autocomplete: 'off', role: 'combobox', 'aria-controls': `${base}-l`, 'aria-expanded': 'true'};
+	q.onInput = (m) => {
+		setQuery(valueOf(m));
+		setActive(0);
+	};
+	if (shown.items.length) q['aria-activedescendant'] = `${base}-o${Math.min(active, shown.items.length - 1)}`;
+	return (
+		<div {...wrap}>
+			<button {...btn}>
+				<span class="s4vp-ss-val">{label}</span>
+				<span class="s4vp-ss-caret" aria-hidden="true">{'▾'}</span>
+			</button>
+			{open ? (
+				<div class="s4vp-ss-pop">
+					<input {...q} />
+					<div id={`${base}-l`} class="s4vp-ss-list" role="listbox">
+						{shown.items.map((o, i) => (
+							<button key={`o${o.value}`} id={`${base}-o${i}`} type="button" role="option" tabindex="-1" class={cx('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : '')} aria-selected={o.value === want ? 'true' : 'false'} onClick={() => choose(o)}>
+								{o.label || o.value || t.choose}
+							</button>
+						))}
+						{shown.total ? null : <div class="s4vp-ss-note">{t.noMatch}</div>}
+						{shown.total > shown.items.length ? <div class="s4vp-ss-note">{t.more(shown.total - shown.items.length)}</div> : null}
+					</div>
+				</div>
+			) : null}
+		</div>
+	);
 }
 
 function SelectImpl(p) {
@@ -335,19 +702,61 @@ export function TextInput(props) {
 	return <InputImpl {...props} />;
 }
 
-/** Ô số: căn phải, onInput nhận chuỗi người dùng gõ (đổi sang số bằng toNumber của lib/format.js khi lưu). */
+/**
+ * Ô số: căn phải, bàn phím số trên điện thoại; onInput nhận chuỗi người dùng gõ (đổi sang số bằng toNumber khi lưu).
+ * Có min / max / step thì là <input type="number"> (mũi tên lên xuống theo bước, ví dụ giờ step 0.5 min 0); không có thì là ô chữ
+ * (gõ được 1.234,5).
+ */
 export function NumberInput(props) {
-	return <InputImpl {...props} align="right" inputmode="decimal" />;
+	const spin = ['min', 'max', 'step'].some((k) => !blank(props[k]) && props[k] !== '');
+	return <InputImpl {...props} align="right" inputmode="decimal" type={spin ? 'number' : 'text'} />;
 }
 
-/** Ô ngày: nhận dd/mm/yyyy hoặc yyyy-mm-dd; onInput nhận chuỗi ISO khi gõ đủ ngày, ngược lại chuỗi đang gõ; value ISO hiện dd/mm/yyyy. */
+/** Ô số tiền: căn phải, gõ tự do (1234567 hoặc 1.234.567), rời ô thì tự thêm phân tách nghìn; value số thì hiện đã phân tách. decimals: số lẻ tối đa (mặc định 2). */
+export function MoneyInput(props) {
+	return <MoneyImpl {...props} />;
+}
+
+/**
+ * Ô ngày: <input type="date"> (lịch chọn của trình duyệt, hiển thị theo ngôn ngữ trình duyệt, vẫn gõ được); value và onInput là
+ * ISO yyyy-mm-dd ('' khi xóa). min / max ISO. Trình duyệt không có ô ngày (hoặc UIF không ghi type) thì là ô chữ dd/mm/yyyy như cũ:
+ * onInput nhận ISO khi gõ đủ một ngày có thật, ngược lại chuỗi đang gõ.
+ */
 export function DateInput(props) {
-	return <InputImpl placeholder="dd/mm/yyyy" {...props} show={fmtDate} read={toIso} inputmode="numeric" />;
+	return <TypedImpl {...props} kind="date" />;
+}
+
+/** Ô tháng (kỳ YYYY-MM): <input type="month">; trình duyệt không hỗ trợ thì ô chữ yyyy-mm (nhận cả mm/yyyy). */
+export function MonthInput(props) {
+	return <TypedImpl {...props} kind="month" />;
+}
+
+/** Ô giờ trong ngày (HH:MM): <input type="time">; không hỗ trợ thì ô chữ hh:mm (nhận 8:30, 8h30). */
+export function TimeInput(props) {
+	return <TypedImpl {...props} kind="time" />;
+}
+
+/** Hộp kiểm có / không: {checked, onInput(boolean), label, disabled, ariaLabel, inField (đặt trong Field thì không lồng <label>)}. */
+export function Checkbox(props) {
+	return <CheckImpl {...props} />;
 }
 
 /** Ô chọn: {value, onInput(value), options: [{value, label}], placeholder (dòng trống đầu danh sách), width, disabled, ariaLabel}. */
 export function Select(props) {
 	return <SelectImpl {...props} />;
+}
+
+/**
+ * Ô chọn có tìm kiếm cho danh sách dài (nhân viên, dự án, tài khoản...): cùng props với Select. Bấm mở khung có ô lọc (không phân
+ * biệt dấu, khớp nhãn và mã); mũi tên lên / xuống chọn, Enter lấy, Esc đóng; hiện tối đa 200 mục khớp.
+ */
+export function SearchSelect(props) {
+	return <SearchSelectImpl {...props} />;
+}
+
+/** Chọn Select hay SearchSelect theo độ dài danh sách (quá 15 mục thì có ô tìm). */
+export function AutoSelect(props) {
+	return (props.options || []).length > 15 ? <SearchSelectImpl {...props} /> : <SelectImpl {...props} />;
 }
 
 export function TextArea(props) {
@@ -360,11 +769,15 @@ export function SearchBox({value, onInput, placeholder, width, label}) {
 	return <InputImpl type="search" value={value} onInput={onInput} placeholder={placeholder || t.search} ariaLabel={label || placeholder || t.search} width={width || 260} />;
 }
 
-/** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. */
-export function Field({label, children, hint}) {
+/** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. required: thêm dấu * đỏ sau nhãn. */
+export function Field({label, children, hint, required}) {
+	const t = pick(TEXT);
 	return (
 		<label class="s4vp-field">
-			<span>{text(label)}</span>
+			<span>
+				{text(label)}
+				{required ? <span class="s4vp-req" title={t.required}>{' *'}</span> : null}
+			</span>
 			{children}
 			{blank(hint) || hint === '' ? null : <span class="s4vp-field-hint">{hint}</span>}
 		</label>

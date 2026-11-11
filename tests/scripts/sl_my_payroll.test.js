@@ -94,3 +94,18 @@ test("PDF: chỉ qua printDetail (lọc theo người đăng nhập); không có
   expect(r.file).toBeUndefined();
   expect(r.written).toContain("Không tìm thấy phiếu lương");
 });
+
+// Đọc dữ liệu khởi tạo nhúng trong trang (đối số của hàm client)
+const bootOf = (html) => JSON.parse(/\}\)\((\{[\s\S]*\})\);<\/script>/.exec(html)[1]);
+
+test("trang mặc định mở tab Tổng quan; view chọn tab mở đầu, giá trị lạ về Tổng quan", () => {
+  expect(bootOf(call("GET", {}).written)).toMatchObject({ view: "home", embed: false });
+  expect(bootOf(call("GET", { view: "requests" }).written).view).toBe("req");
+  expect(bootOf(call("GET", { view: "<x>" }).written).view).toBe("home");
+});
+
+test("embed=1: bản gọn cho portlet, có địa chỉ cổng đầy đủ, vẫn chỉ gọi boot", () => {
+  const b = bootOf(call("GET", { view: "dashboard", embed: "1" }).written);
+  expect(b).toMatchObject({ view: "home", embed: true, fullUrl: "/app/site/hosting/scriptlet.nl?script=7&deploy=1" });
+  expect(mock.calls.map((c) => c.params.op)).toEqual(["boot"]);
+});

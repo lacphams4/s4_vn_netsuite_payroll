@@ -15,7 +15,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, download} from '../lib/api.js';
 import {money, num, pct, fmtDate} from '../lib/format.js';
 import {pick} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Chips, Tabs, Select, Field, TextArea, SearchBox, SidePanel, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, Tabs, Select, AutoSelect, Field, TextArea, SearchBox, SidePanel, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -704,7 +704,7 @@ export default function CheckDetailView({app}) {
 						</div>
 						{item ? (
 							<Field label={t.assignee}>
-								<Select value={form.assignee} onInput={setField('assignee')} options={assigneeOptions} placeholder={t.unassigned} ariaLabel={t.assignee} />
+								<AutoSelect value={form.assignee} onInput={setField('assignee')} options={assigneeOptions} placeholder={t.unassigned} ariaLabel={t.assignee} />
 							</Field>
 						) : null}
 						{item ? (

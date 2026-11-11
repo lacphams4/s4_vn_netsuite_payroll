@@ -6,7 +6,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openJournal} from '../lib/api.js';
 import {fmtDate} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Select, Field, TextInput, Dialog} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, AutoSelect, Field, TextInput, Dialog} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -178,7 +178,7 @@ export default function PayrollListView({app}) {
 					empty={t.empty}
 					search={true}
 					searchPlaceholder={t.search}
-					toolbar={<Select value={period} onInput={setPeriod} options={periodOptions} placeholder={t.allPeriods} ariaLabel={t.period} width={300} />}
+					toolbar={<AutoSelect value={period} onInput={setPeriod} options={periodOptions} placeholder={t.allPeriods} ariaLabel={t.period} width={300} />}
 				/>
 			</Card>
 			{dialog ? (
@@ -187,8 +187,8 @@ export default function PayrollListView({app}) {
 					onClose={() => setDialog(false)}
 					actions={[<Button label={t.cancel} onClick={() => setDialog(false)} />, <Button label={t.create} kind="primary" disabled={!form.period || !!app.busy} onClick={create} />]}
 				>
-					<Field label={t.period}>
-						<Select value={form.period} onInput={setField('period')} options={periodOptions} placeholder={t.pickPeriod} />
+					<Field label={t.period} required={true}>
+						<AutoSelect value={form.period} onInput={setField('period')} options={periodOptions} placeholder={t.pickPeriod} />
 					</Field>
 					<Field label={t.description} hint={t.descriptionHint}>
 						<TextInput value={form.description} onInput={setField('description')} onEnter={create} />
