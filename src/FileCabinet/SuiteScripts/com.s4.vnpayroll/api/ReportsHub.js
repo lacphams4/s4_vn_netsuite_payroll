@@ -15,7 +15,8 @@
  *     {period, columns, rows, totals, byType, batches, pending, warnings}. Truy vấn gom nhóm trên batch_emp (không đọc detail);
  *     phòng ban = phòng ban của hồ sơ lương, trống thì của hồ sơ nhân viên NetSuite (giá trị HIỆN TẠI, không phải lúc tính lương).
  * - GET reportsPitLedger {subsidiary, year, releasedOnly?} -> sổ theo dõi thuế TNCN đã khấu trừ theo nhân viên, 12 tháng
- *     {year, columns, taxableColumns, rows, totals, months, summary, batches, pending, warnings}.
+ *     {year, columns, taxableColumns, rows, totals, months, summary, batches, pending, warnings}. Một truy vấn gom nhóm theo
+ *     nhân viên (tháng xoay thành cột, JOIN employee và hồ sơ lương theo l.profile) - xem ledgerRows.
  *
  * Bảng lương dùng được: đã tính, không đảo, cùng công ty con; releasedOnly = 'T' thì chỉ bảng đã ghi sổ. Kỳ quy về tháng tính
  * thuế (tax_month, trống thì mã kỳ yyyyMM) như api/Reports. Dữ liệu lương nhạy cảm: không ghi số tiền, số định danh vào log.
@@ -189,36 +190,85 @@ define(["./Store", "./Clock", "./Reports", "../core/ReportData", "../core/Report
 
 	// ------------------------------------------------------------------ sổ theo dõi thuế TNCN đã khấu trừ
 
-	function employeeInfo(ids) {
+	/** Mã, họ tên nhân viên theo id (chỉ dùng khi vai trò không nối được bảng employee trong truy vấn sổ thuế). */
+	function employeeNames(ids) {
 		const out = {};
-		const p = (f) => `p.${fld("employee", f)}`;
 		for (const part of chunks(idList(ids))) {
 			for (const r of Store.run(`SELECT e.id, e.entityid, e.firstname, e.lastname FROM employee e WHERE e.id IN (${part.join(",")})`, [], "s4vp_rh_emp")) {
-				out[str(r.id)] = { code: r.entityid, name: [r.lastname, r.firstname].filter(Boolean).join(" ").trim() || r.entityid, taxCode: "", employmentType: "" };
-			}
-			for (const r of Store.run(`SELECT ${p("employee")} AS employee, ${p("tax_code")} AS tax_code, ${p("employment_type")} AS etype FROM ${tbl("employee")} p WHERE p.isinactive = 'F' AND ${p("employee")} IN (${part.join(",")})`, [], "s4vp_rh_profile")) {
-				const k = str(r.employee);
-				out[k] = Object.assign(out[k] || { code: k, name: "" }, { taxCode: str(r.tax_code), employmentType: Store.codeOf("employment_type", r.etype) || "" });
+				out[str(r.id)] = { code: r.entityid, first: r.firstname, last: r.lastname };
 			}
 		}
 		return out;
+	}
+
+	/**
+	 * Sổ thuế TNCN cả năm trong MỘT truy vấn gom nhóm theo nhân viên (mỗi người một dòng thay vì một dòng mỗi bảng lương):
+	 * tổng thu nhập chịu thuế, thuế, số dòng lương của từng tháng tính thuế xoay thành cột bằng SUM(CASE WHEN batch IN (...)),
+	 * mã, họ tên lấy bằng JOIN employee, mã số thuế và loại lao động bằng JOIN hồ sơ lương theo khóa chính (p.id = l.profile) -
+	 * không còn truy vấn hồ sơ lương với danh sách hàng trăm id nhân viên. Chỉ id số nguyên của bảng lương được ghép vào câu
+	 * lệnh, không có tham số ràng buộc. Vai trò không nối được bảng employee: cùng truy vấn bỏ JOIN employee, họ tên đọc riêng.
+	 * Kết quả đổi về dạng dòng {employee, batch, employment_type, taxable, pit, count} mỗi người x tháng cho ReportExtras.pitLedger.
+	 */
+	function ledgerRows(batchIds, monthOf) {
+		const l = (f) => `l.${fld("batch_emp", f)}`;
+		const pf = (f) => `p.${fld("employee", f)}`;
+		const byMonth = {};
+		for (const id of batchIds) {
+			const mm = monthOf[id];
+			if (mm) (byMonth[mm] = byMonth[mm] || []).push(id);
+		}
+		const months = Object.keys(byMonth).sort();
+		const sums = [];
+		for (const mm of months) {
+			const when = `CASE WHEN ${l("batch")} IN (${byMonth[mm].join(",")}) THEN`;
+			sums.push(`SUM(${when} 1 ELSE 0 END) AS n${mm}`, `SUM(${when} ${l("taxable")} ELSE 0 END) AS tx${mm}`, `SUM(${when} ${l("pit")} ELSE 0 END) AS pit${mm}`);
+		}
+		const head = `${l("employee")} AS employee, MAX(${l("employment_type")}) AS etype, MAX(${pf("tax_code")}) AS tax_code, MAX(${pf("employment_type")}) AS p_etype`;
+		const from = `FROM ${tbl("batch_emp")} l LEFT JOIN ${tbl("employee")} p ON p.id = ${l("profile")}`;
+		const tail = `WHERE l.isinactive = 'F' AND ${l("batch")} IN (${batchIds.join(",")}) GROUP BY ${l("employee")}`;
+		let rows;
+		let names = null;
+		try {
+			rows = Store.run(
+				`SELECT ${head}, MAX(e.entityid) AS e_code, MAX(e.firstname) AS e_first, MAX(e.lastname) AS e_last, ${sums.join(", ")} ${from} LEFT JOIN employee e ON e.id = ${l("employee")} ${tail}`,
+				[], "s4vp_rh_pit_ledger"
+			);
+		} catch (e) {
+			rows = Store.run(`SELECT ${head}, ${sums.join(", ")} ${from} ${tail}`, [], "s4vp_rh_pit_ledger_noemp");
+			names = employeeNames(rows.map((r) => r.employee));
+		}
+		const lines = [];
+		const info = {};
+		for (const r of rows) {
+			const k = str(r.employee);
+			const n = names ? names[k] || {} : { code: r.e_code, first: r.e_first, last: r.e_last };
+			info[k] = { code: n.code || "", name: [n.last, n.first].filter(Boolean).join(" ").trim() || n.code || "", taxCode: str(r.tax_code), employmentType: Store.codeOf("employment_type", r.p_etype) || "" };
+			const etype = Store.codeOf("employment_type", r.etype) || "";
+			for (const mm of months) {
+				const count = num(r[`n${mm}`]);
+				if (count > 0) lines.push({ employee: k, batch: byMonth[mm][0], employment_type: etype, taxable: num(r[`tx${mm}`]), pit: num(r[`pit${mm}`]), count });
+			}
+		}
+		return { lines, info };
 	}
 
 	function pitLedger(p) {
 		const year = yearOf(p);
 		const batches = usable(p.subsidiary, (m) => Number(m.slice(0, 4)) === year, releasedOnlyOf(p));
 		const byId = {};
-		for (const b of batches) byId[str(b.id)] = { taxMonth: b.tax_month };
-		const l = (f) => `l.${fld("batch_emp", f)}`;
-		let lines = [];
-		for (const part of chunks(idList(batches.map((b) => b.id)))) {
-			lines = lines.concat(Store.run(
-				`SELECT ${l("employee")} AS employee, ${l("batch")} AS batch, ${l("employment_type")} AS etype, ${l("taxable")} AS taxable, ${l("pit")} AS pit FROM ${tbl("batch_emp")} l `
-				+ `WHERE l.isinactive = 'F' AND ${l("batch")} IN (${part.join(",")})`,
-				[], "s4vp_rh_pit_lines"
-			).map((r) => ({ employee: str(r.employee), batch: str(r.batch), employment_type: Store.codeOf("employment_type", r.etype) || "", taxable: num(r.taxable), pit: num(r.pit) })));
+		const monthOf = {};
+		for (const b of batches) {
+			byId[str(b.id)] = { taxMonth: b.tax_month };
+			if (/^\d{6}$/.test(str(b.tax_month))) monthOf[str(b.id)] = str(b.tax_month).slice(4, 6);
 		}
-		const out = Extras.pitLedger(lines, byId, employeeInfo(lines.map((x) => x.employee)), year);
+		let lines = [];
+		const info = {};
+		for (const part of chunks(idList(batches.map((b) => b.id)))) {
+			const r = ledgerRows(part, monthOf);
+			lines = lines.concat(r.lines);
+			for (const [k, v] of Object.entries(r.info)) if (!info[k] || (!info[k].taxCode && v.taxCode)) info[k] = v;
+		}
+		const out = Extras.pitLedger(lines, byId, info, year);
 		return Object.assign(out, { releasedOnly: releasedOnlyOf(p), batches: batches.length, pending: batches.filter((b) => b.status !== "R").length });
 	}
 

@@ -65,11 +65,12 @@ define(["./Money", "./Dates", "./RateTable", "./TeamSplitCalculator"], (Money, D
 		return { total: Money.sum(lines, (l) => l.amount).toNumber(), splitTotal: Money.sum(members, (m) => m.amount).toNumber() };
 	}
 
-	/** Chuyển trạng thái phiếu (4.3.3): submit H->P, approve P->A, hold P/A->H. */
+	/** Chuyển trạng thái phiếu (4.3.3): submit H->P, approve P->A, reject P->H (kèm lý do), hold P/A->H (trả về tạm giữ). */
 	function nextStatus(status, action) {
 		const st = norm(status || "H");
 		if (action === "submit") return st === "H" ? "P" : null;
 		if (action === "approve") return st === "P" ? "A" : null;
+		if (action === "reject") return st === "P" ? "H" : null;
 		if (action === "hold") return st === "P" || st === "A" ? "H" : null;
 		return null;
 	}

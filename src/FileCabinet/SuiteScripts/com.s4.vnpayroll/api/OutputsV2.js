@@ -4,8 +4,9 @@
  *                                                              chia tiền + bảng lương đã gộp + việc cần xử lý
  *   GET outputRate    {rateTable, date, project?, item?}       đơn giá hiệu lực của từng hạng mục tại ngày phiếu (gợi ý khi nhập)
  *   GET outputLookups {subsidiary}                             bảng đơn giá, tổ, dự án để lập phiếu
- * Nghiệp vụ (lập, sửa, nạp thành viên, chia tiền, gửi duyệt, duyệt, tạm giữ) giữ ở api/Output.js qua action cũ saveOutput,
- * loadTeamMembers, splitOutput, outputAction theo ma trận quyền cũ (administrator + HR).
+ * Nghiệp vụ (lập, sửa, nạp thành viên, chia tiền, gửi duyệt, duyệt, từ chối kèm lý do, tạm giữ, hủy phiếu tạm giữ) giữ ở
+ * api/Output.js qua action saveOutput, loadTeamMembers, splitOutput, outputAction, voidOutput theo ma trận quyền cũ
+ * (administrator + HR). Phiếu đã hủy (isinactive) không có trong outputsView.
  *
  * Số truy vấn của outputsView cố định (không lặp theo phiếu): phiếu (JOIN tổ, bảng đơn giá, kỳ, người duyệt, dự án), dòng
  * sản lượng, thành viên (JOIN nhân viên và hồ sơ lương), bảng lương của công ty con. Id số nguyên ghép thẳng vào câu lệnh.
@@ -52,7 +53,7 @@ define(["./Store", "./Lean", "../core/OutputRules", "../core/RateTable"], (Store
 
 	// ------------------------------------------------------------------ đọc
 
-	const ENTRY_KEYS = ["name", "doc_date", "period", "type", "rate_table", "team", "split_method", "project", "location", "work_center", "description", "status", "approved_date", "batch"];
+	const ENTRY_KEYS = ["name", "doc_date", "period", "type", "rate_table", "team", "split_method", "project", "location", "work_center", "department", "description", "status", "approved_date", "batch", "reject_reason"];
 	const TEAM_KEYS = ["name", "description"];
 	const TABLE_KEYS = ["name", "description", "type", "allow_override"];
 	const PERIOD_KEYS = ["name", "start", "end", "status", "att_status"];
@@ -67,13 +68,17 @@ define(["./Store", "./Lean", "../core/OutputRules", "../core/RateTable"], (Store
 		const extra = Lean.cols("team", TEAM_KEYS, "tm", "tm_")
 			.concat(Lean.cols("rate_table", TABLE_KEYS, "rt", "rt_"), Lean.cols("period", PERIOD_KEYS, "p", "p_"))
 			.concat(["ab.entityid AS ab_code", "ab.firstname AS ab_first", "ab.lastname AS ab_last"]);
-		const raw = TEAM_KEYS.map((k) => `tm_${k}`).concat(TABLE_KEYS.map((k) => `rt_${k}`), PERIOD_KEYS.map((k) => `p_${k}`), ["ab_code", "ab_first", "ab_last", "j_code", "j_name"]);
-		const read = (projectJoin, projectCols, tag) => Lean.select("output", ENTRY_KEYS, { where, order: "{id} DESC", join: join + projectJoin, extra: extra.concat(projectCols), raw, tag });
-		// Tên dự án lấy bằng JOIN; vai trò không đọc được bảng job thì dùng BUILTIN.DF
+		const raw = TEAM_KEYS.map((k) => `tm_${k}`).concat(TABLE_KEYS.map((k) => `rt_${k}`), PERIOD_KEYS.map((k) => `p_${k}`), ["ab_code", "ab_first", "ab_last", "j_code", "j_name", "d_name"]);
+		const read = (moreJoin, moreCols, tag) => Lean.select("output", ENTRY_KEYS, { where, order: "{id} DESC", join: join + moreJoin, extra: extra.concat(moreCols), raw, tag });
+		// Tên dự án, phòng ban lấy bằng JOIN; vai trò không đọc được bảng job / department thì dùng BUILTIN.DF
 		try {
-			return read(` LEFT JOIN job j ON j.id = ${c("project")}`, ["j.entityid AS j_code", "j.companyname AS j_name"], "s4vp_out_entries");
+			return read(
+				` LEFT JOIN job j ON j.id = ${c("project")} LEFT JOIN department d ON d.id = ${c("department")}`,
+				["j.entityid AS j_code", "j.companyname AS j_name", "d.fullname AS d_name"],
+				"s4vp_out_entries"
+			);
 		} catch (e) {
-			return read("", ["NULL AS j_code", `BUILTIN.DF(${c("project")}) AS j_name`], "s4vp_out_entries_df");
+			return read("", ["NULL AS j_code", `BUILTIN.DF(${c("project")}) AS j_name`, `BUILTIN.DF(${c("department")}) AS d_name`], "s4vp_out_entries_df");
 		}
 	}
 
@@ -213,6 +218,7 @@ define(["./Store", "./Lean", "../core/OutputRules", "../core/RateTable"], (Store
 				team: e.team || null, teamName: e.tm_name || "", teamDescription: e.tm_description || "", splitMethod: e.split_method || (isTeam ? "F" : null),
 				rateTable: e.rate_table || null, rateTableName: table.name || "", rateTableDescription: table.description || "", rateTableType: table.type || "", allowOverride: !!table.allow_override,
 				project: e.project || null, projectName: e.project ? [e.j_code, e.j_name].filter((x, i, a) => x && a.indexOf(x) === i).join(" ") : "", location: e.location || null, workCenter: e.work_center || null,
+				department: e.department || null, departmentName: e.department ? e.d_name || "" : "", rejectReason: e.reject_reason || "",
 				total, splitTotal, people: new Set(people.map((x) => String(x.employee))).size,
 				approvedDate: e.approved_date || null, approvedBy: person(e.ab_code, e.ab_first, e.ab_last),
 				batch: e.batch || null, batchName: batch.name || "", batchStatus: batch.status || "", postedBatch: posted,
@@ -268,16 +274,20 @@ define(["./Store", "./Lean", "../core/OutputRules", "../core/RateTable"], (Store
 
 	// ------------------------------------------------------------------ outputLookups
 
-	/** Danh mục để lập phiếu: bảng đơn giá, tổ của công ty con (hoặc tổ dùng chung), dự án (tối đa 300, more = true khi còn). */
+	/**
+	 * Danh mục để lập phiếu: bảng đơn giá, tổ của công ty con (hoặc tổ dùng chung, kèm phòng ban mặc định của tổ), dự án (tối
+	 * đa 300, more = true khi còn), phòng ban đang dùng (account không bật phòng ban / vai trò không đọc được thì rỗng).
+	 */
 	function outputLookups(params) {
 		const sc = scope(params);
 		const rateTables = Lean.select("rate_table", TABLE_KEYS, { order: "{name}", tag: "s4vp_out_tables" }).map((t) => ({ id: t.id, code: t.name || "", description: t.description || "", type: t.type || "W", allowOverride: !!t.allow_override }));
-		const teams = Lean.select("team", ["name", "description", "subsidiary", "split_method", "project", "location", "work_center"], { order: "{name}", tag: "s4vp_out_teams" })
+		const teams = Lean.select("team", ["name", "description", "subsidiary", "split_method", "project", "location", "work_center", "department"], { order: "{name}", tag: "s4vp_out_teams" })
 			.filter((t) => blank(t.subsidiary) || String(t.subsidiary) === sc.subsidiary)
-			.map((t) => ({ id: t.id, code: t.name || "", description: t.description || "", splitMethod: t.split_method || "F", project: t.project || null, location: t.location || null, workCenter: t.work_center || null }));
+			.map((t) => ({ id: t.id, code: t.name || "", description: t.description || "", splitMethod: t.split_method || "F", project: t.project || null, location: t.location || null, workCenter: t.work_center || null, department: t.department || null }));
 		const found = attempt(() => Store.run(`SELECT * FROM (SELECT j.id, j.entityid, j.companyname FROM job j WHERE j.isinactive = 'F' ORDER BY j.entityid) WHERE ROWNUM <= ${PROJECT_LIMIT + 1}`, [], "s4vp_out_projects"), []);
 		const projects = found.slice(0, PROJECT_LIMIT).map((j) => ({ id: String(j.id), name: [j.entityid, j.companyname].filter((x, i, a) => x && a.indexOf(x) === i).join(" ") }));
-		return { rateTables, teams, projects, projectsMore: found.length > PROJECT_LIMIT };
+		const departments = attempt(() => Store.run("SELECT d.id, d.fullname FROM department d WHERE d.isinactive = 'F' ORDER BY d.fullname", [], "s4vp_out_departments"), []).map((d) => ({ id: String(d.id), name: d.fullname || "" }));
+		return { rateTables, teams, projects, projectsMore: found.length > PROJECT_LIMIT, departments };
 	}
 
 	const routes = {

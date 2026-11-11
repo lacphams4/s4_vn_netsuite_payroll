@@ -5,7 +5,7 @@ const path = require("path");
 const API = path.join(__dirname, "../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api");
 const CORE = path.join(__dirname, "../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/core");
 
-const mockDb = { output: [], output_line: [], output_member: [], batch: [], team: [], rate_table: [], rate_line: [], period: [], emp: [], profiles: [], jobs: [], calls: [], sql: [], writes: [], failJob: false, failProjects: false, failBatches: false };
+const mockDb = { output: [], output_line: [], output_member: [], batch: [], team: [], rate_table: [], rate_line: [], period: [], emp: [], profiles: [], jobs: [], departments: [], calls: [], sql: [], writes: [], failJob: false, failProjects: false, failBatches: false, failDepartments: false };
 const db = mockDb;
 
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () => {
@@ -58,7 +58,10 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
           raw(sql, by(mockDb.period, e.period), "p_", o);
           const ab = by(mockDb.emp, e.approved_by);
           const j = by(mockDb.jobs, e.project);
-          return Object.assign(o, { ab_code: ab.entityid || null, ab_first: ab.firstname || null, ab_last: ab.lastname || null, j_code: /job j/.test(sql) ? j.entityid || null : null, j_name: j.companyname || null });
+          // Tên phòng ban: JOIN department (d.fullname) hoặc BUILTIN.DF ở câu lệnh dự phòng
+          if (!/LEFT JOIN department d ON d\.id = t\.custrecord_s4vp_oe_department/.test(sql) && !/BUILTIN\.DF\(t\.custrecord_s4vp_oe_department\) AS d_name/.test(sql)) throw new Error("department name must be joined");
+          const d = by(mockDb.departments, e.department);
+          return Object.assign(o, { ab_code: ab.entityid || null, ab_first: ab.firstname || null, ab_last: ab.lastname || null, j_code: /job j/.test(sql) ? j.entityid || null : null, j_name: j.companyname || null, d_name: d.fullname || null });
         }),
     s4vp_out_lines: child("output_line"),
     s4vp_out_members: child("output_member"),
@@ -73,6 +76,10 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
     s4vp_out_projects: () => {
       if (mockDb.failProjects) throw new Error("no permission");
       return mockDb.jobs.slice(0, 301);
+    },
+    s4vp_out_departments: () => {
+      if (mockDb.failDepartments) throw new Error("departments disabled");
+      return mockDb.departments.filter((d) => !d.isinactive).map((d) => ({ id: Number(d.id), fullname: d.fullname }));
     },
   };
   return {
@@ -118,7 +125,7 @@ beforeEach(() => {
     { id: "3", name: "2027-03", start: "2027-03-01", end: "2027-03-31", status: "O", att_status: "O" },
   ];
   db.team = [
-    { id: "5", name: "TO-XAY-1", description: "Tổ xây 1", subsidiary: "13", split_method: "F", project: "50", location: null, work_center: null },
+    { id: "5", name: "TO-XAY-1", description: "Tổ xây 1", subsidiary: "13", split_method: "F", project: "50", location: null, work_center: null, department: "77" },
     { id: "6", name: "TO-KHAC", description: "Tổ công ty khác", subsidiary: "14", split_method: "D" },
     { id: "7", name: "TO-CHUNG", description: "Tổ dùng chung", subsidiary: null, split_method: "E" },
   ];
@@ -135,6 +142,8 @@ beforeEach(() => {
     { id: "5", table: "3", item: "MAY", description: "May", uom: "cái", rate: 5000, effective: "2027-01-01", expiration: "2027-02-28", project: null },
   ];
   db.jobs = [{ id: "50", entityid: "DA01", companyname: "Dự án A" }];
+  db.departments = [{ id: "77", fullname: "Sản xuất : Tổ xây" }, { id: "31", fullname: "Kế toán" }, { id: "40", fullname: "Cũ", isinactive: true }];
+  db.failDepartments = false;
   db.batch = [
     { id: "6", name: "BL000006", subsidiary: "13", period: "2", status: "R" },
     { id: "7", name: "BL000007", subsidiary: "13", period: "3", status: "C" },
@@ -163,6 +172,29 @@ describe("outputsView", () => {
     expect(rowOf(r, 3).lines[0]).toMatchObject({ employee: "7", code: "E012", name: "Nguyễn Văn An", item: "XAY", qty: 4, rate: 120000, amount: 480000, noProfile: false });
     expect(rowOf(r, 5)).toMatchObject({ kind: "S", type: "I", rateTableName: "HH-DS" });
     expect(rowOf(r, 4)).toMatchObject({ status: "C", batch: "6", batchName: "BL000006", batchStatus: "R" });
+  });
+
+  test("phòng ban (tên bằng JOIN) và lý do từ chối gần nhất của phiếu", () => {
+    Object.assign(db.output.find((e) => e.id === "2"), { department: "77" });
+    Object.assign(db.output.find((e) => e.id === "1"), { reject_reason: "Sai khối lượng" });
+    const r = view();
+    expect(rowOf(r, 2)).toMatchObject({ department: "77", departmentName: "Sản xuất : Tổ xây", rejectReason: "" });
+    expect(rowOf(r, 1)).toMatchObject({ department: null, departmentName: "", rejectReason: "Sai khối lượng" });
+    expect(db.sql[0].sql).toMatch(/d\.fullname AS d_name/);
+    expect(db.sql[0].sql).toMatch(/t\.custrecord_s4vp_oe_reject_reason AS c_reject_reason/);
+    // Vai trò không đọc được bảng job: câu lệnh dự phòng lấy tên phòng ban bằng BUILTIN.DF
+    db.failJob = true;
+    expect(rowOf(view(), 2).departmentName).toBe("Sản xuất : Tổ xây");
+  });
+
+  test("phiếu đã hủy (isinactive) không có trong danh sách, số đếm và thẻ số liệu", () => {
+    db.output.find((e) => e.id === "1").isInactive = true;
+    const r = view();
+    expect(r.rows.map((x) => x.id)).toEqual(["5", "4", "3", "2"]);
+    expect(r.counts).toMatchObject({ all: 4, H: 1 });
+    expect(r.cards.total.holdAmount).toBe(0);
+    expect(db.sql.find((q) => q.tag === "s4vp_out_entries").sql).toMatch(/AND t\.isinactive = 'F' ORDER BY/);
+    expect(db.sql.find((q) => q.tag === "s4vp_out_lines").sql).toMatch(/o\.isinactive = 'F'/);
   });
 
   test("số đếm, thẻ số liệu và tổng", () => {
@@ -335,10 +367,17 @@ describe("outputLookups", () => {
     const r = V2.outputLookups({ subsidiary: "13" });
     expect(r.rateTables.map((t) => [t.code, t.type, t.allowOverride])).toEqual([["KHOAN-XD", "W", false], ["HH-DS", "S", false], ["CONG-DOAN", "O", true]]);
     expect(r.teams.map((t) => t.code)).toEqual(["TO-XAY-1", "TO-CHUNG"]);
-    expect(r.teams[0]).toMatchObject({ id: "5", splitMethod: "F", project: "50" });
+    expect(r.teams[0]).toMatchObject({ id: "5", splitMethod: "F", project: "50", department: "77" });
+    expect(r.teams[1].department).toBeNull();
     expect(r.projects).toEqual([{ id: "50", name: "DA01 Dự án A" }]);
     expect(r.projectsMore).toBe(false);
-    expect(db.calls).toEqual(["s4vp_out_tables", "s4vp_out_teams", "s4vp_out_projects"]);
+    expect(r.departments).toEqual([{ id: "77", name: "Sản xuất : Tổ xây" }, { id: "31", name: "Kế toán" }]);
+    expect(db.calls).toEqual(["s4vp_out_tables", "s4vp_out_teams", "s4vp_out_projects", "s4vp_out_departments"]);
+  });
+
+  test("account không bật phòng ban hoặc vai trò không đọc được: danh sách phòng ban rỗng, màn vẫn mở", () => {
+    db.failDepartments = true;
+    expect(V2.outputLookups({ subsidiary: "13" })).toMatchObject({ departments: [], teams: expect.any(Array) });
   });
 
   test("quá 300 dự án thì báo còn nữa; không đọc được dự án thì danh sách rỗng", () => {

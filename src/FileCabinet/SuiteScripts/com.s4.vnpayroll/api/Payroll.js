@@ -113,11 +113,14 @@ define([
 		for (const g of Store.find("paygroup", { includeInactive: true })) groups[g.id] = String(g.name).trim().toUpperCase();
 		const conds = {};
 		for (const c of Store.find("rule_cond")) (conds[c.rule] = conds[c.rule] || []).push({ field: c.field, comparison: c.operator, value: c.value });
+		// Quy tắc lưu bảng đơn giá theo internal id; sản lượng và bảng đơn giá trong ngữ cảnh tính khóa theo MÃ bảng (tên viết hoa)
+		const rateTableCode = {};
+		for (const t of Store.find("rate_table", { includeInactive: true })) rateTableCode[String(t.id)] = String(t.name).trim().toUpperCase();
 		const rules = Store.find("earning_rule", { includeInactive: true }).map((r) => ({
 			code: String(r.name).trim().toUpperCase(), description: r.description, sequence: blank(r.sequence) ? 100 : r.sequence, earningType: codeOf(r.earning_type),
 			payGroup: r.paygroup ? groups[r.paygroup] : "", salaryType: r.salary_type || "", employmentType: r.employment_type || "", effectiveDate: r.effective,
 			expirationDate: r.expiration, quantitySource: r.qty_source, hoursFallbackToWorkDays: r.hours_fallback, baseEarningType: codeOf(r.base_et),
-			shiftKind: r.shift_kind || "", rateTable: r.rate_table || "", rateSource: r.rate_source, fixedRate: r.fixed_rate, tierMethod: r.tier_method || "P",
+			shiftKind: r.shift_kind || "", rateTable: r.rate_table ? rateTableCode[String(r.rate_table)] || "" : "", rateSource: r.rate_source, fixedRate: r.fixed_rate, tierMethod: r.tier_method || "P",
 			multiplier: blank(r.multiplier) ? 1 : r.multiplier, proration: r.proration || "N", conditions: conds[r.id] || [], failAction: r.fail_action || "N",
 			reductionPercent: r.reduction || 0, isActive: !r.isInactive,
 		}));

@@ -115,6 +115,18 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_tm_department">
+      <label>Phòng ban</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>-102</selectrecordtype>
+      <description>Phòng ban</description>
+      <help>Phòng ban</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
   </customrecordcustomfields>
   <permissions>
     <permission>

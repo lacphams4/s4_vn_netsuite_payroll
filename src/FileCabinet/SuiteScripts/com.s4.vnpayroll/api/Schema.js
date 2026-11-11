@@ -2368,6 +2368,11 @@ define([], () => {
 					"id": "custrecord_s4vp_tm_work_center",
 					"type": "select",
 					"target": "class"
+				},
+				"department": {
+					"id": "custrecord_s4vp_tm_department",
+					"type": "select",
+					"target": "department"
 				}
 			}
 		},
@@ -2496,6 +2501,21 @@ define([], () => {
 				"split_total": {
 					"id": "custrecord_s4vp_oe_split_total",
 					"type": "currency",
+					"target": null
+				},
+				"department": {
+					"id": "custrecord_s4vp_oe_department",
+					"type": "select",
+					"target": "department"
+				},
+				"reject_reason": {
+					"id": "custrecord_s4vp_oe_reject_reason",
+					"type": "textarea",
+					"target": null
+				},
+				"void_reason": {
+					"id": "custrecord_s4vp_oe_void_reason",
+					"type": "textarea",
 					"target": null
 				}
 			}

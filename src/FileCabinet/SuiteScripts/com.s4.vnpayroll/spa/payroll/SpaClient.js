@@ -8385,7 +8385,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                 included: 'Đã vào bảng lương',
                 includedNote: (n, batches) => `${n} phiếu${batches ? ` - ${batches}` : ''}`,
             },
-            cols: { number: 'Số', date: 'Ngày', kind: 'Loại', team: 'Tổ', project: 'Dự án', table: 'Bảng đơn giá', total: 'Thành tiền', split: 'Đã chia', status: 'Trạng thái', batch: 'Bảng lương' },
+            cols: { number: 'Số', date: 'Ngày', kind: 'Loại', team: 'Tổ', project: 'Dự án', department: 'Phòng ban', table: 'Bảng đơn giá', total: 'Thành tiền', split: 'Đã chia', status: 'Trạng thái', batch: 'Bảng lương' },
             todo: {
                 label: 'Cần xử lý',
                 clear: 'Bỏ lọc',
@@ -8420,9 +8420,25 @@ input[type="number"].s4vp-in{padding-right:4px}
                 diff: 'Chênh lệch',
                 peopleCount: 'Số người',
                 method: 'Cách chia',
+                department: 'Phòng ban',
                 description: 'Diễn giải',
                 next: (step) => `Tiếp: ${step}`,
                 lockedNote: 'Phiếu không còn tạm giữ nên không sửa được. Trả phiếu về tạm giữ nếu cần sửa.',
+                void: 'Hủy phiếu',
+                lastReject: (reason) => `Lý do từ chối gần nhất: ${reason}`,
+            },
+            reason: {
+                voidTitle: (nbr) => `Hủy phiếu ${nbr}`,
+                voidIntro: 'Phiếu bị ẩn khỏi danh sách và không vào bảng lương. Dữ liệu không bị xóa, vẫn xem được trên bản ghi NetSuite.',
+                voidLabel: 'Lý do hủy',
+                voidRun: 'Hủy phiếu',
+                voidErr: 'Nhập lý do hủy phiếu.',
+                voided: (nbr) => `Đã hủy phiếu ${nbr}.`,
+                rejectTitle: (nbr) => `Từ chối phiếu ${nbr}`,
+                rejectLabel: 'Lý do từ chối',
+                rejectRun: 'Từ chối',
+                rejectErr: 'Nhập lý do từ chối để người lập biết cần sửa gì.',
+                back: 'Quay lại',
             },
             lines: {
                 save: 'Lưu sản lượng',
@@ -8571,6 +8587,9 @@ input[type="number"].s4vp-in{padding-right:4px}
                 projectNone: 'Theo tổ / không gắn dự án',
                 projectHint: 'Dự án quyết định đơn giá riêng và đích phân bổ chi phí',
                 projectMore: 'Danh sách chỉ gồm 300 dự án đầu; dự án khác chọn trên bản ghi.',
+                department: 'Phòng ban',
+                departmentNone: 'Theo tổ / phòng ban của nhân viên',
+                departmentHint: 'Chi phí khoán của phiếu hạch toán vào phòng ban này; để trống thì theo phòng ban của tổ, không có thì của từng nhân viên',
                 description: 'Diễn giải',
                 create: 'Tạo và nhập sản lượng',
                 save: 'Lưu phiếu',
@@ -8616,7 +8635,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                 included: 'Included in payroll',
                 includedNote: (n, batches) => `${n} entries${batches ? ` - ${batches}` : ''}`,
             },
-            cols: { number: 'Number', date: 'Date', kind: 'Type', team: 'Team', project: 'Project', table: 'Rate table', total: 'Amount', split: 'Split', status: 'Status', batch: 'Payroll batch' },
+            cols: { number: 'Number', date: 'Date', kind: 'Type', team: 'Team', project: 'Project', department: 'Department', table: 'Rate table', total: 'Amount', split: 'Split', status: 'Status', batch: 'Payroll batch' },
             todo: {
                 label: 'To do',
                 clear: 'Clear filter',
@@ -8651,9 +8670,25 @@ input[type="number"].s4vp-in{padding-right:4px}
                 diff: 'Difference',
                 peopleCount: 'People',
                 method: 'Split method',
+                department: 'Department',
                 description: 'Description',
                 next: (step) => `Next: ${step}`,
                 lockedNote: 'The entry is no longer on hold, so it cannot be changed. Put it back on hold to edit.',
+                void: 'Void entry',
+                lastReject: (reason) => `Latest rejection reason: ${reason}`,
+            },
+            reason: {
+                voidTitle: (nbr) => `Void entry ${nbr}`,
+                voidIntro: 'The entry is hidden from the list and does not reach payroll. Nothing is deleted; the record can still be viewed in NetSuite.',
+                voidLabel: 'Reason for voiding',
+                voidRun: 'Void entry',
+                voidErr: 'Enter the reason for voiding the entry.',
+                voided: (nbr) => `Entry ${nbr} voided.`,
+                rejectTitle: (nbr) => `Reject entry ${nbr}`,
+                rejectLabel: 'Reason for rejection',
+                rejectRun: 'Reject',
+                rejectErr: 'Enter the reason so the author knows what to fix.',
+                back: 'Back',
             },
             lines: {
                 save: 'Save output',
@@ -8802,6 +8837,9 @@ input[type="number"].s4vp-in{padding-right:4px}
                 projectNone: 'From the team / no project',
                 projectHint: 'The project drives project rates and the cost allocation target',
                 projectMore: 'Only the first 300 projects are listed; select another project on the record.',
+                department: 'Department',
+                departmentNone: 'From the team / each employee\'s department',
+                departmentHint: 'The piecework cost of the entry is posted to this department; leave empty to use the team\'s department, otherwise each employee\'s',
                 description: 'Description',
                 create: 'Create and enter output',
                 save: 'Save entry',
@@ -8890,6 +8928,9 @@ input[type="number"].s4vp-in{padding-right:4px}
         const [query, setQuery] = core.useState('');
         const [found, setFound] = core.useState({ items: [], more: false, state: '' });
         const [gridQuery, setGridQuery] = core.useState('');
+        // Hộp xác nhận có lý do bắt buộc: {mode: 'reject' | 'void', id, name, reason, error}
+        const [reasonDlg, setReasonDlg] = core.useState(null);
+        const reasonRef = core.useRef(null);
         const formRef = core.useRef(null);
         const draftRef = core.useRef(null);
         const ratesRef = core.useRef({});
@@ -9256,8 +9297,42 @@ input[type="number"].s4vp-in{padding-right:4px}
         };
         // ------------------------------------------------------------------ bước 4 - 6: gửi duyệt, duyệt, vào bảng lương
         const fact = (label, value, strong) => (jsxs("div", { class: "s4vp-line", style: strong ? { fontWeight: '700' } : {}, children: [jsx("span", { class: "s4vp-muted", children: label }), jsx("span", { class: "s4vp-out-val", children: value })] }));
-        const summary = (r) => (jsxs("div", { class: "s4vp-out-info", children: [fact(t.detail.total, r.total ? money(r.total) : '0', true), r.type === 'T' ? fact(t.detail.split, r.splitTotal ? money(r.splitTotal) : '0') : null, r.type === 'T' && r.splitTotal && r.splitTotal !== r.total ? fact(t.detail.diff, jsx("span", { class: "s4vp-out-diff", children: money(Math.abs(r.splitTotal - r.total)) })) : null, fact(t.detail.peopleCount, t.people(r.people || 0)), r.type === 'T' ? fact(t.detail.method, t.method[r.splitMethod] || r.splitMethod || '') : null, r.description ? fact(t.detail.description, r.description) : null] }));
+        const summary = (r) => (jsxs("div", { class: "s4vp-out-info", children: [fact(t.detail.total, r.total ? money(r.total) : '0', true), r.type === 'T' ? fact(t.detail.split, r.splitTotal ? money(r.splitTotal) : '0') : null, r.type === 'T' && r.splitTotal && r.splitTotal !== r.total ? fact(t.detail.diff, jsx("span", { class: "s4vp-out-diff", children: money(Math.abs(r.splitTotal - r.total)) })) : null, fact(t.detail.peopleCount, t.people(r.people || 0)), r.type === 'T' ? fact(t.detail.method, t.method[r.splitMethod] || r.splitMethod || '') : null, r.department ? fact(t.detail.department, r.departmentName || r.department) : null, r.description ? fact(t.detail.description, r.description) : null] }));
         const doAction = (r, op, confirmText, doneText) => app.confirm(confirmText, () => act({ action: 'outputAction', id: r.id, op }, doneText, () => setTab('')));
+        // Từ chối (P -> H) và hủy phiếu tạm giữ: xác nhận kèm lý do bắt buộc
+        const openReason = (mode, r) => {
+            reasonRef.current = { mode, id: r.id, name: r.name || String(r.id), reason: '', error: '' };
+            setReasonDlg(reasonRef.current);
+        };
+        const putReason = (patch) => {
+            reasonRef.current = Object.assign({}, reasonRef.current, patch);
+            setReasonDlg(reasonRef.current);
+        };
+        const submitReason = () => {
+            const d = reasonRef.current;
+            if (!d)
+                return;
+            const reason = String(d.reason || '').trim();
+            if (!reason) {
+                putReason({ error: d.mode === 'void' ? t.reason.voidErr : t.reason.rejectErr });
+                return;
+            }
+            setReasonDlg(null);
+            reasonRef.current = null;
+            if (d.mode === 'void')
+                act({ action: 'voidOutput', id: d.id, reason }, t.reason.voided(d.name), () => pickEntry(''));
+            else
+                act({ action: 'outputAction', id: d.id, op: 'reject', reason }, t.approve.rejected(d.name), () => setTab(''));
+        };
+        const reasonDialog = () => {
+            const d = reasonDlg;
+            const isVoid = d.mode === 'void';
+            const close = () => {
+                reasonRef.current = null;
+                setReasonDlg(null);
+            };
+            return (jsx(Dialog, { title: isVoid ? t.reason.voidTitle(d.name) : t.reason.rejectTitle(d.name), width: 520, onClose: close, actions: [jsx(Button, { label: t.reason.back, onClick: close }), jsx(Button, { label: isVoid ? t.reason.voidRun : t.reason.rejectRun, kind: isVoid ? 'danger' : 'primary', disabled: !!app.busy, onClick: submitReason })], children: jsxs("div", { class: "s4vp-out-body", children: [jsx("span", { children: isVoid ? t.reason.voidIntro : t.approve.confirmReject(d.name) }), jsx(Field, { label: isVoid ? t.reason.voidLabel : t.reason.rejectLabel, required: true, hint: d.error ? jsx("span", { class: "s4vp-out-err", children: d.error }) : null, children: jsx(TextArea, { value: d.reason, rows: 3, onInput: (v) => putReason({ reason: v, error: '' }), ariaLabel: isVoid ? t.reason.voidLabel : t.reason.rejectLabel }) })] }) }));
+        };
         const blockers = (r) => {
             const d = draftOf(r);
             const out = [];
@@ -9294,7 +9369,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             if (r.status !== 'P')
                 return jsxs("div", { class: "s4vp-out-body", children: [jsx("div", { class: "s4vp-out-okay", role: "note", children: t.approve.approvedBy(r.approvedBy || '', fmtDate(r.approvedDate)) }), summary(r)] });
             const reason = canWrite ? '' : t.readOnly;
-            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [jsx(Button, { label: t.approve.run, kind: "primary", disabled: !!reason || !!app.busy, title: reason, onClick: () => doAction(r, 'approve', t.approve.confirm(r.name, money(r.total), r.people || 0), t.approve.done(r.name)) }), jsx(Button, { label: t.approve.reject, disabled: !!reason || !!app.busy, title: reason, onClick: () => doAction(r, 'hold', t.approve.confirmReject(r.name), t.approve.rejected(r.name)) })] }), jsx("span", { class: "s4vp-small", children: t.approve.waiting }), summary(r)] }));
+            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [jsx(Button, { label: t.approve.run, kind: "primary", disabled: !!reason || !!app.busy, title: reason, onClick: () => doAction(r, 'approve', t.approve.confirm(r.name, money(r.total), r.people || 0), t.approve.done(r.name)) }), jsx(Button, { label: t.approve.reject, disabled: !!reason || !!app.busy, title: reason, onClick: () => openReason('reject', r) })] }), jsx("span", { class: "s4vp-small", children: t.approve.waiting }), summary(r)] }));
         };
         const payrollStep = (r) => {
             if (r.status === 'C') {
@@ -9335,10 +9410,13 @@ input[type="number"].s4vp-in{padding-right:4px}
             const shown = keys.indexOf(tab) >= 0 ? tab : cur;
             const curIdx = keys.indexOf(cur);
             const editable = r.status === 'H' && canWrite;
-            const sub = [t.status[r.status] || r.status, fmtDate(r.date), t.kind[r.kind] || r.kind, r.teamName, r.rateTableName, r.projectName, r.periodName ? t.detail.periodOf(r.periodName) : t.detail.noPeriod].filter(Boolean).join(' · ');
+            const sub = [t.status[r.status] || r.status, fmtDate(r.date), t.kind[r.kind] || r.kind, r.teamName, r.rateTableName, r.projectName, r.departmentName, r.periodName ? t.detail.periodOf(r.periodName) : t.detail.noPeriod].filter(Boolean).join(' · ');
             const actions = [];
             if (editable)
                 actions.push(jsx(Button, { small: true, label: t.detail.edit, disabled: !!app.busy, onClick: () => openForm(r) }));
+            // Hủy phiếu: chỉ phiếu tạm giữ chưa vào bảng lương (máy chủ kiểm lại)
+            if (editable && !r.batch)
+                actions.push(jsx(Button, { small: true, kind: "danger", label: t.detail.void, disabled: !!app.busy, onClick: () => openReason('void', r) }));
             actions.push(jsx(Button, { small: true, kind: "ghost", label: t.detail.openRecord, onClick: () => openRecord(RECORD_TYPE, r.id) }));
             let body;
             if (shown === 'lines')
@@ -9361,7 +9439,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                             const step = issueStep(r, code);
                             const canFix = step ? step !== shown : editable;
                             return (jsxs("div", { class: "s4vp-out-issue", role: "note", children: [jsx("span", { children: issueText(r, code) }), canFix ? jsx(Button, { small: true, label: t.issue.fix, onClick: () => (step ? pickTab(step) : openForm(r)) }) : null] }, code));
-                        }) })) : null, locked ? jsx("span", { class: "s4vp-small", children: canWrite ? t.detail.lockedNote : t.readOnly }) : null, body] }));
+                        }) })) : null, r.rejectReason ? jsx("div", { class: r.status === 'H' ? 's4vp-out-warn' : 's4vp-small', role: "note", children: t.detail.lastReject(r.rejectReason) }) : null, locked ? jsx("span", { class: "s4vp-small", children: canWrite ? t.detail.lockedNote : t.readOnly }) : null, body] }));
         };
         // ------------------------------------------------------------------ hộp thoại tạo / sửa phiếu
         const putForm = (patch) => {
@@ -9374,8 +9452,8 @@ input[type="number"].s4vp-in{padding-right:4px}
                     return;
                 const inPeriod = period && periods.find((p) => String(p.id) === String(period) && p.start <= localToday() && p.end >= localToday());
                 formRef.current = r
-                    ? { id: r.id, name: r.name, kind: r.kind, date: r.date || '', rateTable: String(r.rateTable || ''), team: String(r.team || ''), method: r.splitMethod || 'F', period: String(r.period || ''), project: String(r.project || ''), description: r.description || '', errors: {}, was: { date: r.date || '', rateTable: String(r.rateTable || ''), project: String(r.project || '') } }
-                    : { id: '', name: '', kind: 'T', date: localToday(), rateTable: '', team: '', method: 'F', period: inPeriod ? String(period) : '', project: '', description: '', errors: {}, was: null };
+                    ? { id: r.id, name: r.name, kind: r.kind, date: r.date || '', rateTable: String(r.rateTable || ''), team: String(r.team || ''), method: r.splitMethod || 'F', period: String(r.period || ''), project: String(r.project || ''), department: String(r.department || ''), departmentName: r.departmentName || '', description: r.description || '', errors: {}, was: { date: r.date || '', rateTable: String(r.rateTable || ''), project: String(r.project || '') } }
+                    : { id: '', name: '', kind: 'T', date: localToday(), rateTable: '', team: '', method: 'F', period: inPeriod ? String(period) : '', project: '', department: '', departmentName: '', description: '', errors: {}, was: null };
                 setForm(formRef.current);
             });
         };
@@ -9393,7 +9471,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                 return;
             }
             const team = f.kind === 'T' ? f.team : null;
-            const values = { doc_date: f.date, type: f.kind === 'T' ? 'T' : 'I', rate_table: f.rateTable, team, split_method: f.kind === 'T' ? f.method || 'F' : null, period: f.period || null, project: f.project || null, description: String(f.description || '').trim() };
+            const values = { doc_date: f.date, type: f.kind === 'T' ? 'T' : 'I', rate_table: f.rateTable, team, split_method: f.kind === 'T' ? f.method || 'F' : null, period: f.period || null, project: f.project || null, department: f.department || null, description: String(f.description || '').trim() };
             const body = { action: 'saveOutput', values };
             if (f.id) {
                 values.id = f.id;
@@ -9437,6 +9515,9 @@ input[type="number"].s4vp-in{padding-right:4px}
             const projectOptions = list(lk.projects).map((x) => ({ value: x.id, label: x.name }));
             if (f.project && !projectOptions.some((o) => o.value === f.project))
                 projectOptions.push({ value: f.project, label: f.project });
+            const departmentOptions = list(lk.departments).map((x) => ({ value: String(x.id), label: x.name || String(x.id) }));
+            if (f.department && !departmentOptions.some((o) => o.value === f.department))
+                departmentOptions.push({ value: f.department, label: f.departmentName || f.department });
             const periodOptions = periods.filter((p) => p.status !== 'C' || String(p.id) === f.period).map((p) => ({ value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})` }));
             const err = (k) => (f.errors && f.errors[k] ? jsx("span", { class: "s4vp-out-err", children: f.errors[k] }) : null);
             const pickKind = (k) => {
@@ -9445,10 +9526,18 @@ input[type="number"].s4vp-in{padding-right:4px}
             };
             const pickTeam = (id) => {
                 const team = list(lk.teams).find((x) => x.id === id);
-                putForm(team && isNew ? { team: id, method: team.splitMethod || 'F', project: team.project && projectOptions.some((o) => o.value === String(team.project)) ? String(team.project) : f.project } : { team: id });
+                // Phiếu mới nhận cách chia, dự án, phòng ban mặc định của tổ (máy chủ cũng tự nhận khi các ô này để trống)
+                putForm(team && isNew
+                    ? {
+                        team: id,
+                        method: team.splitMethod || 'F',
+                        project: team.project && projectOptions.some((o) => o.value === String(team.project)) ? String(team.project) : f.project,
+                        department: team.department && departmentOptions.some((o) => o.value === String(team.department)) ? String(team.department) : f.department,
+                    }
+                    : { team: id });
             };
             const changed = f.was && (f.was.date !== f.date || f.was.rateTable !== f.rateTable || f.was.project !== f.project);
-            return (jsxs(Dialog, { title: isNew ? t.form.titleNew : t.form.titleEdit(f.name), width: 760, onClose: () => setForm(null), actions: [jsx(Button, { label: t.form.cancel, onClick: () => setForm(null) }), jsx(Button, { label: isNew ? t.form.create : t.form.save, kind: "primary", disabled: !!app.busy, onClick: submitForm })], children: [jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.form.kind, children: jsx(Select, { value: f.kind, onInput: pickKind, options: KINDS.map((k) => ({ value: k, label: t.kind[k] })), disabled: !isNew }) }), jsx(Field, { label: t.form.date, hint: err('date'), required: true, children: jsx(DateInput, { value: f.date, onInput: (v) => putForm({ date: v }) }) }), jsx(Field, { label: t.form.table, required: true, hint: err('rateTable') || (tables.length ? null : t.form.noTables), children: jsx(AutoSelect, { value: f.rateTable, onInput: (v) => putForm({ rateTable: v }), options: tableOptions, placeholder: t.form.tablePick }) }), f.kind === 'T' ? (jsx(Field, { label: t.form.team, hint: err('team'), required: true, children: jsx(AutoSelect, { value: f.team, onInput: pickTeam, options: teamOptions, placeholder: t.form.teamPick }) })) : null, f.kind === 'T' ? (jsx(Field, { label: t.form.method, children: jsx(Select, { value: f.method, onInput: (v) => putForm({ method: v || 'F' }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })) }) })) : null, jsx(Field, { label: t.form.period, hint: t.form.periodHint, children: jsx(AutoSelect, { value: f.period, onInput: (v) => putForm({ period: v }), options: periodOptions, placeholder: t.form.periodAuto }) }), jsx(Field, { label: t.form.project, hint: lk.projectsMore ? t.form.projectMore : t.form.projectHint, children: jsx(AutoSelect, { value: f.project, onInput: (v) => putForm({ project: v }), options: projectOptions, placeholder: t.form.projectNone }) }), jsx(Field, { label: t.form.description, children: jsx(TextInput, { value: f.description, onInput: (v) => putForm({ description: v }) }) })] }), changed ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.form.repriced }) : null, jsx("span", { class: "s4vp-small", children: t.form.moreOnRecord })] }));
+            return (jsxs(Dialog, { title: isNew ? t.form.titleNew : t.form.titleEdit(f.name), width: 760, onClose: () => setForm(null), actions: [jsx(Button, { label: t.form.cancel, onClick: () => setForm(null) }), jsx(Button, { label: isNew ? t.form.create : t.form.save, kind: "primary", disabled: !!app.busy, onClick: submitForm })], children: [jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.form.kind, children: jsx(Select, { value: f.kind, onInput: pickKind, options: KINDS.map((k) => ({ value: k, label: t.kind[k] })), disabled: !isNew }) }), jsx(Field, { label: t.form.date, hint: err('date'), required: true, children: jsx(DateInput, { value: f.date, onInput: (v) => putForm({ date: v }) }) }), jsx(Field, { label: t.form.table, required: true, hint: err('rateTable') || (tables.length ? null : t.form.noTables), children: jsx(AutoSelect, { value: f.rateTable, onInput: (v) => putForm({ rateTable: v }), options: tableOptions, placeholder: t.form.tablePick }) }), f.kind === 'T' ? (jsx(Field, { label: t.form.team, hint: err('team'), required: true, children: jsx(AutoSelect, { value: f.team, onInput: pickTeam, options: teamOptions, placeholder: t.form.teamPick }) })) : null, f.kind === 'T' ? (jsx(Field, { label: t.form.method, children: jsx(Select, { value: f.method, onInput: (v) => putForm({ method: v || 'F' }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })) }) })) : null, jsx(Field, { label: t.form.period, hint: t.form.periodHint, children: jsx(AutoSelect, { value: f.period, onInput: (v) => putForm({ period: v }), options: periodOptions, placeholder: t.form.periodAuto }) }), jsx(Field, { label: t.form.project, hint: lk.projectsMore ? t.form.projectMore : t.form.projectHint, children: jsx(AutoSelect, { value: f.project, onInput: (v) => putForm({ project: v }), options: projectOptions, placeholder: t.form.projectNone }) }), jsx(Field, { label: t.form.department, hint: t.form.departmentHint, children: jsx(AutoSelect, { value: f.department, onInput: (v) => putForm({ department: v || '' }), options: departmentOptions, placeholder: t.form.departmentNone }) }), jsx(Field, { label: t.form.description, children: jsx(TextInput, { value: f.description, onInput: (v) => putForm({ description: v }) }) })] }), changed ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.form.repriced }) : null, jsx("span", { class: "s4vp-small", children: t.form.moreOnRecord })] }));
         };
         // ------------------------------------------------------------------ bảng phiếu
         const issueCode = filter.indexOf('i:') === 0 ? filter.slice(2) : '';
@@ -9473,6 +9562,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             { key: 'kindText', label: t.cols.kind, nowrap: true },
             { key: 'teamName', label: t.cols.team, render: (r) => jsx("span", { class: "s4vp-out-clip", title: [r.teamName, r.teamDescription].filter(Boolean).join(' - '), children: r.teamName || '' }) },
             wide ? { key: 'projectName', label: t.cols.project, render: (r) => jsx("span", { class: "s4vp-out-clip", title: r.projectName || '', children: r.projectName || '' }) } : null,
+            { key: 'departmentName', label: t.cols.department, render: (r) => jsx("span", { class: "s4vp-out-clip", title: r.departmentName || '', children: r.departmentName || '' }) },
             wide ? { key: 'rateTableName', label: t.cols.table, render: (r) => jsx("span", { class: "s4vp-out-clip", title: [r.rateTableName, r.rateTableDescription].filter(Boolean).join(' - '), children: r.rateTableName || '' }) } : null,
             { key: 'total', label: t.cols.total, type: 'money', nowrap: true },
             { key: 'splitText', label: t.cols.split, align: 'right', nowrap: true, render: (r) => jsx("span", { class: r.type === 'T' && r.total > 0 && r.splitTotal !== r.total ? 's4vp-out-diff' : 's4vp-out-plain', children: r.splitText }) },
@@ -9503,7 +9593,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                     ] }), jsx(StatCards, { cards: statCards }), todo.length ? (jsxs("div", { class: "s4vp-out-todo", role: "group", "aria-label": t.todo.label, children: [jsx("span", { class: "s4vp-out-todo-l", children: t.todo.label }), todo.map((g) => {
                             const on = filter === `i:${g.code}`;
                             return (jsx("button", { type: "button", class: on ? 's4vp-out-todo-btn s4vp-on' : 's4vp-out-todo-btn', "aria-pressed": on ? 'true' : 'false', onClick: () => setFilter(on ? '' : `i:${g.code}`), children: `${t.todo[g.code] || g.code} ${g.count}` }, g.code));
-                        }), issueCode ? jsx(Button, { small: true, kind: "ghost", label: t.todo.clear, onClick: () => setFilter('') }) : null] })) : null, jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => pickEntry(String(r.id) === String(selected) ? '' : r.id), selectedKey: shownCurrent ? shownCurrent.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: todo.length ? 'max(240px, calc(100vh - 432px))' : 'max(260px, calc(100vh - 384px))', toolbar: jsx(Chips, { items: chipItems, value: issueCode ? 'todo' : filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: todo.length ? 's4vp-col-side s4vp-out-side s4vp-out-side-low' : 's4vp-col-side s4vp-out-side', children: detailPanel(current) }) : null] }), form ? formDialog() : null] }));
+                        }), issueCode ? jsx(Button, { small: true, kind: "ghost", label: t.todo.clear, onClick: () => setFilter('') }) : null] })) : null, jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => pickEntry(String(r.id) === String(selected) ? '' : r.id), selectedKey: shownCurrent ? shownCurrent.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: todo.length ? 'max(240px, calc(100vh - 432px))' : 'max(260px, calc(100vh - 384px))', toolbar: jsx(Chips, { items: chipItems, value: issueCode ? 'todo' : filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: todo.length ? 's4vp-col-side s4vp-out-side s4vp-out-side-low' : 's4vp-col-side s4vp-out-side', children: detailPanel(current) }) : null] }), form ? formDialog() : null, reasonDlg ? reasonDialog() : null] }));
     }
 
     const TEXT$3 = {

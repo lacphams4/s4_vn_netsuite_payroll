@@ -28,7 +28,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	const HR_ACTIONS = BATCH_ACTIONS.concat([
 		"loadDefaults", "loadIndustryPack", "generatePeriods", "closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance",
 		"saveProfile", "saveSetup", "saveCompany", "setInsuranceAccount", "saveDoc", "docAction", "accrueLeave", "expireLeave", "adjustLeave",
-		"saveOutput", "outputAction", "loadTeamMembers", "splitOutput", "saveRateLine", "saveTeam", "saveWorkPermit", "workPermitAction", "updateExpiredPermits",
+		"saveOutput", "outputAction", "voidOutput", "loadTeamMembers", "splitOutput", "saveRateLine", "saveTeam", "saveWorkPermit", "workPermitAction", "updateExpiredPermits",
 		"newAllocVersion", "saveAllocLines", "activateAllocVersion", "deleteAllocVersion",
 		"saveShift", "savePattern", "generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
 	]);
@@ -92,6 +92,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	// Action cũ nhận id bảng lương / id kỳ ở body.id: suy ra batch, period cho nhật ký
 	const BATCH_ID_ACTIONS = ["loadEmployees", "syncTime", "calculate", "removeHold", "hold", "approve", "reject", "reopen", "release", "reverse", "agencyBills", "clearJob", "submitRun"];
 	const PERIOD_ID_ACTIONS = ["closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance", "processPunches", "loadSheetEmployees"];
+	// Thao tác trên phiếu sản lượng: body.id là id phiếu; kỳ của phiếu lấy từ kết quả (Output.act / voidEntry trả period)
+	const OUTPUT_ACTIONS = ["outputAction", "voidOutput"];
 
 	/** Ghi nhật ký sau POST thành công; lỗi ở đây chỉ ghi log, không ảnh hưởng kết quả thao tác. */
 	function audit(action, body, result) {
@@ -104,6 +106,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 			if (BATCH_ID_ACTIONS.includes(action)) batch = b.id || batch;
 			else if (PERIOD_ID_ACTIONS.includes(action)) period = b.id || period;
 			else if (action === "createBatch") batch = (result && result.id) || batch;
+			else if (OUTPUT_ACTIONS.includes(action)) period = (result && result.period) || period;
 			const employee = b.employee || values.employee || null;
 			AuditLog.record({ action, batch: batch || null, period: period || null, id: b.id || null, lineId: b.lineId || null, employee, result });
 		} catch (e) {
@@ -366,7 +369,10 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 				case "saveOutput":
 					return Output.save(body.values || {}, body.lines, body.members);
 				case "outputAction":
-					return Output.act(body.id, body.op);
+					// op reject bắt buộc lý do (body.reason hoặc body.reject_reason)
+					return Output.act(body.id, body.op, { reason: body.reason !== undefined ? body.reason : body.reject_reason });
+				case "voidOutput":
+					return Output.voidEntry(body.id, body.reason);
 				case "loadTeamMembers":
 					return Output.loadTeamMembers(body.id);
 				case "splitOutput":

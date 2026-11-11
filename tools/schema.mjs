@@ -662,6 +662,7 @@ export const records = [
 			["description", "Diễn giải", "text"], ["subsidiary", "Công ty con", "select:subsidiary"], ["type", "Loại tổ", "select:list:team_type"],
 			["leader", "Tổ trưởng", "select:employee"], ["split_method", "Cách chia mặc định", "select:list:split_method"],
 			["project", "Dự án", "select:project"], ["location", "Chi nhánh (địa điểm)", "select:location"], ["work_center", "Work center (lớp)", "select:class"],
+			["department", "Phòng ban", "select:department"],
 		],
 	},
 	{
@@ -683,6 +684,8 @@ export const records = [
 			["status", "Trạng thái", "select:list:output_status", { display: "LOCKED" }], ["approved_by", "Người duyệt", "select:employee", { display: "LOCKED" }],
 			["approved_date", "Ngày duyệt", "date", { display: "LOCKED" }], ["batch", "Bảng lương", "select:rec:batch", { display: "LOCKED" }],
 			["total", "Thành tiền", "currency", { display: "LOCKED" }], ["split_total", "Tổng tiền chia", "currency", { display: "LOCKED" }],
+			["department", "Phòng ban", "select:department"], ["reject_reason", "Lý do từ chối gần nhất", "textarea", { display: "LOCKED" }],
+			["void_reason", "Lý do hủy phiếu", "textarea", { display: "LOCKED" }],
 		],
 	},
 	{

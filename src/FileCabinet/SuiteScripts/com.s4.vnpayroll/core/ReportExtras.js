@@ -270,7 +270,8 @@ define(["./Money", "./PayrollReports"], (Money, Reports) => {
 
 	/**
 	 * Sổ theo dõi thuế TNCN đã khấu trừ: mỗi người một dòng, 12 cột tháng (thuế đã khấu trừ và thu nhập chịu thuế), tổng năm.
-	 * @param {Array} lines dòng nhân viên của bảng lương dùng được trong năm: [{employee, batch, taxable, pit, employment_type?}]
+	 * @param {Array} lines dòng nhân viên của bảng lương dùng được trong năm: [{employee, batch, taxable, pit, employment_type?, count?}]
+	 *   count: số dòng lương đã gộp sẵn vào một phần tử (truy vấn gom nhóm của api/ReportsHub); không có thì là 1 dòng
 	 * @param {Object<string, {taxMonth: string}>} batches theo id bảng lương (tháng tính thuế yyyyMM đã chuẩn hóa)
 	 * @param {Object<string, {code, name, taxCode, employmentType}>} info theo id nhân viên
 	 * @param {number} year
@@ -293,7 +294,7 @@ define(["./Money", "./PayrollReports"], (Money, Reports) => {
 			};
 			e.pit[mm] = D(e.pit[mm] || 0).plus(D(num(l.pit)));
 			e.taxable[mm] = D(e.taxable[mm] || 0).plus(D(num(l.taxable)));
-			e.periods += 1;
+			e.periods += l.count === undefined || l.count === null ? 1 : num(l.count);
 			if (num(l.pit) !== 0 || num(l.taxable) !== 0) used.add(Number(mm));
 			map.set(k, e);
 		}

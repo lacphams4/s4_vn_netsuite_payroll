@@ -43,6 +43,12 @@ define(["N/runtime", "N/log", "./Store", "./Clock"], (runtime, log, Store, Clock
 		return e;
 	}
 	const CHECK_STATUS = { vi: { open: "mở lại", accepted: "chấp nhận", resolved: "đã xử lý" }, en: { open: "reopened", accepted: "accepted", resolved: "resolved" } };
+	const OUTPUT_OPS = {
+		submit: { vi: "gửi duyệt", en: "submitted" },
+		approve: { vi: "duyệt", en: "approved" },
+		reject: { vi: "từ chối", en: "rejected" },
+		hold: { vi: "trả về tạm giữ", en: "put back on hold" },
+	};
 
 	/**
 	 * Thao tác được ghi: nhãn vi / en và hàm dựng diễn giải từ kết quả (chỉ số lượng, không số tiền).
@@ -130,6 +136,19 @@ define(["N/runtime", "N/log", "./Store", "./Clock"], (runtime, log, Store, Clock
 		createAdvance: { vi: "Tạo phiếu tạm ứng", en: "Created a salary advance", emp: "advance", ref: (r) => r.id },
 		removeHoldAdvance: { vi: "Bỏ tạm giữ phiếu tạm ứng", en: "Removed the hold on a salary advance", emp: "advance" },
 		releaseAdvance: { vi: "Ghi sổ phiếu tạm ứng", en: "Released a salary advance", emp: "advance" },
+		// Phiếu sản lượng: RESTlet gắn kỳ của phiếu (result.period); số phiếu ở cột dòng, lý do do người dùng nhập (không có số tiền)
+		outputAction: {
+			vi: "Xử lý phiếu sản lượng", en: "Processed an output entry", ref: (r) => r.name || r.id,
+			detail: (r) => {
+				const op = OUTPUT_OPS[r.op] || { vi: String(r.op || ""), en: String(r.op || "") };
+				const why = blank(r.reason) ? "" : `: ${r.reason}`;
+				return { vi: `${r.name || ""} - ${op.vi}${why}`, en: `${r.name || ""} - ${op.en}${why}` };
+			},
+		},
+		voidOutput: {
+			vi: "Hủy phiếu sản lượng", en: "Voided an output entry", ref: (r) => r.name || r.id,
+			detail: (r) => ({ vi: `${r.name || ""}: ${r.reason || ""}`, en: `${r.name || ""}: ${r.reason || ""}` }),
+		},
 		// Thao tác thiết lập: không gắn bảng lương, kỳ hay nhân viên
 		saveCostAccount: { vi: "Lưu tài khoản chi phí lương", en: "Saved a payroll cost account", setup: true, ref: (r) => r.id },
 		retireCostAccount: { vi: "Thôi dùng tài khoản chi phí lương", en: "Retired a payroll cost account", setup: true, ref: (r) => r.id },

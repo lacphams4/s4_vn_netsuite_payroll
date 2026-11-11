@@ -1,7 +1,8 @@
 /**
  * Phiếu sản lượng / nghiệm thu (VP308000), bảng đơn giá, tổ (đặc tả 4.2.8, 4.3): lập phiếu, nạp thành viên tổ, chia tiền,
- * gửi duyệt / duyệt / tạm giữ, dữ liệu cho bảng lương (quy tắc nguồn O, S và phân bổ "nguồn nào đích đó"), khóa phiếu
- * khi bảng lương ghi sổ và mở lại khi đảo.
+ * gửi duyệt / duyệt / từ chối (kèm lý do) / tạm giữ, hủy phiếu tạm giữ (isinactive, không xóa), dữ liệu cho bảng lương (quy
+ * tắc nguồn O, S và phân bổ "nguồn nào đích đó", phòng ban của phiếu -> shares[].sub), khóa phiếu khi bảng lương ghi sổ và mở
+ * lại khi đảo.
  *
  * Phiếu thuộc kỳ, không thuộc nhóm lương (4.3.4): ghi sổ bảng lương đầu tiên của kỳ khóa mọi phiếu đã duyệt của kỳ.
  *
@@ -45,7 +46,16 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 	function entryOf(id) {
 		const e = Store.get("output", id);
 		if (!e) throw fail("Output entry not found", "Không tìm thấy phiếu sản lượng");
+		// Phiếu đã hủy (voidEntry: isinactive = T) không sửa, không chuyển trạng thái được nữa
+		if (e.isInactive) throw fail("The output entry has been voided", "Phiếu sản lượng đã bị hủy");
 		return e;
+	}
+
+	/** Lý do bắt buộc (từ chối, hủy phiếu): bỏ khoảng trắng hai đầu, tối đa 1.000 ký tự. */
+	function reasonOf(text, en, vi) {
+		const r = String(blank(text) ? "" : text).trim();
+		if (!r) throw fail(en, vi);
+		return r.slice(0, 1000);
 	}
 
 	function linesOf(id) {
@@ -80,19 +90,20 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 		if (blank(e.rate_table)) throw fail("Rate table is required", "Chưa chọn bảng đơn giá");
 		if (blank(e.type)) e.type = blank(e.team) ? "I" : "T";
 		if (blank(e.period)) e.period = defaultPeriod(e.doc_date);
-		// Chọn tổ: nhận cách chia, dự án, chi nhánh, work center của tổ khi phiếu đang trống
+		// Chọn tổ: nhận cách chia, dự án, chi nhánh, work center, phòng ban của tổ khi phiếu đang trống
 		if (!blank(e.team)) {
 			const t = Store.get("team", e.team);
 			if (t) {
 				if (blank(e.split_method)) e.split_method = t.split_method || "F";
-				for (const [k, tk] of [["project", "project"], ["location", "location"], ["work_center", "work_center"]]) if (blank(e[k]) && !blank(t[tk])) e[k] = t[tk];
+				for (const [k, tk] of [["project", "project"], ["location", "location"], ["work_center", "work_center"], ["department", "department"]]) if (blank(e[k]) && !blank(t[tk])) e[k] = t[tk];
 			}
 		}
 		const table = rateTable(e.rate_table);
 		const warnings = [];
+		// department: phòng ban nhận chi phí khoán của phiếu (shares[].sub khi tính lương); trống thì theo phòng ban của nhân viên
 		const header = {
 			subsidiary: e.subsidiary, doc_date: e.doc_date, period: e.period || null, type: e.type, rate_table: e.rate_table, team: e.team || null, split_method: e.split_method || null,
-			project: e.project || null, location: e.location || null, work_center: e.work_center || null, description: e.description || "",
+			project: e.project || null, location: e.location || null, work_center: e.work_center || null, department: e.department || null, description: e.description || "",
 		};
 		const entryId = cur ? (Store.update("output", id, header), id) : Store.create("output", Object.assign(header, { status: "H", total: 0, split_total: 0 }));
 
@@ -184,7 +195,7 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 		const ms = kids ? kids.members[e.id] || [] : membersOf(e.id);
 		return {
 			refNbr: e.name, status: e.status, batchNbr: e.batch || "", entryType: e.type, rateTable: table ? table.code : "", rateTableType: table ? table.type : "",
-			project: e.project || "", branch: e.location || "", workCenter: e.work_center || "",
+			project: e.project || "", branch: e.location || "", workCenter: e.work_center || "", department: e.department || "",
 			lines: ls.map((l) => ({ employee: l.employee || "", itemCode: l.item, qty: l.qty, rate: l.rate, amount: l.amount || 0 })),
 			members: ms.map((m) => ({ employee: m.employee, amount: m.amount || 0, manual: m.manual })),
 		};
@@ -203,14 +214,22 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 	}
 
 	/**
-	 * submit | approve | hold (4.3.3).
-	 * @returns {{id, status}}
+	 * submit | approve | reject | hold (4.3.3). reject: phiếu Chờ duyệt về Tạm giữ, bắt buộc lý do (opts.reason), lưu vào
+	 * reject_reason (lý do từ chối gần nhất, giữ lại khi gửi duyệt lần sau); hold: trả phiếu Chờ duyệt / Đã duyệt về Tạm giữ.
+	 * @param {{reason?: string}} [opts]
+	 * @returns {{id, name, period, op, status, reason?}}
 	 */
-	function act(id, action) {
+	function act(id, action, opts) {
 		const e = entryOf(id);
 		const to = Rules.nextStatus(e.status || "H", action);
 		if (!to) throw fail(`Action ${action} is not allowed in status ${e.status}`, `Không thực hiện được ${action} ở trạng thái ${e.status}`);
 		const update = { status: to };
+		const out = { id: String(id), name: e.name || "", period: e.period || null, op: action, status: to };
+		if (action === "reject") {
+			const reason = reasonOf(opts && opts.reason, "Enter the reason for rejecting the entry", "Nhập lý do từ chối phiếu");
+			update.reject_reason = reason;
+			out.reason = reason;
+		}
 		if (action === "submit" || action === "approve") {
 			checkPeriod(e);
 			// Phiếu tổ chưa có số sửa tay: tự chia trước khi gửi duyệt
@@ -219,14 +238,30 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 			validate(entryOf(id));
 		}
 		if (action === "approve") Object.assign(update, { approved_by: currentEmployee(), approved_date: Clock.today() });
-		if (action === "hold") {
+		if (action === "hold" || action === "reject") {
 			if (!blank(e.batch)) throw fail("The entry is included in a payroll batch", "Phiếu đã vào bảng lương");
 			const p = e.period ? Store.get("period", e.period) : null;
 			if (p && p.status === "C") throw fail("The pay period is closed", "Kỳ lương đã đóng");
 			Object.assign(update, { approved_by: null, approved_date: null });
 		}
 		Store.submit("output", id, update);
-		return { id, status: to };
+		return out;
+	}
+
+	/**
+	 * Hủy phiếu đang Tạm giữ, chưa vào bảng lương: không xóa vĩnh viễn - đặt isinactive = T và ghi lý do (void_reason). Phiếu
+	 * đã hủy biến khỏi danh sách, không vào bảng lương (mọi truy vấn phiếu lọc isinactive = 'F'); dòng sản lượng và thành viên
+	 * giữ nguyên để tra cứu trên bản ghi.
+	 * @returns {{id, name, period, status, voided: true, reason}}
+	 */
+	function voidEntry(id, reason) {
+		if (blank(id)) throw fail("Output entry not found", "Không tìm thấy phiếu sản lượng");
+		const e = entryOf(id);
+		if ((e.status || "H") !== "H") throw fail("Only on-hold entries can be voided", "Chỉ hủy được phiếu đang tạm giữ");
+		if (!blank(e.batch)) throw fail("The entry is included in a payroll batch", "Phiếu đã vào bảng lương");
+		const r = reasonOf(reason, "Enter the reason for voiding the entry", "Nhập lý do hủy phiếu");
+		Store.update("output", id, { isInactive: true, void_reason: r });
+		return { id: String(id), name: e.name || "", period: e.period || null, status: "H", voided: true, reason: r };
 	}
 
 	// ------------------------------------------------------------------ bảng lương
@@ -265,7 +300,12 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 		for (const [emp, amt] of Object.entries(c.salesAmounts)) if (keep(emp)) salesAmount[emp] = Money.num(amt);
 		for (const [emp, list] of Object.entries(c.shares)) {
 			if (!keep(emp)) continue;
-			shares[emp] = list.map((s) => ({ refNbr: s.refNbr, rateTable: s.rateTable, isSales: s.isSales, project: s.project, branch: s.branch, workCenter: s.workCenter, amount: Money.num(s.amount) }));
+			// sub = phòng ban của phiếu: Payroll đưa nguyên mảng này vào emp.outputShares, CostAllocationBuilder đọc khóa sub
+			shares[emp] = list.map((s) => {
+				const o = { refNbr: s.refNbr, rateTable: s.rateTable, isSales: s.isSales, project: s.project, branch: s.branch, workCenter: s.workCenter, amount: Money.num(s.amount) };
+				if (!blank(s.sub)) o.sub = s.sub;
+				return o;
+			});
 		}
 		const rateTables = {};
 		for (const t of Object.values(tables)) {
@@ -332,5 +372,5 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 		return rows.map((e) => Object.assign({}, e, { lines: kids.lines[e.id] || [], members: kids.members[e.id] || [] }));
 	}
 
-	return { save, loadTeamMembers, splitAmount, act, forPayroll, markIncluded, markIncludedRefs, unmarkIncluded, list, rateTable, refreshTotals };
+	return { save, loadTeamMembers, splitAmount, act, voidEntry, forPayroll, markIncluded, markIncludedRefs, unmarkIncluded, list, rateTable, refreshTotals };
 });

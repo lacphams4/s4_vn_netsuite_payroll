@@ -142,6 +142,40 @@ describe("Phân ca và nguồn nào đích đó (4.5.4)", () => {
     expect(res.reduce((s, r) => s + r.amount, 0)).toBe(7000000);
   });
 
+  test("phòng ban của phiếu sản lượng: collect mang department -> shares[].sub -> dòng phân bổ về đúng phòng ban; tổng = gross + BH DN", () => {
+    const Entries = core("OutputEntries");
+    const entry = (refNbr, workCenter, department, amount) => ({
+      refNbr, status: "A", entryType: "I", rateTable: "CONGDOAN", rateTableType: "O", project: "", branch: "", workCenter, department,
+      lines: [{ employee: "A", itemCode: "MAY", qty: 1, rate: amount, amount }], members: [],
+    });
+    const c = Entries.collect([entry("SL1", "WC-LAP", "PX1", 100000), entry("SL2", "WC-HAN", "", 200000), entry("SL3", "", "PX2", 400000)]);
+    expect(c.shares.A.map((s) => s.sub)).toEqual(["PX1", undefined, "PX2"]);
+    expect(Object.keys(c.shares.A[1])).not.toContain("sub");
+    const acc = Object.assign({}, accounts, { departments: { PX2: { account: "627" } } });
+    const input = (shares) => ({
+      grossPay: 6000000, employerInsurance: 1000000, defaultBranch: "HCM", accounts: acc,
+      earnings: [{ earningType: "LUONG", amount: 5000000, source: "S", quantitySource: "B" }, { earningType: "SANPHAM", amount: 1000000, source: "S", quantitySource: "O", rateTable: "CONGDOAN" }],
+      outputShares: shares.map((s) => Object.assign({}, s, { amount: s.amount.toNumber() })),
+      targets: [{ project: "", task: "", costCode: "", branch: "", workCenter: "", source: "D", weight: 100 }],
+    });
+    const res = Builder.build(input(c.shares.A));
+    expect(res.map((r) => [r.component, r.source, r.workCenter, r.sub, r.amount, r.account])).toEqual([
+      // WC-LAP có tài khoản 622 kèm phòng ban SX, nhưng phòng ban của phiếu (PX1) thắng
+      ["GROSS", "S", "WC-LAP", "PX1", 142857, "622"],
+      // Phiếu không khai phòng ban: như trước (phòng ban mặc định)
+      ["GROSS", "S", "WC-HAN", "QL", 285714, "642"],
+      // Phiếu chỉ có phòng ban: tài khoản tra theo phòng ban của dòng
+      ["GROSS", "S", "", "PX2", 571429, "627"],
+      ["GROSS", "D", "", "QL", 5000000, "642"], ["ERINS", "D", "", "QL", 1000000, "642"],
+    ]);
+    expect(res.reduce((s, r) => s + r.amount, 0)).toBe(7000000);
+    // Bỏ phòng ban khỏi mọi phiếu: kết quả đúng như khi chưa có trường department
+    const plain = Entries.collect([entry("SL1", "WC-LAP", null, 100000), entry("SL2", "WC-HAN", "", 200000), entry("SL3", "", undefined, 400000)]);
+    const before = Builder.build(input(plain.shares.A.map((s) => ({ rateTable: s.rateTable, isSales: s.isSales, project: s.project, branch: s.branch, workCenter: s.workCenter, amount: s.amount }))));
+    expect(Builder.build(input(plain.shares.A))).toEqual(before);
+    expect(before.some((r) => r.sub === "PX1" || r.sub === "PX2")).toBe(false);
+  });
+
   test("PA07 đích thiếu chi nhánh, work center nhận mặc định; đích có HN giữ HN", () => {
     const res = Builder.build({
       grossPay: 1000, employerInsurance: 0, defaultBranch: "HCM", defaultWorkCenter: "WC-LAP", accounts,

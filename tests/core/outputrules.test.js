@@ -57,5 +57,10 @@ describe("OutputRules", () => {
 		expect(Rules.nextStatus("A", "hold")).toBe("H");
 		expect(Rules.nextStatus("C", "hold")).toBeNull();
 		expect(Rules.nextStatus("H", "approve")).toBeNull();
+		// Từ chối: chỉ phiếu Chờ duyệt, về Tạm giữ; hold vẫn nhận cả phiếu Đã duyệt
+		expect(Rules.nextStatus("P", "reject")).toBe("H");
+		expect(Rules.nextStatus("A", "reject")).toBeNull();
+		expect(Rules.nextStatus("H", "reject")).toBeNull();
+		expect(Rules.nextStatus("P", "hold")).toBe("H");
 	});
 });

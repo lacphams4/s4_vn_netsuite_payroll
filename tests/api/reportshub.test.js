@@ -34,8 +34,32 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
     }
     return [...map.values()].map((g) => Object.assign({}, g, { headcount: g.set.size, set: undefined }));
   };
+  // Sổ thuế: một truy vấn gom nhóm theo nhân viên; tháng xoay thành cột SUM(CASE WHEN <batch> IN (...) THEN <cột> ELSE 0 END)
+  const BE = Schema.records.batch_emp.fields;
+  const keyOfCol = Object.fromEntries(Object.entries(BE).map(([k, f]) => [f.id, k]));
+  const ledger = (sql, withNames) => {
+    if (/detail/.test(sql)) throw new Error("ledger must not read the detail clob");
+    if (!/GROUP BY l\.custrecord_s4vp_be_employee$/.test(sql)) throw new Error("ledger must group by employee in the database");
+    if (!/LEFT JOIN customrecord_s4vp_employee p ON p\.id = l\.custrecord_s4vp_be_profile/.test(sql)) throw new Error("profile must be joined by its primary key");
+    const where = /WHERE (.*) GROUP BY/.exec(sql)[1];
+    const lines = linesOf(where);
+    const cases = [];
+    const re = /SUM\(CASE WHEN l\.custrecord_s4vp_be_batch IN \(([\d,]+)\) THEN (1|l\.(\w+)) ELSE 0 END\) AS (\w+)/g;
+    let m;
+    while ((m = re.exec(sql))) cases.push({ ids: m[1].split(","), key: m[3] ? keyOfCol[m[3]] : null, alias: m[4] });
+    const by = new Map();
+    for (const l of lines) (by.get(l.employee) || by.set(l.employee, []).get(l.employee)).push(l);
+    return [...by.entries()].map(([emp, ls]) => {
+      const prof = mockDb.profiles.find((p) => p.id === ls[0].profile) || {};
+      const e = mockDb.employees[emp] || {};
+      const row = { employee: emp, etype: ls[0].employment_type, tax_code: prof.tax_code || null, p_etype: prof.employment_type || null };
+      if (withNames) Object.assign(row, { e_code: e.entityid || null, e_first: e.firstname || null, e_last: e.lastname || null });
+      for (const c of cases) row[c.alias] = ls.filter((l) => c.ids.includes(l.batch)).reduce((s, l) => s + (c.key ? l[c.key] || 0 : 1), 0);
+      return row;
+    });
+  };
   const handlers = {
-    s4vp_rh_taxpayer: (sql, [sub]) => {
+    s4vp_rh_taxpayer:(sql, [sub]) => {
       if (mockDb.failTaxpayer) throw new Error("no such column");
       return mockDb.subsidiaries.filter((x) => x.id === s(sub));
     },
@@ -55,11 +79,11 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
       return inIds(sql).filter((id) => mockDb.departments[id]).map((id) => ({ id, name: mockDb.departments[id] }));
     },
     s4vp_rh_emp: (sql) => inIds(sql).filter((id) => mockDb.employees[id]).map((id) => Object.assign({ id }, mockDb.employees[id])),
-    s4vp_rh_profile: (sql) => inIds(sql).map((id) => mockDb.profiles.find((p) => p.employee === id)).filter(Boolean).map((p) => ({ employee: p.employee, tax_code: p.tax_code || null, etype: p.employment_type })),
-    s4vp_rh_pit_lines: (sql) => {
-      if (/detail/.test(sql)) throw new Error("ledger must not read the detail clob");
-      return linesOf(sql).map((l) => ({ employee: l.employee, batch: l.batch, etype: l.employment_type, taxable: l.taxable, pit: l.pit }));
+    s4vp_rh_pit_ledger: (sql) => {
+      if (mockDb.failEmployeeJoin) throw new Error("join not allowed");
+      return ledger(sql, true);
     },
+    s4vp_rh_pit_ledger_noemp: (sql) => ledger(sql, false),
     // api/Reports (action cũ) dùng khi dựng phiếu HTKK
     s4vp_rpt_emp: (sql, ids) => ids.filter((id) => mockDb.employees[id]).map((id) => Object.assign({ id }, mockDb.employees[id])),
   };
@@ -276,7 +300,7 @@ describe("reportsPitLedger", () => {
     db.calls.length = 0;
     const old = Hub.pitLedger({ subsidiary: "13", year: "2026" });
     expect(old.rows.map((r) => [r.employeeCode, r.pit12])).toEqual([["E101", 1200000], ["E102", 0], ["E103", 1500000]]);
-    expect(db.calls).toEqual(["find:period", "find:batch", "run:s4vp_rh_pit_lines", "run:s4vp_rh_emp", "run:s4vp_rh_profile"]);
+    expect(db.calls).toEqual(["find:period", "find:batch", "run:s4vp_rh_pit_ledger"]);
     db.calls.length = 0;
     expect(Hub.pitLedger({ subsidiary: "13", year: "2030" }).rows).toEqual([]);
     expect(db.calls).toEqual(["find:period", "find:batch"]);
@@ -287,5 +311,47 @@ describe("reportsPitLedger", () => {
     db.profiles.find((p) => p.employee === "103").tax_code = "";
     const g = Hub.pitLedger({ subsidiary: "13", year: "2027" });
     expect(g.warnings).toEqual([expect.objectContaining({ code: "NO_TAX_CODE", count: 1 })]);
+  });
+
+  test("một truy vấn gom nhóm: tháng xoay thành cột, JOIN hồ sơ lương theo khóa chính, chỉ cột cần, không tham số ràng buộc", () => {
+    Hub.pitLedger({ subsidiary: "13", year: "2027" });
+    const sql = db.sql.s4vp_rh_pit_ledger;
+    // Bốn tháng có bảng lương dùng được (1, 2, 3, 4): mỗi tháng ba cột (số dòng, TNCT, thuế)
+    expect(sql.match(/SUM\(CASE WHEN/g)).toHaveLength(12);
+    expect(sql).toMatch(/IN \(4\) THEN l\.custrecord_s4vp_be_pit ELSE 0 END\) AS pit04/);
+    expect(sql).toMatch(/WHERE l\.isinactive = 'F' AND l\.custrecord_s4vp_be_batch IN \(1,2,3,4\) GROUP BY/);
+    // Hồ sơ lương: chỉ mã số thuế và loại lao động, nối theo p.id = l.profile (không lọc theo danh sách id nhân viên)
+    expect(sql).toMatch(/MAX\(p\.custrecord_s4vp_em_tax_code\) AS tax_code/);
+    expect(sql).not.toMatch(/p\.custrecord_s4vp_em_employee IN/);
+    expect(sql).not.toMatch(/SELECT \*|personal_id|bank|detail/);
+  });
+
+  test("900 nhân viên: vẫn một truy vấn, câu lệnh không dài theo số người, kết quả như tính từng dòng", () => {
+    for (let i = 0; i < 900; i++) {
+      const emp = String(5000 + i);
+      db.employees[emp] = { entityid: `T${5000 + i}`, firstname: "Thử", lastname: `Nhân viên ${i}`, department: "20" };
+      db.profiles.push({ id: `px${i}`, employee: emp, employment_type: i % 10 ? "E" : "C", tax_code: i % 7 ? `08${i}` : "" });
+      for (const b of ["1", "2", "3"]) db.lines.push({ id: `x${b}-${i}`, batch: b, employee: emp, profile: `px${i}`, employment_type: i % 10 ? "E" : "C", taxable: 10000000 + i, pit: i % 3 ? 100000 + i : 0, gross: 0 });
+    }
+    db.calls.length = 0;
+    const g = Hub.pitLedger({ subsidiary: "13", year: "2027" });
+    expect(db.calls).toEqual(["find:period", "find:batch", "run:s4vp_rh_pit_ledger"]);
+    expect(db.sql.s4vp_rh_pit_ledger.length).toBeLessThan(2500);
+    expect(g.rows).toHaveLength(904);
+    const one = g.rows.find((r) => r.employeeCode === "T5001");
+    expect(one).toMatchObject({ employeeName: "Nhân viên 1 Thử", taxCode: "081", employmentType: "E", periods: 3, pit01: 100001, pit04: null, pitTotal: 300003, taxableTotal: 30000003 });
+    expect(g.rows.find((r) => r.employeeCode === "T5000")).toMatchObject({ employmentType: "C", taxCode: "", pitTotal: 0, pit02: 0 });
+    // Người đã khấu trừ thuế nhưng thiếu mã số thuế (i chia hết cho 7, không chia hết cho 3)
+    const noCode = Array.from({ length: 900 }, (x, i) => i).filter((i) => i % 7 === 0 && i % 3 !== 0).length;
+    expect(g.warnings).toEqual([expect.objectContaining({ code: "NO_TAX_CODE", count: noCode })]);
+  });
+
+  test("vai trò không nối được bảng employee: cùng truy vấn bỏ JOIN, họ tên đọc riêng; kết quả không đổi", () => {
+    const before = Hub.pitLedger({ subsidiary: "13", year: "2027" });
+    db.failEmployeeJoin = true;
+    db.calls.length = 0;
+    const after = Hub.pitLedger({ subsidiary: "13", year: "2027" });
+    expect(db.calls).toEqual(["find:period", "find:batch", "run:s4vp_rh_pit_ledger", "run:s4vp_rh_pit_ledger_noemp", "run:s4vp_rh_emp"]);
+    expect(after).toEqual(before);
   });
 });

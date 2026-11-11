@@ -222,6 +222,40 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_oe_department">
+      <label>Phòng ban</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>-102</selectrecordtype>
+      <description>Phòng ban</description>
+      <help>Phòng ban</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_oe_reject_reason">
+      <label>Lý do từ chối gần nhất</label>
+      <fieldtype>TEXTAREA</fieldtype>
+      <description>Lý do từ chối gần nhất</description>
+      <help>Lý do từ chối gần nhất</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>LOCKED</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_oe_void_reason">
+      <label>Lý do hủy phiếu</label>
+      <fieldtype>TEXTAREA</fieldtype>
+      <description>Lý do hủy phiếu</description>
+      <help>Lý do hủy phiếu</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>LOCKED</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
   </customrecordcustomfields>
   <permissions>
     <permission>

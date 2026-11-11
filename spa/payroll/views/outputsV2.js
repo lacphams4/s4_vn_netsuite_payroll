@@ -5,14 +5,15 @@
  * tiết 6:4 theo các bước (Sản lượng, Thành viên, Chia tiền, Gửi duyệt, Duyệt, Vào bảng lương), mỗi bước một nút chính.
  *
  * Đọc: GET outputsView, outputRate, outputLookups (api/OutputsV2.js), GET employeeSearch (api/AdvancesV2.js).
- * Ghi: action cũ saveOutput (phiếu + dòng + thành viên), loadTeamMembers, splitOutput, outputAction (submit / approve / hold)
- * theo ma trận quyền của RESTlet: chỉ administrator và HR; kế toán chỉ xem.
+ * Ghi: action cũ saveOutput (phiếu + dòng + thành viên, phòng ban), loadTeamMembers, splitOutput, outputAction (submit /
+ * approve / reject kèm lý do / hold), voidOutput (hủy phiếu tạm giữ kèm lý do) theo ma trận quyền của RESTlet: chỉ
+ * administrator và HR; kế toán chỉ xem. Hộp xác nhận có ô lý do bắt buộc là Dialog riêng của màn (app.confirm chỉ nhận chữ).
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, errorText} from '../lib/api.js';
 import {money, num, fmtDate, toNumber, localToday, fold} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, AutoSelect, Field, TextInput, NumberInput, MoneyInput, DateInput, Dialog, SidePanel, SearchBox, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, AutoSelect, Field, TextInput, TextArea, NumberInput, MoneyInput, DateInput, Dialog, SidePanel, SearchBox, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -46,7 +47,7 @@ const TEXT = {
 			included: 'Đã vào bảng lương',
 			includedNote: (n, batches) => `${n} phiếu${batches ? ` - ${batches}` : ''}`,
 		},
-		cols: {number: 'Số', date: 'Ngày', kind: 'Loại', team: 'Tổ', project: 'Dự án', table: 'Bảng đơn giá', total: 'Thành tiền', split: 'Đã chia', status: 'Trạng thái', batch: 'Bảng lương'},
+		cols: {number: 'Số', date: 'Ngày', kind: 'Loại', team: 'Tổ', project: 'Dự án', department: 'Phòng ban', table: 'Bảng đơn giá', total: 'Thành tiền', split: 'Đã chia', status: 'Trạng thái', batch: 'Bảng lương'},
 		todo: {
 			label: 'Cần xử lý',
 			clear: 'Bỏ lọc',
@@ -81,9 +82,25 @@ const TEXT = {
 			diff: 'Chênh lệch',
 			peopleCount: 'Số người',
 			method: 'Cách chia',
+			department: 'Phòng ban',
 			description: 'Diễn giải',
 			next: (step) => `Tiếp: ${step}`,
 			lockedNote: 'Phiếu không còn tạm giữ nên không sửa được. Trả phiếu về tạm giữ nếu cần sửa.',
+			void: 'Hủy phiếu',
+			lastReject: (reason) => `Lý do từ chối gần nhất: ${reason}`,
+		},
+		reason: {
+			voidTitle: (nbr) => `Hủy phiếu ${nbr}`,
+			voidIntro: 'Phiếu bị ẩn khỏi danh sách và không vào bảng lương. Dữ liệu không bị xóa, vẫn xem được trên bản ghi NetSuite.',
+			voidLabel: 'Lý do hủy',
+			voidRun: 'Hủy phiếu',
+			voidErr: 'Nhập lý do hủy phiếu.',
+			voided: (nbr) => `Đã hủy phiếu ${nbr}.`,
+			rejectTitle: (nbr) => `Từ chối phiếu ${nbr}`,
+			rejectLabel: 'Lý do từ chối',
+			rejectRun: 'Từ chối',
+			rejectErr: 'Nhập lý do từ chối để người lập biết cần sửa gì.',
+			back: 'Quay lại',
 		},
 		lines: {
 			save: 'Lưu sản lượng',
@@ -232,6 +249,9 @@ const TEXT = {
 			projectNone: 'Theo tổ / không gắn dự án',
 			projectHint: 'Dự án quyết định đơn giá riêng và đích phân bổ chi phí',
 			projectMore: 'Danh sách chỉ gồm 300 dự án đầu; dự án khác chọn trên bản ghi.',
+			department: 'Phòng ban',
+			departmentNone: 'Theo tổ / phòng ban của nhân viên',
+			departmentHint: 'Chi phí khoán của phiếu hạch toán vào phòng ban này; để trống thì theo phòng ban của tổ, không có thì của từng nhân viên',
 			description: 'Diễn giải',
 			create: 'Tạo và nhập sản lượng',
 			save: 'Lưu phiếu',
@@ -277,7 +297,7 @@ const TEXT = {
 			included: 'Included in payroll',
 			includedNote: (n, batches) => `${n} entries${batches ? ` - ${batches}` : ''}`,
 		},
-		cols: {number: 'Number', date: 'Date', kind: 'Type', team: 'Team', project: 'Project', table: 'Rate table', total: 'Amount', split: 'Split', status: 'Status', batch: 'Payroll batch'},
+		cols: {number: 'Number', date: 'Date', kind: 'Type', team: 'Team', project: 'Project', department: 'Department', table: 'Rate table', total: 'Amount', split: 'Split', status: 'Status', batch: 'Payroll batch'},
 		todo: {
 			label: 'To do',
 			clear: 'Clear filter',
@@ -312,9 +332,25 @@ const TEXT = {
 			diff: 'Difference',
 			peopleCount: 'People',
 			method: 'Split method',
+			department: 'Department',
 			description: 'Description',
 			next: (step) => `Next: ${step}`,
 			lockedNote: 'The entry is no longer on hold, so it cannot be changed. Put it back on hold to edit.',
+			void: 'Void entry',
+			lastReject: (reason) => `Latest rejection reason: ${reason}`,
+		},
+		reason: {
+			voidTitle: (nbr) => `Void entry ${nbr}`,
+			voidIntro: 'The entry is hidden from the list and does not reach payroll. Nothing is deleted; the record can still be viewed in NetSuite.',
+			voidLabel: 'Reason for voiding',
+			voidRun: 'Void entry',
+			voidErr: 'Enter the reason for voiding the entry.',
+			voided: (nbr) => `Entry ${nbr} voided.`,
+			rejectTitle: (nbr) => `Reject entry ${nbr}`,
+			rejectLabel: 'Reason for rejection',
+			rejectRun: 'Reject',
+			rejectErr: 'Enter the reason so the author knows what to fix.',
+			back: 'Back',
 		},
 		lines: {
 			save: 'Save output',
@@ -463,6 +499,9 @@ const TEXT = {
 			projectNone: 'From the team / no project',
 			projectHint: 'The project drives project rates and the cost allocation target',
 			projectMore: 'Only the first 300 projects are listed; select another project on the record.',
+			department: 'Department',
+			departmentNone: 'From the team / each employee\'s department',
+			departmentHint: 'The piecework cost of the entry is posted to this department; leave empty to use the team\'s department, otherwise each employee\'s',
 			description: 'Description',
 			create: 'Create and enter output',
 			save: 'Save entry',
@@ -550,6 +589,9 @@ export default function OutputsView({app}) {
 	const [query, setQuery] = useState('');
 	const [found, setFound] = useState({items: [], more: false, state: ''});
 	const [gridQuery, setGridQuery] = useState('');
+	// Hộp xác nhận có lý do bắt buộc: {mode: 'reject' | 'void', id, name, reason, error}
+	const [reasonDlg, setReasonDlg] = useState(null);
+	const reasonRef = useRef(null);
 	const formRef = useRef(null);
 	const draftRef = useRef(null);
 	const ratesRef = useRef({});
@@ -1143,10 +1185,56 @@ export default function OutputsView({app}) {
 			{r.type === 'T' && r.splitTotal && r.splitTotal !== r.total ? fact(t.detail.diff, <span class="s4vp-out-diff">{money(Math.abs(r.splitTotal - r.total))}</span>) : null}
 			{fact(t.detail.peopleCount, t.people(r.people || 0))}
 			{r.type === 'T' ? fact(t.detail.method, t.method[r.splitMethod] || r.splitMethod || '') : null}
+			{r.department ? fact(t.detail.department, r.departmentName || r.department) : null}
 			{r.description ? fact(t.detail.description, r.description) : null}
 		</div>
 	);
 	const doAction = (r, op, confirmText, doneText) => app.confirm(confirmText, () => act({action: 'outputAction', id: r.id, op}, doneText, () => setTab('')));
+	// Từ chối (P -> H) và hủy phiếu tạm giữ: xác nhận kèm lý do bắt buộc
+	const openReason = (mode, r) => {
+		reasonRef.current = {mode, id: r.id, name: r.name || String(r.id), reason: '', error: ''};
+		setReasonDlg(reasonRef.current);
+	};
+	const putReason = (patch) => {
+		reasonRef.current = Object.assign({}, reasonRef.current, patch);
+		setReasonDlg(reasonRef.current);
+	};
+	const submitReason = () => {
+		const d = reasonRef.current;
+		if (!d) return;
+		const reason = String(d.reason || '').trim();
+		if (!reason) {
+			putReason({error: d.mode === 'void' ? t.reason.voidErr : t.reason.rejectErr});
+			return;
+		}
+		setReasonDlg(null);
+		reasonRef.current = null;
+		if (d.mode === 'void') act({action: 'voidOutput', id: d.id, reason}, t.reason.voided(d.name), () => pickEntry(''));
+		else act({action: 'outputAction', id: d.id, op: 'reject', reason}, t.approve.rejected(d.name), () => setTab(''));
+	};
+	const reasonDialog = () => {
+		const d = reasonDlg;
+		const isVoid = d.mode === 'void';
+		const close = () => {
+			reasonRef.current = null;
+			setReasonDlg(null);
+		};
+		return (
+			<Dialog
+				title={isVoid ? t.reason.voidTitle(d.name) : t.reason.rejectTitle(d.name)}
+				width={520}
+				onClose={close}
+				actions={[<Button label={t.reason.back} onClick={close} />, <Button label={isVoid ? t.reason.voidRun : t.reason.rejectRun} kind={isVoid ? 'danger' : 'primary'} disabled={!!app.busy} onClick={submitReason} />]}
+			>
+				<div class="s4vp-out-body">
+					<span>{isVoid ? t.reason.voidIntro : t.approve.confirmReject(d.name)}</span>
+					<Field label={isVoid ? t.reason.voidLabel : t.reason.rejectLabel} required={true} hint={d.error ? <span class="s4vp-out-err">{d.error}</span> : null}>
+						<TextArea value={d.reason} rows={3} onInput={(v) => putReason({reason: v, error: ''})} ariaLabel={isVoid ? t.reason.voidLabel : t.reason.rejectLabel} />
+					</Field>
+				</div>
+			</Dialog>
+		);
+	};
 	const blockers = (r) => {
 		const d = draftOf(r);
 		const out = [];
@@ -1185,7 +1273,7 @@ export default function OutputsView({app}) {
 			<div class="s4vp-out-body">
 				<div class="s4vp-out-acts">
 					<Button label={t.approve.run} kind="primary" disabled={!!reason || !!app.busy} title={reason} onClick={() => doAction(r, 'approve', t.approve.confirm(r.name, money(r.total), r.people || 0), t.approve.done(r.name))} />
-					<Button label={t.approve.reject} disabled={!!reason || !!app.busy} title={reason} onClick={() => doAction(r, 'hold', t.approve.confirmReject(r.name), t.approve.rejected(r.name))} />
+					<Button label={t.approve.reject} disabled={!!reason || !!app.busy} title={reason} onClick={() => openReason('reject', r)} />
 				</div>
 				<span class="s4vp-small">{t.approve.waiting}</span>
 				{summary(r)}
@@ -1242,9 +1330,11 @@ export default function OutputsView({app}) {
 		const shown = keys.indexOf(tab) >= 0 ? tab : cur;
 		const curIdx = keys.indexOf(cur);
 		const editable = r.status === 'H' && canWrite;
-		const sub = [t.status[r.status] || r.status, fmtDate(r.date), t.kind[r.kind] || r.kind, r.teamName, r.rateTableName, r.projectName, r.periodName ? t.detail.periodOf(r.periodName) : t.detail.noPeriod].filter(Boolean).join(' · ');
+		const sub = [t.status[r.status] || r.status, fmtDate(r.date), t.kind[r.kind] || r.kind, r.teamName, r.rateTableName, r.projectName, r.departmentName, r.periodName ? t.detail.periodOf(r.periodName) : t.detail.noPeriod].filter(Boolean).join(' · ');
 		const actions = [];
 		if (editable) actions.push(<Button small={true} label={t.detail.edit} disabled={!!app.busy} onClick={() => openForm(r)} />);
+		// Hủy phiếu: chỉ phiếu tạm giữ chưa vào bảng lương (máy chủ kiểm lại)
+		if (editable && !r.batch) actions.push(<Button small={true} kind="danger" label={t.detail.void} disabled={!!app.busy} onClick={() => openReason('void', r)} />);
 		actions.push(<Button small={true} kind="ghost" label={t.detail.openRecord} onClick={() => openRecord(RECORD_TYPE, r.id)} />);
 		let body;
 		if (shown === 'lines') body = linesStep(r, editable);
@@ -1281,6 +1371,7 @@ export default function OutputsView({app}) {
 						})}
 					</div>
 				) : null}
+				{r.rejectReason ? <div class={r.status === 'H' ? 's4vp-out-warn' : 's4vp-small'} role="note">{t.detail.lastReject(r.rejectReason)}</div> : null}
 				{locked ? <span class="s4vp-small">{canWrite ? t.detail.lockedNote : t.readOnly}</span> : null}
 				{body}
 			</SidePanel>
@@ -1297,8 +1388,8 @@ export default function OutputsView({app}) {
 			if (!lk || !alive.current) return;
 			const inPeriod = period && periods.find((p) => String(p.id) === String(period) && p.start <= localToday() && p.end >= localToday());
 			formRef.current = r
-				? {id: r.id, name: r.name, kind: r.kind, date: r.date || '', rateTable: String(r.rateTable || ''), team: String(r.team || ''), method: r.splitMethod || 'F', period: String(r.period || ''), project: String(r.project || ''), description: r.description || '', errors: {}, was: {date: r.date || '', rateTable: String(r.rateTable || ''), project: String(r.project || '')}}
-				: {id: '', name: '', kind: 'T', date: localToday(), rateTable: '', team: '', method: 'F', period: inPeriod ? String(period) : '', project: '', description: '', errors: {}, was: null};
+				? {id: r.id, name: r.name, kind: r.kind, date: r.date || '', rateTable: String(r.rateTable || ''), team: String(r.team || ''), method: r.splitMethod || 'F', period: String(r.period || ''), project: String(r.project || ''), department: String(r.department || ''), departmentName: r.departmentName || '', description: r.description || '', errors: {}, was: {date: r.date || '', rateTable: String(r.rateTable || ''), project: String(r.project || '')}}
+				: {id: '', name: '', kind: 'T', date: localToday(), rateTable: '', team: '', method: 'F', period: inPeriod ? String(period) : '', project: '', department: '', departmentName: '', description: '', errors: {}, was: null};
 			setForm(formRef.current);
 		});
 	};
@@ -1313,7 +1404,7 @@ export default function OutputsView({app}) {
 			return;
 		}
 		const team = f.kind === 'T' ? f.team : null;
-		const values = {doc_date: f.date, type: f.kind === 'T' ? 'T' : 'I', rate_table: f.rateTable, team, split_method: f.kind === 'T' ? f.method || 'F' : null, period: f.period || null, project: f.project || null, description: String(f.description || '').trim()};
+		const values = {doc_date: f.date, type: f.kind === 'T' ? 'T' : 'I', rate_table: f.rateTable, team, split_method: f.kind === 'T' ? f.method || 'F' : null, period: f.period || null, project: f.project || null, department: f.department || null, description: String(f.description || '').trim()};
 		const body = {action: 'saveOutput', values};
 		if (f.id) {
 			values.id = f.id;
@@ -1348,6 +1439,8 @@ export default function OutputsView({app}) {
 		const teamOptions = list(lk.teams).map((x) => ({value: x.id, label: [x.code, x.description].filter(Boolean).join(' - ')}));
 		const projectOptions = list(lk.projects).map((x) => ({value: x.id, label: x.name}));
 		if (f.project && !projectOptions.some((o) => o.value === f.project)) projectOptions.push({value: f.project, label: f.project});
+		const departmentOptions = list(lk.departments).map((x) => ({value: String(x.id), label: x.name || String(x.id)}));
+		if (f.department && !departmentOptions.some((o) => o.value === f.department)) departmentOptions.push({value: f.department, label: f.departmentName || f.department});
 		const periodOptions = periods.filter((p) => p.status !== 'C' || String(p.id) === f.period).map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`}));
 		const err = (k) => (f.errors && f.errors[k] ? <span class="s4vp-out-err">{f.errors[k]}</span> : null);
 		const pickKind = (k) => {
@@ -1356,7 +1449,17 @@ export default function OutputsView({app}) {
 		};
 		const pickTeam = (id) => {
 			const team = list(lk.teams).find((x) => x.id === id);
-			putForm(team && isNew ? {team: id, method: team.splitMethod || 'F', project: team.project && projectOptions.some((o) => o.value === String(team.project)) ? String(team.project) : f.project} : {team: id});
+			// Phiếu mới nhận cách chia, dự án, phòng ban mặc định của tổ (máy chủ cũng tự nhận khi các ô này để trống)
+			putForm(
+				team && isNew
+					? {
+						team: id,
+						method: team.splitMethod || 'F',
+						project: team.project && projectOptions.some((o) => o.value === String(team.project)) ? String(team.project) : f.project,
+						department: team.department && departmentOptions.some((o) => o.value === String(team.department)) ? String(team.department) : f.department,
+					}
+					: {team: id}
+			);
 		};
 		const changed = f.was && (f.was.date !== f.date || f.was.rateTable !== f.rateTable || f.was.project !== f.project);
 		return (
@@ -1392,6 +1495,9 @@ export default function OutputsView({app}) {
 					<Field label={t.form.project} hint={lk.projectsMore ? t.form.projectMore : t.form.projectHint}>
 						<AutoSelect value={f.project} onInput={(v) => putForm({project: v})} options={projectOptions} placeholder={t.form.projectNone} />
 					</Field>
+					<Field label={t.form.department} hint={t.form.departmentHint}>
+						<AutoSelect value={f.department} onInput={(v) => putForm({department: v || ''})} options={departmentOptions} placeholder={t.form.departmentNone} />
+					</Field>
 					<Field label={t.form.description}>
 						<TextInput value={f.description} onInput={(v) => putForm({description: v})} />
 					</Field>
@@ -1425,6 +1531,7 @@ export default function OutputsView({app}) {
 		{key: 'kindText', label: t.cols.kind, nowrap: true},
 		{key: 'teamName', label: t.cols.team, render: (r) => <span class="s4vp-out-clip" title={[r.teamName, r.teamDescription].filter(Boolean).join(' - ')}>{r.teamName || ''}</span>},
 		wide ? {key: 'projectName', label: t.cols.project, render: (r) => <span class="s4vp-out-clip" title={r.projectName || ''}>{r.projectName || ''}</span>} : null,
+		{key: 'departmentName', label: t.cols.department, render: (r) => <span class="s4vp-out-clip" title={r.departmentName || ''}>{r.departmentName || ''}</span>},
 		wide ? {key: 'rateTableName', label: t.cols.table, render: (r) => <span class="s4vp-out-clip" title={[r.rateTableName, r.rateTableDescription].filter(Boolean).join(' - ')}>{r.rateTableName || ''}</span>} : null,
 		{key: 'total', label: t.cols.total, type: 'money', nowrap: true},
 		{key: 'splitText', label: t.cols.split, align: 'right', nowrap: true, render: (r) => <span class={r.type === 'T' && r.total > 0 && r.splitTotal !== r.total ? 's4vp-out-diff' : 's4vp-out-plain'}>{r.splitText}</span>},
@@ -1505,6 +1612,7 @@ export default function OutputsView({app}) {
 				{current ? <div class={todo.length ? 's4vp-col-side s4vp-out-side s4vp-out-side-low' : 's4vp-col-side s4vp-out-side'}>{detailPanel(current)}</div> : null}
 			</div>
 			{form ? formDialog() : null}
+			{reasonDlg ? reasonDialog() : null}
 		</Page>
 	);
 }

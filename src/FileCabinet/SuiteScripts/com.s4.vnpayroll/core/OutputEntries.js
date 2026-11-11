@@ -2,13 +2,16 @@
  * Phiếu sản lượng / nghiệm thu vào bảng lương (đặc tả mục 4.3.3 - 4.3.5).
  *
  * Phiếu: {refNbr, status (H/P/A/C), batchNbr, entryType (I cá nhân / T tổ), rateTable, rateTableType (W/O/P/S),
- *         project, branch, workCenter, lines: [{employee, itemCode, qty, rate, amount}], members: [{employee, amount}]}.
+ *         project, branch, workCenter, department, lines: [{employee, itemCode, qty, rate, amount}], members: [{employee, amount}]}.
+ * department (phòng ban của phiếu, tùy chọn) đi vào shares[].sub: chi phí khoán của phiếu hạch toán về phòng ban đó
+ * (CostAllocationBuilder, "nguồn nào đích đó"); phiếu không khai thì chi phí theo phòng ban của nhân viên như trước.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
 define(["./Money"], (Money) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
+	const blank = (s) => norm(s) === "";
 
 	/** Phiếu dùng được khi tính bảng lương: Approved, hoặc Included in Payroll của chính bảng lương đang tính. */
 	function isUsable(entry, batchNbr) {
@@ -38,7 +41,7 @@ define(["./Money"], (Money) => {
 	/**
 	 * Gom phiếu của kỳ theo nhân viên.
 	 * @returns {{outputAmounts: Object<string, Object<string, Decimal>>, salesAmounts: Object<string, Decimal>,
-	 *            shares: Object<string, Array<{refNbr, rateTable, isSales, project, branch, workCenter, amount}>>}}
+	 *            shares: Object<string, Array<{refNbr, rateTable, isSales, project, branch, workCenter, sub?, amount}>>}}
 	 */
 	function collect(entries, options) {
 		const batchNbr = options && options.batchNbr;
@@ -53,9 +56,10 @@ define(["./Money"], (Money) => {
 				const byTable = (outputAmounts[s.employee] = outputAmounts[s.employee] || {});
 				byTable[rt] = (byTable[rt] || Money.D(0)).plus(s.amount);
 				if (isSales) salesAmounts[s.employee] = (salesAmounts[s.employee] || Money.D(0)).plus(s.amount);
-				(shares[s.employee] = shares[s.employee] || []).push({
-					refNbr: e.refNbr, rateTable: rt, isSales, project: e.project || "", branch: e.branch || "", workCenter: e.workCenter || "", amount: s.amount,
-				});
+				const share = { refNbr: e.refNbr, rateTable: rt, isSales, project: e.project || "", branch: e.branch || "", workCenter: e.workCenter || "", amount: s.amount };
+				// Phòng ban của phiếu -> sub (khóa CostAllocationBuilder đọc): chỉ ghi khi có, phiếu không khai giữ nguyên dạng cũ
+				if (!blank(e.department)) share.sub = String(e.department);
+				(shares[s.employee] = shares[s.employee] || []).push(share);
 			}
 		}
 		return { outputAmounts, salesAmounts, shares };
