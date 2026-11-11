@@ -11869,7 +11869,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                             { key: 'remove', label: '', render: (q) => jsx(Button, { small: true, kind: "ghost", label: t.plans.remove, ariaLabel: t.plans.removeOf(q.employeeText), onClick: () => removeLine('quotas', q.key) }) },
                         ], rows: list, keyOf: (q) => q.key, empty: t.plans.quotasEmpty, search: true, searchPlaceholder: t.plans.quotasSearch, toolbar: jsx(Button, { label: t.plans.addQuota, kind: "dashed", small: true, disabled: !canWrite, onClick: addQuota }) }) }) }));
         };
-        const planEditor = (d) => (jsxs("div", { class: "s4vp-cm", children: [errs && errs.count ? jsx("div", { class: "s4vp-cm-warn s4vp-cm-bad", role: "alert", children: t.plans.err.fix(errs.count) }) : null, planForm(d), jsxs("div", { class: "s4vp-cols", children: [jsxs("div", { class: "s4vp-col-main", children: [rulesGrid(d), assignGrid(d), quotaGrid(d)] }), jsx("div", { class: "s4vp-col-side s4vp-cm-side", children: ruleEditor(d) })] })] }));
+        const planEditor = (d) => (jsxs("div", { class: "s4vp-cm", children: [errs && errs.count ? jsx("div", { class: "s4vp-cm-warn s4vp-cm-bad", role: "alert", children: t.plans.err.fix(errs.count) }) : null, planForm(d), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: rulesGrid(d) }), jsx("div", { class: "s4vp-col-side s4vp-cm-side", children: ruleEditor(d) })] }), assignGrid(d), quotaGrid(d)] }));
         // ------------------------------------------------------------------ tab Mô phỏng
         const simTab = () => {
             const c = t.sim;

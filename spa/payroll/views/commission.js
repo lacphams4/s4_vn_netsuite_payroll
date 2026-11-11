@@ -2364,13 +2364,12 @@ export default function CommissionView({app}) {
 			{errs && errs.count ? <div class="s4vp-cm-warn s4vp-cm-bad" role="alert">{t.plans.err.fix(errs.count)}</div> : null}
 			{planForm(d)}
 			<div class="s4vp-cols">
-				<div class="s4vp-col-main">
-					{rulesGrid(d)}
-					{assignGrid(d)}
-					{quotaGrid(d)}
-				</div>
+				<div class="s4vp-col-main">{rulesGrid(d)}</div>
 				<div class="s4vp-col-side s4vp-cm-side">{ruleEditor(d)}</div>
 			</div>
+			{/* Phân công và chỉ tiêu tháng nhiều cột (ô chọn nhân viên, quản lý, ngày): trải hết chiều ngang để không tràn khung */}
+			{assignGrid(d)}
+			{quotaGrid(d)}
 		</div>
 	);
 
