@@ -146,8 +146,31 @@
     <customrecordcustomfield scriptid="custrecord_s4vp_cxt_item_type">
       <label>Loại dòng</label>
       <fieldtype>TEXT</fieldtype>
-      <description>Loại dòng</description>
-      <help>Loại dòng</help>
+      <description>NetSuite item type code: InvtPart, NonInvtPart, Service, Assembly, Kit, OthCharge, Discount, GiftCert, Payment, Markup, DwnLdItem.</description>
+      <help>NetSuite item type code: InvtPart, NonInvtPart, Service, Assembly, Kit, OthCharge, Discount, GiftCert, Payment, Markup, DwnLdItem.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_cxt_item_group">
+      <label>Nhóm hàng</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Item group value compared with the item group filter of the components (case-insensitive).</description>
+      <help>Item group value compared with the item group filter of the components (case-insensitive).</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_cxt_customer_type">
+      <label>Loại khách hàng</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>[customlist_s4vp_cm_cust_scope]</selectrecordtype>
+      <description>Optional N new / E existing customer as known by the source system; when set it overrides the first sale date rule.</description>
+      <help>Optional N new / E existing customer as known by the source system; when set it overrides the first sale date rule.</help>
       <ismandatory>F</ismandatory>
       <storevalue>T</storevalue>
       <displaytype>NORMAL</displaytype>

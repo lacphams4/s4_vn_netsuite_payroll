@@ -249,6 +249,17 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_cpl_item_group_field">
+      <label>Trường nhóm hàng trên mặt hàng</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Id of an item custom field (custitem...) holding the item group defined by the customer. Components filter on its display text (list / record fields compare by name). Empty = item group filters only match external sales rows.</description>
+      <help>Id of an item custom field (custitem...) holding the item group defined by the customer. Components filter on its display text (list / record fields compare by name). Empty = item group filters only match external sales rows.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
   </customrecordcustomfields>
   <permissions>
     <permission>

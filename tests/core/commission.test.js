@@ -214,6 +214,95 @@ describe("bộ lọc thành phần", () => {
 	});
 });
 
+describe("bộ lọc loại mặt hàng, mã hàng, nhóm hàng", () => {
+	const rows = [
+		row({ revenue: 10 * M, item: "1", itemType: "InvtPart", itemCode: "SP-001", itemGroup: "Điện máy" }),
+		row({ revenue: 20 * M, item: "2", itemType: "Service", itemCode: "DV-LAPDAT", itemGroup: "Dịch vụ" }),
+		row({ revenue: 40 * M, item: "3", itemType: "NonInvtPart", itemCode: "sp-002", itemGroup: "Điện máy, Khuyến mãi" }),
+		row({ revenue: -5 * M, item: "4", itemType: "Discount", itemCode: "CK10" }),
+		// Dòng ngoài: không có id nội bộ mặt hàng, mã hàng / loại / nhóm do hệ thống nguồn khai
+		row({ revenue: 8 * M, item: null, itemType: "invtpart", itemCode: "SP-001", itemGroup: "điện máy", sourceSystem: "DMS" }),
+	];
+	const base = (filter) => one({ rules: [rule(filter)], rows }).components[0].base;
+
+	test("loại mặt hàng: mã NetSuite, không phân biệt hoa thường, cả dòng ngoài", () => {
+		expect(base({ fItemTypes: "InvtPart" })).toBe(18 * M);
+		expect(base({ f_item_types: "service, NONINVTPART" })).toBe(60 * M);
+		expect(base({ fItemTypes: ["Discount"] })).toBe(-5 * M);
+		expect(base({ fItemTypes: "Kit" })).toBe(0);
+	});
+	test("mã hàng: không phân biệt hoa thường, khớp dòng ngoài (id nội bộ thì không)", () => {
+		expect(base({ fItemCodes: "sp-001" })).toBe(18 * M);
+		expect(base({ f_item_codes: "SP-002, dv-lapdat" })).toBe(60 * M);
+		// f_items so id nội bộ: dòng ngoài (item null) không bao giờ khớp
+		expect(base({ fItems: "1" })).toBe(10 * M);
+	});
+	test("nhóm hàng: so chữ hiển thị không phân biệt hoa thường; trường nhiều giá trị khớp một tên là đủ; dòng không có nhóm thì loại", () => {
+		expect(base({ fItemGroups: "ĐIỆN MÁY" })).toBe(58 * M);
+		expect(base({ f_item_groups: "khuyến mãi" })).toBe(40 * M);
+		expect(base({ fItemGroups: "Dịch vụ,Phụ kiện" })).toBe(20 * M);
+	});
+	test("kết hợp bộ lọc (AND); danh sách trống = không lọc", () => {
+		expect(base({ fItemTypes: "InvtPart,NonInvtPart", fItemGroups: "Điện máy", fItemCodes: "SP-001" })).toBe(18 * M);
+		expect(base({ fItemTypes: "InvtPart", fItemGroups: "Dịch vụ" })).toBe(0);
+		expect(base({ fItemTypes: "InvtPart", fItems: "1" })).toBe(10 * M);
+		expect(base({ fItemTypes: "", fItemCodes: [], fItemGroups: " , " })).toBe(73 * M);
+	});
+	test("normalizeRule và normalizeLines mang trường mới", () => {
+		expect(CE.normalizeRule({ f_item_types: "invtpart, Service,InvtPart", f_item_codes: "a1, A1 ,b2", f_item_groups: "" })).toMatchObject({ fItemTypes: ["INVTPART", "SERVICE"], fItemCodes: ["A1", "B2"], fItemGroups: null, customerScope: "A" });
+		const [l] = CE.normalizeLines([row({ revenue: 1, itemCode: "X1", itemGroup: "G1", customerType: "e" })], plan(), NOV);
+		expect(l).toMatchObject({ itemCode: "X1", itemGroup: "G1", customerType: "E" });
+	});
+});
+
+describe("phạm vi khách hàng: mới / cũ", () => {
+	// Ngày chứng từ 10/11/2026; 90 ngày trước = 12/08/2026
+	const rows = [
+		row({ revenue: 10 * M, customer: "K1", firstSaleDate: "2026-08-12" }), // 90 ngày: mới
+		row({ revenue: 20 * M, customer: "K2", firstSaleDate: "2026-08-11" }), // 91 ngày: cũ
+		row({ revenue: 40 * M, customer: "K3" }), // không có ngày mua đầu tiên: không xác định
+		row({ revenue: 7 * M, customer: "K4", firstSaleDate: "2026-12-01" }), // mua đầu sau ngày chứng từ: không xác định
+		row({ revenue: 3 * M, customer: "X1", customerType: "N", sourceSystem: "DMS" }), // dòng ngoài khai thẳng mới
+		row({ revenue: 5 * M, customer: "X2", customerType: "E", firstSaleDate: "2026-11-01", sourceSystem: "DMS" }), // khai cũ thắng ngày
+	];
+	const res = (filter) => one({ rules: [rule(filter)], rows });
+
+	test("N: khách mới trong new_days (đúng ngưỡng vẫn tính); dòng ngoài theo customer_type", () => {
+		expect(res({ f_customer_scope: "N" }).components[0].base).toBe(13 * M);
+		expect(res({ customerScope: "N", newDays: 91 }).components[0].base).toBe(33 * M);
+	});
+	test("E: khách cũ hơn new_days; customer_type E thắng quy tắc ngày", () => {
+		expect(res({ f_customer_scope: "E" }).components[0].base).toBe(25 * M);
+		expect(res({ f_customer_scope: "E", new_days: 30 }).components[0].base).toBe(35 * M);
+	});
+	test("A (mặc định): mọi khách, không cảnh báo", () => {
+		const r = res({ f_customer_scope: "A" });
+		expect(r.components[0].base).toBe(85 * M);
+		expect(r.warnings.map((w) => w.code)).not.toContain("UNKNOWN_CUSTOMER_AGE");
+	});
+	test("dòng thiếu dữ liệu không coi là khách cũ, có cảnh báo UNKNOWN_CUSTOMER_AGE song ngữ", () => {
+		const r = res({ f_customer_scope: "E" });
+		const w = r.warnings.find((x) => x.code === "UNKNOWN_CUSTOMER_AGE");
+		expect(w.vi).toBe("Thành phần Doanh số (chỉ khách cũ): 2 dòng không xác định được khách mới hay cũ (thiếu ngày mua đầu tiên), không tính.");
+		expect(w.en).toMatch(/existing customers only\): 2 line\(s\)/);
+		// Dòng bị bộ lọc khác loại thì không đếm
+		const r2 = res({ f_customer_scope: "N", fItems: "99" });
+		expect(r2.warnings.map((x) => x.code)).not.toContain("UNKNOWN_CUSTOMER_AGE");
+	});
+	test("tương thích f_new_customer: trống phạm vi thì T = N; phạm vi khai thì thắng", () => {
+		expect(CE.normalizeRule({ f_new_customer: "T" })).toMatchObject({ customerScope: "N", fNewCustomer: true });
+		expect(CE.normalizeRule({ f_new_customer: true, f_customer_scope: "E" })).toMatchObject({ customerScope: "E", fNewCustomer: false });
+		expect(CE.normalizeRule({ f_new_customer: false, f_customer_scope: "" })).toMatchObject({ customerScope: "A" });
+		expect(res({ fNewCustomer: true }).components[0].base).toBe(13 * M);
+	});
+	test("customerAge", () => {
+		expect(CE.customerAge({ date: "2026-11-10", firstSaleDate: "2026-11-10" }, 90)).toBe("N");
+		expect(CE.customerAge({ date: "2026-11-10", firstSaleDate: "2025-01-01" }, 90)).toBe("E");
+		expect(CE.customerAge({ date: "2026-11-10" }, 90)).toBeNull();
+		expect(CE.customerAge({ date: "2026-11-10", customerType: "E", firstSaleDate: "2026-11-10" }, 90)).toBe("E");
+	});
+});
+
 describe("trigger thu tiền, credit memo, truy thu", () => {
 	test("P: hóa đơn tính theo tỷ lệ thu trong kỳ kể cả hóa đơn kỳ trước; cash sale và credit memo theo ngày", () => {
 		const r = one({

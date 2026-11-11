@@ -80,6 +80,39 @@ export function idList(v) {
 	return out;
 }
 
+// Mã loại mặt hàng của NetSuite (tl.itemtype) mà bộ lọc thành phần nhận; nhãn ở TEXT.*.cm.itemType
+export const ITEM_TYPES = ['InvtPart', 'NonInvtPart', 'Service', 'Assembly', 'Kit', 'OthCharge', 'Discount', 'GiftCert', 'Payment', 'Markup', 'DwnLdItem'];
+// Phạm vi khách hàng của thành phần: A tất cả, N chỉ khách mới, E chỉ khách cũ
+export const CUSTOMER_SCOPES = ['A', 'N', 'E'];
+// Id trường nhóm hàng trên mặt hàng (máy chủ kiểm cùng biểu thức trước khi ghép vào SuiteQL)
+export const GROUP_FIELD_RE = /^custitem[a-z0-9_]+$/;
+
+/**
+ * Danh sách chữ (mã hàng, nhóm hàng) từ mảng hoặc chuỗi cách nhau dấu phẩy / chấm phẩy / xuống dòng / tab (dán từ Excel):
+ * bỏ trống, bỏ trùng không phân biệt hoa thường (giữ cách viết đầu tiên).
+ */
+export function tokenList(v) {
+	const raw = Array.isArray(v) ? v : str(v).split(/[,;\r\n\t]+/);
+	const out = [];
+	const seen = {};
+	raw.forEach((x) => {
+		const s = str(x).trim();
+		if (!s || seen[s.toUpperCase()]) return;
+		seen[s.toUpperCase()] = true;
+		out.push(s);
+	});
+	return out;
+}
+/** Thêm các mã trong đoạn chữ gõ / dán vào danh sách đang có (không trùng, không phân biệt hoa thường). */
+export const addTokens = (list, text) => tokenList(tokenList(list).concat(tokenList(text)));
+
+/** Phạm vi khách hàng của thành phần từ dữ liệu API: f_customer_scope, trống thì theo f_new_customer cũ (T = N). */
+export function scopeOf(r) {
+	const v = str(rd(r, 'customerScope', 'f_customer_scope', 'fCustomerScope')).toUpperCase();
+	if (CUSTOMER_SCOPES.indexOf(v) >= 0) return v;
+	return bool(rd(r, 'fNewCustomer', 'f_new_customer', 'newCustomer')) ? 'N' : 'A';
+}
+
 // Tháng: ô MonthInput dùng 'YYYY-MM', máy chủ dùng số YYYYMM
 export const monthInt = (m) => {
 	const x = /^(\d{4})-(\d{2})$/.exec(str(m));
@@ -298,7 +331,11 @@ const mapRule = (r, i) => ({
 	fDepartments: idList(rd(r, 'fDepartments', 'f_departments', 'departments')),
 	fLocations: idList(rd(r, 'fLocations', 'f_locations', 'locations')),
 	fCustCategories: idList(rd(r, 'fCustCategories', 'f_cust_categories', 'customerCategories')),
-	fNewCustomer: bool(rd(r, 'fNewCustomer', 'f_new_customer', 'newCustomer')),
+	// Loại mặt hàng giữ đúng mã NetSuite (InvtPart...) dù API trả chữ thường
+	fItemTypes: idList(rd(r, 'fItemTypes', 'f_item_types')).map((x) => ITEM_TYPES.find((c) => c.toUpperCase() === x.toUpperCase()) || x),
+	fItemCodes: tokenList(rd(r, 'fItemCodes', 'f_item_codes')),
+	fItemGroups: tokenList(rd(r, 'fItemGroups', 'f_item_groups')),
+	customerScope: scopeOf(r),
 	newDays: s(rd(r, 'newDays', 'new_days')) || '90',
 	tiers: arr(r && r.tiers).map(mapTier),
 });
@@ -341,6 +378,7 @@ export function mapPlan(p) {
 		drawAmount: rd(x, 'drawAmount', 'draw_amount') === undefined ? '' : numv(rd(x, 'drawAmount', 'draw_amount')),
 		overridePct: ratesFirst(['overridePct', 'override_pct']),
 		overrideBasis: str(rd(x, 'overrideBasis', 'override_basis')).toUpperCase() || 'B',
+		itemGroupField: str(rd(x, 'itemGroupField', 'item_group_field')),
 		inactive: bool(rd(x, 'isInactive', 'isinactive', 'inactive')),
 		rules: arr(x.rules).map(mapRule),
 		assignments: arr(x.assignments).map(mapAssign),
@@ -399,9 +437,16 @@ export function validatePlan(d) {
 	if (d.effective && d.expiration && d.expiration < d.effective) bad('plan', 'expiration', 'dateOrder');
 	if (d.creditSource === 'F' && !str(d.creditField).trim()) bad('plan', 'creditField', 'required');
 	if (d.drawType && d.drawType !== 'N' && !(toNumber(d.drawAmount) > 0)) bad('plan', 'drawAmount', 'positive');
+	const groupField = str(d.itemGroupField).trim().toLowerCase();
+	if (groupField && !GROUP_FIELD_RE.test(groupField)) bad('plan', 'itemGroupField', 'groupField');
 	if (!arr(d.rules).length) bad('plan', 'rules', 'noRules');
 	arr(d.rules).forEach((r) => {
+		const scoped = r.customerScope === 'N' || r.customerScope === 'E';
+		const days = toNumber(r.newDays);
 		if (!str(r.name).trim()) bad('rules', r.key, 'ruleName');
+		else if (scoped && (days === null || days < 1 || Math.round(days) !== days)) bad('rules', r.key, 'newDays');
+		// Lọc nhóm hàng trên giao dịch NetSuite cần trường nhóm hàng của kế hoạch (nguồn ngoài thì có cột Nhóm hàng)
+		else if (tokenList(r.fItemGroups).length && !groupField && (d.source || 'N') === 'N') bad('rules', r.key, 'noGroupField');
 		else if (r.method === 'P' && toNumber(r.rate) === null) bad('rules', r.key, 'rate');
 		else if (r.method === 'U' && toNumber(r.unitAmount) === null) bad('rules', r.key, 'unit');
 		else if (TIER_METHODS.indexOf(r.method) >= 0 && !arr(r.tiers).length) bad('rules', r.key, 'tiers');
@@ -447,6 +492,7 @@ export function planPayload(d, filterAsCsv) {
 		draw_amount: d.drawType && d.drawType !== 'N' ? n(d.drawAmount) : null,
 		override_pct: n(d.overridePct),
 		override_basis: d.overrideBasis || 'B',
+		item_group_field: str(d.itemGroupField).trim().toLowerCase(),
 	};
 	// Bậc thang đi kèm từng thành phần (rules[].tiers); không gửi thêm danh sách tiers phẳng (máy chủ sẽ cộng trùng)
 	const rules = arr(d.rules).map((r, i) => {
@@ -468,8 +514,14 @@ export function planPayload(d, filterAsCsv) {
 			f_departments: ids(r.fDepartments),
 			f_locations: ids(r.fLocations),
 			f_cust_categories: ids(r.fCustCategories),
-			f_new_customer: !!r.fNewCustomer,
-			new_days: r.fNewCustomer ? int(r.newDays) || 90 : null,
+			// Bộ lọc chữ luôn gửi dạng chuỗi cách nhau dấu phẩy (trường text / textarea của comm_rule)
+			f_item_types: idList(r.fItemTypes).join(','),
+			f_item_codes: tokenList(r.fItemCodes).join(','),
+			f_item_groups: tokenList(r.fItemGroups).join(','),
+			f_customer_scope: r.customerScope || 'A',
+			// f_new_customer cũ giữ đồng bộ cho bản đọc cũ
+			f_new_customer: r.customerScope === 'N',
+			new_days: r.customerScope === 'N' || r.customerScope === 'E' ? int(r.newDays) || 90 : null,
 			tiers,
 		};
 	});
@@ -493,6 +545,9 @@ export const IMPORT_FIELDS = [
 	{key: 'customerName', names: ['ten kh', 'ten khach hang', 'khach hang', 'customer name', 'customer']},
 	{key: 'customerCategory', names: ['nhom kh', 'nhom khach hang', 'customer category', 'category']},
 	{key: 'itemCode', names: ['ma hang', 'ma mat hang', 'mat hang', 'item code', 'item', 'sku']},
+	{key: 'itemType', names: ['loai hang', 'loai mat hang', 'item type', 'itemtype']},
+	{key: 'itemGroup', names: ['nhom hang', 'nhom mat hang', 'item group', 'product group']},
+	{key: 'customerType', names: ['loai kh', 'loai khach hang', 'loai khach', 'khach moi cu', 'customer type', 'new customer']},
 	{key: 'revenue', names: ['doanh thu', 'thanh tien', 'revenue', 'net amount', 'amount']},
 	{key: 'cost', names: ['gia von', 'cost']},
 	{key: 'qty', names: ['so luong', 'sl', 'qty', 'quantity']},
@@ -503,9 +558,10 @@ export const IMPORT_FIELDS = [
 	{key: 'collectedDate', names: ['ngay thu', 'ngay thu tien', 'collected date', 'payment date']},
 	{key: 'collectedAmount', names: ['so da thu', 'da thu', 'so tien thu', 'collected amount', 'collected', 'paid amount']},
 ];
-// Tiêu đề chuẩn của file mẫu (cũng được tự nhận như trên); dòng ví dụ chỉ dùng chữ không dấu
-export const TEMPLATE_HEADERS = ['doc_no', 'line_no', 'tran_type', 'date', 'customer_code', 'customer_name', 'customer_category', 'item_code', 'revenue', 'cost', 'qty', 'employee', 'department', 'class', 'location', 'collected_date', 'collected_amount'];
-const TEMPLATE_SAMPLE = ['HD0001', '1', 'I', '2026-10-15', 'KH001', 'Customer A', 'Retail', 'SP001', '15000000', '11000000', '10', 'NV001', '', '', '', '', ''];
+// Tiêu đề chuẩn của file mẫu (cũng được tự nhận như trên); dòng ví dụ chỉ dùng chữ không dấu. Cột mới thêm ở cuối để file
+// mẫu cũ vẫn đúng thứ tự. customer_type: N khách mới, E khách cũ (trống = tính theo ngày mua đầu tiên)
+export const TEMPLATE_HEADERS = ['doc_no', 'line_no', 'tran_type', 'date', 'customer_code', 'customer_name', 'customer_category', 'item_code', 'revenue', 'cost', 'qty', 'employee', 'department', 'class', 'location', 'collected_date', 'collected_amount', 'item_type', 'item_group', 'customer_type'];
+const TEMPLATE_SAMPLE = ['HD0001', '1', 'I', '2026-10-15', 'KH001', 'Customer A', 'Retail', 'SP001', '15000000', '11000000', '10', 'NV001', '', '', '', '', '', 'InvtPart', 'Dien may', 'N'];
 export const templateCsv = () => `﻿${TEMPLATE_HEADERS.join(',')}\r\n${TEMPLATE_SAMPLE.join(',')}\r\n`;
 
 const headKey = (h) =>
@@ -641,10 +697,25 @@ export function parseTranType(raw) {
 	return null;
 }
 
+/** Loại khách hàng trong file: N / E hoặc chữ mới / cũ / new / existing; trống -> ''; lạ -> null. */
+export function parseCustomerType(raw) {
+	const k = headKey(raw);
+	if (!k) return '';
+	if (['n', 'new', 'moi', 'khach moi'].indexOf(k) >= 0) return 'N';
+	if (['e', 'existing', 'old', 'cu', 'khach cu'].indexOf(k) >= 0) return 'E';
+	return null;
+}
+
+/** Loại mặt hàng trong file: viết lại đúng mã NetSuite khi khớp (invtpart -> InvtPart), khác thì giữ nguyên. */
+export const parseItemType = (raw) => {
+	const v = str(raw).trim();
+	return ITEM_TYPES.find((c) => c.toUpperCase() === v.toUpperCase()) || v;
+};
+
 /**
  * Bảng đã đọc + ánh xạ cột -> dòng chuẩn {row, docNo, lineNo, tranType, date, ..., errors: [mã]}. Dòng thiếu số dòng được đánh số
  * theo thứ tự trong cùng chứng từ (khóa chống trùng ổn định khi nạp lại cùng file). Mã lỗi: noDoc, badType, badDate, noEmployee,
- * badNumber, noAmount, duplicate.
+ * badNumber, noAmount, duplicate, badCustType.
  */
 export function buildImportRows(table, mapping) {
 	const map = mapping || {};
@@ -678,6 +749,9 @@ export function buildImportRows(table, mapping) {
 		const cdRaw = col(r, 'collectedDate');
 		const collectedDate = cdRaw ? parseDay(cdRaw) : null;
 		if (cdRaw && !collectedDate) add('badDate');
+		const ctRaw = col(r, 'customerType');
+		const customerType = parseCustomerType(ctRaw);
+		if (customerType === null) add('badCustType');
 		const key = `${docNo}|${lineNo}`;
 		if (docNo && seen[key]) add('duplicate');
 		seen[key] = true;
@@ -691,6 +765,9 @@ export function buildImportRows(table, mapping) {
 			customerName: col(r, 'customerName'),
 			customerCategory: col(r, 'customerCategory'),
 			itemCode: col(r, 'itemCode'),
+			itemType: parseItemType(col(r, 'itemType')),
+			itemGroup: col(r, 'itemGroup'),
+			customerType: customerType === null ? ctRaw : customerType,
 			revenue: nums.revenue,
 			cost: nums.cost,
 			qty: nums.qty,
@@ -718,6 +795,9 @@ export const importPayloadRow = (r, importBatch) => ({
 	customer_name: r.customerName,
 	customer_category: r.customerCategory,
 	item_code: r.itemCode,
+	item_type: r.itemType || '',
+	item_group: r.itemGroup || '',
+	customer_type: r.customerType || '',
 	revenue: r.revenue,
 	cost: r.cost,
 	qty: r.qty,
@@ -834,13 +914,13 @@ const TEXT = {
 				mapping: 'Ánh xạ cột',
 				mappingHint: 'Cột được tự nhận theo tiêu đề; sửa nếu chưa đúng.',
 				unused: '(không dùng)',
-				fields: {docNo: 'Số chứng từ', lineNo: 'Dòng', tranType: 'Loại (I / S / C)', date: 'Ngày', customerCode: 'Mã KH', customerName: 'Tên KH', customerCategory: 'Nhóm KH', itemCode: 'Mã hàng', revenue: 'Doanh thu', cost: 'Giá vốn', qty: 'Số lượng', employee: 'Mã NV hoặc email', department: 'Phòng ban (id nội bộ)', cls: 'Class (id nội bộ)', location: 'Địa điểm (id nội bộ)', collectedDate: 'Ngày thu', collectedAmount: 'Số đã thu'},
+				fields: {docNo: 'Số chứng từ', lineNo: 'Dòng', tranType: 'Loại (I / S / C)', date: 'Ngày', customerCode: 'Mã KH', customerName: 'Tên KH', customerCategory: 'Nhóm KH', itemCode: 'Mã hàng', itemType: 'Loại hàng (mã NetSuite)', itemGroup: 'Nhóm hàng', customerType: 'Loại KH (N mới / E cũ)', revenue: 'Doanh thu', cost: 'Giá vốn', qty: 'Số lượng', employee: 'Mã NV hoặc email', department: 'Phòng ban (id nội bộ)', cls: 'Class (id nội bộ)', location: 'Địa điểm (id nội bộ)', collectedDate: 'Ngày thu', collectedAmount: 'Số đã thu'},
 				missingReq: (names) => `Chưa ánh xạ cột bắt buộc: ${names}.`,
 				preview: 'Xem trước',
 				search: 'Tìm số chứng từ, nhân viên, lỗi',
 				status: {pending: 'Chưa kiểm', ok: 'Hợp lệ', error: 'Lỗi', create: 'Tạo mới', update: 'Cập nhật', same: 'Không đổi'},
 				counts: (total, ok, bad) => `${total} dòng - ${ok} hợp lệ - ${bad} lỗi`,
-				errors: {noDoc: 'Thiếu số chứng từ', badType: 'Loại không hợp lệ (I, S, C)', badDate: 'Ngày không hợp lệ', noEmployee: 'Thiếu mã nhân viên', badNumber: 'Số không hợp lệ', noAmount: 'Thiếu doanh thu hoặc số lượng', duplicate: 'Trùng số chứng từ + dòng trong file'},
+				errors: {noDoc: 'Thiếu số chứng từ', badType: 'Loại không hợp lệ (I, S, C)', badDate: 'Ngày không hợp lệ', noEmployee: 'Thiếu mã nhân viên', badNumber: 'Số không hợp lệ', noAmount: 'Thiếu doanh thu hoặc số lượng', duplicate: 'Trùng số chứng từ + dòng trong file', badCustType: 'Loại KH phải là N (mới) hoặc E (cũ)'},
 				cols: {row: 'Dòng', status: 'Trạng thái', docNo: 'Số chứng từ', line: 'Dòng CT', type: 'Loại', date: 'Ngày', customer: 'Khách', item: 'Mặt hàng', revenue: 'Doanh thu', qty: 'Số lượng', employee: 'Nhân viên', errors: 'Lỗi'},
 				check: 'Kiểm tra',
 				checking: 'Đang kiểm tra dữ liệu...',
@@ -863,6 +943,8 @@ const TEXT = {
 			draw: {N: 'Không', R: 'Ứng trước có thu hồi', G: 'Bảo đảm tối thiểu'},
 			overrideBasis: {B: 'Doanh số của cấp dưới', C: 'Hoa hồng của cấp dưới'},
 			method: {P: 'Tỷ lệ cố định', G: 'Thang lũy tiến', S: 'Thang bậc', A: 'Theo % đạt chỉ tiêu', U: 'Đơn giá / sản phẩm', B: 'Thưởng mốc'},
+			itemType: {InvtPart: 'Hàng tồn kho', NonInvtPart: 'Hàng không tồn kho', Service: 'Dịch vụ', Assembly: 'Lắp ráp', Kit: 'Bộ (kit)', OthCharge: 'Phí khác', Discount: 'Chiết khấu', GiftCert: 'Phiếu quà tặng', Payment: 'Thanh toán', Markup: 'Phụ thu (markup)', DwnLdItem: 'Hàng tải về'},
+			scope: {A: 'Tất cả khách hàng', N: 'Chỉ khách mới', E: 'Chỉ khách cũ'},
 			methodHelp: {
 				P: 'Cơ sở x tỷ lệ %.',
 				G: 'Mỗi khoảng cơ sở nhân % của khoảng đó (như thuế lũy tiến).',
@@ -979,8 +1061,9 @@ const TEXT = {
 				f: {
 					source: 'Nguồn doanh số', sourceHint: 'Dữ liệu ngoài nạp ở tab Doanh số ngoài',
 					name: 'Mã kế hoạch', description: 'Mô tả', subsidiary: 'Công ty con', allSubs: 'Mọi công ty', effective: 'Hiệu lực từ', expiration: 'Đến ngày', earningType: 'Loại thu nhập', basis: 'Cơ sở tính', trigger: 'Ghi nhận khi', creditSource: 'Người được ghi nhận', creditField: 'Id trường nhân viên trên chứng từ', creditFieldHint: 'Ví dụ custbody_sales_agent', window: 'Cửa sổ tính', includeReturns: 'Trừ hàng trả lại (credit memo)', clawbackDays: 'Truy thu hóa đơn quá hạn (ngày)', clawbackHint: '0 = tắt; chỉ áp khi ghi nhận lúc xuất hóa đơn', excludeItemTypes: 'Loại dòng bỏ qua', excludeHint: 'Cách nhau dấu phẩy', minAttainment: 'Ngưỡng % đạt tối thiểu', minHint: 'Dưới ngưỡng thì hoa hồng theo doanh số = 0', capAmount: 'Trần mỗi kỳ', capHint: 'Trống = không trần', drawType: 'Ứng trước (draw)', drawAmount: 'Mức ứng trước mỗi kỳ', overridePct: 'Hoa hồng quản lý %', overrideBasis: 'Tính trên', overrideHint: 'Quản lý khai ở lưới phân công',
+					itemGroupField: 'Trường nhóm hàng trên mặt hàng (custitem...)', itemGroupFieldHint: 'Id trường tùy chỉnh của mặt hàng chứa nhóm hàng do doanh nghiệp tự định nghĩa, ví dụ custitem_nhom_hang; lọc so theo tên hiển thị. Trống = lọc nhóm hàng chỉ áp cho doanh số ngoài.',
 				},
-				err: {required: 'Bắt buộc.', dateOrder: 'Ngày kết thúc trước ngày bắt đầu.', positive: 'Nhập số tiền lớn hơn 0.', noRules: 'Kế hoạch cần ít nhất một thành phần.', ruleName: 'Thành phần thiếu tên.', rate: 'Nhập tỷ lệ %.', unit: 'Nhập đơn giá.', tiers: 'Thêm ít nhất một bậc.', tierValues: 'Bậc thiếu giá trị.', employee: 'Chọn nhân viên.', quotaRow: 'Chọn nhân viên, tháng và nhập chỉ tiêu.', fix: (n) => `Còn ${n} ô chưa hợp lệ, xem các dòng báo đỏ.`},
+				err: {required: 'Bắt buộc.', dateOrder: 'Ngày kết thúc trước ngày bắt đầu.', positive: 'Nhập số tiền lớn hơn 0.', noRules: 'Kế hoạch cần ít nhất một thành phần.', ruleName: 'Thành phần thiếu tên.', rate: 'Nhập tỷ lệ %.', unit: 'Nhập đơn giá.', tiers: 'Thêm ít nhất một bậc.', tierValues: 'Bậc thiếu giá trị.', employee: 'Chọn nhân viên.', quotaRow: 'Chọn nhân viên, tháng và nhập chỉ tiêu.', groupField: 'Id trường phải dạng custitem... (chữ thường, số, gạch dưới).', newDays: 'Nhập số ngày tính là khách mới (số nguyên từ 1).', noGroupField: 'Lọc nhóm hàng cần khai Trường nhóm hàng trên kế hoạch.', fix: (n) => `Còn ${n} ô chưa hợp lệ, xem các dòng báo đỏ.`},
 				rules: 'Thành phần (cách tính)',
 				rulesSearch: 'Tìm tên, cách tính',
 				rulesEmpty: 'Chưa có thành phần.',
@@ -989,6 +1072,7 @@ const TEXT = {
 				ruleCols: {sequence: 'TT', name: 'Tên', method: 'Cách tính', value: 'Tỷ lệ / đơn giá', filters: 'Bộ lọc', remove: ''},
 				tiersCount: (n) => `${n} bậc`,
 				filtersCount: (n) => (n ? `${n} điều kiện` : 'Mọi giao dịch'),
+				sum: {types: (x) => `Loại: ${x}`, codes: (x) => `Mã: ${x}`, groups: (x) => `Nhóm: ${x}`, scopeN: (d) => `Khách mới (${d} ngày)`, scopeE: (d) => `Khách cũ (trên ${d} ngày)`, others: (n) => `${n} điều kiện khác`},
 				remove: 'Bỏ',
 				removeOf: (name) => `Bỏ ${name}`,
 				rule: {
@@ -1000,7 +1084,15 @@ const TEXT = {
 					classes: 'Lớp (class)', departments: 'Phòng ban', locations: 'Địa điểm', custCategories: 'Nhóm khách hàng', items: 'Mặt hàng', itemsHint: 'Id nội bộ mặt hàng, cách nhau dấu phẩy',
 					add: 'Thêm...',
 					removeChip: (name) => `Bỏ điều kiện ${name}`,
-					newCustomer: 'Chỉ khách mới', newDays: 'Khách mới trong (ngày)',
+					itemTypes: 'Loại mặt hàng',
+					itemCodes: 'Mã hàng',
+					itemCodesHint: 'Gõ mã rồi Enter, hoặc dán nhiều mã cách nhau dấu phẩy / xuống dòng; không phân biệt hoa thường. Áp cho cả doanh số ngoài.',
+					itemGroups: 'Nhóm hàng',
+					itemGroupsHint: (field) => (field ? `Giá trị của trường ${field} (theo tên hiển thị) hoặc cột Nhóm hàng của doanh số ngoài; gõ rồi Enter hoặc dán nhiều giá trị.` : 'Kế hoạch chưa khai trường nhóm hàng: chỉ dòng doanh số ngoài có cột Nhóm hàng được lọc.'),
+					tokenPh: 'Gõ rồi Enter...',
+					customerScope: 'Phạm vi khách hàng',
+					newDays: 'Số ngày tính là khách mới',
+					scopeHelp: (d) => `Khách mới: lần mua đầu tiên (hóa đơn hoặc bán thu tiền ngay đã ghi sổ) cách ngày chứng từ không quá ${d} ngày; khách cũ: hơn ${d} ngày. Dòng doanh số ngoài có cột Loại KH thì dùng thẳng giá trị đó. Dòng thiếu ngày mua đầu tiên không được tính và có cảnh báo.`,
 					tiers: 'Bậc thang',
 					noTiers: 'Cách tính này không dùng bậc thang.',
 					addTier: 'Thêm bậc',
@@ -1080,13 +1172,13 @@ const TEXT = {
 				mapping: 'Column mapping',
 				mappingHint: 'Columns are matched by their headers; correct them if needed.',
 				unused: '(not used)',
-				fields: {docNo: 'Document number', lineNo: 'Line', tranType: 'Type (I / S / C)', date: 'Date', customerCode: 'Customer code', customerName: 'Customer name', customerCategory: 'Customer category', itemCode: 'Item code', revenue: 'Revenue', cost: 'Cost', qty: 'Quantity', employee: 'Employee ID or email', department: 'Department (internal id)', cls: 'Class (internal id)', location: 'Location (internal id)', collectedDate: 'Collected date', collectedAmount: 'Collected amount'},
+				fields: {docNo: 'Document number', lineNo: 'Line', tranType: 'Type (I / S / C)', date: 'Date', customerCode: 'Customer code', customerName: 'Customer name', customerCategory: 'Customer category', itemCode: 'Item code', itemType: 'Item type (NetSuite code)', itemGroup: 'Item group', customerType: 'Customer type (N new / E existing)', revenue: 'Revenue', cost: 'Cost', qty: 'Quantity', employee: 'Employee ID or email', department: 'Department (internal id)', cls: 'Class (internal id)', location: 'Location (internal id)', collectedDate: 'Collected date', collectedAmount: 'Collected amount'},
 				missingReq: (names) => `Required columns not mapped: ${names}.`,
 				preview: 'Preview',
 				search: 'Search document, employee, error',
 				status: {pending: 'Not checked', ok: 'Valid', error: 'Error', create: 'New', update: 'Update', same: 'Unchanged'},
 				counts: (total, ok, bad) => `${total} rows - ${ok} valid - ${bad} with errors`,
-				errors: {noDoc: 'Missing document number', badType: 'Invalid type (I, S, C)', badDate: 'Invalid date', noEmployee: 'Missing employee ID', badNumber: 'Invalid number', noAmount: 'Missing revenue or quantity', duplicate: 'Duplicate document + line in the file'},
+				errors: {noDoc: 'Missing document number', badType: 'Invalid type (I, S, C)', badDate: 'Invalid date', noEmployee: 'Missing employee ID', badNumber: 'Invalid number', noAmount: 'Missing revenue or quantity', duplicate: 'Duplicate document + line in the file', badCustType: 'Customer type must be N (new) or E (existing)'},
 				cols: {row: 'Row', status: 'Status', docNo: 'Document', line: 'Doc. line', type: 'Type', date: 'Date', customer: 'Customer', item: 'Item', revenue: 'Revenue', qty: 'Quantity', employee: 'Employee', errors: 'Errors'},
 				check: 'Check',
 				checking: 'Checking the data...',
@@ -1109,6 +1201,8 @@ const TEXT = {
 			draw: {N: 'None', R: 'Recoverable draw', G: 'Guaranteed minimum'},
 			overrideBasis: {B: 'Subordinates sales', C: 'Subordinates commission'},
 			method: {P: 'Flat rate', G: 'Graduated tiers', S: 'Step tiers', A: 'Attainment based', U: 'Per unit', B: 'Milestone bonus'},
+			itemType: {InvtPart: 'Inventory item', NonInvtPart: 'Non-inventory item', Service: 'Service', Assembly: 'Assembly', Kit: 'Kit / package', OthCharge: 'Other charge', Discount: 'Discount', GiftCert: 'Gift certificate', Payment: 'Payment', Markup: 'Markup', DwnLdItem: 'Download item'},
+			scope: {A: 'All customers', N: 'New customers only', E: 'Existing customers only'},
 			methodHelp: {
 				P: 'Base x rate %.',
 				G: 'Each slice of the base times the rate of that slice (like progressive tax).',
@@ -1225,8 +1319,9 @@ const TEXT = {
 				f: {
 					source: 'Sales source', sourceHint: 'External data is imported in the External sales tab',
 					name: 'Plan code', description: 'Description', subsidiary: 'Subsidiary', allSubs: 'All subsidiaries', effective: 'Effective from', expiration: 'Until', earningType: 'Earning type', basis: 'Basis', trigger: 'Credit when', creditSource: 'Credited person', creditField: 'Employee field id on the transaction', creditFieldHint: 'For example custbody_sales_agent', window: 'Window', includeReturns: 'Deduct returns (credit memos)', clawbackDays: 'Claw back overdue invoices (days)', clawbackHint: '0 = off; only when crediting on invoice', excludeItemTypes: 'Line types to skip', excludeHint: 'Comma separated', minAttainment: 'Minimum attainment %', minHint: 'Below it, sales based commission is 0', capAmount: 'Cap per period', capHint: 'Empty = no cap', drawType: 'Draw', drawAmount: 'Draw amount per period', overridePct: 'Override %', overrideBasis: 'Calculated on', overrideHint: 'Managers are set in the assignment grid',
+					itemGroupField: 'Item group field on items (custitem...)', itemGroupFieldHint: 'Id of the item custom field holding the item group defined by the business, for example custitem_item_group; filters compare its display text. Empty = item group filters only apply to external sales.',
 				},
-				err: {required: 'Required.', dateOrder: 'The end date is before the start date.', positive: 'Enter an amount greater than zero.', noRules: 'The plan needs at least one component.', ruleName: 'The component has no name.', rate: 'Enter the rate %.', unit: 'Enter the unit amount.', tiers: 'Add at least one tier.', tierValues: 'A tier is missing values.', employee: 'Select the employee.', quotaRow: 'Select the employee and month, and enter the quota.', fix: (n) => `${n} fields are invalid, see the rows in red.`},
+				err: {required: 'Required.', dateOrder: 'The end date is before the start date.', positive: 'Enter an amount greater than zero.', noRules: 'The plan needs at least one component.', ruleName: 'The component has no name.', rate: 'Enter the rate %.', unit: 'Enter the unit amount.', tiers: 'Add at least one tier.', tierValues: 'A tier is missing values.', employee: 'Select the employee.', quotaRow: 'Select the employee and month, and enter the quota.', groupField: 'The field id must look like custitem... (lowercase letters, digits, underscores).', newDays: 'Enter the new customer days (a whole number from 1).', noGroupField: 'Item group filters need the item group field of the plan.', fix: (n) => `${n} fields are invalid, see the rows in red.`},
 				rules: 'Components (calculation methods)',
 				rulesSearch: 'Search name, method',
 				rulesEmpty: 'No components yet.',
@@ -1235,6 +1330,7 @@ const TEXT = {
 				ruleCols: {sequence: 'Seq.', name: 'Name', method: 'Method', value: 'Rate / unit amount', filters: 'Filters', remove: ''},
 				tiersCount: (n) => `${n} tiers`,
 				filtersCount: (n) => (n ? `${n} conditions` : 'All transactions'),
+				sum: {types: (x) => `Type: ${x}`, codes: (x) => `Code: ${x}`, groups: (x) => `Group: ${x}`, scopeN: (d) => `New customers (${d} days)`, scopeE: (d) => `Existing customers (over ${d} days)`, others: (n) => `${n} other conditions`},
 				remove: 'Remove',
 				removeOf: (name) => `Remove ${name}`,
 				rule: {
@@ -1246,7 +1342,15 @@ const TEXT = {
 					classes: 'Classes', departments: 'Departments', locations: 'Locations', custCategories: 'Customer categories', items: 'Items', itemsHint: 'Item internal ids, comma separated',
 					add: 'Add...',
 					removeChip: (name) => `Remove condition ${name}`,
-					newCustomer: 'New customers only', newDays: 'New customer within (days)',
+					itemTypes: 'Item types',
+					itemCodes: 'Item codes',
+					itemCodesHint: 'Type a code and press Enter, or paste several codes separated by commas / new lines; case-insensitive. Also applies to external sales.',
+					itemGroups: 'Item groups',
+					itemGroupsHint: (field) => (field ? `Values of the field ${field} (by display text) or the item group column of external sales; type and press Enter or paste several values.` : 'The plan has no item group field: only external sales rows with an item group column are filtered.'),
+					tokenPh: 'Type and press Enter...',
+					customerScope: 'Customer scope',
+					newDays: 'Days counted as a new customer',
+					scopeHelp: (d) => `New customer: first sale (posted invoice or cash sale) at most ${d} days before the document date; existing customer: more than ${d} days. External sales rows with a customer type column use that value directly. Lines without a first sale date are skipped with a warning.`,
 					tiers: 'Tiers',
 					noTiers: 'This method does not use tiers.',
 					addTier: 'Add tier',
@@ -1667,6 +1771,40 @@ export default function CommissionView({app}) {
 			}
 		} catch (e) {
 			// bỏ qua: vẫn dán được từ Excel
+		}
+	});
+	// Ô nhập mã hàng / nhóm hàng dạng chip: UIF không bắn sự kiện phím, nên gắn trình nghe gốc một lần cho mỗi phần tử. Enter,
+	// dấu phẩy, chấm phẩy -> thêm chip; dán -> tách nhiều mã (cả xuống dòng từ Excel); rời ô -> giữ phần đang gõ; Backspace ở ô
+	// trống -> bỏ chip cuối. Hàm xử lý mới nhất nằm trong tokenFns (đổi theo thành phần đang sửa).
+	const tokenFns = useRef({});
+	useEffect(() => {
+		try {
+			Object.keys(tokenFns.current).forEach((id) => {
+				const el = document.getElementById(id);
+				if (!el || el.__s4vpTok) return;
+				el.__s4vpTok = true;
+				const fn = () => tokenFns.current[id] || {add: () => {}, pop: () => {}};
+				const commit = (extra) => {
+					const text = `${el.value || ''}${extra || ''}`;
+					el.value = '';
+					if (text.trim()) fn().add(text);
+				};
+				el.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter' || e.key === ',' || e.key === ';') {
+						e.preventDefault();
+						commit('');
+					} else if (e.key === 'Backspace' && !el.value) fn().pop();
+				});
+				el.addEventListener('paste', (e) => {
+					const data = e.clipboardData && e.clipboardData.getData('text');
+					if (!data) return;
+					e.preventDefault();
+					commit(data);
+				});
+				el.addEventListener('focusout', () => commit(''));
+			});
+		} catch (e) {
+			// bỏ qua: không gắn được thì vẫn thêm được bằng nút Thêm cạnh ô
 		}
 	});
 	// Trạng thái từng dòng: lỗi của trình duyệt (định dạng) cộng lỗi máy chủ (mã NV không có, trùng khóa với dòng đã khóa...)
@@ -2093,6 +2231,60 @@ export default function CommissionView({app}) {
 			</Field>
 		);
 	};
+	// Ô chip cho danh sách chữ tự do (mã hàng, nhóm hàng): chip có nút bỏ + ô gõ (trình nghe gốc ở tokenFns) + nút Thêm
+	const tokenInput = (id, label, hint, values, onChange) => {
+		const list = tokenList(values);
+		tokenFns.current[id] = {add: (text) => onChange(addTokens(list, text)), pop: () => list.length && onChange(list.slice(0, -1))};
+		const addTyped = () => {
+			try {
+				const el = document.getElementById(id);
+				if (el && str(el.value).trim()) {
+					const text = el.value;
+					el.value = '';
+					onChange(addTokens(list, text));
+				}
+			} catch (e) {
+				// bỏ qua
+			}
+		};
+		return (
+			<Field label={label} hint={hint}>
+				<div class="s4vp-cm-chips">
+					{list.map((v) => (
+						<span key={`k${v}`} class="s4vp-cm-chip">
+							<span>{v}</span>
+							<button type="button" class="s4vp-cm-chip-x" aria-label={t.plans.rule.removeChip(v)} title={t.plans.rule.removeChip(v)} onClick={() => onChange(list.filter((x) => x !== v))}>
+								{'×'}
+							</button>
+						</span>
+					))}
+					<span class="s4vp-cm-chip-add">
+						<input id={id} type="text" class="s4vp-in" placeholder={t.plans.rule.tokenPh} aria-label={label} autocomplete="off" disabled={!canWrite} />
+					</span>
+					<Button small={true} kind="ghost" label={t.plans.rule.add} ariaLabel={`${t.plans.rule.add} ${label}`} disabled={!canWrite} onClick={addTyped} />
+				</div>
+			</Field>
+		);
+	};
+	const typeOptions = ITEM_TYPES.map((c) => ({value: c, label: `${t.itemType[c] || c} (${c})`}));
+	// Tóm tắt bộ lọc cho cột Bộ lọc của lưới thành phần: loại, mã, nhóm (2 giá trị đầu + số còn lại), phạm vi khách, số điều kiện id
+	const shortList = (list, label) => (list.length > 2 ? `${list.slice(0, 2).map(label).join(', ')} +${list.length - 2}` : list.map(label).join(', '));
+	const filterSummary = (r) => {
+		const sm = t.plans.sum;
+		const parts = [];
+		const types = idList(r.fItemTypes);
+		const codes = tokenList(r.fItemCodes);
+		const groups = tokenList(r.fItemGroups);
+		if (types.length) parts.push(sm.types(shortList(types, (c) => t.itemType[c] || c)));
+		if (codes.length) parts.push(sm.codes(shortList(codes, (x) => x)));
+		if (groups.length) parts.push(sm.groups(shortList(groups, (x) => x)));
+		const days = toNumber(r.newDays) || 90;
+		if (r.customerScope === 'N') parts.push(sm.scopeN(days));
+		if (r.customerScope === 'E') parts.push(sm.scopeE(days));
+		const others = FILTER_KEYS.concat([{key: 'fItems'}]).reduce((n, k) => n + idList(r[k.key]).length, 0);
+		if (others) parts.push(parts.length ? sm.others(others) : t.plans.filtersCount(others));
+		return parts.length ? parts.join('; ') : t.plans.filtersCount(0);
+	};
 	const planForm = (d) => {
 		const f = t.plans.f;
 		const subs = arr(boot.subsidiaries).map((x) => ({value: str(x.id), label: str(x.name)}));
@@ -2143,6 +2335,9 @@ export default function CommissionView({app}) {
 					<Field label={f.excludeItemTypes} hint={f.excludeHint}>
 						<TextInput value={d.excludeItemTypes} onInput={setPlanField('excludeItemTypes')} />
 					</Field>
+					<Field label={f.itemGroupField} hint={fieldErr('itemGroupField') || f.itemGroupFieldHint}>
+						<TextInput value={d.itemGroupField} placeholder="custitem_..." onInput={setPlanField('itemGroupField')} />
+					</Field>
 					<Field label={f.minAttainment} hint={f.minHint}>
 						<NumberInput value={d.minAttainment} min={0} step={0.01} onInput={setPlanField('minAttainment')} />
 					</Field>
@@ -2174,9 +2369,8 @@ export default function CommissionView({app}) {
 		if (r.method === 'U') return has(r.unitAmount) ? money(toNumber(r.unitAmount)) : '';
 		return t.plans.tiersCount(r.tiers.length);
 	};
-	const filterCount = (r) => FILTER_KEYS.concat([{key: 'fItems'}]).reduce((n, k) => n + idList(r[k.key]).length, 0) + (r.fNewCustomer ? 1 : 0);
 	const rulesGrid = (d) => {
-		const list = d.rules.map((r) => Object.assign({}, r, {id: r.key, methodText: methodText(r.method), valueText: ruleValueText(r), filterText: t.plans.filtersCount(filterCount(r))}));
+		const list = d.rules.map((r) => Object.assign({}, r, {id: r.key, methodText: methodText(r.method), valueText: ruleValueText(r), filterText: filterSummary(r)}));
 		const ruleErr = errs ? errs.rules : {};
 		return (
 			<Card flush={true} title={t.plans.rules} actions={[<Button label={t.plans.addRule} kind="dashed" small={true} disabled={!canWrite} onClick={addRule} />]}>
@@ -2192,7 +2386,7 @@ export default function CommissionView({app}) {
 						)},
 						{key: 'methodText', label: t.plans.ruleCols.method, nowrap: true},
 						{key: 'valueText', label: t.plans.ruleCols.value, align: 'right', nowrap: true},
-						{key: 'filterText', label: t.plans.ruleCols.filters, nowrap: true},
+						{key: 'filterText', label: t.plans.ruleCols.filters, render: (r) => <span class="s4vp-cm-clip" title={r.filterText}>{r.filterText}</span>},
 						{key: 'remove', label: '', noRowClick: true, render: (r) => <Button small={true} kind="ghost" label={t.plans.remove} ariaLabel={t.plans.removeOf(r.name)} disabled={!canWrite} onClick={() => removeRule(r.key)} />},
 					]}
 					rows={list}
@@ -2217,7 +2411,8 @@ export default function CommissionView({app}) {
 			);
 		const tiered = TIER_METHODS.indexOf(r.method) >= 0;
 		const fromPct = tierFromIsPct(r.method);
-		const err = errs && errs.rules[r.key] ? <span class="s4vp-cm-err">{errText(errs.rules[r.key])}</span> : null;
+		const ruleErrCode = errs ? errs.rules[r.key] || '' : '';
+		const err = ruleErrCode ? <span class="s4vp-cm-err">{errText(ruleErrCode)}</span> : null;
 		return (
 			<SidePanel title={c.title(r.name || '-')} sub={methodText(r.method)}>
 				{err ? <div>{err}</div> : null}
@@ -2284,14 +2479,20 @@ export default function CommissionView({app}) {
 						<TextInput value={idList(r.fItems).join(',')} onInput={(v) => setRule(r.key, {fItems: v})} />
 					</Field>
 				)}
+				{multiPick(c.itemTypes, typeOptions, r.fItemTypes, (v) => setRule(r.key, {fItemTypes: v}))}
+				{tokenInput('s4vp-cm-tok-codes', c.itemCodes, c.itemCodesHint, r.fItemCodes, (v) => setRule(r.key, {fItemCodes: v}))}
+				{tokenInput('s4vp-cm-tok-groups', c.itemGroups, ruleErrCode === 'noGroupField' ? err : c.itemGroupsHint(str(d.itemGroupField).trim()), r.fItemGroups, (v) => setRule(r.key, {fItemGroups: v}))}
 				<div class="s4vp-cm-pair">
-					<Field label={c.newCustomer}>
-						<Checkbox checked={!!r.fNewCustomer} inField={true} label={c.newCustomer} ariaLabel={c.newCustomer} onInput={(v) => setRule(r.key, {fNewCustomer: v})} />
+					<Field label={c.customerScope}>
+						<Select value={r.customerScope || 'A'} options={opts(CUSTOMER_SCOPES, t.scope)} ariaLabel={c.customerScope} onInput={(v) => setRule(r.key, {customerScope: v})} />
 					</Field>
-					<Field label={c.newDays}>
-						<NumberInput value={r.newDays} min={1} step={1} disabled={!r.fNewCustomer} onInput={(v) => setRule(r.key, {newDays: v})} />
-					</Field>
+					{r.customerScope === 'N' || r.customerScope === 'E' ? (
+						<Field label={c.newDays} required={true} hint={ruleErrCode === 'newDays' ? err : null}>
+							<NumberInput value={r.newDays} min={1} step={1} onInput={(v) => setRule(r.key, {newDays: v})} />
+						</Field>
+					) : null}
 				</div>
+				{r.customerScope === 'N' || r.customerScope === 'E' ? <div class="s4vp-small s4vp-cm-pad">{c.scopeHelp(toNumber(r.newDays) || 90)}</div> : null}
 			</SidePanel>
 		);
 	};

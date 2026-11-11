@@ -98,11 +98,56 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_ccr_f_item_types">
+      <label>Lọc loại mặt hàng</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Comma separated NetSuite item type codes (InvtPart, NonInvtPart, Service, Assembly, Kit, OthCharge, Discount, GiftCert, Payment, Markup, DwnLdItem). Empty = no filter.</description>
+      <help>Comma separated NetSuite item type codes (InvtPart, NonInvtPart, Service, Assembly, Kit, OthCharge, Discount, GiftCert, Payment, Markup, DwnLdItem). Empty = no filter.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_ccr_f_item_codes">
+      <label>Lọc mã hàng</label>
+      <fieldtype>TEXTAREA</fieldtype>
+      <description>Comma separated item codes (NetSuite item name / number, external item_code), case-insensitive. Empty = no filter.</description>
+      <help>Comma separated item codes (NetSuite item name / number, external item_code), case-insensitive. Empty = no filter.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_ccr_f_item_groups">
+      <label>Lọc nhóm hàng</label>
+      <fieldtype>TEXTAREA</fieldtype>
+      <description>Comma separated item group values (display text of the plan item group field, external item_group), case-insensitive. Empty = no filter.</description>
+      <help>Comma separated item group values (display text of the plan item group field, external item_group), case-insensitive. Empty = no filter.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_ccr_f_customer_scope">
+      <label>Phạm vi khách hàng</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>[customlist_s4vp_cm_cust_scope]</selectrecordtype>
+      <description>A all customers (default), N new customers only, E existing customers only. Empty = taken from the legacy new customer checkbox.</description>
+      <help>A all customers (default), N new customers only, E existing customers only. Empty = taken from the legacy new customer checkbox.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
     <customrecordcustomfield scriptid="custrecord_s4vp_ccr_f_new_customer">
-      <label>Chỉ khách mới</label>
+      <label>Chỉ khách mới (cũ)</label>
       <fieldtype>CHECKBOX</fieldtype>
-      <description>Only customers whose first sale is within the new customer days counted to the document date.</description>
-      <help>Only customers whose first sale is within the new customer days counted to the document date.</help>
+      <description>Legacy: used only when the customer scope is empty (checked = N).</description>
+      <help>Legacy: used only when the customer scope is empty (checked = N).</help>
       <ismandatory>F</ismandatory>
       <storevalue>T</storevalue>
       <displaytype>NORMAL</displaytype>
@@ -111,10 +156,10 @@
       <defaultchecked>F</defaultchecked>
     </customrecordcustomfield>
     <customrecordcustomfield scriptid="custrecord_s4vp_ccr_new_days">
-      <label>Số ngày khách mới</label>
+      <label>Số ngày tính là khách mới</label>
       <fieldtype>INTEGER</fieldtype>
-      <description>Default 90.</description>
-      <help>Default 90.</help>
+      <description>Default 90. New customer = first sale at most this many days before the document date; existing customer = more than that. Applies to scopes N and E.</description>
+      <help>Default 90. New customer = first sale at most this many days before the document date; existing customer = more than that. Applies to scopes N and E.</help>
       <ismandatory>F</ismandatory>
       <storevalue>T</storevalue>
       <displaytype>NORMAL</displaytype>

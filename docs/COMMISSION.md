@@ -46,12 +46,26 @@ tính, `crs` kết quả, `cad` điều chỉnh. `osr` nguồn sản lượng t�
 - draw_amount (currency)
 - override_pct (percent), override_basis (list cm_override: `B` doanh số của cấp dưới, `C` hoa hồng của cấp dưới): hoa hồng
   quản lý trên cấp dưới trực tiếp được khai ở phân công (cas.manager)
+- item_group_field (text, bổ sung 11/11/2026): id trường tùy chỉnh của mặt hàng chứa nhóm hàng do doanh nghiệp tự định nghĩa
+  (kiểm `^custitem[a-z0-9_]+$` trước khi ghép vào SuiteQL). Truy vấn dòng thêm cột `BUILTIN.DF(i.<trường>) AS ig_<i>` nên trường
+  danh sách / record so theo tên hiển thị. Trường không tồn tại thì SuiteQL chỉ báo lỗi chung: API bắt và báo song ngữ nêu tên
+  trường. Trống = lọc nhóm hàng chỉ khớp dòng doanh số ngoài (cột item_group).
 
 ### comm_rule - Thành phần (cách tính) của kế hoạch
 - plan (select rec comm_plan, req), sequence (int), name (text)
 - Bộ lọc (trống = không lọc; danh sách id nội bộ cách nhau dấu phẩy): f_items, f_classes, f_departments, f_locations,
-  f_cust_categories; f_new_customer (check) + new_days (int, mặc định 90): chỉ hóa đơn của khách có lần mua đầu tiên trong
-  N ngày tính đến ngày chứng từ
+  f_cust_categories. f_items so id nội bộ nên không bao giờ khớp dòng doanh số ngoài (dùng f_item_codes).
+- Bộ lọc theo mặt hàng (bổ sung 11/11/2026, so không phân biệt hoa thường, các bộ lọc kết hợp theo AND):
+  - f_item_types (text): mã loại mặt hàng NetSuite cách nhau dấu phẩy, chỉ nhận InvtPart, NonInvtPart, Service, Assembly, Kit,
+    OthCharge, Discount, GiftCert, Payment, Markup, DwnLdItem; so với tl.itemtype / comm_txn.item_type.
+  - f_item_codes (textarea, tối đa 4000 ký tự): mã hàng; so với i.itemid / comm_txn.item_code.
+  - f_item_groups (textarea): giá trị nhóm hàng; so với chữ hiển thị của trường item_group_field / comm_txn.item_group. Trường
+    nhiều giá trị (BUILTIN.DF trả "A, B") khớp một tên là đủ; giá trị nhóm không chứa dấu phẩy.
+- Phạm vi khách hàng: f_customer_scope (list cm_cust_scope: `A` tất cả - mặc định, `N` chỉ khách mới, `E` chỉ khách cũ) + new_days
+  (int, mặc định 90, áp cho N và E). Khách mới = lần mua đầu tiên cách ngày chứng từ 0..new_days ngày; khách cũ = hơn new_days.
+  Dòng ngoài có customer_type N / E thì dùng thẳng. Dòng thiếu ngày mua đầu tiên (hoặc mua đầu sau ngày chứng từ) không thuộc
+  N lẫn E: bỏ qua và có cảnh báo UNKNOWN_CUSTOMER_AGE. f_new_customer (check) giữ để tương thích: chỉ dùng khi f_customer_scope
+  trống (T = N); lưu kế hoạch luôn ghi đồng bộ f_new_customer = (scope N).
 - method (list cm_method):
   - `P` tỷ lệ cố định: cơ sở x rate%
   - `G` thang lũy tiến theo giá trị: từng khoảng cơ sở x % của khoảng
@@ -138,7 +152,8 @@ Khách hàng có thể bán qua hệ thống khác (DMS, POS, sàn thương mạ
 - comm_plan.source (list cm_source): `N` giao dịch NetSuite (mặc định), `X` dữ liệu ngoài đã nạp, `B` cả hai.
 - Record **comm_txn** (tiền tố `cxt`) - vùng đệm doanh số ngoài, cùng hình dạng với dòng chuẩn hóa ở mục 5: subsidiary,
   source_system (text, ví dụ DMS), doc_no (req), line_no, tran_type (list: I hóa đơn, S bán thu tiền ngay, C trả hàng), date
-  (req), customer_code, customer_name, customer_category (text), first_sale_date, item_code, item_type, class, department,
+  (req), customer_code, customer_name, customer_category (text), first_sale_date, customer_type (list cm_cust_scope, N / E tùy
+  chọn), item_code, item_type (mã NetSuite, nạp thì viết lại đúng mã khi khớp), item_group (text), class, department,
   location, project (select), revenue, cost, qty, employee (select, req), team (textarea JSON [{employee, pct}] tùy chọn),
   collected_date, collected_amount (cho trigger P), import_batch (text), note. Khóa chống trùng: subsidiary + source_system +
   doc_no + line_no; nạp lại cùng khóa thì cập nhật. Dòng đã dùng trong bảng tính đã duyệt thì khóa sửa (dùng isinactive để bỏ).
@@ -155,7 +170,8 @@ Sản lượng (phiếu sản lượng) đã nạp được bằng CSV Import tr
 
 ```
 normalizeLines(rows, plan) -> lines
-  row (data layer): {tranId, tranNo, tranType: 'I'|'S'|'C', date, customer, customerCategory, firstSaleDate, item, itemType,
+  row (data layer): {tranId, tranNo, tranType: 'I'|'S'|'C', date, customer, customerCategory, firstSaleDate, customerType
+    ('N'|'E'|'' - dòng ngoài), item, itemType, itemCode, itemGroup,
     classId, department, location, project, revenue, cost, qty, salesRep, team: [{employee, pct}], creditEmployee,
     collectedRatio (trigger P: 0..1 cho kỳ), unpaidRatio (clawback: 0..1, chỉ dòng đến hạn trong kỳ)}
 credit(lines, plan, assignments, date) -> credits [{employee, ...line, pct, base, qty}]

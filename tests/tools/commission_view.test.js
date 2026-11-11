@@ -182,6 +182,42 @@ describe("ánh xạ API", () => {
 		expect(body.quotas[0]).toEqual({ id: "41", employee: "101", month: 202610, quota: 120000000 });
 	});
 
+	test("bộ lọc loại mặt hàng / mã hàng / nhóm hàng / phạm vi khách: đọc, kiểm, gửi", () => {
+		const p = cm.mapPlan({
+			id: 6, name: "KH-MH", item_group_field: "custitem_nhom", source: "N",
+			rules: [
+				{ id: 1, name: "A", method: "P", rate: 1, f_item_types: "invtpart,Service", f_item_codes: "SP-01,sp-01,DV-02", f_item_groups: "Điện máy", f_customer_scope: "E", new_days: 60 },
+				{ id: 2, name: "B", method: "P", rate: 1, f_new_customer: "T" },
+				{ id: 3, name: "C", method: "P", rate: 1 },
+			],
+		});
+		expect(p.itemGroupField).toBe("custitem_nhom");
+		expect(p.rules[0]).toMatchObject({ fItemTypes: ["InvtPart", "Service"], fItemCodes: ["SP-01", "DV-02"], fItemGroups: ["Điện máy"], customerScope: "E", newDays: "60" });
+		expect(p.rules[1].customerScope).toBe("N");
+		expect(p.rules[2].customerScope).toBe("A");
+		expect(cm.validatePlan(Object.assign({}, p, { earningType: "HH" })).count).toBe(0);
+		const body = cm.planPayload(p);
+		expect(body.plan.item_group_field).toBe("custitem_nhom");
+		expect(body.rules[0]).toMatchObject({ f_item_types: "InvtPart,Service", f_item_codes: "SP-01,DV-02", f_item_groups: "Điện máy", f_customer_scope: "E", f_new_customer: false, new_days: 60 });
+		expect(body.rules[1]).toMatchObject({ f_customer_scope: "N", f_new_customer: true, new_days: 90 });
+		expect(body.rules[2]).toMatchObject({ f_item_types: "", f_item_codes: "", f_item_groups: "", f_customer_scope: "A", f_new_customer: false, new_days: null });
+		// Kiểm: id trường sai, số ngày khách mới, lọc nhóm hàng khi kế hoạch NetSuite chưa khai trường
+		const e = cm.validatePlan(Object.assign({}, p, { earningType: "HH", itemGroupField: "custbody_x", rules: [Object.assign({}, p.rules[0], { newDays: "0" }), Object.assign({}, p.rules[2], { fItemGroups: ["G"] })] }));
+		expect(e.plan.itemGroupField).toBe("groupField");
+		expect(e.rules[p.rules[0].key]).toBe("newDays");
+		const e2 = cm.validatePlan(Object.assign({}, p, { earningType: "HH", itemGroupField: "", rules: [Object.assign({}, p.rules[2], { fItemGroups: ["G"] })] }));
+		expect(e2.rules[p.rules[2].key]).toBe("noGroupField");
+		expect(cm.validatePlan(Object.assign({}, p, { earningType: "HH", itemGroupField: "", source: "X", rules: [Object.assign({}, p.rules[2], { fItemGroups: ["G"] })] })).count).toBe(0);
+	});
+
+	test("ô chip: tách mã gõ / dán (phẩy, chấm phẩy, xuống dòng), bỏ trùng không phân biệt hoa thường", () => {
+		expect(cm.tokenList("SP-01, sp-01;DV-02\r\nKM\t")).toEqual(["SP-01", "DV-02", "KM"]);
+		expect(cm.addTokens(["SP-01"], "sp-01,  X9 ")).toEqual(["SP-01", "X9"]);
+		expect(cm.tokenList(null)).toEqual([]);
+		expect(cm.scopeOf({ f_customer_scope: "n" })).toBe("N");
+		expect(cm.scopeOf({ fNewCustomer: true })).toBe("N");
+	});
+
 	test("kiểm biểu mẫu kế hoạch mới", () => {
 		const d = cm.newPlanDraft("13", "2026-11-11");
 		expect(d).toMatchObject({ subsidiary: "13", effective: "2026-11-01", basis: "R", trigger: "I", source: "N", drawType: "N" });
@@ -207,6 +243,22 @@ describe("nạp doanh số ngoài", () => {
 		expect(Object.keys(en).length).toBe(cm.TEMPLATE_HEADERS.length);
 		expect(en).toMatchObject({ docNo: "0", lineNo: "1", tranType: "2", date: "3", cls: "13", collectedDate: "15", collectedAmount: "16" });
 		expect(cm.templateCsv().startsWith("﻿doc_no,line_no,")).toBe(true);
+		expect(en).toMatchObject({ itemType: "17", itemGroup: "18", customerType: "19" });
+		expect(cm.guessMapping(["Số CT", "Ngày", "Mã NV", "Doanh thu", "Loại hàng", "Nhóm hàng", "Loại KH", "Loại"])).toMatchObject({ itemType: "4", itemGroup: "5", customerType: "6", tranType: "7" });
+	});
+
+	test("nhóm hàng, loại mặt hàng, loại khách hàng trong file nạp", () => {
+		expect(cm.parseCustomerType("Mới")).toBe("N");
+		expect(cm.parseCustomerType("existing")).toBe("E");
+		expect(cm.parseCustomerType("khách cũ")).toBe("E");
+		expect(cm.parseCustomerType("")).toBe("");
+		expect(cm.parseCustomerType("vip")).toBeNull();
+		expect(cm.parseItemType("invtpart")).toBe("InvtPart");
+		const table = cm.parseDelimited("doc_no\tdate\temployee\trevenue\titem_type\titem_group\tcustomer_type\nHD1\t15/10/2026\tNV001\t100\tservice\tLắp đặt\tcũ\nHD2\t15/10/2026\tNV001\t100\t\t\tvip\n");
+		const rows = cm.buildImportRows(table, cm.guessMapping(table.headers));
+		expect(rows[0]).toMatchObject({ itemType: "Service", itemGroup: "Lắp đặt", customerType: "E", errors: [] });
+		expect(rows[1].errors).toEqual(["badCustType"]);
+		expect(cm.importPayloadRow(rows[0], "")).toMatchObject({ item_type: "Service", item_group: "Lắp đặt", customer_type: "E" });
 	});
 
 	test("số, ngày, loại chứng từ", () => {
@@ -272,6 +324,19 @@ describe("vẽ thử từng tab (không ném lỗi)", () => {
 		expect(text).toContain("Bậc thang");
 		expect(text).toContain("Nguồn doanh số");
 		renderView({ tab: "plans", setup, draft, ruleKey: draft.rules[0].key, errs: cm.validatePlan(Object.assign({}, draft, { name: "" })) });
+		// Thành phần có bộ lọc mới: chip loại / mã / nhóm, phạm vi khách + số ngày + giải thích; cột Bộ lọc tóm tắt
+		const rich = Object.assign({}, draft, { itemGroupField: "custitem_nhom", rules: [Object.assign({}, draft.rules[0], { fItemTypes: ["InvtPart", "Service"], fItemCodes: ["SP-01", "SP-02", "SP-03"], fItemGroups: ["Điện máy"], customerScope: "E", newDays: "60" })].concat(draft.rules.slice(1)) });
+		const text2 = renderView({ tab: "plans", setup, draft: rich, ruleKey: rich.rules[0].key });
+		expect(text2).toContain("Hàng tồn kho (InvtPart)");
+		expect(text2).toContain("SP-02");
+		expect(text2).toContain("Điện máy");
+		expect(text2).toContain("Phạm vi khách hàng");
+		expect(text2).toContain("Số ngày tính là khách mới");
+		expect(text2).toMatch(/Khách mới: lần mua đầu tiên .* 60 ngày/);
+		expect(text2).toContain("Loại: Hàng tồn kho, Dịch vụ; Mã: SP-01, SP-02 +1; Nhóm: Điện máy; Khách cũ (trên 60 ngày); 2 điều kiện khác");
+		expect(text2).toContain("Trường nhóm hàng trên mặt hàng (custitem...)");
+		// Phạm vi Tất cả: không có ô số ngày
+		expect(renderView({ tab: "plans", setup, draft, ruleKey: draft.rules[0].key })).not.toContain("Số ngày tính là khách mới");
 	});
 
 	test("Mô phỏng, Doanh số ngoài, hộp thoại nạp", () => {

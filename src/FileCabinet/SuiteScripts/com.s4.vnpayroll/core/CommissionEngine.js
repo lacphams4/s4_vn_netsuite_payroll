@@ -20,6 +20,9 @@
  *   tiền} là phần đã trả các kỳ trước cùng cửa sổ (tổng earned các kết quả đã duyệt); drawBalance {employee: số dư ứng trước}.
  * - Cổng min_attainment khi không có chỉ tiêu: không xác định được % đạt nên coi như chưa đạt (0) và cảnh báo NO_QUOTA.
  * - cap_amount trống hoặc <= 0 = không trần.
+ * - Dòng mang thêm itemCode (mã hàng), itemGroup (nhóm hàng theo trường của khách hàng, dạng chữ hiển thị) và customerType
+ *   (dòng ngoài: N khách mới / E khách cũ do hệ thống nguồn khai) cho bộ lọc fItemTypes / fItemCodes / fItemGroups /
+ *   customerScope của thành phần (passes).
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
@@ -50,6 +53,15 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 		const list = (Array.isArray(v) ? v : String(v).split(",")).map(str).filter(Boolean);
 		return list.length ? list : null;
 	}
+
+	/** Danh sách mã lọc so không phân biệt hoa thường (loại mặt hàng, mã hàng, nhóm hàng): như idList nhưng viết hoa, bỏ trùng. */
+	function codeList(v) {
+		const list = idList(v);
+		return list ? [...new Set(list.map(norm))] : null;
+	}
+
+	// Phạm vi khách hàng của thành phần: A tất cả, N chỉ khách mới, E chỉ khách cũ
+	const CUSTOMER_SCOPES = ["A", "N", "E"];
 
 	// ------------------------------------------------------------------ định dạng số cho diễn giải song ngữ
 
@@ -84,6 +96,11 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 		UNKNOWN_METHOD: (name, m) => ({ code: "UNKNOWN_METHOD", vi: `Thành phần ${name} có phương pháp không hợp lệ (${m}).`, en: `Component ${name} has an invalid method (${m}).` }),
 		NO_EARNING_TYPE: { code: "NO_EARNING_TYPE", vi: "Kế hoạch chưa khai loại thu nhập lương.", en: "The plan has no payroll earning type." },
 		NEGATIVE_CARRIED: (lang) => ({ code: "NEGATIVE_CARRIED", vi: `Hoa hồng âm ${lang.vi} chuyển thành số dư ứng trước.`, en: `Negative commission ${lang.en} is carried to the draw balance.` }),
+		UNKNOWN_CUSTOMER_AGE: (name, n, scope) => ({
+			code: "UNKNOWN_CUSTOMER_AGE",
+			vi: `Thành phần ${name} (${scope === "E" ? "chỉ khách cũ" : "chỉ khách mới"}): ${n} dòng không xác định được khách mới hay cũ (thiếu ngày mua đầu tiên), không tính.`,
+			en: `Component ${name} (${scope === "E" ? "existing customers only" : "new customers only"}): ${n} line(s) without a first sale date cannot be classified as new or existing and were skipped.`,
+		}),
 	};
 
 	const BASIS = { R: ["doanh thu thuần", "net revenue"], G: ["lãi gộp ước tính", "estimated gross profit"], Q: ["số lượng", "quantity"] };
@@ -118,8 +135,15 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 		};
 	}
 
+	/**
+	 * Thành phần. Bộ lọc mới (trống = không lọc): fItemTypes (mã loại mặt hàng NetSuite: InvtPart, Service...), fItemCodes (mã
+	 * hàng), fItemGroups (giá trị nhóm hàng do khách hàng định nghĩa) - cả ba so không phân biệt hoa thường. customerScope A / N /
+	 * E (f_customer_scope); trống thì lấy theo f_new_customer cũ (T = N) để tương thích. fNewCustomer = (customerScope N).
+	 */
 	function normalizeRule(r) {
 		const o = r || {};
+		const rawScope = norm(pick(o, "customerScope", "f_customer_scope", "fCustomerScope"));
+		const customerScope = CUSTOMER_SCOPES.includes(rawScope) ? rawScope : bool(pick(o, "fNewCustomer", "f_new_customer"), false) ? "N" : "A";
 		return {
 			id: str(o.id),
 			plan: str(o.plan),
@@ -133,7 +157,11 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 			fDepartments: idList(pick(o, "fDepartments", "f_departments")),
 			fLocations: idList(pick(o, "fLocations", "f_locations")),
 			fCustCategories: idList(pick(o, "fCustCategories", "f_cust_categories")),
-			fNewCustomer: bool(pick(o, "fNewCustomer", "f_new_customer"), false),
+			fItemTypes: codeList(pick(o, "fItemTypes", "f_item_types")),
+			fItemCodes: codeList(pick(o, "fItemCodes", "f_item_codes")),
+			fItemGroups: codeList(pick(o, "fItemGroups", "f_item_groups")),
+			customerScope,
+			fNewCustomer: customerScope === "N",
 			newDays: Number(pick(o, "newDays", "new_days") || 90),
 		};
 	}
@@ -211,7 +239,7 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 			const line = {
 				tranId: str(row.tranId), tranNo: str(row.tranNo), tranType, date, customer: str(row.customer), customerName: str(row.customerName),
 				customerCategory: str(row.customerCategory), firstSaleDate: Dates.iso(row.firstSaleDate), item: str(row.item), itemName: str(row.itemName),
-				itemType: str(row.itemType), classId: str(row.classId), department: str(row.department), location: str(row.location), project: str(row.project),
+				itemType: str(row.itemType), itemCode: str(row.itemCode), itemGroup: str(row.itemGroup), customerType: norm(row.customerType), classId: str(row.classId), department: str(row.department), location: str(row.location), project: str(row.project),
 				subsidiary: str(row.subsidiary), revenue: revenue.toNumber(), cost: cost.toNumber(), lineQty: qty.toNumber(), salesRep: str(row.salesRep),
 				team: (row.team || []).map((t) => ({ employee: str(t.employee), pct: Number(t.pct || 0) })), creditEmployee: str(row.creditEmployee),
 				sourceSystem: str(row.sourceSystem),
@@ -296,16 +324,44 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 
 	// ------------------------------------------------------------------ 5-7. đo lường và thành phần
 
-	function passes(rule, c) {
+	/**
+	 * Khách của dòng là mới (N) hay cũ (E): dòng ngoài có customerType N / E thì dùng thẳng (hệ thống nguồn biết rõ hơn);
+	 * ngược lại khách mới = lần mua đầu tiên cách ngày chứng từ 0..newDays ngày, khách cũ = hơn newDays ngày. Thiếu ngày mua
+	 * đầu tiên / ngày chứng từ, hoặc ngày mua đầu tiên sau ngày chứng từ (dữ liệu lệch) -> null (không xác định).
+	 */
+	function customerAge(c, newDays) {
+		if (c.customerType === "N" || c.customerType === "E") return c.customerType;
+		if (!c.firstSaleDate || !c.date) return null;
+		const age = Dates.diff(c.firstSaleDate, c.date);
+		if (age < 0) return null;
+		return age <= newDays ? "N" : "E";
+	}
+
+	/** Bộ lọc của thành phần trừ phạm vi khách hàng; danh sách trống = không lọc. */
+	function filtersOk(rule, c) {
 		const inList = (list, v) => !list || list.includes(str(v));
+		const inCodes = (list, v) => !list || list.includes(norm(v));
 		if (!inList(rule.fItems, c.item) || !inList(rule.fClasses, c.classId) || !inList(rule.fDepartments, c.department)) return false;
 		if (!inList(rule.fLocations, c.location) || !inList(rule.fCustCategories, c.customerCategory)) return false;
-		if (rule.fNewCustomer) {
-			if (!c.firstSaleDate || !c.date) return false;
-			const age = Dates.diff(c.firstSaleDate, c.date);
-			if (age < 0 || age > rule.newDays) return false;
+		if (!inCodes(rule.fItemTypes, c.itemType) || !inCodes(rule.fItemCodes, c.itemCode)) return false;
+		if (rule.fItemGroups) {
+			// Trường nhóm hàng nhiều giá trị (multi select): BUILTIN.DF trả các tên cách nhau dấu phẩy, khớp một tên là đủ
+			const g = norm(c.itemGroup);
+			if (!g || !(rule.fItemGroups.includes(g) || g.split(",").some((x) => rule.fItemGroups.includes(x.trim())))) return false;
 		}
 		return true;
+	}
+
+	function passes(rule, c) {
+		if (!filtersOk(rule, c)) return false;
+		if (rule.customerScope === "N" || rule.customerScope === "E") return customerAge(c, rule.newDays) === rule.customerScope;
+		return true;
+	}
+
+	/** Số dòng qua mọi bộ lọc khác nhưng không xác định được khách mới / cũ (thành phần lọc N / E). */
+	function unknownAge(rule, list) {
+		if (rule.customerScope !== "N" && rule.customerScope !== "E") return 0;
+		return list.filter((c) => filtersOk(rule, c) && customerAge(c, rule.newDays) === null).length;
 	}
 
 	const sumOf = (list, key) => Money.sum(list, (x) => x[key]);
@@ -587,6 +643,12 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 				}
 			}
 			const warnings = ev.warnings.slice();
+			if (active) {
+				for (const r of rules) {
+					const n = unknownAge(r, myWin);
+					if (n) warnings.push(WARN.UNKNOWN_CUSTOMER_AGE(r.name || r.id, n, r.customerScope));
+				}
+			}
 			if (!plan.earningType) warnings.push(WARN.NO_EARNING_TYPE);
 			return {
 				employee: e, plan: plan.id, planCode: plan.code, earningType: plan.earningType, window: win,
@@ -715,5 +777,5 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 		return { amount: amount.toNumber(), gross: ev.gross.toNumber(), capped: capped.toNumber(), attainment, components: ev.components, steps, warnings: ev.warnings };
 	}
 
-	return { normalizeLines, credit, uncredited, calculate, simulate, windowOf, normalizePlan, normalizeRule, normalizeTier, normalizeAssignment, normalizeQuota, fmt };
+	return { normalizeLines, credit, uncredited, calculate, simulate, windowOf, normalizePlan, normalizeRule, normalizeTier, normalizeAssignment, normalizeQuota, fmt, passes, customerAge };
 });

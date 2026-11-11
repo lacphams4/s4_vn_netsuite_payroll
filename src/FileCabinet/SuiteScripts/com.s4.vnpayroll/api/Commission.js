@@ -5,7 +5,8 @@
  *   dòng hóa đơn / cash sale / credit memo trong khoảng ngày, dòng hóa đơn được thu tiền trong kỳ (trigger P), hóa đơn đến
  *   hạn truy thu chưa thu đủ (clawback), đội bán, ngày mua đầu tiên của khách. Id công ty con, id giao dịch là số nguyên
  *   ghép thẳng vào câu lệnh; ngày truyền tham số TO_DATE(?, 'YYYY-MM-DD'); id trường tùy chỉnh (nguồn F) kiểm bằng regex
- *   ^custbody[a-z0-9_]+$ trước khi ghép.
+ *   ^custbody[a-z0-9_]+$, id trường nhóm hàng trên mặt hàng (comm_plan.item_group_field) kiểm bằng ^custitem[a-z0-9_]+$
+ *   trước khi ghép (cột BUILTIN.DF(i.<trường>) để so theo tên).
  * - Đọc thêm doanh số ngoài đã nạp (record comm_txn, mục 4.1) khi kế hoạch có nguồn X / B.
  * - Chuẩn hóa về dạng dòng của core/CommissionEngine (mục 5), gọi lõi theo từng kế hoạch, ghi comm_run (nháp D) và
  *   comm_result theo khóa nhân viên + kế hoạch: cập nhật dòng đã có, dòng không còn sinh ra -> isinactive, không xóa.
@@ -26,7 +27,13 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 	const DATE = "TO_DATE(?, 'YYYY-MM-DD')";
 	const TYPE_CODE = { CustInvc: "I", CashSale: "S", CustCred: "C" };
 	const CREDIT_FIELD = /^custbody[a-z0-9_]+$/;
+	// Trường nhóm hàng do khách hàng định nghĩa trên mặt hàng (comm_plan.item_group_field): kiểm trước khi ghép vào SuiteQL
+	const GROUP_FIELD = /^custitem[a-z0-9_]+$/;
 	const IDLIST = /^\d+(,\d+)*$/;
+	// Mã loại mặt hàng của NetSuite (tl.itemtype, comm_txn.item_type) mà bộ lọc thành phần nhận
+	const ITEM_TYPES = ["InvtPart", "NonInvtPart", "Service", "Assembly", "Kit", "OthCharge", "Discount", "GiftCert", "Payment", "Markup", "DwnLdItem"];
+	// Độ dài tối đa của trường textarea f_item_codes / f_item_groups
+	const FILTER_TEXT_MAX = 4000;
 	// Số credit tối đa lưu trong detail của một kết quả (clob); vượt thì ghi creditsTotal để màn hình báo
 	const MAX_CREDITS = 1500;
 	const IMPORT_LIMIT = 5000;
@@ -101,8 +108,10 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 	/**
 	 * Cột của dòng giao dịch. Dự án: thực thể dòng là job, hoặc thực thể chứng từ là job (khách = job.customer). Doanh thu,
 	 * giá vốn ước tính, số lượng đổi dấu (bán hàng âm trên sổ; credit memo dương nên ra số âm). cf_<i>: trường ghi nhận nguồn F.
+	 * item_code = i.itemid (mã hàng); ig_<i>: chữ hiển thị (BUILTIN.DF) của trường nhóm hàng thứ i trên mặt hàng, để trường
+	 * danh sách / record so theo tên (đã thử trên td2937310).
 	 */
-	function lineColumns(creditFields) {
+	function lineColumns(creditFields, groupFields) {
 		return [
 			"t.id AS tran_id", "t.tranid AS tran_no", "t.type AS ttype", "TO_CHAR(t.trandate, 'YYYY-MM-DD') AS tdate",
 			"NVL(jh.customer, t.entity) AS customer", "c.entityid AS cust_code", "c.altname AS cust_name", "c.category AS cust_cat",
@@ -110,53 +119,64 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 			"t.employee AS sales_rep", "t.foreigntotal AS ftotal", "tl.id AS line_id", "tl.item AS item", "i.itemid AS item_code", "tl.itemtype AS item_type",
 			"tl.class AS class_id", "tl.department AS department", "tl.location AS location",
 			"-tl.netamount AS revenue", "-tl.costestimate AS cost", "-tl.quantity AS qty",
-		].concat(creditFields.map((f, i) => `t.${f} AS cf_${i}`)).join(", ");
+		].concat(creditFields.map((f, i) => `t.${f} AS cf_${i}`), (groupFields || []).map((f, i) => `BUILTIN.DF(i.${f}) AS ig_${i}`)).join(", ");
 	}
 
-	/** Truy vấn có ghép trường tùy chỉnh: lỗi (trường không tồn tại / không đọc được) báo rõ thay vì lỗi SuiteQL chung. */
-	function runLines(sql, params, tag, creditFields) {
+	/**
+	 * Truy vấn có ghép trường tùy chỉnh: lỗi (trường không tồn tại / không đọc được - SuiteQL chỉ báo lỗi chung) báo rõ tên
+	 * trường ghi nhận (custbody) và trường nhóm hàng (custitem) đang dùng.
+	 */
+	function runLines(sql, params, tag, creditFields, groupFields) {
 		try {
 			return Store.run(sql, params, tag);
 		} catch (e) {
+			const groups = groupFields || [];
+			if (creditFields.length && groups.length) {
+				throw fail(
+					`Cannot read the credit field(s) ${creditFields.join(", ")} on sales transactions or the item group field(s) ${groups.join(", ")} on items`,
+					`Không đọc được trường ghi nhận ${creditFields.join(", ")} trên chứng từ bán hàng hoặc trường nhóm hàng ${groups.join(", ")} trên mặt hàng`
+				);
+			}
 			if (creditFields.length) throw fail(`Cannot read the credit field(s) ${creditFields.join(", ")} on sales transactions`, `Không đọc được trường ghi nhận ${creditFields.join(", ")} trên chứng từ bán hàng`);
+			if (groups.length) throw fail(`Cannot read the item group field(s) ${groups.join(", ")} on items; check the field id on the plan`, `Không đọc được trường nhóm hàng ${groups.join(", ")} trên mặt hàng, kiểm tra id trường trên kế hoạch`);
 			throw e;
 		}
 	}
 
 	/** Dòng hóa đơn, cash sale, credit memo của công ty con có ngày chứng từ trong [from, to]. */
-	function docLines(sub, from, to, creditFields) {
+	function docLines(sub, from, to, creditFields, groupFields) {
 		const sql =
-			`SELECT ${lineColumns(creditFields)} FROM transaction t ${LINE_JOINS} WHERE t.type IN ('CustInvc','CashSale','CustCred') AND ${LINE_WHERE} ` +
+			`SELECT ${lineColumns(creditFields, groupFields)} FROM transaction t ${LINE_JOINS} WHERE t.type IN ('CustInvc','CashSale','CustCred') AND ${LINE_WHERE} ` +
 			`AND tl.subsidiary = ${sub} AND t.trandate >= ${DATE} AND t.trandate <= ${DATE} ORDER BY t.id, tl.id`;
-		return runLines(sql, [from, to], "s4vp_cm_lines", creditFields);
+		return runLines(sql, [from, to], "s4vp_cm_lines", creditFields, groupFields);
 	}
 
 	/**
 	 * Dòng hóa đơn được thu tiền (CustPymt, DepAppl) có ngày áp trong [starts[0], to] (trigger P). paid_<i> = tổng đã thu từ
 	 * starts[i] đến to (mỗi điểm đầu cửa sổ một cột, trong cùng một truy vấn). Ngày đầu đã kiểm ISO nên ghép thẳng.
 	 */
-	function paidLines(sub, starts, to, creditFields) {
+	function paidLines(sub, starts, to, creditFields, groupFields) {
 		const sums = starts.map((d, i) => `SUM(CASE WHEN k.nextdate >= TO_DATE('${d}', 'YYYY-MM-DD') THEN k.foreignamount ELSE 0 END) AS paid_${i}`).join(", ");
 		const cols = starts.map((d, i) => `p.paid_${i} AS paid_${i}`).join(", ");
 		const sql =
-			`SELECT ${lineColumns(creditFields)}, ${cols} FROM (SELECT k.previousdoc AS doc, ${sums} FROM previoustransactionlinelink k WHERE ${PAY_LINK} ` +
+			`SELECT ${lineColumns(creditFields, groupFields)}, ${cols} FROM (SELECT k.previousdoc AS doc, ${sums} FROM previoustransactionlinelink k WHERE ${PAY_LINK} ` +
 			`AND k.nexttype IN ('CustPymt','DepAppl') AND k.nextdate >= ${DATE} AND k.nextdate <= ${DATE} GROUP BY k.previousdoc) p ` +
 			`JOIN transaction t ON t.id = p.doc ${LINE_JOINS} WHERE t.type = 'CustInvc' AND ${LINE_WHERE} AND tl.subsidiary = ${sub} ORDER BY t.id, tl.id`;
-		return runLines(sql, [starts[0], to], "s4vp_cm_paid", creditFields);
+		return runLines(sql, [starts[0], to], "s4vp_cm_paid", creditFields, groupFields);
 	}
 
 	/**
 	 * Hóa đơn ngày chứng từ trong [invFrom, invTo] chưa thu đủ tính đến asOf (đã thu = thu tiền, áp cọc, áp credit memo có
 	 * ngày áp <= asOf; credit memo đã trừ ở cơ sở nên coi như đã thu để không trừ hai lần).
 	 */
-	function clawLines(sub, invFrom, invTo, asOf, creditFields) {
+	function clawLines(sub, invFrom, invTo, asOf, creditFields, groupFields) {
 		const sql =
-			`SELECT ${lineColumns(creditFields)}, NVL(p.paid, 0) AS paid FROM transaction t ${LINE_JOINS} ` +
+			`SELECT ${lineColumns(creditFields, groupFields)}, NVL(p.paid, 0) AS paid FROM transaction t ${LINE_JOINS} ` +
 			`LEFT JOIN (SELECT k.previousdoc AS doc, SUM(k.foreignamount) AS paid FROM previoustransactionlinelink k WHERE ${PAY_LINK} ` +
 			`AND k.nexttype IN ('CustPymt','DepAppl','CustCred') AND k.nextdate <= ${DATE} GROUP BY k.previousdoc) p ON p.doc = t.id ` +
 			`WHERE t.type = 'CustInvc' AND ${LINE_WHERE} AND tl.subsidiary = ${sub} AND t.trandate >= ${DATE} AND t.trandate <= ${DATE} ` +
 			`AND t.foreigntotal > NVL(p.paid, 0) ORDER BY t.id, tl.id`;
-		return runLines(sql, [asOf, invFrom, invTo], "s4vp_cm_claw", creditFields);
+		return runLines(sql, [asOf, invFrom, invTo], "s4vp_cm_claw", creditFields, groupFields);
 	}
 
 	/**
@@ -207,7 +227,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 		return {
 			tranId: String(r.tran_id), line: String(r.line_id), tranNo: r.tran_no || "", tranType: TYPE_CODE[r.ttype] || "I", date: r.tdate,
 			customer, customerName: [r.cust_code, r.cust_name].filter((x, i, a) => x && a.indexOf(x) === i).join(" "), customerCategory: str(r.cust_cat), firstSaleDate: customer ? first[customer] || null : null,
-			item: str(r.item), itemName: r.item_code || "", itemType: r.item_type || "", classId: str(r.class_id), department: str(r.department), location: str(r.location), project: str(r.project),
+			item: str(r.item), itemName: r.item_code || "", itemCode: r.item_code || "", itemGroup: "", itemType: r.item_type || "", classId: str(r.class_id), department: str(r.department), location: str(r.location), project: str(r.project),
 			revenue: num(r.revenue), cost: num(r.cost), qty: num(r.qty), salesRep: str(r.sales_rep), team: teams[String(r.tran_id)] || [], creditEmployee: null,
 			sourceSystem: "", raw: r,
 		};
@@ -225,13 +245,15 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 
 	/**
 	 * Dòng comm_txn -> dòng chuẩn; người được ghi nhận = employee của dòng với mọi nguồn ghi nhận (đội bán: team của dòng, pct
-	 * là phần trăm 100 = 100%). Bộ lọc mặt hàng của thành phần so theo id nội bộ nên không khớp mã mặt hàng ngoài.
+	 * là phần trăm 100 = 100%). Dòng ngoài không có id nội bộ mặt hàng (item = null, lọc f_items không khớp): lọc theo mã hàng
+	 * (f_item_codes), loại mặt hàng, nhóm hàng (item_group). customer_type N / E (nếu có) thay cho quy tắc ngày mua đầu tiên.
 	 */
 	function extRow(x) {
 		return {
 			tranId: `X${x.id}`, line: String(blank(x.line_no) ? 0 : x.line_no), tranNo: x.doc_no || "", tranType: x.tran_type || "I", date: x.date,
 			customer: x.customer_code || null, customerName: [x.customer_code, x.customer_name].filter((v, i, a) => v && a.indexOf(v) === i).join(" "), customerCategory: str(x.customer_category), firstSaleDate: x.first_sale_date || null,
-			item: x.item_code || null, itemName: x.item_code || "", itemType: x.item_type || "", classId: str(x.class), department: str(x.department), location: str(x.location), project: str(x.project),
+			customerType: x.customer_type === "N" || x.customer_type === "E" ? x.customer_type : "",
+			item: null, itemName: x.item_code || "", itemCode: x.item_code || "", itemGroup: x.item_group || "", itemType: x.item_type || "", classId: str(x.class), department: str(x.department), location: str(x.location), project: str(x.project),
 			revenue: num(x.revenue), cost: num(x.cost), qty: num(x.qty), salesRep: str(x.employee), team: parseTeam(x.team), creditEmployee: str(x.employee),
 			sourceSystem: x.source_system || "EXT", external: x,
 		};
@@ -246,12 +268,12 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 
 	// ------------------------------------------------------------------ kế hoạch
 
-	const PLAN_KEYS = ["subsidiary", "description", "effective", "expiration", "basis", "trigger", "credit_source", "credit_field", "window", "include_returns", "clawback_days", "exclude_item_types", "earning_type", "min_attainment", "cap_amount", "draw_type", "draw_amount", "override_pct", "override_basis", "source"];
-	const RULE_KEYS = ["sequence", "f_items", "f_classes", "f_departments", "f_locations", "f_cust_categories", "f_new_customer", "new_days", "method", "rate", "unit_amount"];
+	const PLAN_KEYS = ["subsidiary", "description", "effective", "expiration", "basis", "trigger", "credit_source", "credit_field", "window", "include_returns", "clawback_days", "exclude_item_types", "earning_type", "min_attainment", "cap_amount", "draw_type", "draw_amount", "override_pct", "override_basis", "source", "item_group_field"];
+	const RULE_KEYS = ["sequence", "f_items", "f_classes", "f_departments", "f_locations", "f_cust_categories", "f_item_types", "f_item_codes", "f_item_groups", "f_customer_scope", "f_new_customer", "new_days", "method", "rate", "unit_amount"];
 	const TIER_KEYS = ["from_value", "rate", "amount"];
 	const ASSIGN_KEYS = ["employee", "effective", "expiration", "quota", "manager"];
 	const QUOTA_KEYS = ["employee", "month", "quota"];
-	const LISTS = { basis: ["R", "G", "Q"], trigger: ["I", "P"], credit_source: ["R", "T", "F"], window: ["M", "Q", "Y"], draw_type: ["N", "R", "G"], override_basis: ["B", "C"], source: ["N", "X", "B"], method: ["P", "G", "S", "A", "U", "B"] };
+	const LISTS = { basis: ["R", "G", "Q"], trigger: ["I", "P"], credit_source: ["R", "T", "F"], window: ["M", "Q", "Y"], draw_type: ["N", "R", "G"], override_basis: ["B", "C"], source: ["N", "X", "B"], method: ["P", "G", "S", "A", "U", "B"], f_customer_scope: ["A", "N", "E"] };
 
 	const hasField = (name, key) => {
 		try {
@@ -367,6 +389,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 	function sourceData(sub, period, plans) {
 		const starts = [period.from];
 		const fields = [];
+		const groups = [];
 		const clawDays = [];
 		let needNs = false;
 		let needExt = false;
@@ -378,20 +401,21 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 			if (!starts.includes(p.window_from)) starts.push(p.window_from);
 			if (src !== "X" && p.trigger === "P") needPaid = true;
 			if (src !== "X" && p.credit_source === "F" && !fields.includes(p.credit_field)) fields.push(p.credit_field);
+			if (src !== "X" && !blank(p.item_group_field) && !groups.includes(p.item_group_field)) groups.push(p.item_group_field);
 			const n = num(p.clawback_days);
 			if (src !== "X" && p.trigger !== "P" && n > 0 && !clawDays.includes(n)) clawDays.push(n);
 		}
 		starts.sort();
 		const wFrom = starts[0];
-		const docs = needNs ? docLines(sub, wFrom, period.to, fields) : [];
-		const paid = needNs && needPaid ? paidLines(sub, starts, period.to, fields) : [];
+		const docs = needNs ? docLines(sub, wFrom, period.to, fields, groups) : [];
+		const paid = needNs && needPaid ? paidLines(sub, starts, period.to, fields, groups) : [];
 		const claws = {};
-		for (const n of clawDays) claws[n] = clawLines(sub, Dates.addDays(wFrom, -n), Dates.addDays(period.to, -n), period.to, fields);
+		for (const n of clawDays) claws[n] = clawLines(sub, Dates.addDays(wFrom, -n), Dates.addDays(period.to, -n), period.to, fields, groups);
 		const all = docs.concat(paid, ...Object.values(claws));
 		const teams = all.length ? salesTeams(all.map((r) => r.tran_id)) : {};
 		const first = all.length ? firstSales(all.map((r) => r.customer)) : {};
 		const ext = needExt ? externalTxns(sub, wFrom, period.to) : [];
-		return { starts, fields, docs: docs.map((r) => nsRow(r, teams, first)), paid: paid.map((r) => nsRow(r, teams, first)), claws: Object.keys(claws).reduce((o, n) => ((o[n] = claws[n].map((r) => nsRow(r, teams, first))), o), {}), ext: ext.map(extRow) };
+		return { starts, fields, groups, docs: docs.map((r) => nsRow(r, teams, first)), paid: paid.map((r) => nsRow(r, teams, first)), claws: Object.keys(claws).reduce((o, n) => ((o[n] = claws[n].map((r) => nsRow(r, teams, first))), o), {}), ext: ext.map(extRow) };
 	}
 
 	/**
@@ -406,13 +430,16 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 		const inRange = (d) => !blank(d) && String(d) >= start && String(d) <= to;
 		const field = plan.credit_source === "F" ? data.fields.indexOf(plan.credit_field) : -1;
 		const credited = (row) => (field >= 0 ? str(row.raw && row.raw[`cf_${field}`]) : null);
+		// Nhóm hàng theo trường của kế hoạch (cột ig_<i>); kế hoạch không khai trường thì dòng NetSuite không có nhóm hàng
+		const group = blank(plan.item_group_field) ? -1 : (data.groups || []).indexOf(plan.item_group_field);
+		const own = (row, extra) => Object.assign({ creditEmployee: credited(row), itemGroup: group >= 0 ? String(blank(row.raw && row.raw[`ig_${group}`]) ? "" : row.raw[`ig_${group}`]) : "" }, extra);
 		const out = [];
 		if (src !== "X") {
 			const byLine = {};
 			for (const r of data.docs) {
 				if (!inRange(r.date)) continue;
 				if (plan.trigger === "P" && r.tranType === "I") continue;
-				const row = clone(r, { creditEmployee: credited(r) });
+				const row = clone(r, own(r));
 				byLine[`${r.tranId}:${r.line}`] = row;
 				out.push(row);
 			}
@@ -422,7 +449,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 					const total = num(r.raw.ftotal);
 					if (!(total > 0) || k < 0) continue;
 					const ratio = Math.min(1, num(r.raw[`paid_${k}`]) / total);
-					if (ratio > 0) out.push(clone(r, { creditEmployee: credited(r), collectedRatio: Math.round(ratio * 1e8) / 1e8 }));
+					if (ratio > 0) out.push(clone(r, own(r, { collectedRatio: Math.round(ratio * 1e8) / 1e8 })));
 				}
 			} else if (num(plan.clawback_days) > 0) {
 				const n = num(plan.clawback_days);
@@ -431,9 +458,9 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 					if (!(total > 0) || !inRange(Dates.addDays(r.date, n))) continue;
 					const ratio = Math.round(Math.max(0, Math.min(1, (total - num(r.raw.paid)) / total)) * 1e8) / 1e8;
 					if (!(ratio > 0)) continue;
-					const own = byLine[`${r.tranId}:${r.line}`];
-					if (own) own.unpaidRatio = ratio;
-					else out.push(clone(r, { creditEmployee: credited(r), unpaidRatio: ratio }));
+					const same = byLine[`${r.tranId}:${r.line}`];
+					if (same) same.unpaidRatio = ratio;
+					else out.push(clone(r, own(r, { unpaidRatio: ratio })));
 				}
 			}
 		}
@@ -463,7 +490,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 	function compactCredit(c) {
 		return {
 			key: c.key || "", kind: c.kind || "N", tranId: c.tranId, tranNo: c.tranNo, tranType: c.tranType, date: c.date, creditDate: c.creditDate || c.date,
-			customer: c.customer || "", customerName: c.customerName || "", item: c.item || "", itemName: c.itemName || "", classId: c.classId || "", department: c.department || "",
+			customer: c.customer || "", customerName: c.customerName || "", item: c.item || "", itemName: c.itemName || "", itemType: c.itemType || "", itemGroup: c.itemGroup || "", classId: c.classId || "", department: c.department || "",
 			location: c.location || "", project: c.project || "", revenue: c.revenue, factor: c.factor === undefined ? 1 : c.factor, pct: c.pct, base: c.base, qty: c.qty,
 			source: c.sourceSystem || "NetSuite",
 		};
@@ -510,6 +537,9 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 		for (const p of plans) {
 			if (p.credit_source === "F" && (p.source || "N") !== "X" && !CREDIT_FIELD.test(String(p.credit_field || ""))) {
 				throw fail(`Plan ${p.name}: the credit field must be a transaction body field id (custbody...)`, `Kế hoạch ${p.name}: trường ghi nhận phải là id trường body của chứng từ (custbody...)`);
+			}
+			if (!blank(p.item_group_field) && (p.source || "N") !== "X" && !GROUP_FIELD.test(String(p.item_group_field))) {
+				throw fail(`Plan ${p.name}: the item group field must be an item custom field id (custitem...)`, `Kế hoạch ${p.name}: trường nhóm hàng phải là id trường tùy chỉnh của mặt hàng (custitem...)`);
 			}
 		}
 		const data = plans.length ? sourceData(sub, period, plans) : null;
@@ -694,6 +724,39 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 		return s;
 	}
 
+	/** Danh sách chữ cách nhau dấu phẩy / chấm phẩy / xuống dòng (mảng cũng nhận): bỏ trống, bỏ trùng không phân biệt hoa thường. */
+	function textItems(v) {
+		if (blank(v)) return [];
+		const raw = Array.isArray(v) ? v : String(v).split(/[,;\r\n\t]+/);
+		const seen = {};
+		const out = [];
+		for (const x of raw) {
+			const s = String(blank(x) ? "" : x).trim();
+			if (!s || seen[s.toUpperCase()]) continue;
+			seen[s.toUpperCase()] = true;
+			out.push(s);
+		}
+		return out;
+	}
+
+	/** Lọc loại mặt hàng: mã NetSuite trong ITEM_TYPES (không phân biệt hoa thường, lưu đúng cách viết chuẩn). */
+	function itemTypesText(v, label) {
+		const out = [];
+		for (const s of textItems(v)) {
+			const code = ITEM_TYPES.find((t) => t.toUpperCase() === s.toUpperCase());
+			if (!code) throw fail(`${label.en}: unknown item type ${s} (allowed: ${ITEM_TYPES.join(", ")})`, `${label.vi}: loại mặt hàng không hợp lệ ${s} (nhận: ${ITEM_TYPES.join(", ")})`);
+			if (!out.includes(code)) out.push(code);
+		}
+		return out.join(",");
+	}
+
+	/** Lọc mã hàng / nhóm hàng: chữ cách nhau dấu phẩy (giá trị không chứa dấu phẩy), tối đa FILTER_TEXT_MAX ký tự. */
+	function codesText(v, label) {
+		const s = textItems(v).join(",");
+		if (s.length > FILTER_TEXT_MAX) throw fail(`${label.en}: the list is too long (at most ${FILTER_TEXT_MAX} characters)`, `${label.vi}: danh sách quá dài (tối đa ${FILTER_TEXT_MAX} ký tự)`);
+		return s;
+	}
+
 	function numberOrNull(v, label) {
 		if (blank(v)) return null;
 		const n = Number(v);
@@ -722,6 +785,11 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 			if (!CREDIT_FIELD.test(f)) throw fail("Credit field must be a transaction body field id (custbody...)", "Trường ghi nhận phải là id trường body của chứng từ (custbody...)");
 			v.credit_field = f;
 		} else if ("credit_field" in v) v.credit_field = blank(v.credit_field) ? "" : String(v.credit_field).trim().toLowerCase();
+		if ("item_group_field" in v) {
+			const g = String(blank(v.item_group_field) ? "" : v.item_group_field).trim().toLowerCase();
+			if (g && !GROUP_FIELD.test(g)) throw fail("Item group field must be an item custom field id (custitem...)", "Trường nhóm hàng phải là id trường tùy chỉnh của mặt hàng (custitem...)");
+			v.item_group_field = g;
+		}
 		if (blank(v.earning_type) || !String(v.earning_type).trim()) throw fail("Payroll earning type is required", "Chưa chọn loại thu nhập lương");
 		v.earning_type = String(v.earning_type).trim().toUpperCase();
 		for (const [k, en, vi] of [["clawback_days", "Clawback days", "Số ngày truy thu"], ["min_attainment", "Minimum attainment", "Ngưỡng % đạt"], ["cap_amount", "Cap", "Trần"], ["draw_amount", "Draw amount", "Số tiền draw"], ["override_pct", "Override rate", "Tỷ lệ quản lý"]]) {
@@ -743,8 +811,20 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 		for (const [k, en, vi] of [["f_items", "item filter", "lọc mặt hàng"], ["f_classes", "class filter", "lọc class"], ["f_departments", "department filter", "lọc phòng ban"], ["f_locations", "location filter", "lọc địa điểm"], ["f_cust_categories", "customer category filter", "lọc nhóm khách"]]) {
 			if (k in v) v[k] = idsText(v[k], { en: `Component ${label}: ${en}`, vi: `Thành phần ${label}: ${vi}` });
 		}
+		if ("f_item_types" in v) v.f_item_types = itemTypesText(v.f_item_types, { en: `Component ${label}: item type filter`, vi: `Thành phần ${label}: lọc loại mặt hàng` });
+		if ("f_item_codes" in v) v.f_item_codes = codesText(v.f_item_codes, { en: `Component ${label}: item code filter`, vi: `Thành phần ${label}: lọc mã hàng` });
+		if ("f_item_groups" in v) v.f_item_groups = codesText(v.f_item_groups, { en: `Component ${label}: item group filter`, vi: `Thành phần ${label}: lọc nhóm hàng` });
 		if ("f_new_customer" in v) v.f_new_customer = !!v.f_new_customer && v.f_new_customer !== "F";
+		// Phạm vi khách hàng A / N / E; f_new_customer cũ giữ đồng bộ (T khi N) cho bản đọc cũ
+		if ("f_customer_scope" in v) {
+			v.f_customer_scope = checkList("f_customer_scope", blank(v.f_customer_scope) ? null : String(v.f_customer_scope).trim().toUpperCase(), false, { en: `Component ${label}: customer scope`, vi: `phạm vi khách hàng của thành phần ${label}` }) || (v.f_new_customer ? "N" : "A");
+			v.f_new_customer = v.f_customer_scope === "N";
+		}
 		for (const k of ["sequence", "new_days", "rate", "unit_amount"]) if (k in v) v[k] = numberOrNull(v[k], { en: `Component ${label}: ${k}`, vi: `Thành phần ${label}: ${k}` });
+		const scoped = v.f_customer_scope === "N" || v.f_customer_scope === "E" || (!("f_customer_scope" in v) && v.f_new_customer === true);
+		if (scoped && v.new_days !== null && v.new_days !== undefined && !(Number.isInteger(v.new_days) && v.new_days >= 1)) {
+			throw fail(`Component ${label}: new customer days must be a whole number of at least 1`, `Thành phần ${label}: số ngày tính là khách mới phải là số nguyên từ 1`);
+		}
 		if (v.sequence === null || v.sequence === undefined) v.sequence = (index + 1) * 10;
 		return v;
 	}
@@ -951,7 +1031,17 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 
 	// ------------------------------------------------------------------ doanh số ngoài (comm_txn)
 
-	const TXN_TEXT = ["customer_code", "customer_name", "customer_category", "item_code", "item_type", "import_batch", "note"];
+	const TXN_TEXT = ["customer_code", "customer_name", "customer_category", "item_code", "item_type", "item_group", "import_batch", "note"];
+
+	/** Bỏ dấu tiếng Việt, chữ thường (so giá trị chữ trong file nạp). */
+	const fold = (s) => String(blank(s) ? "" : s).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").trim().toLowerCase();
+	const CUSTOMER_TYPE_WORDS = { n: "N", new: "N", moi: "N", "khach moi": "N", e: "E", existing: "E", old: "E", cu: "E", "khach cu": "E" };
+
+	/** Loại khách hàng trong file: N / E hoặc chữ mới / cũ / new / existing; trống -> null; lạ -> undefined. */
+	function parseCustomerType(v) {
+		if (blank(v) || !String(v).trim()) return null;
+		return CUSTOMER_TYPE_WORDS[fold(v).replace(/[_\-.]+/g, " ").replace(/\s+/g, " ")];
+	}
 	const TXN_NUM = ["revenue", "cost", "qty", "collected_amount"];
 	// Phân đoạn trong file: id nội bộ, hoặc tên / tên đầy đủ (không phân biệt hoa thường); dự án chỉ nhận id nội bộ
 	const TXN_SEGMENTS = { class: { table: "classification", en: "Class", vi: "Class" }, department: { table: "department", en: "Department", vi: "Phòng ban" }, location: { table: "location", en: "Location", vi: "Địa điểm" } };
@@ -1122,6 +1212,12 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 				else values[k] = n;
 			}
 			for (const k of TXN_TEXT) values[k] = blank(r[k]) ? "" : String(r[k]).trim().slice(0, k === "note" ? 4000 : 300);
+			// Loại mặt hàng viết đúng mã NetSuite khi khớp (invtpart -> InvtPart) để lọc theo loại mặt hàng khớp với dòng NetSuite
+			const known = ITEM_TYPES.find((x) => x.toUpperCase() === values.item_type.toUpperCase());
+			if (known) values.item_type = known;
+			const ctype = parseCustomerType(r.customer_type);
+			if (ctype === undefined) messages.push(msg(`Customer type must be N (new) or E (existing): ${r.customer_type}`, `Loại khách hàng phải là N (mới) hoặc E (cũ): ${r.customer_type}`));
+			values.customer_type = ctype || null;
 			for (const k of Object.keys(TXN_SEGMENTS)) {
 				const hit = segs[k](r[k]);
 				const label = TXN_SEGMENTS[k];
@@ -1223,7 +1319,7 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 			return {
 				id: x.id, sourceSystem: x.source_system || "", docNo: x.doc_no || "", lineNo: blank(x.line_no) ? 0 : num(x.line_no), tranType: x.tran_type || "I", date: x.date || null,
 				customerCode: x.customer_code || "", customerName: x.customer_name || "", customerCategory: x.customer_category || "", firstSaleDate: x.first_sale_date || null,
-				itemCode: x.item_code || "", itemType: x.item_type || "", classId: x.class || null, department: x.department || null, location: x.location || null, project: x.project || null,
+				itemCode: x.item_code || "", itemType: x.item_type || "", itemGroup: x.item_group || "", customerType: x.customer_type || "", classId: x.class || null, department: x.department || null, location: x.location || null, project: x.project || null,
 				revenue: num(x.revenue), cost: num(x.cost), qty: num(x.qty), employee: x.employee || null, code: who.code, name: who.name, team: parseTeam(x.team),
 				collectedDate: x.collected_date || null, collectedAmount: blank(x.collected_amount) ? null : num(x.collected_amount), importBatch: x.import_batch || "", note: x.note || "",
 				locked: !!lockedBy(ranges, [x.date, x.collected_date]),
@@ -1237,6 +1333,6 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 		// dùng chung với api/CommissionV2 và test
 		periodOf, plansFor, plansWithChildren, activeRun, runOf, idList, employeeNames,
 		readers: { docLines, paidLines, clawLines, salesTeams, firstSales, externalTxns },
-		CREDIT_FIELD,
+		CREDIT_FIELD, GROUP_FIELD, ITEM_TYPES, parseCustomerType,
 	};
 });

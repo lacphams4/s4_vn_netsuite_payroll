@@ -3648,6 +3648,11 @@ define([], () => {
 					"id": "custrecord_s4vp_cpl_source",
 					"type": "select",
 					"target": "list:cm_source"
+				},
+				"item_group_field": {
+					"id": "custrecord_s4vp_cpl_item_group_field",
+					"type": "text",
+					"target": null
 				}
 			}
 		},
@@ -3715,6 +3720,16 @@ define([], () => {
 					"id": "custrecord_s4vp_cxt_item_type",
 					"type": "text",
 					"target": null
+				},
+				"item_group": {
+					"id": "custrecord_s4vp_cxt_item_group",
+					"type": "text",
+					"target": null
+				},
+				"customer_type": {
+					"id": "custrecord_s4vp_cxt_customer_type",
+					"type": "select",
+					"target": "list:cm_cust_scope"
 				},
 				"class": {
 					"id": "custrecord_s4vp_cxt_class",
@@ -3822,6 +3837,26 @@ define([], () => {
 					"id": "custrecord_s4vp_ccr_f_cust_categories",
 					"type": "text",
 					"target": null
+				},
+				"f_item_types": {
+					"id": "custrecord_s4vp_ccr_f_item_types",
+					"type": "text",
+					"target": null
+				},
+				"f_item_codes": {
+					"id": "custrecord_s4vp_ccr_f_item_codes",
+					"type": "textarea",
+					"target": null
+				},
+				"f_item_groups": {
+					"id": "custrecord_s4vp_ccr_f_item_groups",
+					"type": "textarea",
+					"target": null
+				},
+				"f_customer_scope": {
+					"id": "custrecord_s4vp_ccr_f_customer_scope",
+					"type": "select",
+					"target": "list:cm_cust_scope"
 				},
 				"f_new_customer": {
 					"id": "custrecord_s4vp_ccr_f_new_customer",
@@ -4884,6 +4919,14 @@ define([], () => {
 				"I": "val_s4vp_cm_txn_type_i",
 				"S": "val_s4vp_cm_txn_type_s",
 				"C": "val_s4vp_cm_txn_type_c"
+			}
+		},
+		"cm_cust_scope": {
+			"type": "customlist_s4vp_cm_cust_scope",
+			"values": {
+				"A": "val_s4vp_cm_cust_scope_a",
+				"N": "val_s4vp_cm_cust_scope_n",
+				"E": "val_s4vp_cm_cust_scope_e"
 			}
 		},
 		"hrc_type": {

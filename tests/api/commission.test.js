@@ -94,7 +94,12 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
     return out;
   };
   const HANDLERS = {
-    s4vp_cm_lines: (sql, p) => mockDb.ns.lines.filter((l) => between(l.tdate, p[0], p[1]) && new RegExp(`tl\\.subsidiary = ${l.sub || 13} `).test(sql)),
+    s4vp_cm_lines: (sql, p) => {
+      // SuiteQL thật chỉ báo lỗi chung khi trường không tồn tại (đã thử trên td2937310)
+      if (/custitem_khong_co/.test(sql)) throw new Error("An unexpected SuiteScript error has occurred");
+      return HANDLERS.lines(sql, p);
+    },
+    lines: (sql, p) => mockDb.ns.lines.filter((l) => between(l.tdate, p[0], p[1]) && new RegExp(`tl\\.subsidiary = ${l.sub || 13} `).test(sql)),
     s4vp_cm_paid: (sql, p) => {
       const starts = [...sql.matchAll(/k\.nextdate >= TO_DATE\('(\d{4}-\d{2}-\d{2})'/g)].map((m) => m[1]);
       return mockDb.ns.paid.map((l) => {
@@ -427,6 +432,90 @@ describe("nguồn giao dịch", () => {
   });
 });
 
+describe("bộ lọc loại mặt hàng, mã hàng, nhóm hàng, phạm vi khách", () => {
+  test("truy vấn dòng có mã hàng; trường nhóm hàng qua BUILTIN.DF (ig_<i>); thành phần lọc loại / mã / nhóm", () => {
+    db.comm_plan[0].item_group_field = "custitem_s4_nhom";
+    db.ns.lines = [
+      nsLine({ tran_id: 1, line_id: 1, item_type: "InvtPart", item_code: "SP-01", ig_0: "Điện máy", revenue: 60 * M }),
+      nsLine({ tran_id: 1, line_id: 2, item_type: "Service", item_code: "DV-01", ig_0: "Dịch vụ", revenue: 40 * M }),
+    ];
+    db.comm_rule = [
+      { id: "11", name: "Hàng tồn kho", isInactive: false, plan: "1", sequence: 10, method: "P", rate: 2, f_item_types: "InvtPart" },
+      { id: "12", name: "Mã DV", isInactive: false, plan: "1", sequence: 20, method: "P", rate: 1, f_item_codes: "dv-01" },
+      { id: "13", name: "Nhóm điện máy", isInactive: false, plan: "1", sequence: 30, method: "P", rate: 1, f_item_groups: "ĐIỆN MÁY" },
+    ];
+    const out = calc();
+    const lines = db.sql.find((q) => q.tag === "s4vp_cm_lines");
+    expect(lines.sql).toMatch(/i\.itemid AS item_code/);
+    expect(lines.sql).toMatch(/BUILTIN\.DF\(i\.custitem_s4_nhom\) AS ig_0/);
+    expect(lines.sql).toMatch(/LEFT JOIN item i ON i\.id = tl\.item/);
+    const r = resultOf(out.run, "101");
+    const detail = JSON.parse(r.detail);
+    expect(detail.components.map((c) => [c.name, c.base, c.amount])).toEqual([["Hàng tồn kho", 60 * M, 1.2 * M], ["Mã DV", 40 * M, 400000], ["Nhóm điện máy", 60 * M, 600000]]);
+    expect(detail.credits.find((c) => c.itemName === "SP-01")).toMatchObject({ itemType: "InvtPart", itemGroup: "Điện máy" });
+    // Không khai trường nhóm hàng: không có cột ig, lọc nhóm không khớp dòng NetSuite
+    reset();
+    db.comm_rule[0].f_item_groups = "Điện máy";
+    const out2 = calc();
+    expect(db.sql.find((q) => q.tag === "s4vp_cm_lines").sql).not.toMatch(/BUILTIN\.DF|ig_0/);
+    expect(resultOf(out2.run, "101").base).toBe(90 * M);
+    expect(JSON.parse(resultOf(out2.run, "101").detail).components[0].base).toBe(0);
+  });
+
+  test("trường nhóm hàng không tồn tại: lỗi SuiteQL chung đổi thành thông báo song ngữ nêu tên trường; id sai thì không truy vấn", () => {
+    db.comm_plan[0].item_group_field = "custitem_khong_co";
+    expect(() => calc()).toThrow(/Không đọc được trường nhóm hàng custitem_khong_co trên mặt hàng/);
+    let err = null;
+    try {
+      calc();
+    } catch (e) {
+      err = e;
+    }
+    expect(err.userMessage.en).toMatch(/item group field\(s\) custitem_khong_co on items/);
+    // Có cả trường ghi nhận (nguồn F): thông báo nêu cả hai
+    Object.assign(db.comm_plan[0], { credit_source: "F", credit_field: "custbody_s4_seller" });
+    expect(() => calc()).toThrow(/custbody_s4_seller.*custitem_khong_co/);
+    reset();
+    db.comm_plan[0].item_group_field = "custitem_x) OR (1=1";
+    db.calls = [];
+    expect(() => calc()).toThrow(/custitem/);
+    expect(db.calls).not.toContain("s4vp_cm_lines");
+  });
+
+  test("dòng ngoài: lọc theo mã hàng (f_items id nội bộ không khớp), nhóm hàng, loại mặt hàng, customer_type", () => {
+    db.comm_plan[0].source = "X";
+    db.comm_txn = [
+      { id: "71", isInactive: false, subsidiary: "13", source_system: "DMS", doc_no: "D1", line_no: 1, tran_type: "I", date: "2026-03-12", item_code: "77", item_type: "InvtPart", item_group: "Điện máy", customer_type: "N", revenue: 25 * M, employee: "101" },
+      { id: "72", isInactive: false, subsidiary: "13", source_system: "DMS", doc_no: "D2", line_no: 1, tran_type: "I", date: "2026-03-13", item_code: "SP-02", item_type: "Service", item_group: "", customer_type: "E", first_sale_date: "2026-03-13", revenue: 15 * M, employee: "101" },
+    ];
+    const base = (rule) => {
+      db.comm_rule = [Object.assign({ id: "11", name: "TP", isInactive: false, plan: "1", sequence: 10, method: "P", rate: 1 }, rule)];
+      const out = calc();
+      return JSON.parse(resultOf(out.run, "101").detail).components[0].base;
+    };
+    expect(base({ f_items: "77" })).toBe(0);
+    expect(base({ f_item_codes: "sp-02,77" })).toBe(40 * M);
+    expect(base({ f_item_groups: "điện máy" })).toBe(25 * M);
+    expect(base({ f_item_types: "Service" })).toBe(15 * M);
+    expect(base({ f_customer_scope: "N" })).toBe(25 * M);
+    // customer_type E thắng ngày mua đầu tiên (cùng ngày chứng từ)
+    expect(base({ f_customer_scope: "E" })).toBe(15 * M);
+  });
+
+  test("phạm vi khách NetSuite: khách mới / cũ theo ngày mua đầu tiên; f_new_customer cũ vẫn chạy", () => {
+    // Khách 501 mua đầu 2025-06-01 (cũ), 502 mua đầu 2026-03-01 (mới, INV3 ngày 10/03)
+    const comp = (rule) => {
+      Object.assign(db.comm_rule[0], { f_customer_scope: null, f_new_customer: false }, rule);
+      const out = calc();
+      return [resultOf(out.run, "101"), resultOf(out.run, "102")].map((r) => JSON.parse(r.detail).components[0].base);
+    };
+    expect(comp({ f_customer_scope: "N" })).toEqual([0, 20 * M]);
+    expect(comp({ f_customer_scope: "E" })).toEqual([90 * M, 0]);
+    expect(comp({ f_new_customer: true })).toEqual([0, 20 * M]);
+    expect(comp({ f_customer_scope: "A", f_new_customer: true })).toEqual([90 * M, 20 * M]);
+  });
+});
+
 describe("duyệt, mở lại, hủy", () => {
   test("D -> A ghi người duyệt; A -> D; cấm khi P; hủy cần lý do, isinactive, không xóa", () => {
     const out = calc();
@@ -520,6 +609,37 @@ describe("planSave", () => {
     const h = body();
     h.plan.basis = "Z";
     expect(() => Commission.planSave(h)).toThrow(/không hợp lệ/);
+  });
+
+  test("bộ lọc loại mặt hàng / mã hàng / nhóm hàng, trường nhóm hàng, phạm vi khách: chuẩn hóa và kiểm", () => {
+    const b = body();
+    b.plan.item_group_field = " CustItem_S4_Nhom ";
+    Object.assign(b.rules[0], { f_item_types: "invtpart, Service ,INVTPART", f_item_codes: "SP-01, sp-01; DV-02\nKM", f_item_groups: ["Điện máy", " điện máy ", "Gia dụng"], f_customer_scope: "e", new_days: 60 });
+    const out = Commission.planSave(b);
+    expect(db.comm_plan.find((p) => p.id === out.id).item_group_field).toBe("custitem_s4_nhom");
+    const saved = db.comm_rule.find((r) => r.id === out.rules[0].id);
+    expect(saved).toMatchObject({ f_item_types: "InvtPart,Service", f_item_codes: "SP-01,DV-02,KM", f_item_groups: "Điện máy,Gia dụng", f_customer_scope: "E", f_new_customer: false, new_days: 60 });
+    // f_new_customer cũ (không gửi phạm vi) vẫn lưu được; gửi phạm vi trống thì suy ra từ f_new_customer
+    const legacy = body();
+    legacy.plan.name = "KH-CU";
+    Object.assign(legacy.rules[0], { f_new_customer: true, f_customer_scope: "" });
+    const out2 = Commission.planSave(legacy);
+    expect(db.comm_rule.find((r) => r.id === out2.rules[0].id)).toMatchObject({ f_customer_scope: "N", f_new_customer: true });
+
+    const bad = (mut) => {
+      const x = body();
+      x.plan.name = `KH-${Math.random()}`;
+      mut(x);
+      return () => Commission.planSave(x);
+    };
+    expect(bad((x) => (x.rules[0].f_item_types = "InvtPart,Hàng hóa"))).toThrow(/loại mặt hàng không hợp lệ Hàng hóa/);
+    expect(bad((x) => (x.plan.item_group_field = "custbody_nhom"))).toThrow(/custitem/);
+    expect(bad((x) => (x.plan.item_group_field = "custitem_a' OR 1=1"))).toThrow(/custitem/);
+    expect(bad((x) => (x.rules[0].f_customer_scope = "X"))).toThrow(/phạm vi khách hàng/);
+    expect(bad((x) => Object.assign(x.rules[0], { f_customer_scope: "N", new_days: 0 }))).toThrow(/số ngày tính là khách mới/);
+    expect(bad((x) => (x.rules[0].f_item_codes = "A".repeat(4001)))).toThrow(/quá dài/);
+    // Trường nhóm hàng trống là hợp lệ (lọc nhóm chỉ khớp dòng ngoài)
+    expect(bad((x) => (x.plan.item_group_field = ""))).not.toThrow();
   });
 });
 
@@ -671,5 +791,31 @@ describe("doanh số ngoài (comm_txn)", () => {
     expect(list).toMatchObject({ month: 202603, from: "2026-03-01", to: "2026-03-31", counts: { rows: 4, systems: [{ sourceSystem: "DMS", rows: 4 }] } });
     expect(list.rows[0]).toEqual(expect.objectContaining({ sourceSystem: "DMS", docNo: "D1", lineNo: 1, tranType: "I", date: "2026-03-05", employee: "101", code: "NV101", name: "Nguyễn An", revenue: 1500000, locked: true }));
     expect(() => Commission.importExternal({ subsidiary: "13", sourceSystem: "", rows: [row()] })).toThrow(/hệ thống nguồn/);
+  });
+
+  test("nạp nhóm hàng, loại mặt hàng (chuẩn mã NetSuite), loại khách hàng (N / E, mới / cũ, new / existing)", () => {
+    const rows = [
+      row({ doc_no: "G1", item_code: "SP-01", item_type: "invtpart", item_group: " Điện máy ", customer_type: "mới" }),
+      row({ doc_no: "G2", item_type: "Hàng lạ", customer_type: "Existing" }),
+      row({ doc_no: "G3", customer_type: "E" }),
+      row({ doc_no: "G4", customer_type: "khách cũ" }),
+      row({ doc_no: "G5", customer_type: "" }),
+      row({ doc_no: "G6", customer_type: "vip" }),
+    ];
+    const dry = Commission.importExternal({ subsidiary: "13", sourceSystem: "DMS", dryRun: true, rows });
+    expect(dry.rows.map((r) => r.status)).toEqual(["new", "new", "new", "new", "new", "invalid"]);
+    expect(dry.rows[5].messages[0].vi).toBe("Loại khách hàng phải là N (mới) hoặc E (cũ): vip");
+    const out = Commission.importExternal({ subsidiary: "13", sourceSystem: "DMS", dryRun: false, rows: rows.slice(0, 5) });
+    expect(out.written).toBe(5);
+    const by = (d) => db.comm_txn.find((x) => x.doc_no === d);
+    expect(by("G1")).toMatchObject({ item_code: "SP-01", item_type: "InvtPart", item_group: "Điện máy", customer_type: "N" });
+    expect(by("G2")).toMatchObject({ item_type: "Hàng lạ", customer_type: "E" });
+    expect([by("G3").customer_type, by("G4").customer_type, by("G5").customer_type]).toEqual(["E", "E", null]);
+    // Nạp lại cùng dữ liệu: không đổi
+    expect(Commission.importExternal({ subsidiary: "13", sourceSystem: "DMS", dryRun: true, rows: rows.slice(0, 5) }).counts.ok).toBe(5);
+    const list = V2.routes.get.commissionExternal.run({ subsidiary: "13", month: 202603 });
+    expect(list.rows.find((x) => x.docNo === "G1")).toMatchObject({ itemCode: "SP-01", itemType: "InvtPart", itemGroup: "Điện máy", customerType: "N" });
+    expect(Commission.parseCustomerType("New")).toBe("N");
+    expect(Commission.parseCustomerType("cũ")).toBe("E");
   });
 });
