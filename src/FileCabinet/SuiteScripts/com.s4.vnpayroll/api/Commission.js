@@ -249,12 +249,15 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 	 * (f_item_codes), loại mặt hàng, nhóm hàng (item_group). customer_type N / E (nếu có) thay cho quy tắc ngày mua đầu tiên.
 	 */
 	function extRow(x) {
+		// Dòng trả hàng (C) luôn làm giảm cơ sở: hệ thống nguồn thường xuất số dương, nên quy về số âm (đã âm thì giữ)
+		const back = (x.tran_type || "I") === "C";
+		const neg = (v) => (back ? -Math.abs(num(v)) : num(v));
 		return {
 			tranId: `X${x.id}`, line: String(blank(x.line_no) ? 0 : x.line_no), tranNo: x.doc_no || "", tranType: x.tran_type || "I", date: x.date,
 			customer: x.customer_code || null, customerName: [x.customer_code, x.customer_name].filter((v, i, a) => v && a.indexOf(v) === i).join(" "), customerCategory: str(x.customer_category), firstSaleDate: x.first_sale_date || null,
 			customerType: x.customer_type === "N" || x.customer_type === "E" ? x.customer_type : "",
 			item: null, itemName: x.item_code || "", itemCode: x.item_code || "", itemGroup: x.item_group || "", itemType: x.item_type || "", classId: str(x.class), department: str(x.department), location: str(x.location), project: str(x.project),
-			revenue: num(x.revenue), cost: num(x.cost), qty: num(x.qty), salesRep: str(x.employee), team: parseTeam(x.team), creditEmployee: str(x.employee),
+			revenue: neg(x.revenue), cost: neg(x.cost), qty: neg(x.qty), salesRep: str(x.employee), team: parseTeam(x.team), creditEmployee: str(x.employee),
 			sourceSystem: x.source_system || "EXT", external: x,
 		};
 	}
