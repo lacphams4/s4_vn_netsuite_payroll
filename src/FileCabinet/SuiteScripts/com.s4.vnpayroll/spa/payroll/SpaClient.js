@@ -7839,7 +7839,8 @@ select.s4vp-in{padding-right:28px}
         const counts = (list && list.counts) || EMPTY_COUNTS;
         // Máy chủ đã lọc và cắt trang: items là các mục đã tải, total là số mục khớp bộ lọc, bySeverity đếm theo mức độ trong phạm
         // vi các bộ lọc còn lại, groups là số lượng theo quy tắc trên toàn bộ bảng lương
-        const bySeverity = Object.assign({ error: 0, warn: 0, info: 0 }, (list && list.bySeverity) || {});
+        const sev = (list && list.bySeverity) || {};
+        const bySeverity = { error: sev.err || sev.error || 0, warn: sev.warn || 0, info: sev.info || 0 };
         const total = list ? Number(list.total) || 0 : 0;
         const groups = (list && Array.isArray(list.groups) ? list.groups : []).filter(Boolean);
         const group = rule ? groups.find((g) => g.rule === rule) || null : null;

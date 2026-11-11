@@ -359,12 +359,12 @@ describe("Checks - bảng lương 1.000 nhân viên: lọc, phân trang, nhóm p
     expect(warn.total).toBe(300);
     expect(warn.items).toHaveLength(20);
     expect(warn.items.every((it) => it.severity === "warn")).toBe(true);
-    expect(warn.bySeverity).toEqual({ error: 10, warn: 300, info: 300 });
+    expect(warn.bySeverity).toEqual({ err: 10, warn: 300, info: 300 });
     expect(warn.counts).toEqual({ open: 310, errors: 10, warnings: 300, resolved: 0 });
     const rule = Checks.checksList({ batch: "7", rule: "NET_NEGATIVE", offset: 0, limit: 5 });
     expect(rule.total).toBe(10);
     expect(rule.items).toHaveLength(5);
-    expect(rule.bySeverity).toEqual({ error: 10, warn: 0, info: 0 });
+    expect(rule.bySeverity).toEqual({ err: 10, warn: 0, info: 0 });
     expect(Checks.checksList({ batch: "7", offset: 700, limit: 100 }).items).toEqual([]);
   });
 

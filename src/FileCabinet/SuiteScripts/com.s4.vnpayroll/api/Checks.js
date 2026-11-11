@@ -429,13 +429,15 @@ define(["N/runtime", "./Store", "./Clock", "./Lean", "../core/PayrollChecks"], (
 			const text = fold([it.employeeCode, it.employeeName, it.title, it.headline, it.note, it.assigneeName].join(" "));
 			return words.every((w) => text.indexOf(w) >= 0);
 		};
-		const bySeverity = { error: 0, warn: 0, info: 0 };
+		// Khóa "error" trong JSON trả về làm N/https phía trình duyệt từ chối phản hồi: mức lỗi gửi dưới khóa "err"
+		const bySeverity = { err: 0, warn: 0, info: 0 };
 		const filtered = [];
 		for (const it of c.items) {
 			if (!blank(q.rule) && it.rule !== String(q.rule)) continue;
 			if (!blank(q.status) && it.status !== String(q.status)) continue;
 			if (!matches(it)) continue;
-			bySeverity[it.severity] = (bySeverity[it.severity] || 0) + 1;
+			const sk = it.severity === "error" ? "err" : it.severity;
+			bySeverity[sk] = (bySeverity[sk] || 0) + 1;
 			if (!blank(q.severity) && it.severity !== String(q.severity)) continue;
 			filtered.push(it);
 		}
