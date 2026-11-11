@@ -155,5 +155,9 @@
       <permittedlevel>CREATE</permittedlevel>
       <permittedrole>[customrole_s4vp_accountant]</permittedrole>
     </permission>
+    <permission>
+      <permittedlevel>VIEW</permittedlevel>
+      <permittedrole>[customrole_s4vp_selfservice]</permittedrole>
+    </permission>
   </permissions>
 </customrecordtype>

@@ -231,7 +231,11 @@ describe("PrintModelExtra.contractorStatement", () => {
 		expect(m.windowLine).toBe("Thời gian làm việc: từ 26/09/2026 đến 25/10/2026");
 		expect(m.pages.map((p) => p.info[0].value)).toEqual(["E014 - CTV C", "E015 - CTV D"]);
 		expect(m.pages.map((p) => p.breaks.length)).toEqual([1, 0]);
-		const one = Extra.contractorStatement(ctvDetail, Object.assign({}, ctvOpts, { employee: "2685" }));
+		// CCCD chỉ in 4 số cuối, mã số thuế in đủ
+		const info = Object.fromEntries(m.pages[0].info.map((x) => [x.label, x.value]));
+		expect(info["Số CCCD"]).toBe("********0001");
+		expect(Object.values(info)).toContain("8000000001");
+		const one =Extra.contractorStatement(ctvDetail, Object.assign({}, ctvOpts, { employee: "2685" }));
 		expect(one.count).toBe(1);
 		expect(one.pages[0].breaks).toEqual([]);
 		expect(Extra.contractorStatement(ctvDetail, Object.assign({}, ctvOpts, { employee: "2682" })).count).toBe(0);
@@ -253,7 +257,7 @@ describe("PrintModelExtra.contractorStatement", () => {
 		]);
 		expect(p.rows[0].memo).toBe("Bản vẽ");
 		expect(p.total).toEqual({ source: "76", hours: "80" });
-		expect(p.info.map((f) => f.value)).toEqual(["E014 - CTV C", "Dự án", "8000000001", "001200000001", "196.000"]);
+		expect(p.info.map((f) => f.value)).toEqual(["E014 - CTV C", "Dự án", "8000000001", "********0001", "196.000"]);
 		expect(p.pay.map((f) => f.value)).toEqual(["80", "15.680.000", "1.568.000"]);
 		expect(p.net).toBe("14.112.000");
 		expect(p.netWords).toBe("Mười bốn triệu một trăm mười hai nghìn đồng");

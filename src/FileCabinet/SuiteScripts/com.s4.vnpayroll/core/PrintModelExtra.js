@@ -220,6 +220,13 @@ define(["./PrintModel", "./Money", "./Dates", "./VietnameseNumberReader"], (Base
 	 * @param {Object} opts {lang, company, signers, profiles, employee, entries: dòng Time ĐÃ NHẬN vào lương trong cửa sổ kết công
 	 *   [{employee, date, hours, project, projectName, task, taskName, memo}], window: {from, to}}
 	 */
+	// Bảng kê gửi ra ngoài cho cộng tác viên ký: số CCCD chỉ in 4 số cuối (mã số thuế in đủ để đối chiếu với quyết toán)
+	function maskId(value) {
+		const v = String(value === null || value === undefined ? "" : value).replace(/\s+/g, "");
+		if (!v) return "";
+		return v.length <= 4 ? v : `${"*".repeat(v.length - 4)}${v.slice(-4)}`;
+	}
+
 	function contractorStatement(detail, opts = {}) {
 		const h = head(opts, "Bảng kê xác nhận thù lao", "Contractor fee statement");
 		const t = T(h.lang);
@@ -289,7 +296,7 @@ define(["./PrintModel", "./Money", "./Dates", "./VietnameseNumberReader"], (Base
 					{ label: t("Họ và tên", "Full name"), value: label(l.code, l.name) },
 					{ label: t("Bộ phận", "Department"), value: l.department || "" },
 					{ label: t("Mã số thuế", "Tax code"), value: p.taxCode || "" },
-					{ label: t("Số CCCD", "ID number"), value: p.personalId || "" },
+					{ label: t("Số CCCD", "ID number"), value: maskId(p.personalId) },
 					{ label: t("Đơn giá thù lao (đồng/giờ)", "Fee rate (VND per hour)"), value: money(Base.contract(l, opts)) },
 				],
 				rows,

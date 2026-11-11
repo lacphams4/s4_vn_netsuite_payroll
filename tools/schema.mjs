@@ -71,6 +71,11 @@ export const lists = {
 
 const ROLE_HR = "customrole_s4vp_hr";
 const ROLE_ACCT = "customrole_s4vp_accountant";
+// Vai trò chạy (run-as) của cổng tự phục vụ: KHÔNG gán cho người dùng nào; Suitelet s4vp_sl_my_payroll chạy bằng vai trò này
+// thay cho Administrator và tự lọc cứng theo nhân viên đang đăng nhập (phương án A, người dùng duyệt 11/11/2026).
+const ROLE_ESS = "customrole_s4vp_selfservice";
+// Record cổng tự phục vụ được ghi (đơn của nhân viên và phần giữ chỗ phép khi gửi duyệt); mọi record khác của gói chỉ xem
+const ESS_WRITE = ["leave_request", "ot_request", "business_trip", "leave_balance", "leave_tran", "audit_log"];
 
 // Quyền theo ma trận 1.4.1: HR thiết lập, hồ sơ, bảng lương (không ghi sổ); kế toán xem thiết lập, toàn quyền bảng lương, tạm ứng
 const SETUP = { [ROLE_HR]: "FULL", [ROLE_ACCT]: "VIEW" };
@@ -817,6 +822,7 @@ function accountFields() {
 }
 
 export const roles = [
+	{ id: ROLE_ESS, name: "S4VP Self-service (run-as only)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"]] },
 	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"]] },
 	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"]] },
 ];
@@ -844,4 +850,10 @@ for (const file of partFiles) {
 		if (records.some((r) => r.id === rec.id)) throw new Error(`tools/schema/${file}: record ${rec.id} already defined`);
 		records.push(rec);
 	}
+}
+
+// Quyền của vai trò chạy cổng tự phục vụ trên mọi record của gói: xem; ghi với các record đơn (không xóa)
+for (const rec of records) {
+	if (!rec.perms) continue;
+	rec.perms = Object.assign({}, rec.perms, { [ROLE_ESS]: ESS_WRITE.includes(rec.id) ? "EDIT" : "VIEW" });
 }
