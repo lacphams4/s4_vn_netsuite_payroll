@@ -4005,6 +4005,11 @@ define([], () => {
 					"id": "custrecord_s4vp_crn_note",
 					"type": "textarea",
 					"target": null
+				},
+				"warnings": {
+					"id": "custrecord_s4vp_crn_warnings",
+					"type": "clob",
+					"target": null
 				}
 			}
 		},

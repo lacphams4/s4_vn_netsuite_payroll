@@ -9988,6 +9988,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             calcAt: str(rd(r, 'calcAt', 'calc_at')),
             approvedByName: str(rd(r, 'approvedByName', 'approved_by_name')),
             note: str(rd(r, 'note')),
+            warnings: arr(rd(r, 'warnings')).map((w) => (w && typeof w === 'object' ? { code: str(w.code), vi: str(w.vi), en: str(w.en) } : { code: '', vi: str(w), en: str(w) })),
         };
     }
     function mapRow(r, i) {
@@ -10774,6 +10775,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                     calculating: 'Đang tính hoa hồng...',
                     calculated: (n) => `Đã tính hoa hồng cho ${n} nhân viên.`,
                     calculatedNoCount: 'Đã tính hoa hồng.',
+                    runWarnings: 'Doanh số chưa ai được ghi nhận',
                     confirmRecalc: (name) => `Tính lại bảng tính ${name}? Kết quả nháp hiện tại được thay bằng kết quả mới (điều chỉnh tay vẫn giữ).`,
                     confirmApprove: (name, amount) => `Duyệt bảng tính ${name}, tổng hoa hồng ${amount}? Bảng lương có kỳ chứa ngày cuối của bảng tính sẽ lấy số này.`,
                     approved: (name) => `Đã duyệt bảng tính ${name}.`,
@@ -11019,6 +11021,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                     calculating: 'Calculating commissions...',
                     calculated: (n) => `Commissions calculated for ${n} employees.`,
                     calculatedNoCount: 'Commissions calculated.',
+                    runWarnings: 'Sales not credited to anyone',
                     confirmRecalc: (name) => `Recalculate ${name}? The current draft results are replaced (manual adjustments are kept).`,
                     confirmApprove: (name, amount) => `Approve ${name}, total commission ${amount}? The payroll batch whose period contains the end date will pick it up.`,
                     approved: (name) => `${name} approved.`,
@@ -11745,7 +11748,9 @@ input[type="number"].s4vp-in{padding-right:4px}
             ];
             return (jsxs(SidePanel, { title: `${row.code} ${row.name}`.trim() || row.employee, sub: [row.planName, row.department].filter(Boolean).join(' · '), children: [jsx(Tabs, { items: tabs, value: sideTab, onPick: setSideTab, label: t.side.label }), body] }));
         };
-        const runTab = () => (jsxs("div", { class: "s4vp-cm", children: [jsx(StatCards, { cards: statCards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.tabs.run, children: jsx(Table, { label: t.tabs.run, columns: gridColumns, rows: gridRows, keyOf: (r) => r.id, onRowClick: (r) => setSelected(r.id), selectedKey: current ? current.id : '', total: gridTotal, empty: t.empty, search: true, searchPlaceholder: t.search, maxHeight: "max(260px, calc(100vh - 384px))" }) }) }), jsx("div", { class: "s4vp-col-side s4vp-cm-side", children: current ? detailPanel(current) : jsx(SidePanel, { title: t.side.label, children: jsx(Empty, { text: t.side.pick }) }) })] })] }));
+        // Cảnh báo cấp bảng tính: doanh số chưa ai được ghi nhận (người bán chưa phân công, chứng từ không có người bán)
+        const runWarns = run && run.warnings ? run.warnings : [];
+        const runTab = () => (jsxs("div", { class: "s4vp-cm", children: [jsx(StatCards, { cards: statCards }), runWarns.length ? (jsxs("div", { class: "s4vp-cm-warn", role: "note", children: [jsx("b", { children: t.run.runWarnings }), runWarns.map((w, i) => (jsx("span", { children: localized(w) || w.code }, `rw${i}`)))] })) : null, jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.tabs.run, children: jsx(Table, { label: t.tabs.run, columns: gridColumns, rows: gridRows, keyOf: (r) => r.id, onRowClick: (r) => setSelected(r.id), selectedKey: current ? current.id : '', total: gridTotal, empty: t.empty, search: true, searchPlaceholder: t.search, maxHeight: "max(260px, calc(100vh - 384px))" }) }) }), jsx("div", { class: "s4vp-col-side s4vp-cm-side", children: current ? detailPanel(current) : jsx(SidePanel, { title: t.side.label, children: jsx(Empty, { text: t.side.pick }) }) })] })] }));
         // ------------------------------------------------------------------ tab Kế hoạch
         const planState = (p) => {
             if (p.inactive)

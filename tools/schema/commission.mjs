@@ -156,6 +156,7 @@ export default ({ ROLE_HR, ROLE_ACCT }) => {
 					["calc_at", "Thời điểm tính (UTC, ISO)", "text", { display: "LOCKED" }],
 					["approved_by", "Người duyệt", "select:employee", { display: "LOCKED" }],
 					["note", "Ghi chú", "textarea"],
+					["warnings", "Cảnh báo cấp bảng tính (JSON)", "clob", { display: "LOCKED", help: "Run-level warnings of the last calculation: unassigned sales reps, documents without a sales rep, skipped adjustments." }],
 				],
 			},
 			{

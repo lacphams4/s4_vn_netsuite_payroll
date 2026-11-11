@@ -53,12 +53,24 @@ define(["./Store", "./Lean", "./Settings", "./Clock", "./Commission", "../core/D
 		return s;
 	}
 
+	/** Cảnh báo cấp bảng tính đã lưu (JSON) -> [{code, employee, vi, en}]; hỏng thì bỏ qua. */
+	function runWarnings(text) {
+		if (blank(text)) return [];
+		try {
+			const list = JSON.parse(text);
+			return Array.isArray(list) ? list.map((w) => ({ code: String(w.code || ""), employee: w.employee ? String(w.employee) : null, vi: String(w.vi || ""), en: String(w.en || "") })) : [];
+		} catch (e) {
+			return [];
+		}
+	}
+
 	const runView = (r) =>
 		r
 			? {
 				id: String(r.id), name: r.name || "", status: r.status || "D", month: num(r.month), from: r.date_from || null, to: r.date_to || null,
 				totalBase: num(r.total_base), totalAmount: num(r.total_amount), employees: num(r.employees), batch: r.batch || null,
 				calcAt: r.calc_at || "", calculated: !blank(r.calc_at), approvedBy: r.approved_by || null, note: r.note || "",
+				warnings: runWarnings(r.warnings),
 			}
 			: null;
 

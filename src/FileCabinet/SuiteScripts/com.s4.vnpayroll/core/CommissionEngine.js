@@ -263,6 +263,37 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 		return out;
 	}
 
+	/**
+	 * Doanh số không ai được ghi nhận trong kế hoạch (kiểm soát kiểu "unassigned credits"): người bán chưa có phân công hiệu
+	 * lực, hoặc chứng từ không có người bán. employee "" = dòng không có người bán.
+	 * @returns {Array<{employee, base: number, docs: number}>}
+	 */
+	function uncredited(lines, planIn, assignments, date) {
+		const plan = normalizePlan(planIn);
+		const asg = (assignments || []).map(normalizeAssignment).filter((a) => samePlan(a, plan));
+		const acc = new Map();
+		const add = (emp, base, doc) => {
+			const g = acc.get(emp) || { employee: emp, base: D(0), docs: new Set() };
+			g.base = g.base.plus(D(base));
+			g.docs.add(str(doc));
+			acc.set(emp, g);
+		};
+		for (const l of lines || []) {
+			const when = l.creditDate || l.date || Dates.iso(date);
+			const team = (l.team || []).filter((t) => !blank(t.employee));
+			let recips;
+			if (plan.creditSource === "T" && team.length) recips = team.map((t) => ({ employee: str(t.employee), pct: D(t.pct) }));
+			else if (plan.creditSource === "F") recips = blank(l.creditEmployee) ? [] : [{ employee: str(l.creditEmployee), pct: HUNDRED }];
+			else recips = blank(l.salesRep) ? [] : [{ employee: str(l.salesRep), pct: HUNDRED }];
+			if (!recips.length) add("", l.base, l.tranId || l.tranNo);
+			for (const r of recips) {
+				if (asg.some((a) => a.employee === r.employee && activeAt(a, when))) continue;
+				add(r.employee, D(l.base).times(r.pct.div(100)), l.tranId || l.tranNo);
+			}
+		}
+		return [...acc.values()].map((g) => ({ employee: g.employee, base: Money.roundTo(g.base, 2), docs: g.docs.size }));
+	}
+
 	// ------------------------------------------------------------------ 5-7. đo lường và thành phần
 
 	function passes(rule, c) {
@@ -683,5 +714,5 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 		return { amount: amount.toNumber(), gross: ev.gross.toNumber(), capped: capped.toNumber(), attainment, components: ev.components, steps, warnings: ev.warnings };
 	}
 
-	return { normalizeLines, credit, calculate, simulate, windowOf, normalizePlan, normalizeRule, normalizeTier, normalizeAssignment, normalizeQuota, fmt };
+	return { normalizeLines, credit, uncredited, calculate, simulate, windowOf, normalizePlan, normalizeRule, normalizeTier, normalizeAssignment, normalizeQuota, fmt };
 });

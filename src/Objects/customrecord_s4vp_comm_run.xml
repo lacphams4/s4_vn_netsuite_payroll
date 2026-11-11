@@ -156,6 +156,17 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_crn_warnings">
+      <label>Cảnh báo cấp bảng tính (JSON)</label>
+      <fieldtype>CLOBTEXT</fieldtype>
+      <description>Run-level warnings of the last calculation: unassigned sales reps, documents without a sales rep, skipped adjustments.</description>
+      <help>Run-level warnings of the last calculation: unassigned sales reps, documents without a sales rep, skipped adjustments.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>LOCKED</displaytype>
+      <isparent>F</isparent>
+      <showinlist>F</showinlist>
+    </customrecordcustomfield>
   </customrecordcustomfields>
   <permissions>
     <permission>

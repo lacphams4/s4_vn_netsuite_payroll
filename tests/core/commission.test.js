@@ -419,3 +419,24 @@ describe("simulate và định dạng số", () => {
 		expect(CE.fmt(999.995, "vi", 2)).toBe("1.000");
 	});
 });
+
+describe("uncredited (doanh số chưa ai được ghi nhận)", () => {
+	test("người bán chưa phân công và chứng từ không có người bán được gom riêng; người đã phân công không có mặt", () => {
+		const p = plan();
+		const lines = CE.normalizeLines(
+			[
+				row({ revenue: 10 * M, salesRep: "101" }),
+				row({ revenue: 3 * M, salesRep: "202" }),
+				row({ revenue: 2 * M, salesRep: "202" }),
+				row({ revenue: 1 * M, salesRep: null }),
+			],
+			p,
+			NOV
+		);
+		const out = CE.uncredited(lines, p, [asg("101")], NOV.to);
+		const by = Object.fromEntries(out.map((u) => [u.employee, u]));
+		expect(by["101"]).toBeUndefined();
+		expect(by["202"]).toEqual({ employee: "202", base: 5 * M, docs: 2 });
+		expect(by[""]).toEqual({ employee: "", base: 1 * M, docs: 1 });
+	});
+});

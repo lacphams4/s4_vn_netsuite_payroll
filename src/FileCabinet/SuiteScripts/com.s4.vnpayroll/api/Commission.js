@@ -524,6 +524,8 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 		// Kết quả theo kế hoạch
 		const produced = [];
 		const warnings = [];
+		const credited = new Set();
+		const loose = {};
 		for (const p of plans) {
 			const curLines = Engine.normalizeLines(planRows(p, data, period.from, period.to), p, { from: period.from, to: period.to });
 			const credits = Engine.credit(curLines, p, p.assignments, period.to);
@@ -536,6 +538,21 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 			for (const r of (out && out.results) || []) {
 				produced.push({ plan: p, result: r, credits });
 				for (const w of r.warnings || []) warnings.push({ code: w.code, vi: w.vi, en: w.en, employee: String(r.employee), plan: String(p.id) });
+			}
+			for (const c of credits) credited.add(String(c.employee));
+			for (const u of Engine.uncredited(curLines, p, p.assignments, period.to)) if (!loose[u.employee]) loose[u.employee] = u;
+		}
+		// Doanh số không ai được ghi nhận ở bất kỳ kế hoạch nào (người bán chưa phân công, chứng từ không có người bán)
+		const looseIds = Object.keys(loose).filter((e) => e && !credited.has(e));
+		const looseNames = looseIds.length ? employeeNames(looseIds) : {};
+		for (const u of Object.values(loose)) {
+			if (u.employee && credited.has(u.employee)) continue;
+			const who = u.employee && looseNames[u.employee] ? [looseNames[u.employee].code, looseNames[u.employee].name].filter(Boolean).join(" - ") : u.employee;
+			const amount = Engine.fmt(u.base, "vi", 0);
+			if (!u.employee) {
+				warnings.push({ code: "NO_SALES_REP", vi: `${u.docs} chứng từ (cơ sở ${amount}) không có người bán, không ai được ghi nhận`, en: `${u.docs} document(s) (base ${Engine.fmt(u.base, "en", 0)}) have no sales rep and were not credited` });
+			} else {
+				warnings.push({ code: "UNASSIGNED", employee: u.employee, vi: `Người bán ${who} chưa được phân công vào kế hoạch nào: ${u.docs} chứng từ, cơ sở ${amount}`, en: `Sales rep ${who} is not assigned to any plan: ${u.docs} document(s), base ${Engine.fmt(u.base, "en", 0)}` });
 			}
 		}
 		if (adj.skipped.length) warnings.push({ code: "ADJ_NO_PLAN", vi: `${adj.skipped.length} điều chỉnh không có kế hoạch phù hợp, chưa đưa vào`, en: `${adj.skipped.length} adjustment(s) without a matching plan were skipped` });
@@ -605,7 +622,11 @@ define(["N/runtime", "./Store", "./Clock", "../core/CommissionEngine", "../core/
 			}
 		}
 		if (more) return Object.assign(summary, counts, { employees: people.size, totalBase: 0, totalAmount: 0, more: true });
-		Store.submit("comm_run", run.id, { total_base: Math.round(totalBase * 100) / 100, total_amount: Math.round(totalAmount), employees: people.size, calc_at: new Date().toISOString() });
+		// Cảnh báo cấp bảng tính (không gắn kế hoạch) lưu lại để màn hình hiện cả sau khi tải lại
+		const runLevel = warnings.filter((w) => !w.plan).slice(0, 200);
+		Store.submit("comm_run", run.id, {
+			total_base: Math.round(totalBase * 100) / 100, total_amount: Math.round(totalAmount), employees: people.size, calc_at: new Date().toISOString(), warnings: JSON.stringify(runLevel),
+		});
 		return Object.assign(summary, counts, { employees: people.size, totalBase: Math.round(totalBase * 100) / 100, totalAmount: Math.round(totalAmount) });
 	}
 

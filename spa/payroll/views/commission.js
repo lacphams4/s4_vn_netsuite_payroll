@@ -133,6 +133,7 @@ export function mapRun(r) {
 		calcAt: str(rd(r, 'calcAt', 'calc_at')),
 		approvedByName: str(rd(r, 'approvedByName', 'approved_by_name')),
 		note: str(rd(r, 'note')),
+		warnings: arr(rd(r, 'warnings')).map((w) => (w && typeof w === 'object' ? {code: str(w.code), vi: str(w.vi), en: str(w.en)} : {code: '', vi: str(w), en: str(w)})),
 	};
 }
 
@@ -892,6 +893,7 @@ const TEXT = {
 				calculating: 'Đang tính hoa hồng...',
 				calculated: (n) => `Đã tính hoa hồng cho ${n} nhân viên.`,
 				calculatedNoCount: 'Đã tính hoa hồng.',
+				runWarnings: 'Doanh số chưa ai được ghi nhận',
 				confirmRecalc: (name) => `Tính lại bảng tính ${name}? Kết quả nháp hiện tại được thay bằng kết quả mới (điều chỉnh tay vẫn giữ).`,
 				confirmApprove: (name, amount) => `Duyệt bảng tính ${name}, tổng hoa hồng ${amount}? Bảng lương có kỳ chứa ngày cuối của bảng tính sẽ lấy số này.`,
 				approved: (name) => `Đã duyệt bảng tính ${name}.`,
@@ -1137,6 +1139,7 @@ const TEXT = {
 				calculating: 'Calculating commissions...',
 				calculated: (n) => `Commissions calculated for ${n} employees.`,
 				calculatedNoCount: 'Commissions calculated.',
+				runWarnings: 'Sales not credited to anyone',
 				confirmRecalc: (name) => `Recalculate ${name}? The current draft results are replaced (manual adjustments are kept).`,
 				confirmApprove: (name, amount) => `Approve ${name}, total commission ${amount}? The payroll batch whose period contains the end date will pick it up.`,
 				approved: (name) => `${name} approved.`,
@@ -1973,9 +1976,19 @@ export default function CommissionView({app}) {
 		);
 	};
 
+	// Cảnh báo cấp bảng tính: doanh số chưa ai được ghi nhận (người bán chưa phân công, chứng từ không có người bán)
+	const runWarns = run && run.warnings ? run.warnings : [];
 	const runTab = () => (
 		<div class="s4vp-cm">
 			<StatCards cards={statCards} />
+			{runWarns.length ? (
+				<div class="s4vp-cm-warn" role="note">
+					<b>{t.run.runWarnings}</b>
+					{runWarns.map((w, i) => (
+						<span key={`rw${i}`}>{localized(w) || w.code}</span>
+					))}
+				</div>
+			) : null}
 			<div class="s4vp-cols">
 				<div class="s4vp-col-main">
 					<Card flush={true} label={t.tabs.run}>
