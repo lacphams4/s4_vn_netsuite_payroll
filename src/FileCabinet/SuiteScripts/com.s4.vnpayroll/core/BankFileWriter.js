@@ -32,7 +32,13 @@ define(["./Money", "./Errors"], (Money, Errors) => {
 			.sort((a, b) => (String(a.code) < String(b.code) ? -1 : String(a.code) > String(b.code) ? 1 : 0));
 		const missing = rows.filter((e) => !String(e.bankAccount || "").trim()).map((e) => e.code);
 		if (missing.length) {
-			throw Errors.invalid(`Bank account number is missing for employees: ${missing.join(", ")}.`, `Thiếu số tài khoản ngân hàng của nhân viên: ${missing.join(", ")}.`);
+			// Liệt kê tối đa 20 mã cho dễ đọc; bảng lớn thì ghi số người còn lại
+			const shown = missing.slice(0, 20).join(", ");
+			const rest = missing.length - 20;
+			throw Errors.invalid(
+				`Bank account number is missing for ${missing.length} employee(s): ${shown}${rest > 0 ? ` and ${rest} more` : ""}.`,
+				`Thiếu số tài khoản ngân hàng của ${missing.length} nhân viên: ${shown}${rest > 0 ? ` và ${rest} người khác` : ""}.`
+			);
 		}
 		const prefix = (opts.lang || "vi") === "en" ? "Salary" : "Lương";
 		const month = monthLabel(batch.taxMonth, batch.periodId);
