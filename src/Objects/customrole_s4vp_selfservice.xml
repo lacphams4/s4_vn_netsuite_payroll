@@ -15,6 +15,14 @@
       <permlevel>VIEW</permlevel>
     </permission>
     <permission>
+      <permkey>ADMI_CUSTLIST</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>LIST_FILECABINET</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
       <permkey>LIST_SUBSIDIARY</permkey>
       <permlevel>VIEW</permlevel>
     </permission>
