@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_cm_credit">
+  <name>S4VP cm_credit</name>
+  <description>S4 VN Payroll code list cm_credit; values keep the Acumatica codes (R, T, F).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_cm_credit_r">
+      <value>R - Nhân viên kinh doanh trên chứng từ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_credit_t">
+      <value>T - Đội bán (% đóng góp)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_credit_f">
+      <value>F - Trường tùy chỉnh trên chứng từ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

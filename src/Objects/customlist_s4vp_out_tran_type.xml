@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_out_tran_type">
+  <name>S4VP out_tran_type</name>
+  <description>S4 VN Payroll code list out_tran_type; values keep the Acumatica codes (Build, WOCompl, ItemShip).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_out_tran_type_build">
+      <value>Build - Assembly Build</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_out_tran_type_wocompl">
+      <value>WOCompl - Work Order Completion</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_out_tran_type_itemship">
+      <value>ItemShip - Item Fulfillment</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

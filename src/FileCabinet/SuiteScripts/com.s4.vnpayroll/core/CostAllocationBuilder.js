@@ -1,7 +1,8 @@
 /**
  * Dòng phân bổ chi phí của một nhân viên (đặc tả mục 4.5.4 "nguồn nào đích đó" và 4.5.6 tài khoản chi phí).
  *
- * Thứ tự: thu nhập có đích riêng (dòng tay có chi nhánh / work center / phòng ban, dòng quy tắc sản lượng O, doanh số S) ->
+ * Thứ tự: thu nhập có đích riêng (hoa hồng C theo shares, dòng tay có chi nhánh / work center / phòng ban, dòng quy tắc sản
+ * lượng O, doanh số S) ->
  * dòng OT có dự án khi nguồn đã chọn không phải timesheet -> phần còn lại (GROSS) và BH phần DN (ERINS) chia theo đích
  * của phương pháp đã chọn. BH DN không đi theo "nguồn nào đích đó". Trích trước tháng 13 không phân bổ.
  *
@@ -22,7 +23,7 @@ define(["./Money", "./ProjectCostAllocator"], (Money, Allocator) => {
 
 	/**
 	 * @param {{grossPay, employerInsurance,
-	 *   earnings: Array<{earningType, amount, source (S/T/M), quantitySource, rateTable, project, task, costCode, branch, workCenter, sub, hours}>,
+	 *   earnings: Array<{earningType, amount, source (S/T/M/C), shares (C: [{sub, workCenter, branch, project, amount}]), quantitySource, rateTable, project, task, costCode, branch, workCenter, sub, hours}>,
 	 *   outputShares: Array<{rateTable, isSales, project, branch, workCenter, sub, amount}>,
 	 *   targets: Array (AllocationSourceResolver.resolve; đích có thể mang sub), defaultBranch, defaultWorkCenter,
 	 *   accounts: {workCenters, projects, departments: {ID: {account, byLabor: {E, C}, sub}} (CostAccountRules.buildMaps), laborType (E/C),
@@ -43,7 +44,11 @@ define(["./Money", "./ProjectCostAllocator"], (Money, Allocator) => {
 			earnings.forEach((e, idx) => {
 				if (D(e.amount).isZero()) return;
 				let own = [];
-				if (!blank(e.branch) || !blank(e.workCenter) || !blank(e.sub)) {
+				if (norm(e.source) === "C" && (e.shares || []).length) {
+					// Hoa hồng (docs/COMMISSION.md mục 7): đích theo phân đoạn của doanh thu được ghi nhận, trọng số = số tiền phần
+					own = e.shares.filter((s) => D(s.amount).gt(0))
+						.map((s) => withSub({ project: s.project || "", task: "", costCode: "", branch: s.branch || "", workCenter: s.workCenter || "", source: "S", weight: s.amount }, s.sub));
+				} else if (!blank(e.branch) || !blank(e.workCenter) || !blank(e.sub)) {
 					own = [withSub({ project: e.project || "", task: e.task || "", costCode: e.costCode || "", branch: e.branch || "", workCenter: e.workCenter || "", source: "S", weight: 1 }, e.sub)];
 				} else if (norm(e.quantitySource) === "O" && norm(e.source) === "S") {
 					own = (input.outputShares || []).filter((s) => blank(e.rateTable) || norm(s.rateTable) === norm(e.rateTable))

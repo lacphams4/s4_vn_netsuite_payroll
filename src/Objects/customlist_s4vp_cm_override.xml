@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_cm_override">
+  <name>S4VP cm_override</name>
+  <description>S4 VN Payroll code list cm_override; values keep the Acumatica codes (B, C).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_cm_override_b">
+      <value>B - Doanh số của cấp dưới</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_override_c">
+      <value>C - Hoa hồng của cấp dưới</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

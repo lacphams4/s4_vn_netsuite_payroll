@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_cm_window">
+  <name>S4VP cm_window</name>
+  <description>S4 VN Payroll code list cm_window; values keep the Acumatica codes (M, Q, Y).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_cm_window_m">
+      <value>M - Theo tháng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_window_q">
+      <value>Q - Lũy kế quý</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_window_y">
+      <value>Y - Lũy kế năm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

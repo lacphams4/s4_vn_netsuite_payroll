@@ -256,6 +256,29 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_oe_src_tran">
+      <label>Khóa giao dịch nguồn</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Source transaction line keys type:id:line separated by ; (entries generated from transactions).</description>
+      <help>Source transaction line keys type:id:line separated by ; (entries generated from transactions).</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>LOCKED</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_oe_src">
+      <label>Nguồn sản lượng</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>[customrecord_s4vp_out_source]</selectrecordtype>
+      <description>Nguồn sản lượng</description>
+      <help>Nguồn sản lượng</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>LOCKED</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
   </customrecordcustomfields>
   <permissions>
     <permission>

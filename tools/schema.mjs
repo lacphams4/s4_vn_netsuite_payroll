@@ -53,6 +53,8 @@ export const lists = {
 	split_method: ["Cách chia tiền tổ", { D: "D - Ngày công", F: "F - Ngày công x hệ số", H: "H - Giờ", P: "P - Tỷ lệ cố định", E: "E - Chia đều" }],
 	output_type: ["Loại phiếu sản lượng", { I: "I - Cá nhân", T: "T - Tổ" }],
 	output_status: ["Trạng thái phiếu sản lượng", { H: "H - Tạm giữ", P: "P - Chờ duyệt", A: "A - Đã duyệt", C: "C - Đã vào bảng lương" }],
+	// Mã = transaction.type trong SuiteQL (docs/COMMISSION.md mục 9)
+	out_tran_type: ["Loại giao dịch sinh sản lượng", { Build: "Build - Assembly Build", WOCompl: "WOCompl - Work Order Completion", ItemShip: "ItemShip - Item Fulfillment" }],
 	wp_doc_type: ["Loại giấy phép lao động", { P: "P - Giấy phép", E: "E - Giấy xác nhận miễn" }],
 	wp_issue_type: ["Loại cấp giấy phép", { N: "N - Cấp mới", X: "X - Gia hạn", R: "R - Cấp lại" }],
 	wp_status: ["Trạng thái giấy phép", { D: "D - Đang chuẩn bị", S: "S - Đã nộp", A: "A - Còn hiệu lực", E: "E - Hết hạn", V: "V - Thu hồi" }],
@@ -686,6 +688,22 @@ export const records = [
 			["total", "Thành tiền", "currency", { display: "LOCKED" }], ["split_total", "Tổng tiền chia", "currency", { display: "LOCKED" }],
 			["department", "Phòng ban", "select:department"], ["reject_reason", "Lý do từ chối gần nhất", "textarea", { display: "LOCKED" }],
 			["void_reason", "Lý do hủy phiếu", "textarea", { display: "LOCKED" }],
+			// Phiếu sinh từ giao dịch (api/OutputSources): khóa "type:id:line" của các dòng nguồn, cách nhau bởi ";"
+			["src_tran", "Khóa giao dịch nguồn", "text", { display: "LOCKED", help: "Source transaction line keys type:id:line separated by ; (entries generated from transactions)." }],
+			["src", "Nguồn sản lượng", "select:rec:out_source", { display: "LOCKED" }],
+		],
+	},
+	{
+		id: "out_source", prefix: "osr", name: "Nguồn sản lượng từ giao dịch", screen: "VP308000", perms: SETUP, includeName: true,
+		desc: "Output source: generates on-hold output entries from NetSuite production transactions (assembly build, work order completion, item fulfillment). Record name = source ID.",
+		fields: [
+			["subsidiary", "Công ty con", "select:subsidiary", { req: true }],
+			["tran_type", "Loại giao dịch", "select:list:out_tran_type", { req: true }],
+			["employee_field", "Trường nhân viên trên giao dịch", "text", { help: "Script ID of the body (custbody...) or line (custcol...) field holding the employee (List/Record: Employee)." }],
+			["team_field", "Trường tổ trên giao dịch", "text", { help: "Optional script ID of the body (custbody...) or line (custcol...) field holding the team (List/Record: S4VP Tổ đội); lines with a team become team entries." }],
+			["rate_table", "Bảng đơn giá", "select:rec:rate_table", { req: true }],
+			["qty_sign", "Dấu số lượng (1 / -1)", "int", { help: "Multiplier of the transaction line quantity: 1, or -1 for item fulfillments (shipped quantity is negative). Empty: -1 for item fulfillment, 1 otherwise." }],
+			["department_from_line", "Phòng ban theo dòng giao dịch", "check", { def: "T", help: "Use the department of the transaction line as the department of the output entry." }],
 		],
 	},
 	{

@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_cm_trigger">
+  <name>S4VP cm_trigger</name>
+  <description>S4 VN Payroll code list cm_trigger; values keep the Acumatica codes (I, P).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_cm_trigger_i">
+      <value>I - Khi xuất hóa đơn</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_trigger_p">
+      <value>P - Khi thu tiền</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

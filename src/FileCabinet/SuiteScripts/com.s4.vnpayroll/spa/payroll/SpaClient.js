@@ -834,6 +834,70 @@ input[type="number"].s4vp-in{padding-right:4px}
 .s4vp-ss-opt:hover,.s4vp-ss-opt.s4vp-on{background:var(--s4vp-accent-soft)}
 .s4vp-ss-opt.s4vp-sel{font-weight:600;color:var(--s4vp-accent-dark)}
 .s4vp-ss-note{padding:6px 10px;font-size:12px;color:var(--s4vp-sub)}
+/* Commission (views/commission.js): prefix s4vp-cm- */
+.s4vp-cm{display:flex;flex-direction:column;gap:var(--s4vp-gap);min-width:0}
+.s4vp-cm .s4vp-tbl td{font-size:13px;padding:6px 8px}
+.s4vp-cm .s4vp-tbl th{padding:6px 8px}
+.s4vp-cm .s4vp-tbl th:first-child,.s4vp-cm .s4vp-tbl td:first-child{padding-left:12px}
+.s4vp-cm .s4vp-tbl th:last-child,.s4vp-cm .s4vp-tbl td:last-child{padding-right:12px}
+.s4vp-cm .s4vp-tbl-bar{padding:6px 12px}
+.s4vp-cm .s4vp-tbl-bar .s4vp-in{min-height:32px}
+.s4vp-cm .s4vp-tbl-bar .s4vp-btn{min-height:32px}
+.s4vp-cm .s4vp-tbl .s4vp-badge{padding:2px 7px}
+.s4vp-cm .s4vp-tbl-sticky tr.s4vp-total td{position:sticky;bottom:0;background:#F7F8F9;box-shadow:inset 0 1px 0 #D9DEE2}
+.s4vp-cm .s4vp-empty{padding:18px 12px}
+.s4vp-cm-month{display:inline-flex}
+.s4vp-cm-month .s4vp-in{min-height:36px}
+.s4vp-cm-side > .s4vp-side{max-height:max(316px,calc(100vh - 300px));overflow-y:auto;gap:10px}
+.s4vp-cm-side > .s4vp-side > *{flex-shrink:0}
+.s4vp-cm-side .s4vp-tabs{gap:0}
+.s4vp-cm-body{display:flex;flex-direction:column;gap:8px;min-width:0}
+.s4vp-cm-body > *{flex-shrink:0}
+.s4vp-cm-info{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--s4vp-line-soft);border-bottom:1px solid var(--s4vp-line-soft)}
+.s4vp-cm-info .s4vp-line{align-items:baseline;font-size:13px}
+.s4vp-cm-val{text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0}
+.s4vp-cm-strong{font-weight:700}
+.s4vp-cm-sub{font-size:14px;font-weight:700}
+.s4vp-cm-sub .s4vp-small{font-weight:400}
+.s4vp-cm-box{border:1px solid var(--s4vp-line);border-radius:10px;overflow:hidden;min-width:0}
+.s4vp-cm-box .s4vp-tbl-bar{padding:6px 8px}
+.s4vp-cm-side .s4vp-cm-box .s4vp-tbl td{font-size:13px;padding:5px 6px}
+.s4vp-cm-side .s4vp-cm-box .s4vp-tbl th{padding:5px 6px}
+.s4vp-cm-steps{margin:0;padding:0 0 0 20px;display:flex;flex-direction:column;gap:4px;font-size:13px;font-variant-numeric:tabular-nums}
+.s4vp-cm-steps li{overflow-wrap:anywhere}
+.s4vp-cm-who{display:flex;flex-direction:column;gap:1px;min-width:0}
+.s4vp-cm-who-n{font-weight:600;overflow-wrap:anywhere}
+.s4vp-cm-clip{display:block;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4vp-cm-warn{display:flex;flex-direction:column;gap:2px;font-size:13px;padding:8px 10px;border-radius:8px;background:var(--s4vp-warn-bg);color:var(--s4vp-warn)}
+.s4vp-cm-warn.s4vp-cm-bad{background:var(--s4vp-err-bg);color:var(--s4vp-err)}
+.s4vp-cm-note{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--s4vp-info-bg);color:var(--s4vp-info)}
+.s4vp-cm-err{color:var(--s4vp-err);font-size:12px}
+.s4vp-cm-dirty{font-size:12px;font-weight:600;color:#8A4B00}
+.s4vp-cm-adj{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 10px}
+.s4vp-cm-pair{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px 10px;align-items:start}
+.s4vp-cm-form{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px 12px}
+.s4vp-cm-methods{margin:0;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--s4vp-sub)}
+.s4vp-cm-method{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px;padding:3px 6px;border-radius:6px}
+.s4vp-cm-method dt{font-weight:600;margin:0}
+.s4vp-cm-method dd{margin:0}
+.s4vp-cm-method.s4vp-on{background:var(--s4vp-accent-soft);color:var(--s4vp-accent-dark)}
+.s4vp-cm-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.s4vp-cm-chip{display:inline-flex;align-items:center;gap:2px;font-size:13px;padding:0 2px 0 10px;min-height:30px;border-radius:999px;background:var(--s4vp-accent-soft);color:var(--s4vp-accent-dark);max-width:100%}
+.s4vp-cm-chip > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s4vp-cm-chip-x{background:none;border:0;min-width:26px;min-height:26px;border-radius:50%;font-size:15px;line-height:1;color:inherit}
+.s4vp-cm-chip-x:hover{background:rgba(0,0,0,.08)}
+.s4vp-cm-chip-add{flex:1 1 140px;min-width:140px;max-width:240px}
+.s4vp-cm-chip-add .s4vp-in{min-height:30px}
+.s4vp-cm-edit .s4vp-tbl-wrap{overflow:visible}
+.s4vp-cm-edit .s4vp-tbl td{padding:4px 6px}
+.s4vp-cm-edit .s4vp-tbl .s4vp-in{min-height:32px;padding:0 8px}
+.s4vp-cm-pad{padding:4px 8px 6px}
+.s4vp-cm-dlg-l{margin-right:auto;display:inline-flex}
+.s4vp-cm-imp-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px 12px;align-items:start}
+.s4vp-cm-file{padding:5px 8px}
+.s4vp-cm-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 10px}
+.s4vp-cm-map .s4vp-in{min-height:32px}
+@media (max-width:812px){.s4vp-cm-adj,.s4vp-cm-imp-top,.s4vp-cm-pair{grid-template-columns:1fr}.s4vp-cm-method{grid-template-columns:1fr}}
 `;
     let done = false;
     // Chèn CSS một lần; gọi ở đầu mỗi lần vẽ khung cũng không sao (đã có thẻ thì bỏ qua)
@@ -918,7 +982,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return { rows: out, count: out.length };
     }
 
-    const TEXT$d = {
+    const TEXT$e = {
         vi: {
             search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}`,
             choose: 'Chọn...', filter: 'Gõ để lọc', noMatch: 'Không có mục nào khớp', more: (n) => `Còn ${n} mục, gõ thêm để lọc`, required: 'Bắt buộc', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
@@ -968,7 +1032,7 @@ input[type="number"].s4vp-in{padding-right:4px}
      * làm nút quay lại; hoặc truyền thẳng `back` {label, onClick}. Tiêu đề dài bị cắt bằng dấu ba chấm, có title đầy đủ.
      */
     function PageHeader({ crumbs, back, title, status, sub, actions }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         const parents = (crumbs || []).filter((c) => c && c.onClick);
         const up = back && back.onClick ? back : parents.length ? parents[parents.length - 1] : null;
         const upLabel = up ? (blank$4(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
@@ -1036,7 +1100,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     // ------------------------------------------------------------------ thanh bước, thẻ số, bộ lọc nhanh, tab
     /** steps: [{label, note, state, noteTone, onClick}]; state: 'done' | 'current' | 'todo'. */
     function Stepper({ steps, label }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         return (jsx("ol", { class: "s4vp-steps", "aria-label": label || t.steps, children: (steps || []).filter(Boolean).map((s, i) => {
                 const state = s.state === 'done' || s.state === 'current' ? s.state : 'todo';
                 const attrs = { class: cx$1('s4vp-step', `s4vp-step-${state}`) };
@@ -1085,7 +1149,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$1('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
     }
     function Empty({ text: label }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         return jsx("div", { class: "s4vp-empty", children: text(label) || t.empty });
     }
     // ------------------------------------------------------------------ ô nhập
@@ -1244,7 +1308,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return text(spec.show(v));
     }
     function TypedImpl(p) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         const kind = TYPED[p.kind] ? p.kind : 'date';
         const spec = TYPED[kind];
         const [, redraw] = core.useState(0);
@@ -1387,7 +1451,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     const SEARCH_LIMIT = 200;
     function SearchSelectImpl(p) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         const [open, setOpen] = core.useState(false);
         const [query, setQuery] = core.useState('');
         const [active, setActive] = core.useState(0);
@@ -1581,6 +1645,13 @@ input[type="number"].s4vp-in{padding-right:4px}
     function Select(props) {
         return jsx(SelectImpl, { ...props });
     }
+    /**
+     * Ô chọn có tìm kiếm cho danh sách dài (nhân viên, dự án, tài khoản...): cùng props với Select. Bấm mở khung có ô lọc (không phân
+     * biệt dấu, khớp nhãn và mã); mũi tên lên / xuống chọn, Enter lấy, Esc đóng; hiện tối đa 200 mục khớp.
+     */
+    function SearchSelect(props) {
+        return jsx(SearchSelectImpl, { ...props });
+    }
     /** Chọn Select hay SearchSelect theo độ dài danh sách (quá 15 mục thì có ô tìm). */
     function AutoSelect(props) {
         return (props.options || []).length > 15 ? jsx(SearchSelectImpl, { ...props }) : jsx(SelectImpl, { ...props });
@@ -1590,12 +1661,12 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     /** Ô tìm kiếm: {value, onInput(chuỗi), placeholder, width, label}. */
     function SearchBox({ value, onInput, placeholder, width, label }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         return jsx(InputImpl, { type: "search", value: value, onInput: onInput, placeholder: placeholder || t.search, ariaLabel: label || placeholder || t.search, width: width || 260 });
     }
     /** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. required: thêm dấu * đỏ sau nhãn. */
     function Field({ label, children, hint, required }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         return (jsxs("label", { class: "s4vp-field", children: [jsxs("span", { children: [text(label), required ? jsx("span", { class: "s4vp-req", title: t.required, children: ' *' }) : null] }), children, blank$4(hint) || hint === '' ? null : jsx("span", { class: "s4vp-field-hint", children: hint })] }));
     }
     // ------------------------------------------------------------------ bảng
@@ -1619,7 +1690,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     // nên ô ghi lại thời điểm bấm và dòng bỏ qua lượt bấm vừa được ô nhận.
     let cellClickAt = 0;
     function TableImpl({ columns, rows, keyOf, onRowClick, selectedKey, total, empty, search, maxHeight, toolbar, searchPlaceholder, label }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         const [query, setQuery] = core.useState('');
         const cols = (columns || []).filter(Boolean);
         const all = Array.isArray(rows) ? rows : [];
@@ -1685,7 +1756,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     // ------------------------------------------------------------------ hộp thoại, khung bên phải
     /** Hộp thoại giữa màn hình; actions: mảng nút ở chân; onClose: nút đóng góc phải và phím Esc. */
     function Dialog({ title, children, actions, onClose, width }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         const panel = { class: 's4vp-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': text(title) };
         if (width)
             panel.style = { width: px(width) };
@@ -1693,11 +1764,11 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     /** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols"> (tỷ lệ 6:4), hoặc trong <div class="s4vp-col-side"> khi cột phải có nhiều khối. */
     function SidePanel({ title, sub, onClose, children, actions }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         return (jsxs("aside", { class: "s4vp-side", "aria-label": text(title), children: [jsxs("div", { class: "s4vp-side-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-side-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-side-s", children: sub })] }), jsxs("div", { class: "s4vp-actions", children: [keyed(actions), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] })] }), children] }));
     }
 
-    const TEXT$c = {
+    const TEXT$d = {
         vi: {
             title: 'Việc hôm nay',
             weekdays: ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
@@ -2086,7 +2157,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         };
     }
     function HomeView({ app }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const role = roleKey(boot.user);
@@ -2235,7 +2306,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                                     ], children: [shownRuns.length ? (jsx("div", { style: S.runList, children: shownRuns.slice(0, RUN_LIMIT).map((r, i) => (jsxs("div", { style: S.run, children: [jsxs("div", { style: S.runHead, children: [jsx("div", { style: S.runTitle, children: r.title }), jsx("div", { class: "s4vp-muted", style: S.small, children: r.sub })] }), r.step ? (jsxs("div", { style: S.runProgress, children: [jsx("div", { style: S.small, children: r.step }), jsx("div", { role: "img", "aria-label": t.progressLabel(r.done, r.total), style: S.track, children: jsx("div", { style: S.bar(r.percent) }) })] })) : null, jsxs("div", { style: S.runEnd, children: [r.badge ? jsx(Badge, { text: r.badge.text, tone: r.badge.tone }) : null, jsx(Button, { kind: i === 0 && r.group === 'running' ? 'primary' : 'default', label: r.group === 'running' ? t.resume : t.open, ariaLabel: `${r.group === 'running' ? t.resume : t.open}: ${r.title}`, onClick: () => go(r.go) })] })] }, r.key))) })) : (jsx(Empty, { text: inGroup.length ? t.runNoMatch : t.runEmpty[activeGroup] })), shownRuns.length > RUN_LIMIT || (activeGroup !== 'upcoming' && count(runCounts[activeGroup]) > shownRuns.length && !query) ? (jsxs("div", { style: S.runBar, children: [jsx("span", { class: "s4vp-small", children: t.runMore(Math.min(shownRuns.length, RUN_LIMIT), Math.max(count(runCounts[activeGroup]), shownRuns.length)) }), jsx(Button, { kind: "link", label: t.seeAll, onClick: () => app.go('payrollList') })] })) : null] }), jsx(Card, { title: t.todos(todos.length), sub: t.todoSub, flush: true, children: jsx(Table, { columns: todoColumns, rows: todos, keyOf: (r) => r.id, onRowClick: (r) => go(r), empty: t.todoEmpty, search: true, searchPlaceholder: t.todoSearch, label: t.todos(todos.length) }) })] }), jsxs(SidePanel, { title: t.deadlines, sub: period ? t.deadlinesSub(period.code) : '', children: [sideItems.length ? (sideItems.map((d, i) => (jsxs("div", { style: S.deadline(i === sideItems.length - 1 && data.statutoryDeadlines !== false), children: [jsxs("div", { style: S.deadlineTitle(d.tone), children: [jsx("span", { children: d.title }), d.badge ? jsx(Badge, { text: d.badge, tone: d.tone }) : null] }), jsx("div", { class: "s4vp-muted", style: S.small, children: d.text }), d.link ? (jsx("div", { style: S.linkRow, children: jsx(Button, { kind: "link", label: d.link.label, ariaLabel: `${d.link.label}: ${d.title}`, onClick: () => go(d.link.go) }) })) : null] }, d.key)))) : (jsx("div", { class: "s4vp-muted", style: S.small, children: t.deadlineEmpty })), data.statutoryDeadlines === false ? jsx("div", { class: "s4vp-small", children: t.noStatutory }) : null] })] })] }));
     }
 
-    const TEXT$b = {
+    const TEXT$c = {
         vi: {
             crumb: 'Chấm công',
             title: (code) => `Công kỳ ${code}`,
@@ -2552,7 +2623,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     /** Chữ trong ô: ký hiệu; ô chờ xử lý mà chưa có ký hiệu hiện "!". */
     const cellText = (c) => (c.s === '' && (c.p || c.hp) ? '!' : c.k === 'M' ? '·' : c.s);
     function AttendanceView({ app }) {
-        const t = pick(TEXT$b);
+        const t = pick(TEXT$c);
         ensureGridCss();
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
@@ -3167,7 +3238,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb }, { label: t.periodCrumb(period.code) }], title: t.title(period.code), status: status, sub: subLine, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: menuItems }), showRebuild ? jsx(Button, { label: t.act.rebuild, disabled: !canEdit || busy, title: editTitle, onClick: build }) : null, primary] }), jobCard, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: gridCard }), panel || excCard ? (jsxs("div", { class: "s4vp-col-side", children: [panel, excCard] })) : null] }), dialog] }));
     }
 
-    const TEXT$a = {
+    const TEXT$b = {
         vi: {
             title: 'Chạy lương',
             sub: 'Bảng lương theo kỳ của công ty con đang chọn. Bấm một dòng để mở.',
@@ -3235,7 +3306,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     };
     const SUM_KEYS = ['emp_count', 'gross', 'ee_ins', 'er_ins', 'pit', 'net'];
     function PayrollListView({ app }) {
-        const t = pick(TEXT$a);
+        const t = pick(TEXT$b);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const periods = Array.isArray(boot.periods) ? boot.periods : [];
@@ -3327,7 +3398,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                     ] }), jsx(Card, { flush: true, label: t.title, children: jsx(Table, { columns: columns, rows: data, keyOf: (r) => r.id, onRowClick: (r) => app.go('payrollRun', { id: r.id }), total: total, empty: t.empty, search: true, searchPlaceholder: t.search, toolbar: jsx(AutoSelect, { value: period, onInput: setPeriod, options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 300 }) }) }), dialog ? (jsxs(Dialog, { title: t.newBatch, onClose: () => setDialog(false), actions: [jsx(Button, { label: t.cancel, onClick: () => setDialog(false) }), jsx(Button, { label: t.create, kind: "primary", disabled: !form.period || !!app.busy, onClick: create })], children: [jsx(Field, { label: t.period, required: true, children: jsx(AutoSelect, { value: form.period, onInput: setField('period'), options: periodOptions, placeholder: t.pickPeriod }) }), jsx(Field, { label: t.description, hint: t.descriptionHint, children: jsx(TextInput, { value: form.description, onInput: setField('description'), onEnter: create }) })] })) : null] }));
     }
 
-    const TEXT$9 = {
+    const TEXT$a = {
         vi: {
             title: 'Phân tích chi phí lương',
             month: 'Tháng',
@@ -3814,7 +3885,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     // ------------------------------------------------------------------ màn hình
     function LaborAnalyticsView({ app }) {
-        const t = pick(TEXT$9);
+        const t = pick(TEXT$a);
         const user = (app.boot && app.boot.user) || {};
         const allowed = user.role === 'administrator' || user.isAccountant === true || user.role === 'customrole_s4vp_accountant';
         const subsidiary = app.subsidiary || '';
@@ -4173,7 +4244,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return (jsxs(Page, { children: [header, jsxs("div", { class: loading ? 's4vp-la s4vp-la-stale' : 's4vp-la', children: [error ? (jsxs("div", { class: "s4vp-la-note s4vp-la-note-error", role: "alert", children: [jsx("span", { children: error }), jsx(Button, { label: t.retry, small: true, onClick: reload })] })) : null, has('FACTS_OUTDATED') && !noFacts ? (jsxs("div", { class: "s4vp-la-note", role: "status", children: [jsx("span", { children: t.outdated }), jsx(Button, { label: t.rebuildNow, small: true, onClick: () => rebuild(curMonth) })] })) : null, noFacts ? (jsxs(Card, { title: t.noFactsTitle, tone: "warn", children: [jsx("div", { children: t.noFacts }), jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { label: t.rebuildNow, kind: "primary", onClick: () => rebuild(curMonth) }), jsx(Button, { label: t.goPayroll, onClick: () => app.go('payrollList', {}) })] })] })) : null, noGl && !noFacts ? (jsx("div", { class: "s4vp-la-note s4vp-la-note-info", role: "status", children: jsx("span", { children: t.noGl }) })) : null, noCompare && !noFacts ? (jsx("div", { class: "s4vp-la-note s4vp-la-note-info", role: "status", children: jsx("span", { children: t.noCompare(cmpName) }) })) : null, noFacts ? null : jsx(StatCards, { cards: cards }), noFacts && !months.length ? null : (jsxs("div", { class: "s4vp-cols s4vp-la-pair", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { title: t.trend.title, children: jsx(TrendChart, { months: months, selected: curMonth, compareMonth: noCompare ? '' : cmpMonth, noGl: noGl, onPick: (m) => go({ month: m }), t: t }) }) }), noFacts ? null : (jsx("div", { class: "s4vp-col-side", children: jsx(Card, { title: noCompare ? t.bridge.title : t.bridge.titleFor(cmpName, monthLabel$1(curMonth)), children: noCompare ? jsx(Empty, { text: t.bridge.none }) : jsx(BridgeChart, { bridge: d.bridge, t: t }) }) }))] })), noFacts ? null : (jsx(Card, { title: t.breakdown.title, sub: t.breakdown.sub, flush: true, children: jsx(Table, { columns: breakdownCols, rows: bdRows, total: bdRows.length ? bdTotal : null, search: true, searchPlaceholder: t.breakdown.search, empty: t.breakdown.empty, maxHeight: 372, label: t.breakdown.title, toolbar: jsx(Chips, { items: dimList.map((k) => ({ value: k, label: t.dims[k] })), value: shownDim, onPick: (k) => k !== dim && go({ dim: k }), label: t.dimLabel }), onRowClick: openDrill, selectedKey: drill ? drill.row.id : '' }) })), noFacts ? null : (jsxs("div", { class: "s4vp-cols s4vp-la-pair", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { title: t.pnl.title, sub: t.pnl.sub, flush: true, actions: [jsx(Button, { label: t.csv, small: true, onClick: exportPnl, disabled: !pnlRows.length })], children: jsx(Table, { columns: pnlCols, rows: pnlRows, search: true, searchPlaceholder: t.pnl.search, label: t.pnl.title }) }) }), jsx("div", { class: "s4vp-col-side", children: jsxs(Card, { title: t.recon.title, sub: t.recon.sub, tone: noGl || recOk || !recRows.length ? '' : 'warn', flush: true, actions: recActions, children: [jsx("div", { class: "s4vp-la-summary", children: recSummary }), recShown && recRows.length ? jsx(Table, { columns: recCols, rows: recRows, total: recTotal, search: true, searchPlaceholder: t.recon.search, maxHeight: 300, label: t.recon.title }) : null] }) })] }))] }), drillDialog] }));
     }
 
-    const TEXT$8 = {
+    const TEXT$9 = {
         vi: {
             title: 'Nhân sự',
             sub: 'Tìm một người, xem việc sắp đến hạn. Bấm một dòng để mở hồ sơ.',
@@ -4521,7 +4592,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     };
     const blank$3 = (v) => v === null || v === undefined || v === '';
     const isIso = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
-    const str = (v) => (blank$3(v) ? '' : String(v));
+    const str$1 = (v) => (blank$3(v) ? '' : String(v));
     const nextDay = (iso) => {
         if (!isIso(iso))
             return '';
@@ -4592,7 +4663,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             case 'permitExpiry':
                 return { title: t.tl.permitExpiry(ev.ref || ''), detail: '' };
             default:
-                return { title: str(ev.kind), detail: '' };
+                return { title: str$1(ev.kind), detail: '' };
         }
     }
     const newProfileRecord = (boot) => {
@@ -4605,7 +4676,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     };
     // ------------------------------------------------------------------ danh sách
     function EmployeeList({ app }) {
-        const t = pick(TEXT$8);
+        const t = pick(TEXT$9);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const [typing, setTyping] = core.useState('');
@@ -4726,7 +4797,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     // ------------------------------------------------------------------ hồ sơ một người
     function EmployeeCard({ app, id }) {
-        const t = pick(TEXT$8);
+        const t = pick(TEXT$9);
         const boot = app.boot || {};
         const params = (app.route && app.route.params) || {};
         const [data, setData] = core.useState(null);
@@ -4855,9 +4926,9 @@ input[type="number"].s4vp-in{padding-right:4px}
         };
         const numOrNull = (k) => (blank$3(formRef.current[k]) ? null : toNumber(formRef.current[k]));
         const F = (k, label, control, hint) => (jsx(Field, { label: label, hint: errs[k] ? jsx("span", { class: "s4vp-hr-err", children: errs[k] }) : hint, children: control }));
-        const txt = (k, extra) => jsx(TextInput, { value: str(form[k]), onInput: setField(k), ...(extra || {}) });
-        const dat = (k, extra) => jsx(DateInput, { value: str(form[k]), onInput: setField(k), ...(extra || {}) });
-        const amt = (k, extra) => jsx(MoneyInput, { value: str(form[k]), onInput: setField(k), decimals: 0, ...(extra || {}) });
+        const txt = (k, extra) => jsx(TextInput, { value: str$1(form[k]), onInput: setField(k), ...(extra || {}) });
+        const dat = (k, extra) => jsx(DateInput, { value: str$1(form[k]), onInput: setField(k), ...(extra || {}) });
+        const amt = (k, extra) => jsx(MoneyInput, { value: str$1(form[k]), onInput: setField(k), decimals: 0, ...(extra || {}) });
         const dialogActions = (buttons) => [jsx(Button, { label: t.act.cancel, onClick: close, disabled: saving })].concat(buttons);
         const serverBox = errs.server ? jsx("div", { class: "s4vp-hr-errbox", role: "alert", children: errs.server }) : null;
         // -------------------------------------------------------------- điều chỉnh lương, quyết định
@@ -4866,8 +4937,8 @@ input[type="number"].s4vp-in{padding-right:4px}
             ensureLookups();
             if (d) {
                 open('decision', { id: d.id }, {
-                    type: d.type || 'T', number: str(d.number), sign_date: str(d.sign_date), effective: str(d.effective), new_department: str(d.new_department), new_title: str(d.new_title),
-                    new_salary: str(d.new_salary), new_ins_wage: str(d.new_ins_wage), new_allowance: str(d.new_allowance), note: str(d.note),
+                    type: d.type || 'T', number: str$1(d.number), sign_date: str$1(d.sign_date), effective: str$1(d.effective), new_department: str$1(d.new_department), new_title: str$1(d.new_title),
+                    new_salary: str$1(d.new_salary), new_ins_wage: str$1(d.new_ins_wage), new_allowance: str$1(d.new_allowance), note: str$1(d.note),
                 });
             }
             else
@@ -4908,19 +4979,19 @@ input[type="number"].s4vp-in{padding-right:4px}
         };
         const applyDecision = (d) => app.confirm(t.confirm.apply(d.number), () => act({ action: 'hrApplyDecision', id: d.id }, t.done.applied));
         // -------------------------------------------------------------- hợp đồng
-        const contractBlank = () => ({ number: '', type: 'F', sign_date: '', effective: today, expiry: '', title: data.title || '', base_salary: pay && comp ? str(comp.base_salary) : '', insurance_wage: pay && comp ? str(comp.insurance_wage) : '', note: '' });
+        const contractBlank = () => ({ number: '', type: 'F', sign_date: '', effective: today, expiry: '', title: data.title || '', base_salary: pay && comp ? str$1(comp.base_salary) : '', insurance_wage: pay && comp ? str$1(comp.insurance_wage) : '', note: '' });
         const openContract = (mode, c) => {
             if (mode === 'new')
                 open('contract', { mode }, contractBlank());
             else if (mode === 'appendix')
                 open('contract', { mode, parent: c.id, parentNumber: c.number }, { number: '', sign_date: '', effective: today, title: '', base_salary: '', insurance_wage: '', note: '' });
             else if (mode === 'renew') {
-                open('contract', { mode }, Object.assign(contractBlank(), { type: c.type === 'P' ? 'F' : c.type || 'F', effective: nextDay(c.expiry) || today, title: str(c.title) || data.title || '', base_salary: str(c.base_salary), insurance_wage: str(c.insurance_wage) }));
+                open('contract', { mode }, Object.assign(contractBlank(), { type: c.type === 'P' ? 'F' : c.type || 'F', effective: nextDay(c.expiry) || today, title: str$1(c.title) || data.title || '', base_salary: str$1(c.base_salary), insurance_wage: str$1(c.insurance_wage) }));
             }
             else {
                 open('contract', { mode: 'edit', id: c.id, approved: c.status !== 'D', parent: c.parent || '', parentNumber: c.parentNumber }, {
-                    number: str(c.number), type: c.type || 'F', sign_date: str(c.sign_date), effective: str(c.effective), expiry: str(c.expiry), title: str(c.title), base_salary: str(c.base_salary),
-                    insurance_wage: str(c.insurance_wage), note: str(c.note),
+                    number: str$1(c.number), type: c.type || 'F', sign_date: str$1(c.sign_date), effective: str$1(c.effective), expiry: str$1(c.expiry), title: str$1(c.title), base_salary: str$1(c.base_salary),
+                    insurance_wage: str$1(c.insurance_wage), note: str$1(c.note),
                 });
             }
         };
@@ -4967,7 +5038,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         // -------------------------------------------------------------- người phụ thuộc
         const openDependent = (d, ending) => {
             if (d)
-                open('dependent', { id: d.id }, { name: str(d.name), relationship: str(d.relationship), birth_date: str(d.birth_date), tax_code: '', from: str(d.from), to: ending && !d.to ? today : str(d.to) });
+                open('dependent', { id: d.id }, { name: str$1(d.name), relationship: str$1(d.relationship), birth_date: str$1(d.birth_date), tax_code: '', from: str$1(d.from), to: ending && !d.to ? today : str$1(d.to) });
             else
                 open('dependent', null, { name: '', relationship: '', birth_date: '', tax_code: '', from: today, to: '' });
         };
@@ -4991,8 +5062,8 @@ input[type="number"].s4vp-in{padding-right:4px}
         const openAllocLines = (v) => {
             ensureLookups();
             open('allocLines', { id: v.id, nbr: v.versionNbr }, {
-                reason: str(v.reason),
-                lines: (v.lines || []).map((l) => ({ project: str(l.project), department: str(l.sub), location: str(l.branch), work_center: str(l.workCenter), percent: str(l.percent) })),
+                reason: str$1(v.reason),
+                lines: (v.lines || []).map((l) => ({ project: str$1(l.project), department: str$1(l.sub), location: str$1(l.branch), work_center: str$1(l.workCenter), percent: str$1(l.percent) })),
             });
         };
         const setLine = (i, k) => (v) => {
@@ -5192,7 +5263,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             const tools = canEdit ? bar([
                 sm(t.act.addPermit, openPermit, 'primary'),
                 st === 'D' ? sm(t.act.submit, () => permitOp(w, 'submit')) : null,
-                st === 'D' || st === 'S' ? sm(t.act.issue, () => open('permitIssue', { id: w.id, name: w.name, docType: w.doc_type }, { permitNo: str(w.permit_no), issued: today })) : null,
+                st === 'D' || st === 'S' ? sm(t.act.issue, () => open('permitIssue', { id: w.id, name: w.name, docType: w.doc_type }, { permitNo: str$1(w.permit_no), issued: today })) : null,
                 st === 'A' || st === 'E' ? sm(t.act.extend, () => permitOp(w, 'extend')) : null,
                 st === 'A' ? sm(t.act.revoke, () => app.confirm(t.confirm.revoke(w.permit_no || w.name), () => permitOp(w, 'revoke')), 'danger') : null,
                 w ? sm(t.card.openRecord, () => openRecord('customrecord_s4vp_work_permit', w.id), 'ghost') : null,
@@ -5245,7 +5316,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                 const org = ['H', 'T', 'P'].indexOf(type) >= 0;
                 const payType = pay && (org || type === 'S');
                 const cur = (v) => (comp && !blank$3(v) ? t.f.current(money(v)) : '');
-                return (jsxs(Dialog, { title: isRaise ? t.dlg.raise : dlg.id ? t.dlg.decisionEdit : t.dlg.decisionNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.saveDraft, disabled: saving, onClick: () => saveDecision(false) }), jsx(Button, { label: t.act.saveApply, kind: "primary", disabled: saving, onClick: () => saveDecision(true) })]), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: isRaise ? t.dlg.raiseHint : t.dlg.decisionHint }), jsxs("div", { class: "s4vp-form", children: [isRaise ? null : F('type', t.f.decisionType, jsx(Select, { value: str(form.type), onInput: setField('type'), options: opt(t.decisionType) })), F('number', t.f.decisionNumber, txt('number')), F('sign_date', t.f.signDate, dat('sign_date')), F('effective', `${t.f.effective} *`, dat('effective')), org ? F('new_department', t.f.newDepartment, jsx(AutoSelect, { value: str(form.new_department), onInput: setField('new_department'), options: lk('departments'), placeholder: t.f.keep }), deptName ? t.f.current(deptName) : '') : null, org ? F('new_title', t.f.newTitle, txt('new_title'), data.title ? t.f.current(data.title) : '') : null, payType ? F('new_salary', isRaise ? `${t.f.newSalary} *` : t.f.newSalary, amt('new_salary'), cur(comp && comp.base_salary)) : null, payType ? F('new_ins_wage', t.f.newInsWage, amt('new_ins_wage'), cur(comp && comp.insurance_wage)) : null, payType ? F('new_allowance', t.f.newAllowance, amt('new_allowance'), cur(comp && comp.allowance)) : null] }), F('note', t.f.note, jsx(TextArea, { value: str(form.note), onInput: setField('note'), rows: 2 }))] }));
+                return (jsxs(Dialog, { title: isRaise ? t.dlg.raise : dlg.id ? t.dlg.decisionEdit : t.dlg.decisionNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.saveDraft, disabled: saving, onClick: () => saveDecision(false) }), jsx(Button, { label: t.act.saveApply, kind: "primary", disabled: saving, onClick: () => saveDecision(true) })]), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: isRaise ? t.dlg.raiseHint : t.dlg.decisionHint }), jsxs("div", { class: "s4vp-form", children: [isRaise ? null : F('type', t.f.decisionType, jsx(Select, { value: str$1(form.type), onInput: setField('type'), options: opt(t.decisionType) })), F('number', t.f.decisionNumber, txt('number')), F('sign_date', t.f.signDate, dat('sign_date')), F('effective', `${t.f.effective} *`, dat('effective')), org ? F('new_department', t.f.newDepartment, jsx(AutoSelect, { value: str$1(form.new_department), onInput: setField('new_department'), options: lk('departments'), placeholder: t.f.keep }), deptName ? t.f.current(deptName) : '') : null, org ? F('new_title', t.f.newTitle, txt('new_title'), data.title ? t.f.current(data.title) : '') : null, payType ? F('new_salary', isRaise ? `${t.f.newSalary} *` : t.f.newSalary, amt('new_salary'), cur(comp && comp.base_salary)) : null, payType ? F('new_ins_wage', t.f.newInsWage, amt('new_ins_wage'), cur(comp && comp.insurance_wage)) : null, payType ? F('new_allowance', t.f.newAllowance, amt('new_allowance'), cur(comp && comp.allowance)) : null] }), F('note', t.f.note, jsx(TextArea, { value: str$1(form.note), onInput: setField('note'), rows: 2 }))] }));
             }
             if (dlg.kind === 'contract') {
                 const appendix = !!dlg.parent;
@@ -5255,7 +5326,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                 const buttons = locked
                     ? [jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: () => saveContract(false) })]
                     : [jsx(Button, { label: t.act.saveDraft, disabled: saving, onClick: () => saveContract(false) }), jsx(Button, { label: t.act.saveActivate, kind: "primary", disabled: saving, onClick: () => saveContract(true) })];
-                return (jsxs(Dialog, { title: title, width: 640, onClose: close, actions: dialogActions(buttons), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: locked ? t.dlg.approvedHint : t.dlg.contractHint }), jsxs("div", { class: "s4vp-form", children: [F('number', appendix ? t.f.appendixNumber : t.f.number, txt('number')), appendix ? null : F('type', t.f.type, jsx(Select, { value: str(form.type), onInput: setField('type'), options: opt(t.contractType), ...off })), F('sign_date', t.f.signDate, dat('sign_date')), F('effective', `${t.f.effective} *`, dat('effective', off)), appendix || form.type === 'U' ? null : F('expiry', form.type === 'P' || form.type === 'F' ? `${t.f.expiry} *` : t.f.expiry, dat('expiry', off)), F('title', t.f.title, txt('title', off)), pay ? F('base_salary', t.f.contractSalary, amt('base_salary', off)) : null, pay ? F('insurance_wage', t.f.insWage, amt('insurance_wage', off)) : null] }), F('note', t.f.note, jsx(TextArea, { value: str(form.note), onInput: setField('note'), rows: 2 }))] }));
+                return (jsxs(Dialog, { title: title, width: 640, onClose: close, actions: dialogActions(buttons), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: locked ? t.dlg.approvedHint : t.dlg.contractHint }), jsxs("div", { class: "s4vp-form", children: [F('number', appendix ? t.f.appendixNumber : t.f.number, txt('number')), appendix ? null : F('type', t.f.type, jsx(Select, { value: str$1(form.type), onInput: setField('type'), options: opt(t.contractType), ...off })), F('sign_date', t.f.signDate, dat('sign_date')), F('effective', `${t.f.effective} *`, dat('effective', off)), appendix || form.type === 'U' ? null : F('expiry', form.type === 'P' || form.type === 'F' ? `${t.f.expiry} *` : t.f.expiry, dat('expiry', off)), F('title', t.f.title, txt('title', off)), pay ? F('base_salary', t.f.contractSalary, amt('base_salary', off)) : null, pay ? F('insurance_wage', t.f.insWage, amt('insurance_wage', off)) : null] }), F('note', t.f.note, jsx(TextArea, { value: str$1(form.note), onInput: setField('note'), rows: 2 }))] }));
             }
             if (dlg.kind === 'terminate') {
                 return (jsxs(Dialog, { title: t.dlg.terminate(dlg.number), onClose: close, actions: dialogActions([jsx(Button, { label: t.act.terminate, kind: "danger", disabled: saving, onClick: saveTerminate })]), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: t.dlg.terminateHint }), F('date', `${t.f.terminateDate} *`, dat('date'), `${fmtDate(dlg.effective)} - ${dlg.expiry ? fmtDate(dlg.expiry) : t.openEnded}`), F('reason', t.f.reason, txt('reason'))] }));
@@ -5272,11 +5343,11 @@ input[type="number"].s4vp-in{padding-right:4px}
             if (dlg.kind === 'allocLines') {
                 const lines = form.lines || [];
                 const total = lines.reduce((s, l) => s + (toNumber(l.percent) || 0), 0);
-                const pickOf = (i, k, name, label) => jsx(AutoSelect, { value: str(lines[i][k]), onInput: setLine(i, k), options: lk(name), placeholder: t.f.none, ariaLabel: label });
-                return (jsxs(Dialog, { title: t.dlg.allocLines(dlg.nbr), width: 900, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: saveAllocLines })]), children: [serverBox, jsxs("div", { class: "s4vp-hr-alloc", children: [jsxs("div", { class: "s4vp-hr-alloc-row s4vp-hr-alloc-head", children: [jsx("span", { children: t.cols.project }), jsx("span", { children: t.cols.department }), jsx("span", { children: t.cols.location }), jsx("span", { children: t.cols.cls }), jsx("span", { children: t.cols.percent }), jsx("span", { children: '' })] }), lines.map((l, i) => (jsxs("div", { children: [jsxs("div", { class: "s4vp-hr-alloc-row", children: [pickOf(i, 'project', 'projects', t.cols.project), pickOf(i, 'department', 'departments', t.cols.department), pickOf(i, 'location', 'locations', t.cols.location), pickOf(i, 'work_center', 'classes', t.cols.cls), jsx(NumberInput, { value: str(l.percent), onInput: setLine(i, 'percent'), ariaLabel: t.cols.percent, min: 0, max: 100, step: "any" }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.act.removeLine, title: t.act.removeLine, onClick: () => removeLine(i), children: '×' })] }), errs[`line${i}`] ? jsx("div", { class: "s4vp-hr-err s4vp-small", children: errs[`line${i}`] }) : null] }, `l${i}`)))] }), jsxs("div", { class: "s4vp-line", children: [jsx(Button, { small: true, kind: "dashed", label: t.act.addLine, onClick: addLine }), jsxs("span", { children: [jsx("b", { class: Math.abs(total - 100) > 0.001 ? 's4vp-hr-err' : 's4vp-num', children: t.dlg.allocTotal(num(total)) }), jsx("span", { class: "s4vp-small", children: ` - ${t.dlg.allocTotalHint}` })] })] }), F('reason', t.f.reason, txt('reason'))] }));
+                const pickOf = (i, k, name, label) => jsx(AutoSelect, { value: str$1(lines[i][k]), onInput: setLine(i, k), options: lk(name), placeholder: t.f.none, ariaLabel: label });
+                return (jsxs(Dialog, { title: t.dlg.allocLines(dlg.nbr), width: 900, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: saveAllocLines })]), children: [serverBox, jsxs("div", { class: "s4vp-hr-alloc", children: [jsxs("div", { class: "s4vp-hr-alloc-row s4vp-hr-alloc-head", children: [jsx("span", { children: t.cols.project }), jsx("span", { children: t.cols.department }), jsx("span", { children: t.cols.location }), jsx("span", { children: t.cols.cls }), jsx("span", { children: t.cols.percent }), jsx("span", { children: '' })] }), lines.map((l, i) => (jsxs("div", { children: [jsxs("div", { class: "s4vp-hr-alloc-row", children: [pickOf(i, 'project', 'projects', t.cols.project), pickOf(i, 'department', 'departments', t.cols.department), pickOf(i, 'location', 'locations', t.cols.location), pickOf(i, 'work_center', 'classes', t.cols.cls), jsx(NumberInput, { value: str$1(l.percent), onInput: setLine(i, 'percent'), ariaLabel: t.cols.percent, min: 0, max: 100, step: "any" }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.act.removeLine, title: t.act.removeLine, onClick: () => removeLine(i), children: '×' })] }), errs[`line${i}`] ? jsx("div", { class: "s4vp-hr-err s4vp-small", children: errs[`line${i}`] }) : null] }, `l${i}`)))] }), jsxs("div", { class: "s4vp-line", children: [jsx(Button, { small: true, kind: "dashed", label: t.act.addLine, onClick: addLine }), jsxs("span", { children: [jsx("b", { class: Math.abs(total - 100) > 0.001 ? 's4vp-hr-err' : 's4vp-num', children: t.dlg.allocTotal(num(total)) }), jsx("span", { class: "s4vp-small", children: ` - ${t.dlg.allocTotalHint}` })] })] }), F('reason', t.f.reason, txt('reason'))] }));
             }
             if (dlg.kind === 'permit') {
-                return (jsxs(Dialog, { title: t.dlg.permitNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: savePermit })]), children: [serverBox, jsxs("div", { class: "s4vp-form", children: [F('doc_type', t.f.docType, jsx(Select, { value: str(form.doc_type), onInput: setField('doc_type'), options: opt(t.permitDoc) })), F('issue_type', t.f.issueType, jsx(Select, { value: str(form.issue_type), onInput: setField('issue_type'), options: opt({ N: t.permitIssue.N, R: t.permitIssue.R }) })), F('effective', `${t.f.effective} *`, dat('effective')), F('expiry', `${t.f.permitExpiry} *`, dat('expiry')), F('authority', t.f.authority, txt('authority')), F('job', t.f.job, jsx(Select, { value: str(form.job), onInput: setField('job'), options: opt(t.permitJob), placeholder: t.f.pick })), F('title', t.f.title, txt('title')), F('work_location', t.f.workLocation, txt('work_location')), F('passport', t.f.passport, txt('passport')), F('passport_expiry', t.f.passportExpiry, dat('passport_expiry'))] })] }));
+                return (jsxs(Dialog, { title: t.dlg.permitNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.save, kind: "primary", disabled: saving, onClick: savePermit })]), children: [serverBox, jsxs("div", { class: "s4vp-form", children: [F('doc_type', t.f.docType, jsx(Select, { value: str$1(form.doc_type), onInput: setField('doc_type'), options: opt(t.permitDoc) })), F('issue_type', t.f.issueType, jsx(Select, { value: str$1(form.issue_type), onInput: setField('issue_type'), options: opt({ N: t.permitIssue.N, R: t.permitIssue.R }) })), F('effective', `${t.f.effective} *`, dat('effective')), F('expiry', `${t.f.permitExpiry} *`, dat('expiry')), F('authority', t.f.authority, txt('authority')), F('job', t.f.job, jsx(Select, { value: str$1(form.job), onInput: setField('job'), options: opt(t.permitJob), placeholder: t.f.pick })), F('title', t.f.title, txt('title')), F('work_location', t.f.workLocation, txt('work_location')), F('passport', t.f.passport, txt('passport')), F('passport_expiry', t.f.passportExpiry, dat('passport_expiry'))] })] }));
             }
             if (dlg.kind === 'permitIssue') {
                 return (jsxs(Dialog, { title: t.dlg.permitIssue(dlg.name), onClose: close, actions: dialogActions([jsx(Button, { label: t.act.issue, kind: "primary", disabled: saving, onClick: savePermitIssue })]), children: [serverBox, F('permitNo', dlg.docType === 'E' ? t.f.permitNo : `${t.f.permitNo} *`, txt('permitNo')), F('issued', `${t.f.issued} *`, dat('issued'))] }));
@@ -5318,7 +5389,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return id ? jsx(EmployeeCard, { app: app, id: String(id) }, `e${id}`) : jsx(EmployeeList, { app: app }, "list");
     }
 
-    const TEXT$7 = {
+    const TEXT$8 = {
         vi: {
             title: 'Báo cáo - tờ khai',
             sub: 'Chọn hồ sơ theo kỳ hạn. Mỗi mục mở sẵn kỳ gần nhất có số liệu.',
@@ -5564,7 +5635,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     const gridColumns = (columns, over) => (columns || []).map((c) => Object.assign({ key: c.key, label: localized(c), type: c.type, nowrap: true }, (over || {})[c.key] || {}));
     // ------------------------------------------------------------------ lưới có ô tìm, phân trang, dòng tổng, xuất CSV
     function GridImpl({ columns, rows, total, empty, placeholder, toolbar, label, exportName, pin, height, plain }) {
-        const t = pick(TEXT$7).grid;
+        const t = pick(TEXT$8).grid;
         const [query, setQuery] = core.useState('');
         const [page, setPage] = core.useState(0);
         const cols = (columns || []).filter(Boolean);
@@ -5619,7 +5690,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return (jsxs("div", { class: "s4vp-rp-grid", children: [jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: toolbar || null }), jsxs("div", { class: "s4vp-tbl-bar-r", children: [shown.rows.length > PAGE_SIZE$1 ? (jsxs("span", { class: "s4vp-rp-pager", children: [jsx("span", { class: "s4vp-tbl-count", children: t.rows(num(at * PAGE_SIZE$1 + 1), num(Math.min((at + 1) * PAGE_SIZE$1, shown.rows.length)), num(shown.rows.length)) }), jsx("button", { ...prevAttrs, children: '‹' }), jsx("button", { ...nextAttrs, children: '›' })] })) : (jsx("span", { class: "s4vp-tbl-count", children: shown.count === null ? t.count(num(all.length)) : t.matches(num(shown.count)) })), jsx(SearchBox, { value: query, onInput: (v) => {
                                         setQuery(v);
                                         setPage(0);
-                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$2(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$7).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$2(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
+                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$2(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$8).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$2(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
     }
     function Grid(props) {
         return jsx(GridImpl, { ...props });
@@ -5657,7 +5728,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     // ------------------------------------------------------------------ màn hình
     function ReportsHubView({ app }) {
-        const t = pick(TEXT$7);
+        const t = pick(TEXT$8);
         const params = (app.route && app.route.params) || {};
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
@@ -6143,7 +6214,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return (jsxs(Page, { children: [jsx(PageHeader, { back: { label: t.back, onClick: () => app.go('reportsHub', {}) }, title: period ? `${info.title} - ${period}` : info.title, sub: report === 'print' ? t.print.sub : info.desc, actions: controls }), jsx("div", { class: "s4vp-rp", children: body.length ? body : (jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : pending || app.busy ? t.waiting : t.empty }) })) })] }));
     }
 
-    const TEXT$6 = {
+    const TEXT$7 = {
         vi: {
             title: 'Tạm ứng lương',
             sub: 'HR lập phiếu, kế toán ghi sổ Nợ 141 / Có tiền, bảng lương kỳ sau tự cấn trừ. Bấm một dòng để xem chi tiết.',
@@ -6401,7 +6472,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     const empLabel = (r) => `${r.employeeCode || r.code || ''} ${r.employeeName || r.name || ''}`.trim();
     const list$2 = (v) => (Array.isArray(v) ? v : []);
     function AdvancesView({ app }) {
-        const t = pick(TEXT$6);
+        const t = pick(TEXT$7);
         const boot = app.boot || {};
         const user = boot.user || {};
         const subsidiary = app.subsidiary || '';
@@ -6684,7 +6755,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                     ] }), jsx(StatCards, { cards: statCards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => setSelected(String(r.id) === String(selected) ? '' : String(r.id)), selectedKey: current ? current.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: "max(260px, calc(100vh - 384px))", toolbar: jsx(Chips, { items: chipItems, value: filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: "s4vp-col-side s4vp-adv-side", children: detailPanel(current) }) : null] }), dialog ? dialogBody() : null] }));
     }
 
-    const TEXT$5 = {
+    const TEXT$6 = {
         vi: {
             title: 'Thiết lập',
             sub: 'Tình trạng thiết lập của phân hệ lương. Mục thiếu hoặc cần chú ý được đánh dấu để xử lý trước.',
@@ -7592,7 +7663,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     const plainNumber = (v) => (blank$1(v) || isNaN(Number(v)) ? '' : Number(v).toLocaleString('vi-VN', { maximumFractionDigits: 6 }));
     const accountLabel = (a) => (a ? `${a.number || ''} ${a.name || ''}`.trim() : '');
     function SetupHubView({ app }) {
-        const t = pick(TEXT$5);
+        const t = pick(TEXT$6);
         const boot = app.boot || {};
         const user = boot.user || {};
         const subsidiary = app.subsidiary || '';
@@ -8353,7 +8424,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return (jsxs(Page, { children: [jsx(PageHeader, { title: current ? current.title : t.title, sub: current ? current.sub : subsidiary ? t.sub : t.noSubsidiary, status: headerStatus, back: current ? { label: t.title, onClick: () => go('') } : null, actions: actions }), safeRender(current ? current.render : hub), dialog ? safeRender(dialogBody) : null] }));
     }
 
-    const TEXT$4 = {
+    const TEXT$5 = {
         vi: {
             title: 'Sản lượng - lương khoán',
             sub: 'Nhập khối lượng của tổ hoặc cá nhân, xem tiền chia cho từng người, gửi duyệt. Phiếu đã duyệt tự vào bảng lương của kỳ.',
@@ -8602,6 +8673,43 @@ input[type="number"].s4vp-in{padding-right:4px}
                 moreOnRecord: 'Chi nhánh, work center và các trường khác sửa trên bản ghi.',
                 created: (nbr) => `Đã tạo phiếu${nbr ? ` ${nbr}` : ''}. Nhập sản lượng ở khung bên phải.`,
                 saved: (nbr) => `Đã lưu phiếu ${nbr}.`,
+            },
+            // Sản lượng từ giao dịch (api/OutputSources, docs/COMMISSION.md mục 9)
+            src: {
+                open: 'Lấy từ giao dịch',
+                title: 'Lấy sản lượng từ giao dịch',
+                intro: 'Sinh phiếu Tạm giữ từ chứng từ lắp ráp, hoàn thành lệnh sản xuất hoặc xuất kho của NetSuite theo nguồn đã cấu hình. Dòng đã sinh không sinh lại; phiếu sinh ra vẫn phải gửi duyệt và duyệt như phiếu nhập tay.',
+                source: 'Nguồn sản lượng',
+                sourcePick: 'Chọn nguồn',
+                loadingSources: 'Đang tải danh sách nguồn...',
+                noSources: 'Chưa có nguồn sản lượng cho công ty con này. Tạo nguồn trên form bản ghi NetSuite: loại giao dịch, trường nhân viên hoặc tổ trên giao dịch, bảng đơn giá.',
+                newSource: 'Tạo nguồn trên bản ghi',
+                type: { Build: 'Lắp ráp (Assembly Build)', WOCompl: 'Hoàn thành lệnh sản xuất (Work Order Completion)', ItemShip: 'Xuất kho (Item Fulfillment)' },
+                from: 'Từ ngày',
+                to: 'Đến ngày',
+                preview: 'Xem trước',
+                previewing: 'Đang đọc giao dịch...',
+                generate: 'Sinh phiếu',
+                generateN: (n) => `Sinh ${n} phiếu`,
+                generating: 'Đang sinh phiếu...',
+                close: 'Đóng',
+                search: 'Tìm chứng từ, nhân viên, tổ, hạng mục, số tiền',
+                empty: 'Không có dòng giao dịch nào của nguồn này trong khoảng ngày.',
+                hint: 'Chọn nguồn và khoảng ngày rồi bấm Xem trước.',
+                cols: { tran: 'Chứng từ', date: 'Ngày', who: 'Nhân viên / tổ', item: 'Hạng mục', qty: 'Số lượng', rate: 'Đơn giá', amount: 'Thành tiền', status: 'Trạng thái' },
+                status: { N: 'Sẽ sinh', G: 'Đã sinh', S: 'Bỏ qua' },
+                generatedAs: (name) => `Đã sinh ${name}`,
+                skip: { NO_WORKER: 'Thiếu nhân viên / tổ', NO_ITEM: 'Thiếu mặt hàng', BAD_QTY: 'Số lượng không dương' },
+                rateMissing: 'Sẽ sinh - thiếu đơn giá',
+                team: (name) => `Tổ ${name}`,
+                sum: 'Tổng sẽ sinh',
+                summary: (c) => `${c.lines} dòng: ${c.ready} dòng sẽ sinh ${c.entries} phiếu, ${c.generated} dòng đã sinh, ${c.skipped} dòng bỏ qua.`,
+                missingNote: (n) => `${n} dòng chưa có đơn giá hiệu lực: phiếu vẫn được sinh với thành tiền 0, nhập đơn giá trên phiếu trước khi gửi duyệt.`,
+                truncated: 'Chỉ hiện 1.000 dòng đầu của khoảng ngày; khi sinh phiếu hệ thống xử lý hết khoảng ngày.',
+                errSource: 'Chọn nguồn sản lượng.',
+                errDates: 'Nhập khoảng ngày hợp lệ (từ ngày không sau đến ngày).',
+                done: (n) => (n ? `Đã sinh ${n} phiếu Tạm giữ. Kiểm tra rồi gửi duyệt.` : 'Không có dòng mới để sinh phiếu.'),
+                failed: (n, first) => `${n} phiếu không sinh được (${first}).`,
             },
         },
         en: {
@@ -8853,11 +8961,49 @@ input[type="number"].s4vp-in{padding-right:4px}
                 created: (nbr) => `Entry${nbr ? ` ${nbr}` : ''} created. Enter the output in the panel on the right.`,
                 saved: (nbr) => `Entry ${nbr} saved.`,
             },
+            src: {
+                open: 'From transactions',
+                title: 'Output from transactions',
+                intro: 'Create on-hold entries from NetSuite assembly builds, work order completions or item fulfillments according to a configured source. Lines already generated are skipped; generated entries still go through submit and approval like manual entries.',
+                source: 'Output source',
+                sourcePick: 'Select a source',
+                loadingSources: 'Loading sources...',
+                noSources: 'No output source for this subsidiary yet. Create one on the NetSuite record form: transaction type, employee or team field on the transaction, rate table.',
+                newSource: 'Create a source on the record',
+                type: { Build: 'Assembly build', WOCompl: 'Work order completion', ItemShip: 'Item fulfillment' },
+                from: 'From',
+                to: 'To',
+                preview: 'Preview',
+                previewing: 'Reading transactions...',
+                generate: 'Generate entries',
+                generateN: (n) => `Generate ${n} entries`,
+                generating: 'Generating entries...',
+                close: 'Close',
+                search: 'Search transaction, employee, team, item, amount',
+                empty: 'No transaction lines of this source in the date range.',
+                hint: 'Select a source and a date range, then click Preview.',
+                cols: { tran: 'Transaction', date: 'Date', who: 'Employee / team', item: 'Item', qty: 'Quantity', rate: 'Rate', amount: 'Amount', status: 'Status' },
+                status: { N: 'To generate', G: 'Generated', S: 'Skipped' },
+                generatedAs: (name) => `Generated ${name}`,
+                skip: { NO_WORKER: 'No employee / team', NO_ITEM: 'No item', BAD_QTY: 'Quantity not positive' },
+                rateMissing: 'To generate - no rate',
+                team: (name) => `Team ${name}`,
+                sum: 'Total to generate',
+                summary: (c) => `${c.lines} lines: ${c.ready} lines will create ${c.entries} entries, ${c.generated} lines already generated, ${c.skipped} lines skipped.`,
+                missingNote: (n) => `${n} lines have no effective rate: the entries are still created with a zero amount; enter the rate on the entry before submitting.`,
+                truncated: 'Only the first 1,000 lines of the range are shown; generation processes the whole range.',
+                errSource: 'Select an output source.',
+                errDates: 'Enter a valid date range (the start date cannot be after the end date).',
+                done: (n) => (n ? `${n} on-hold entries generated. Check them, then submit.` : 'No new lines to generate entries from.'),
+                failed: (n, first) => `${n} entries could not be generated (${first}).`,
+            },
         },
     };
+    const SOURCE_TYPE = 'customrecord_s4vp_out_source';
+    const SRC_TONE = { N: 'info', G: 'ok', S: 'muted' };
     const TONE$1 = { H: 'muted', P: 'warn', A: 'info', C: 'ok' };
     const STATUSES = ['H', 'P', 'A', 'C'];
-    const METHODS = ['D', 'F', 'H', 'P', 'E'];
+    const METHODS$1 = ['D', 'F', 'H', 'P', 'E'];
     const KINDS = ['T', 'I', 'S'];
     const STEPS = { T: ['lines', 'members', 'split', 'submit', 'approve', 'payroll'], I: ['lines', 'submit', 'approve', 'payroll'] };
     const RECORD_TYPE = 'customrecord_s4vp_output';
@@ -8908,7 +9054,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return hit ? String(hit.id) : '';
     }
     function OutputsView({ app }) {
-        const t = pick(TEXT$4);
+        const t = pick(TEXT$5);
         const boot = app.boot || {};
         const user = boot.user || {};
         const subsidiary = app.subsidiary || '';
@@ -8931,6 +9077,9 @@ input[type="number"].s4vp-in{padding-right:4px}
         // Hộp xác nhận có lý do bắt buộc: {mode: 'reject' | 'void', id, name, reason, error}
         const [reasonDlg, setReasonDlg] = core.useState(null);
         const reasonRef = core.useRef(null);
+        // Hộp thoại lấy từ giao dịch: {sources, recordType, source, from, to, preview, state: '' | 'preview' | 'generate', error, seq}
+        const [srcDlg, setSrcDlg] = core.useState(null);
+        const srcRef = core.useRef(null);
         const formRef = core.useRef(null);
         const draftRef = core.useRef(null);
         const ratesRef = core.useRef({});
@@ -9244,7 +9393,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                 primary = jsx(Button, { label: t.members.loadFirst, kind: "primary", disabled: !r.team || !!app.busy, title: r.team ? '' : t.members.noTeam, onClick: () => loadTeam(r) });
             else
                 primary = nextButton(r, 'members');
-            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [primary, d.members.length ? jsx(Button, { label: t.members.load, disabled: !canLoad || !!app.busy, title: !r.team ? t.members.noTeam : d.membersDirty ? t.members.loadDirty : '', onClick: () => loadTeam(r) }) : null, jsx("span", { class: "s4vp-out-method", children: jsx(Select, { value: d.method, onInput: (v) => putDraft(r, { method: v || 'F', membersDirty: true }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })), ariaLabel: t.detail.method, width: 178 }) }), d.membersDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null] }), d.error ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: d.error }) : null, r.splitError && !d.membersDirty ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.split.cannot(serverText(r.splitError.en, r.splitError.vi)) }) : null, method === 'P' && d.members.length && Math.abs(percentSum - 100) > 0.000001 ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.members.percentSum(num(percentSum)) }) : null, finder((e) => addMember(r, e), d.members.map((m) => m.employee)), jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: cols.days ? t.members.methodHint : '' }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.members.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.members, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t.members.employee }), cols.days ? jsx("th", { class: "s4vp-r", children: t.members.workDays }) : null, cols.hours ? jsx("th", { class: "s4vp-r", children: t.members.hours }) : null, cols.factor ? jsx("th", { class: "s4vp-r", children: t.members.factor }) : null, cols.percent ? jsx("th", { class: "s4vp-r", children: t.members.percent }) : null, jsx("th", { children: '' })] }) }), jsxs("tbody", { children: [shown.map((m) => {
+            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [primary, d.members.length ? jsx(Button, { label: t.members.load, disabled: !canLoad || !!app.busy, title: !r.team ? t.members.noTeam : d.membersDirty ? t.members.loadDirty : '', onClick: () => loadTeam(r) }) : null, jsx("span", { class: "s4vp-out-method", children: jsx(Select, { value: d.method, onInput: (v) => putDraft(r, { method: v || 'F', membersDirty: true }), options: METHODS$1.map((k) => ({ value: k, label: t.method[k] })), ariaLabel: t.detail.method, width: 178 }) }), d.membersDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null] }), d.error ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: d.error }) : null, r.splitError && !d.membersDirty ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.split.cannot(serverText(r.splitError.en, r.splitError.vi)) }) : null, method === 'P' && d.members.length && Math.abs(percentSum - 100) > 0.000001 ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.members.percentSum(num(percentSum)) }) : null, finder((e) => addMember(r, e), d.members.map((m) => m.employee)), jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: cols.days ? t.members.methodHint : '' }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.members.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.members, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t.members.employee }), cols.days ? jsx("th", { class: "s4vp-r", children: t.members.workDays }) : null, cols.hours ? jsx("th", { class: "s4vp-r", children: t.members.hours }) : null, cols.factor ? jsx("th", { class: "s4vp-r", children: t.members.factor }) : null, cols.percent ? jsx("th", { class: "s4vp-r", children: t.members.percent }) : null, jsx("th", { children: '' })] }) }), jsxs("tbody", { children: [shown.map((m) => {
                                             const label = who$1(m);
                                             const dirty = { membersDirty: true };
                                             return (jsxs("tr", { children: [jsx("td", { children: personCell(m) }), cols.days ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.workDays, onInput: (v) => setMember(r, m.employee, { workDays: v }, dirty), ariaLabel: t.members.daysOf(label), width: 84 }) }) : null, cols.hours ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.hours, onInput: (v) => setMember(r, m.employee, { hours: v }, dirty), ariaLabel: t.members.hoursOf(label), width: 84 }) }) : null, cols.factor ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.factor, onInput: (v) => setMember(r, m.employee, { factor: v }, dirty), ariaLabel: t.members.factorOf(label), width: 76 }) }) : null, cols.percent ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.percent, onInput: (v) => setMember(r, m.employee, { percent: v }, dirty), ariaLabel: t.members.percentOf(label), width: 84 }) }) : null, jsx("td", { class: "s4vp-r", children: jsx(Button, { small: true, kind: "ghost", label: t.lines.remove, ariaLabel: t.members.removeOf(label), onClick: () => removeMember(r, m.employee) }) })] }, `m${m.employee}`));
@@ -9537,7 +9686,134 @@ input[type="number"].s4vp-in{padding-right:4px}
                     : { team: id });
             };
             const changed = f.was && (f.was.date !== f.date || f.was.rateTable !== f.rateTable || f.was.project !== f.project);
-            return (jsxs(Dialog, { title: isNew ? t.form.titleNew : t.form.titleEdit(f.name), width: 760, onClose: () => setForm(null), actions: [jsx(Button, { label: t.form.cancel, onClick: () => setForm(null) }), jsx(Button, { label: isNew ? t.form.create : t.form.save, kind: "primary", disabled: !!app.busy, onClick: submitForm })], children: [jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.form.kind, children: jsx(Select, { value: f.kind, onInput: pickKind, options: KINDS.map((k) => ({ value: k, label: t.kind[k] })), disabled: !isNew }) }), jsx(Field, { label: t.form.date, hint: err('date'), required: true, children: jsx(DateInput, { value: f.date, onInput: (v) => putForm({ date: v }) }) }), jsx(Field, { label: t.form.table, required: true, hint: err('rateTable') || (tables.length ? null : t.form.noTables), children: jsx(AutoSelect, { value: f.rateTable, onInput: (v) => putForm({ rateTable: v }), options: tableOptions, placeholder: t.form.tablePick }) }), f.kind === 'T' ? (jsx(Field, { label: t.form.team, hint: err('team'), required: true, children: jsx(AutoSelect, { value: f.team, onInput: pickTeam, options: teamOptions, placeholder: t.form.teamPick }) })) : null, f.kind === 'T' ? (jsx(Field, { label: t.form.method, children: jsx(Select, { value: f.method, onInput: (v) => putForm({ method: v || 'F' }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })) }) })) : null, jsx(Field, { label: t.form.period, hint: t.form.periodHint, children: jsx(AutoSelect, { value: f.period, onInput: (v) => putForm({ period: v }), options: periodOptions, placeholder: t.form.periodAuto }) }), jsx(Field, { label: t.form.project, hint: lk.projectsMore ? t.form.projectMore : t.form.projectHint, children: jsx(AutoSelect, { value: f.project, onInput: (v) => putForm({ project: v }), options: projectOptions, placeholder: t.form.projectNone }) }), jsx(Field, { label: t.form.department, hint: t.form.departmentHint, children: jsx(AutoSelect, { value: f.department, onInput: (v) => putForm({ department: v || '' }), options: departmentOptions, placeholder: t.form.departmentNone }) }), jsx(Field, { label: t.form.description, children: jsx(TextInput, { value: f.description, onInput: (v) => putForm({ description: v }) }) })] }), changed ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.form.repriced }) : null, jsx("span", { class: "s4vp-small", children: t.form.moreOnRecord })] }));
+            return (jsxs(Dialog, { title: isNew ? t.form.titleNew : t.form.titleEdit(f.name), width: 760, onClose: () => setForm(null), actions: [jsx(Button, { label: t.form.cancel, onClick: () => setForm(null) }), jsx(Button, { label: isNew ? t.form.create : t.form.save, kind: "primary", disabled: !!app.busy, onClick: submitForm })], children: [jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.form.kind, children: jsx(Select, { value: f.kind, onInput: pickKind, options: KINDS.map((k) => ({ value: k, label: t.kind[k] })), disabled: !isNew }) }), jsx(Field, { label: t.form.date, hint: err('date'), required: true, children: jsx(DateInput, { value: f.date, onInput: (v) => putForm({ date: v }) }) }), jsx(Field, { label: t.form.table, required: true, hint: err('rateTable') || (tables.length ? null : t.form.noTables), children: jsx(AutoSelect, { value: f.rateTable, onInput: (v) => putForm({ rateTable: v }), options: tableOptions, placeholder: t.form.tablePick }) }), f.kind === 'T' ? (jsx(Field, { label: t.form.team, hint: err('team'), required: true, children: jsx(AutoSelect, { value: f.team, onInput: pickTeam, options: teamOptions, placeholder: t.form.teamPick }) })) : null, f.kind === 'T' ? (jsx(Field, { label: t.form.method, children: jsx(Select, { value: f.method, onInput: (v) => putForm({ method: v || 'F' }), options: METHODS$1.map((k) => ({ value: k, label: t.method[k] })) }) })) : null, jsx(Field, { label: t.form.period, hint: t.form.periodHint, children: jsx(AutoSelect, { value: f.period, onInput: (v) => putForm({ period: v }), options: periodOptions, placeholder: t.form.periodAuto }) }), jsx(Field, { label: t.form.project, hint: lk.projectsMore ? t.form.projectMore : t.form.projectHint, children: jsx(AutoSelect, { value: f.project, onInput: (v) => putForm({ project: v }), options: projectOptions, placeholder: t.form.projectNone }) }), jsx(Field, { label: t.form.department, hint: t.form.departmentHint, children: jsx(AutoSelect, { value: f.department, onInput: (v) => putForm({ department: v || '' }), options: departmentOptions, placeholder: t.form.departmentNone }) }), jsx(Field, { label: t.form.description, children: jsx(TextInput, { value: f.description, onInput: (v) => putForm({ description: v }) }) })] }), changed ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.form.repriced }) : null, jsx("span", { class: "s4vp-small", children: t.form.moreOnRecord })] }));
+        };
+        // ------------------------------------------------------------------ hộp thoại lấy từ giao dịch
+        const putSrc = (patch) => {
+            if (!srcRef.current)
+                return;
+            srcRef.current = Object.assign({}, srcRef.current, patch);
+            setSrcDlg(srcRef.current);
+        };
+        const closeSrc = () => {
+            srcRef.current = null;
+            setSrcDlg(null);
+        };
+        /** Khoảng ngày mặc định: kỳ đang xem, không có thì kỳ mặc định chứa hôm nay, không có nữa thì tháng hiện tại. */
+        const srcRange = () => {
+            const pid = period || defaultPeriod(boot);
+            const p = pid ? periods.find((x) => String(x.id) === String(pid)) : null;
+            if (p && validIso(p.start) && validIso(p.end))
+                return { from: p.start, to: p.end };
+            const today = localToday();
+            const y = Number(today.slice(0, 4));
+            const m = Number(today.slice(5, 7));
+            const last = new Date(y, m, 0).getDate();
+            return { from: `${today.slice(0, 8)}01`, to: `${today.slice(0, 8)}${String(last).padStart(2, '0')}` };
+        };
+        const openSources = () => {
+            const range = srcRange();
+            srcRef.current = { sources: null, recordType: SOURCE_TYPE, source: '', from: range.from, to: range.to, preview: null, state: '', error: '', seq: 0 };
+            setSrcDlg(srcRef.current);
+            call({ action: 'outputSources', subsidiary }).then((r) => {
+                if (!alive.current)
+                    return;
+                const found = list(r && r.sources);
+                putSrc({ sources: found, recordType: (r && r.recordType) || SOURCE_TYPE, source: found.length === 1 ? String(found[0].id) : '' });
+            }, (e) => alive.current && putSrc({ sources: [], error: errorText(e) }));
+        };
+        // Đổi nguồn hoặc ngày: bỏ kết quả xem trước cũ (lượt xem trước đang chạy bị bỏ qua nhờ seq)
+        const pickSrc = (patch) => putSrc(Object.assign({ preview: null, error: '', state: '', seq: (srcRef.current ? srcRef.current.seq : 0) + 1 }, patch));
+        const srcCheck = (d) => {
+            if (!d.source)
+                return t.src.errSource;
+            if (!validIso(d.from) || !validIso(d.to) || d.from > d.to)
+                return t.src.errDates;
+            return '';
+        };
+        /** Gửi POST, lỗi trả về {failure} (hiện trong hộp thoại) thay vì dải thông báo nằm sau lớp phủ. */
+        const sendQuiet = (body) => send(body).then((r) => r, (e) => ({ failure: errorText(e) || 'Error' }));
+        const runPreview = () => {
+            const d = srcRef.current;
+            if (!d)
+                return;
+            const error = srcCheck(d);
+            if (error) {
+                putSrc({ error });
+                return;
+            }
+            const seq = d.seq + 1;
+            putSrc({ seq, state: 'preview', error: '', preview: null });
+            app.run(t.src.previewing, sendQuiet({ action: 'outputSourcePreview', source: d.source, from: d.from, to: d.to })).then((r) => {
+                if (!alive.current || !srcRef.current || srcRef.current.seq !== seq)
+                    return;
+                if (!r || r.failure)
+                    putSrc({ state: '', error: (r && r.failure) || '' });
+                else
+                    putSrc({ state: '', preview: r });
+            });
+        };
+        const runGenerate = () => {
+            const d = srcRef.current;
+            if (!d || !d.preview)
+                return;
+            putSrc({ state: 'generate', error: '' });
+            app.run(t.src.generating, sendQuiet({ action: 'outputSourceGenerate', source: d.source, from: d.from, to: d.to })).then((r) => {
+                if (!alive.current)
+                    return;
+                if (!r || r.failure) {
+                    putSrc({ state: '', error: (r && r.failure) || '' });
+                    return;
+                }
+                closeSrc();
+                load().then(() => {
+                    if (!alive.current)
+                        return;
+                    // post() gộp kết quả các lượt (more = true): cảnh báo có thể lặp
+                    const warnings = list(r.warnings).map((w) => serverText(w.message, w.messageVi)).filter((x, i, a) => x && a.indexOf(x) === i);
+                    const failed = list(r.failed);
+                    const parts = [t.src.done(Number(r.created) || 0)];
+                    if (failed.length)
+                        parts.push(t.src.failed(failed.length, `${failed[0].tranNo}: ${serverText(failed[0].message, failed[0].messageVi)}`));
+                    app.notify(parts.concat(warnings.slice(0, 3)).join(' '), failed.length || warnings.length ? 'warn' : 'ok');
+                });
+            });
+        };
+        const srcStatus = (r) => {
+            if (r.status === 'G')
+                return t.src.generatedAs(r.entryName || r.entry || '');
+            if (r.status === 'S')
+                return t.src.skip[r.skip] || t.src.status.S;
+            return r.warning ? t.src.rateMissing : t.src.status.N;
+        };
+        const srcDialog = () => {
+            const d = srcDlg;
+            const sources = d.sources;
+            const options = list(sources).map((s) => ({ value: String(s.id), label: [s.name, t.src.type[s.tranType] || s.tranType, s.rateTableCode].filter(Boolean).join(' - ') }));
+            const p = d.preview;
+            const counts = (p && p.counts) || {};
+            // Chữ hiển thị (người làm, ngày, trạng thái) đưa vào dòng để ô tìm khớp được
+            const rows = p
+                ? list(p.rows).map((r) => Object.assign({}, r, { id: r.key, whoText: r.kind === 'T' ? t.src.team(r.who || '') : r.who || '', dateText: fmtDate(r.date), statusText: srcStatus(r) }))
+                : [];
+            const busy = !!d.state || !!app.busy;
+            const ready = Number(counts.ready) || 0;
+            const columns = [
+                { key: 'tranNo', label: t.src.cols.tran, nowrap: true },
+                { key: 'date', label: t.src.cols.date, type: 'date', nowrap: true },
+                { key: 'whoText', label: t.src.cols.who },
+                { key: 'item', label: t.src.cols.item, nowrap: true },
+                { key: 'qty', label: t.src.cols.qty, type: 'num', nowrap: true },
+                { key: 'rate', label: t.src.cols.rate, align: 'right', nowrap: true, render: (r) => (r.rate === null || r.rate === undefined ? '' : num(r.rate)) },
+                { key: 'amount', label: t.src.cols.amount, align: 'right', nowrap: true, render: (r) => (r.amount === null || r.amount === undefined ? '' : money(r.amount) === '-' ? '0' : money(r.amount)) },
+                { key: 'statusText', label: t.src.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: r.status === 'N' && r.warning ? 'warn' : SRC_TONE[r.status] || 'muted' }) },
+            ];
+            const newSource = () => window.open(url.resolveRecord({ recordType: d.recordType || SOURCE_TYPE, isEditMode: true }), '_blank');
+            return (jsx(Dialog, { title: t.src.title, width: 1040, onClose: closeSrc, actions: [
+                    jsx(Button, { label: t.src.close, onClick: closeSrc }),
+                    jsx(Button, { label: t.src.preview, disabled: busy || !d.source, onClick: runPreview }),
+                    jsx(Button, { label: ready ? t.src.generateN(counts.entries || 0) : t.src.generate, kind: "primary", disabled: busy || !p || !ready || !canWrite, title: canWrite ? '' : t.readOnly, onClick: runGenerate }),
+                ], children: jsxs("div", { class: "s4vp-out-body", children: [jsx("span", { class: "s4vp-small", children: t.src.intro }), jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.src.source, required: true, children: jsx(SearchSelect, { value: d.source, onInput: (v) => pickSrc({ source: v || '' }), options: options, placeholder: sources ? t.src.sourcePick : t.src.loadingSources, disabled: !sources || busy }) }), jsx(Field, { label: t.src.from, required: true, children: jsx(DateInput, { value: d.from, max: d.to || undefined, onInput: (v) => pickSrc({ from: v }), disabled: busy }) }), jsx(Field, { label: t.src.to, required: true, children: jsx(DateInput, { value: d.to, min: d.from || undefined, onInput: (v) => pickSrc({ to: v }), disabled: busy }) })] }), sources && !sources.length ? (jsxs("div", { class: "s4vp-out-warn", role: "note", children: [jsx("span", { children: t.src.noSources }), " ", jsx(Button, { small: true, kind: "link", label: t.src.newSource, onClick: newSource })] })) : null, d.error ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: d.error }) : null, d.state ? jsx("span", { class: "s4vp-small", children: d.state === 'preview' ? t.src.previewing : t.src.generating }) : null, p ? jsx("span", { class: "s4vp-small", children: t.src.summary(counts) }) : !d.state ? jsx("span", { class: "s4vp-small", children: t.src.hint }) : null, p && counts.rateMissing ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.src.missingNote(counts.rateMissing) }) : null, p && p.truncated ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.src.truncated }) : null, p ? (jsx(Table, { label: t.src.title, columns: columns, rows: rows, keyOf: (r) => r.key, total: rows.length > 1 ? { tranNo: t.src.sum, amount: counts.amount ? money(counts.amount) : '0' } : null, empty: t.src.empty, search: true, searchPlaceholder: t.src.search, maxHeight: "max(220px, calc(100vh - 460px))" })) : null] }) }));
         };
         // ------------------------------------------------------------------ bảng phiếu
         const issueCode = filter.indexOf('i:') === 0 ? filter.slice(2) : '';
@@ -9589,11 +9865,2180 @@ input[type="number"].s4vp-in{padding-right:4px}
                         jsx("span", { class: "s4vp-out-period", children: jsx(AutoSelect, { value: period, onInput: (v) => (setPeriod(v || ''), pickEntry('')), options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 250 }) }),
                         jsx(Button, { label: t.legacy, kind: "ghost", onClick: () => app.go('outputs') }),
                         jsx(Button, { label: t.refresh, onClick: () => load() }),
+                        jsx(Button, { label: t.src.open, disabled: !subsidiary || !canWrite || !!app.busy, title: canWrite ? '' : t.readOnly, onClick: openSources }),
                         jsx(Button, { label: t.newEntry, kind: "primary", disabled: !subsidiary || !canWrite || !!app.busy, title: canWrite ? '' : t.readOnly, onClick: () => openForm(null) }),
                     ] }), jsx(StatCards, { cards: statCards }), todo.length ? (jsxs("div", { class: "s4vp-out-todo", role: "group", "aria-label": t.todo.label, children: [jsx("span", { class: "s4vp-out-todo-l", children: t.todo.label }), todo.map((g) => {
                             const on = filter === `i:${g.code}`;
                             return (jsx("button", { type: "button", class: on ? 's4vp-out-todo-btn s4vp-on' : 's4vp-out-todo-btn', "aria-pressed": on ? 'true' : 'false', onClick: () => setFilter(on ? '' : `i:${g.code}`), children: `${t.todo[g.code] || g.code} ${g.count}` }, g.code));
-                        }), issueCode ? jsx(Button, { small: true, kind: "ghost", label: t.todo.clear, onClick: () => setFilter('') }) : null] })) : null, jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => pickEntry(String(r.id) === String(selected) ? '' : r.id), selectedKey: shownCurrent ? shownCurrent.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: todo.length ? 'max(240px, calc(100vh - 432px))' : 'max(260px, calc(100vh - 384px))', toolbar: jsx(Chips, { items: chipItems, value: issueCode ? 'todo' : filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: todo.length ? 's4vp-col-side s4vp-out-side s4vp-out-side-low' : 's4vp-col-side s4vp-out-side', children: detailPanel(current) }) : null] }), form ? formDialog() : null, reasonDlg ? reasonDialog() : null] }));
+                        }), issueCode ? jsx(Button, { small: true, kind: "ghost", label: t.todo.clear, onClick: () => setFilter('') }) : null] })) : null, jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => pickEntry(String(r.id) === String(selected) ? '' : r.id), selectedKey: shownCurrent ? shownCurrent.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: todo.length ? 'max(240px, calc(100vh - 432px))' : 'max(260px, calc(100vh - 384px))', toolbar: jsx(Chips, { items: chipItems, value: issueCode ? 'todo' : filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: todo.length ? 's4vp-col-side s4vp-out-side s4vp-out-side-low' : 's4vp-col-side s4vp-out-side', children: detailPanel(current) }) : null] }), form ? formDialog() : null, reasonDlg ? reasonDialog() : null, srcDlg ? srcDialog() : null] }));
+    }
+
+    // ================================================================== ánh xạ API (mọi tên action, tên trường nằm ở đây)
+    const ACTIONS = {
+        view: 'commissionView',
+        result: 'commissionResult',
+        setup: 'commissionSetup',
+        simulate: 'commissionSimulate',
+        calculate: 'commissionCalculate',
+        approve: 'commissionApprove',
+        reopen: 'commissionReopen',
+        void: 'commissionVoid',
+        planSave: 'commissionPlanSave',
+        adjust: 'commissionAdjust',
+        // Doanh số ngoài (mục 4.1): POST nạp (dryRun = chỉ kiểm), GET liệt kê dòng ngoài của tháng
+        importExt: 'commissionImport',
+        external: 'commissionExternal',
+    };
+    // Số dòng mỗi lượt POST commissionImport (lượt nào API trả more: true thì lib/api.js gửi lại cùng nội dung)
+    const IMPORT_CHUNK = 200;
+    // Cách máy chủ biểu diễn tỷ lệ (core/CommissionEngine.js): mọi tỷ lệ là số phần trăm (105,5 = 105,5%), kể cả % ghi nhận
+    // của credit (100 = 100%). Đổi ở đây nếu API trả tỷ lệ 0..1.
+    const PCT = { attainmentIsRatio: false, creditIsRatio: false };
+    const has = (v) => v !== undefined && v !== null && v !== '';
+    /** Giá trị đầu tiên có nội dung theo danh sách tên khóa (camelCase rồi snake_case...). */
+    function rd(o, ...keys) {
+        if (!o || typeof o !== 'object')
+            return undefined;
+        for (let i = 0; i < keys.length; i++)
+            if (has(o[keys[i]]))
+                return o[keys[i]];
+        return undefined;
+    }
+    const str = (v) => (has(v) && typeof v !== 'object' ? String(v) : '');
+    const numv = (v) => {
+        if (!has(v) || typeof v === 'object')
+            return null;
+        const n = Number(v);
+        return isNaN(n) ? null : n;
+    };
+    const bool = (v) => v === true || v === 'T' || v === 't' || v === 1 || v === '1' || v === 'true';
+    const arr = (v) => (Array.isArray(v) ? v : []);
+    const countOf = (v) => (Array.isArray(v) ? v.length : numv(v) || 0);
+    const parseJson = (v) => {
+        if (v && typeof v === 'object')
+            return v;
+        try {
+            return v ? JSON.parse(v) : {};
+        }
+        catch (e) {
+            return {};
+        }
+    };
+    /** Danh sách id từ mảng (số, chuỗi, {id} / {value}) hoặc chuỗi "1,2,3"; bỏ trống, bỏ trùng. */
+    function idList(v) {
+        const raw = Array.isArray(v) ? v : str(v).split(',');
+        const out = [];
+        raw.forEach((x) => {
+            const s = (x && typeof x === 'object' ? str(rd(x, 'id', 'value')) : str(x)).trim();
+            if (s && out.indexOf(s) < 0)
+                out.push(s);
+        });
+        return out;
+    }
+    // Tháng: ô MonthInput dùng 'YYYY-MM', máy chủ dùng số YYYYMM
+    const monthInt = (m) => {
+        const x = /^(\d{4})-(\d{2})$/.exec(str(m));
+        return x ? Number(x[1]) * 100 + Number(x[2]) : null;
+    };
+    const monthIso = (v) => {
+        const s = str(v);
+        if (/^\d{4}-\d{2}$/.test(s))
+            return s;
+        const x = /^(\d{4})(\d{2})$/.exec(s);
+        return x ? `${x[1]}-${x[2]}` : '';
+    };
+    const monthText = (m) => {
+        const x = /^(\d{4})-(\d{2})$/.exec(monthIso(m));
+        return x ? `${x[2]}/${x[1]}` : str(m);
+    };
+    /** Tháng trước của một ngày ISO (mặc định của màn Bảng tính: hoa hồng tính sau khi khóa doanh số tháng trước). */
+    function previousMonth(isoDay) {
+        const x = /^(\d{4})-(\d{2})/.exec(str(isoDay));
+        if (!x)
+            return '';
+        let y = Number(x[1]);
+        let m = Number(x[2]) - 1;
+        if (m < 1) {
+            m = 12;
+            y -= 1;
+        }
+        return `${y}-${String(m).padStart(2, '0')}`;
+    }
+    const pctOf = (v, isRatio) => {
+        const n = numv(v);
+        return n === null ? null : isRatio ? n * 100 : n;
+    };
+    /** Chữ phần trăm từ số phần trăm (105.5 -> "105,5%"). */
+    const pctText = (n) => (n === null || n === undefined || n === '' || isNaN(Number(n)) ? '' : `${Number(n).toLocaleString('vi-VN', { maximumFractionDigits: 2 })}%`);
+    const stepsOf = (v) => arr(v).map((s) => (s && typeof s === 'object' ? { vi: str(s.vi), en: str(s.en) } : { vi: str(s), en: str(s) })).filter((s) => s.vi || s.en);
+    function mapRun(r) {
+        if (!r || typeof r !== 'object')
+            return null;
+        return {
+            id: str(rd(r, 'id', 'internalId')),
+            name: str(rd(r, 'name', 'code')),
+            status: str(rd(r, 'status')).toUpperCase(),
+            from: str(rd(r, 'from', 'dateFrom', 'date_from')),
+            to: str(rd(r, 'to', 'dateTo', 'date_to')),
+            totalBase: numv(rd(r, 'totalBase', 'total_base')),
+            totalAmount: numv(rd(r, 'totalAmount', 'total_amount')),
+            employees: numv(rd(r, 'employees')),
+            batch: str(rd(r, 'batch')),
+            batchName: str(rd(r, 'batchName', 'batchNbr', 'batchText')),
+            calcAt: str(rd(r, 'calcAt', 'calc_at')),
+            approvedByName: str(rd(r, 'approvedByName', 'approved_by_name')),
+            note: str(rd(r, 'note')),
+        };
+    }
+    function mapRow(r, i) {
+        const resultId = str(rd(r, 'resultId', 'result', 'id'));
+        return {
+            id: resultId || `r${i}`,
+            resultId,
+            employee: str(rd(r, 'employee', 'employeeId')),
+            code: str(rd(r, 'code', 'employeeCode', 'entityId')),
+            name: str(rd(r, 'name', 'employeeName')),
+            department: str(rd(r, 'departmentName', 'department')),
+            plan: str(rd(r, 'plan', 'planId')),
+            planName: str(rd(r, 'planName', 'planCode')),
+            quota: numv(rd(r, 'quota')),
+            base: numv(rd(r, 'base')),
+            attainment: pctOf(rd(r, 'attainment'), PCT.attainmentIsRatio),
+            earned: numv(rd(r, 'earned')),
+            override: numv(rd(r, 'override', 'overrideAmount', 'override_amount')),
+            adjustments: numv(rd(r, 'adjustments', 'adjustmentAmount')),
+            capped: numv(rd(r, 'capped')),
+            drawPaid: numv(rd(r, 'drawPaid', 'draw_paid')),
+            payable: numv(rd(r, 'payable')),
+            warnings: countOf(rd(r, 'warnings', 'warningCount')),
+        };
+    }
+    /** commissionView -> {run, rows, kpis, months}; thẻ số liệu tự tính từ dòng khi API không trả kpis. */
+    function mapView(raw) {
+        const v = raw || {};
+        const run = mapRun(v.run);
+        const rows = arr(v.rows).map(mapRow);
+        const k = v.kpis || {};
+        const sum = (key) => rows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
+        const withAtt = rows.filter((r) => r.attainment !== null);
+        const people = rows.map((r) => r.employee || r.code).filter((x, i, a) => x && a.indexOf(x) === i).length;
+        const kAtt = rd(k, 'avgAttainment', 'averageAttainment', 'attainment');
+        const kpis = {
+            totalBase: numv(rd(k, 'totalBase', 'base')) !== null ? numv(rd(k, 'totalBase', 'base')) : run && run.totalBase !== null ? run.totalBase : sum('base'),
+            totalAmount: numv(rd(k, 'totalAmount', 'totalPayable', 'payable')) !== null ? numv(rd(k, 'totalAmount', 'totalPayable', 'payable')) : run && run.totalAmount !== null ? run.totalAmount : sum('payable'),
+            employees: numv(rd(k, 'employees')) !== null ? numv(rd(k, 'employees')) : run && run.employees !== null ? run.employees : people,
+            avgAttainment: has(kAtt) ? pctOf(kAtt, PCT.attainmentIsRatio) : withAtt.length ? withAtt.reduce((s, r) => s + r.attainment, 0) / withAtt.length : null,
+            warnings: numv(rd(k, 'warnings')) !== null ? numv(rd(k, 'warnings')) : sum('warnings'),
+        };
+        const months = arr(v.months).map(monthIso).filter(Boolean);
+        return { run, rows, kpis, months };
+    }
+    const mapComponent = (c, i) => ({
+        key: `c${i}`,
+        rule: str(rd(c, 'rule', 'id')),
+        name: str(rd(c, 'name')),
+        method: str(rd(c, 'method')).toUpperCase(),
+        base: numv(rd(c, 'base')),
+        amount: numv(rd(c, 'amount')),
+        steps: stepsOf(c && c.steps),
+    });
+    const mapCredit = (c, i) => ({
+        id: `t${i}`,
+        tranId: str(rd(c, 'tranId', 'transaction')),
+        tranNo: str(rd(c, 'tranNo', 'tranid', 'docNo')),
+        tranType: str(rd(c, 'tranType', 'type')).toUpperCase(),
+        date: str(rd(c, 'date', 'trandate')),
+        customer: str(rd(c, 'customerName', 'customerText', 'customer')),
+        item: str(rd(c, 'itemName', 'itemCode', 'itemText', 'item')),
+        pct: pctOf(rd(c, 'pct', 'contribution'), PCT.creditIsRatio),
+        // Nguồn của credit: trống / N / NS = NetSuite, còn lại là tên hệ thống ngoài (DMS, POS...)
+        source: str(rd(c, 'sourceSystem', 'source_system', 'source')),
+        base: numv(rd(c, 'base')),
+        qty: numv(rd(c, 'qty', 'quantity')),
+        revenue: numv(rd(c, 'revenue')),
+    });
+    const mapShare = (s, i) => ({
+        id: `s${i}`,
+        department: str(rd(s, 'departmentName', 'department', 'subName', 'sub')),
+        cls: str(rd(s, 'className', 'classText', 'workCenterName', 'workCenter', 'classId')),
+        location: str(rd(s, 'locationName', 'location', 'branchName', 'branch')),
+        project: str(rd(s, 'projectName', 'project', 'jobName', 'job')),
+        amount: numv(rd(s, 'amount')),
+    });
+    const mapAdjust = (a, i) => ({
+        id: str(rd(a, 'id')) || `a${i}`,
+        plan: str(rd(a, 'plan')),
+        planName: str(rd(a, 'planName')),
+        amount: numv(rd(a, 'amount')),
+        reason: str(rd(a, 'reason')),
+        date: str(rd(a, 'date', 'created', 'createdAt')),
+        by: str(rd(a, 'createdByName', 'byName', 'owner')),
+    });
+    /** commissionResult -> số liệu đủ của một kết quả + diễn giải (detail có thể là chuỗi JSON hoặc đối tượng). */
+    function mapResult(raw) {
+        const r = (raw && (raw.result || raw)) || {};
+        const d = parseJson(r.detail);
+        const pickList = (...keys) => {
+            for (let i = 0; i < keys.length; i++) {
+                const v = Array.isArray(r[keys[i]]) ? r[keys[i]] : Array.isArray(d[keys[i]]) ? d[keys[i]] : null;
+                if (v)
+                    return v;
+            }
+            return [];
+        };
+        return {
+            id: str(rd(r, 'id', 'resultId')),
+            employee: str(rd(r, 'employee')),
+            plan: str(rd(r, 'plan')),
+            planName: str(rd(r, 'planName')),
+            basis: str(rd(r, 'basis') || rd(d, 'basis')).toUpperCase(),
+            earningType: str(rd(r, 'earningType', 'earning_type')),
+            quota: numv(rd(r, 'quota')),
+            base: numv(rd(r, 'base')),
+            windowBase: numv(rd(r, 'windowBase', 'window_base')),
+            attainment: pctOf(rd(r, 'attainment'), PCT.attainmentIsRatio),
+            gross: numv(rd(r, 'gross')),
+            priorPaid: numv(rd(r, 'priorPaid', 'prior_paid')),
+            earned: numv(rd(r, 'earned')),
+            override: numv(rd(r, 'override', 'overrideAmount', 'override_amount')),
+            adjustments: numv(rd(r, 'adjustments', 'adjustmentAmount')),
+            capped: numv(rd(r, 'capped')),
+            drawPaid: numv(rd(r, 'drawPaid', 'draw_paid')),
+            drawRecovered: numv(rd(r, 'drawRecovered', 'draw_recovered')),
+            drawBalance: numv(rd(r, 'drawBalance', 'draw_balance')),
+            payable: numv(rd(r, 'payable')),
+            components: pickList('components').map(mapComponent),
+            steps: stepsOf(pickList('steps')),
+            credits: pickList('credits').map(mapCredit),
+            shares: pickList('shares').map(mapShare),
+            warnings: pickList('warnings').map((w) => (w && typeof w === 'object' ? { code: str(w.code), vi: str(w.vi), en: str(w.en) } : { code: '', vi: str(w), en: str(w) })),
+            adjustList: pickList('adjustmentList', 'adjustList', 'adjusts', 'adjustmentLines').map(mapAdjust),
+        };
+    }
+    const optionsOf = (v) => arr(v)
+        .map((o) => {
+        if (!o || typeof o !== 'object')
+            return { value: str(o), label: str(o) };
+        const value = str(rd(o, 'id', 'value'));
+        const code = str(rd(o, 'code', 'entityId', 'number'));
+        const name = str(rd(o, 'name', 'label', 'text'));
+        return { value, label: code && name && code !== name ? `${code} ${name}` : name || code || value };
+    })
+        .filter((o) => o.value);
+    const DEFAULT_EXCLUDE = 'TaxItem,ShipItem,Subtotal,Description,EndGroup,Group';
+    let keySeq = 0;
+    const newKey = (p) => {
+        keySeq += 1;
+        return `${p}${keySeq}`;
+    };
+    const s = (v) => (has(v) ? String(v) : '');
+    const mapTier = (x) => ({ key: has(rd(x, 'id')) ? `t:${x.id}` : newKey('nt'), id: str(rd(x, 'id')), fromValue: s(rd(x, 'fromValue', 'from_value', 'from')), rate: s(rd(x, 'rate')), amount: rd(x, 'amount') === undefined ? '' : numv(rd(x, 'amount')) });
+    const mapRule = (r, i) => ({
+        key: has(rd(r, 'id')) ? `r:${r.id}` : newKey('nr'),
+        id: str(rd(r, 'id')),
+        sequence: s(rd(r, 'sequence')) || String((i + 1) * 10),
+        name: str(rd(r, 'name')),
+        method: str(rd(r, 'method')).toUpperCase() || 'P',
+        rate: s(rd(r, 'rate')),
+        unitAmount: rd(r, 'unitAmount', 'unit_amount') === undefined ? '' : numv(rd(r, 'unitAmount', 'unit_amount')),
+        fItems: idList(rd(r, 'fItems', 'f_items', 'items')),
+        fClasses: idList(rd(r, 'fClasses', 'f_classes', 'classes')),
+        fDepartments: idList(rd(r, 'fDepartments', 'f_departments', 'departments')),
+        fLocations: idList(rd(r, 'fLocations', 'f_locations', 'locations')),
+        fCustCategories: idList(rd(r, 'fCustCategories', 'f_cust_categories', 'customerCategories')),
+        fNewCustomer: bool(rd(r, 'fNewCustomer', 'f_new_customer', 'newCustomer')),
+        newDays: s(rd(r, 'newDays', 'new_days')) || '90',
+        tiers: arr(r && r.tiers).map(mapTier),
+    });
+    const mapAssign = (a) => ({
+        key: has(rd(a, 'id')) ? `a:${a.id}` : newKey('na'),
+        id: str(rd(a, 'id')),
+        employee: str(rd(a, 'employee')),
+        effective: str(rd(a, 'effective')),
+        expiration: str(rd(a, 'expiration')),
+        quota: rd(a, 'quota') === undefined ? '' : numv(rd(a, 'quota')),
+        manager: str(rd(a, 'manager')),
+    });
+    const mapQuota = (q) => ({ key: has(rd(q, 'id')) ? `q:${q.id}` : newKey('nq'), id: str(rd(q, 'id')), employee: str(rd(q, 'employee')), month: monthIso(rd(q, 'month')), quota: rd(q, 'quota') === undefined ? '' : numv(rd(q, 'quota')) });
+    /** Một kế hoạch của commissionSetup -> bản nháp của biểu mẫu (số giữ dạng chuỗi / số để đưa thẳng vào ô nhập). */
+    function mapPlan(p) {
+        const x = p || {};
+        const ratesFirst = (keys) => s(rd(x, ...keys));
+        return {
+            key: has(rd(x, 'id')) ? `p:${x.id}` : newKey('np'),
+            id: str(rd(x, 'id')),
+            name: str(rd(x, 'name', 'code')),
+            description: str(rd(x, 'description')),
+            subsidiary: str(rd(x, 'subsidiary')),
+            effective: str(rd(x, 'effective')),
+            expiration: str(rd(x, 'expiration')),
+            source: str(rd(x, 'source', 'salesSource', 'sales_source')).toUpperCase() || 'N',
+            basis: str(rd(x, 'basis')).toUpperCase() || 'R',
+            trigger: str(rd(x, 'trigger')).toUpperCase() || 'I',
+            creditSource: str(rd(x, 'creditSource', 'credit_source')).toUpperCase() || 'R',
+            creditField: str(rd(x, 'creditField', 'credit_field')),
+            window: str(rd(x, 'window')).toUpperCase() || 'M',
+            includeReturns: rd(x, 'includeReturns', 'include_returns') === undefined ? true : bool(rd(x, 'includeReturns', 'include_returns')),
+            clawbackDays: ratesFirst(['clawbackDays', 'clawback_days']) || '0',
+            excludeItemTypes: rd(x, 'excludeItemTypes', 'exclude_item_types') === undefined ? DEFAULT_EXCLUDE : str(rd(x, 'excludeItemTypes', 'exclude_item_types')),
+            earningType: str(rd(x, 'earningType', 'earning_type')),
+            minAttainment: ratesFirst(['minAttainment', 'min_attainment']),
+            capAmount: rd(x, 'capAmount', 'cap_amount') === undefined ? '' : numv(rd(x, 'capAmount', 'cap_amount')),
+            drawType: str(rd(x, 'drawType', 'draw_type')).toUpperCase() || 'N',
+            drawAmount: rd(x, 'drawAmount', 'draw_amount') === undefined ? '' : numv(rd(x, 'drawAmount', 'draw_amount')),
+            overridePct: ratesFirst(['overridePct', 'override_pct']),
+            overrideBasis: str(rd(x, 'overrideBasis', 'override_basis')).toUpperCase() || 'B',
+            inactive: bool(rd(x, 'isInactive', 'isinactive', 'inactive')),
+            rules: arr(x.rules).map(mapRule),
+            assignments: arr(x.assignments).map(mapAssign),
+            quotas: arr(x.quotas).map(mapQuota),
+        };
+    }
+    /** commissionSetup -> {plans, earningTypes, lookups} với lookups là danh sách [{value, label}]. */
+    function mapSetup(raw) {
+        const v = raw || {};
+        const lk = v.lookups || {};
+        return {
+            plans: arr(v.plans).map(mapPlan),
+            earningTypes: arr(v.earningTypes)
+                .map((e) => {
+                const code = str(rd(e, 'code'));
+                const id = str(rd(e, 'id'));
+                const value = code || id;
+                return { value, label: [code, str(rd(e, 'name'))].filter(Boolean).join(' - ') || value };
+            })
+                .filter((o) => o.value),
+            lookups: {
+                classes: optionsOf(lk.classes),
+                departments: optionsOf(lk.departments),
+                locations: optionsOf(lk.locations),
+                customerCategories: optionsOf(lk.customerCategories || lk.custCategories),
+                employees: optionsOf(lk.employees || lk.salesReps),
+                items: optionsOf(lk.items),
+            },
+        };
+    }
+    /** Bản nháp kế hoạch mới với mặc định hợp lý. */
+    function newPlanDraft(subsidiary, today) {
+        const d = mapPlan({});
+        d.subsidiary = str(subsidiary);
+        const x = /^(\d{4})-(\d{2})/.exec(str(today));
+        d.effective = x ? `${x[1]}-${x[2]}-01` : '';
+        d.rules = [newRule(1)];
+        return d;
+    }
+    const newRule = (n) => Object.assign(mapRule({}, 0), { sequence: String((n || 1) * 10), method: 'P' });
+    const TIER_METHODS = ['G', 'S', 'A', 'B'];
+    const tierFromIsPct = (m) => m === 'A' || m === 'B';
+    /** Kiểm biểu mẫu kế hoạch; trả {plan: {trường: mã}, rules: {key: mã}, assignments: {key: mã}, quotas: {key: mã}, count}. Mã lỗi đổi thành chữ ở view. */
+    function validatePlan(d) {
+        const out = { plan: {}, rules: {}, assignments: {}, quotas: {}, count: 0 };
+        const bad = (group, key, code) => {
+            if (!out[group][key])
+                out.count += 1;
+            out[group][key] = code;
+        };
+        if (!str(d.name).trim())
+            bad('plan', 'name', 'required');
+        if (!str(d.earningType))
+            bad('plan', 'earningType', 'required');
+        if (d.effective && d.expiration && d.expiration < d.effective)
+            bad('plan', 'expiration', 'dateOrder');
+        if (d.creditSource === 'F' && !str(d.creditField).trim())
+            bad('plan', 'creditField', 'required');
+        if (d.drawType && d.drawType !== 'N' && !(toNumber(d.drawAmount) > 0))
+            bad('plan', 'drawAmount', 'positive');
+        if (!arr(d.rules).length)
+            bad('plan', 'rules', 'noRules');
+        arr(d.rules).forEach((r) => {
+            if (!str(r.name).trim())
+                bad('rules', r.key, 'ruleName');
+            else if (r.method === 'P' && toNumber(r.rate) === null)
+                bad('rules', r.key, 'rate');
+            else if (r.method === 'U' && toNumber(r.unitAmount) === null)
+                bad('rules', r.key, 'unit');
+            else if (TIER_METHODS.indexOf(r.method) >= 0 && !arr(r.tiers).length)
+                bad('rules', r.key, 'tiers');
+            else if (TIER_METHODS.indexOf(r.method) >= 0 && arr(r.tiers).some((t) => toNumber(t.fromValue) === null || (r.method === 'B' ? toNumber(t.amount) === null : toNumber(t.rate) === null)))
+                bad('rules', r.key, 'tierValues');
+        });
+        arr(d.assignments).forEach((a) => {
+            if (!a.employee)
+                bad('assignments', a.key, 'employee');
+            else if (a.effective && a.expiration && a.expiration < a.effective)
+                bad('assignments', a.key, 'dateOrder');
+        });
+        arr(d.quotas).forEach((q) => {
+            if (!q.employee || !monthInt(q.month))
+                bad('quotas', q.key, 'quotaRow');
+            else if (toNumber(q.quota) === null)
+                bad('quotas', q.key, 'quotaRow');
+        });
+        return out;
+    }
+    /** Bản nháp -> nội dung POST commissionPlanSave {plan, rules (mỗi thành phần kèm tiers), assignments, quotas}, tên trường snake_case. */
+    function planPayload(d, filterAsCsv) {
+        const n = (v) => toNumber(v);
+        const int = (v) => (n(v) === null ? null : Math.round(n(v)));
+        const ids = (a) => (idList(a).join(',') );
+        const plan = {
+            id: d.id || null,
+            name: str(d.name).trim(),
+            description: str(d.description).trim(),
+            subsidiary: d.subsidiary || null,
+            effective: d.effective || null,
+            expiration: d.expiration || null,
+            source: d.source || 'N',
+            basis: d.basis,
+            trigger: d.trigger,
+            credit_source: d.creditSource,
+            credit_field: d.creditSource === 'F' ? str(d.creditField).trim() : '',
+            window: d.window,
+            include_returns: !!d.includeReturns,
+            clawback_days: d.trigger === 'I' ? int(d.clawbackDays) || 0 : 0,
+            exclude_item_types: str(d.excludeItemTypes).trim(),
+            earning_type: d.earningType || '',
+            min_attainment: n(d.minAttainment),
+            cap_amount: n(d.capAmount),
+            draw_type: d.drawType || 'N',
+            draw_amount: d.drawType && d.drawType !== 'N' ? n(d.drawAmount) : null,
+            override_pct: n(d.overridePct),
+            override_basis: d.overrideBasis || 'B',
+        };
+        // Bậc thang đi kèm từng thành phần (rules[].tiers); không gửi thêm danh sách tiers phẳng (máy chủ sẽ cộng trùng)
+        const rules = arr(d.rules).map((r, i) => {
+            const tiers = TIER_METHODS.indexOf(r.method) >= 0
+                ? arr(r.tiers)
+                    .map((t) => ({ id: t.id || null, from_value: n(t.fromValue), rate: r.method === 'B' ? null : n(t.rate), amount: r.method === 'B' ? n(t.amount) : null }))
+                    .sort((a, b) => (a.from_value || 0) - (b.from_value || 0))
+                : [];
+            return {
+                key: r.key,
+                id: r.id || null,
+                sequence: int(r.sequence) === null ? (i + 1) * 10 : int(r.sequence),
+                name: str(r.name).trim(),
+                method: r.method,
+                rate: r.method === 'P' ? n(r.rate) : null,
+                unit_amount: r.method === 'U' ? n(r.unitAmount) : null,
+                f_items: ids(r.fItems),
+                f_classes: ids(r.fClasses),
+                f_departments: ids(r.fDepartments),
+                f_locations: ids(r.fLocations),
+                f_cust_categories: ids(r.fCustCategories),
+                f_new_customer: !!r.fNewCustomer,
+                new_days: r.fNewCustomer ? int(r.newDays) || 90 : null,
+                tiers,
+            };
+        });
+        const assignments = arr(d.assignments).map((a) => ({ id: a.id || null, employee: a.employee, effective: a.effective || null, expiration: a.expiration || null, quota: n(a.quota), manager: a.manager || null }));
+        const quotas = arr(d.quotas).map((q) => ({ id: q.id || null, employee: q.employee, month: monthInt(q.month), quota: n(q.quota) }));
+        return { plan, rules, assignments, quotas };
+    }
+    // ------------------------------------------------------------------ doanh số ngoài (docs/COMMISSION.md mục 4.1)
+    /**
+     * Trường của dòng doanh số ngoài và các tên tiêu đề tự nhận (so sau khi bỏ dấu, chữ thường, "_" / "-" thành dấu cách).
+     * Thứ tự tên quan trọng: khớp đúng cả tên trước, rồi mới khớp phần đầu.
+     */
+    const IMPORT_FIELDS = [
+        { key: 'docNo', required: true, names: ['so chung tu', 'so ct', 'so hoa don', 'so phieu', 'doc no', 'document no', 'document', 'invoice no', 'doc'] },
+        { key: 'lineNo', names: ['dong', 'so dong', 'line no', 'line'] },
+        { key: 'tranType', names: ['loai', 'loai chung tu', 'tran type', 'type'] },
+        { key: 'date', required: true, names: ['ngay', 'ngay chung tu', 'ngay hoa don', 'date', 'tran date', 'trandate'] },
+        { key: 'customerCode', names: ['ma kh', 'ma khach hang', 'ma khach', 'customer code', 'customer id'] },
+        { key: 'customerName', names: ['ten kh', 'ten khach hang', 'khach hang', 'customer name', 'customer'] },
+        { key: 'customerCategory', names: ['nhom kh', 'nhom khach hang', 'customer category', 'category'] },
+        { key: 'itemCode', names: ['ma hang', 'ma mat hang', 'mat hang', 'item code', 'item', 'sku'] },
+        { key: 'revenue', names: ['doanh thu', 'thanh tien', 'revenue', 'net amount', 'amount'] },
+        { key: 'cost', names: ['gia von', 'cost'] },
+        { key: 'qty', names: ['so luong', 'sl', 'qty', 'quantity'] },
+        { key: 'employee', required: true, names: ['ma nv', 'ma nhan vien', 'nhan vien', 'nv kinh doanh', 'email', 'employee', 'employee code', 'sales rep', 'salesrep'] },
+        { key: 'department', names: ['phong ban', 'department'] },
+        { key: 'cls', names: ['class', 'lop'] },
+        { key: 'location', names: ['dia diem', 'chi nhanh', 'location'] },
+        { key: 'collectedDate', names: ['ngay thu', 'ngay thu tien', 'collected date', 'payment date'] },
+        { key: 'collectedAmount', names: ['so da thu', 'da thu', 'so tien thu', 'collected amount', 'collected', 'paid amount'] },
+    ];
+    // Tiêu đề chuẩn của file mẫu (cũng được tự nhận như trên); dòng ví dụ chỉ dùng chữ không dấu
+    const TEMPLATE_HEADERS = ['doc_no', 'line_no', 'tran_type', 'date', 'customer_code', 'customer_name', 'customer_category', 'item_code', 'revenue', 'cost', 'qty', 'employee', 'department', 'class', 'location', 'collected_date', 'collected_amount'];
+    const TEMPLATE_SAMPLE = ['HD0001', '1', 'I', '2026-10-15', 'KH001', 'Customer A', 'Retail', 'SP001', '15000000', '11000000', '10', 'NV001', '', '', '', '', ''];
+    const templateCsv = () => `﻿${TEMPLATE_HEADERS.join(',')}\r\n${TEMPLATE_SAMPLE.join(',')}\r\n`;
+    const headKey = (h) => fold(h)
+        .replace(/[_\-./]+/g, ' ')
+        .replace(/[^a-z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    /** Văn bản dán từ Excel (tab) hoặc CSV (dấu phẩy / chấm phẩy, có ngoặc kép) -> {headers, rows, delimiter}; bỏ dòng trống. */
+    function parseDelimited(text) {
+        const src = String(text === null || text === undefined ? '' : text).replace(/^﻿/, '');
+        const first = src.split(/\r?\n/)[0] || '';
+        const delimiter = first.indexOf('\t') >= 0 ? '\t' : first.split(';').length > first.split(',').length ? ';' : ',';
+        const rows = [];
+        let row = [];
+        let cell = '';
+        let quoted = false;
+        for (let i = 0; i < src.length; i++) {
+            const ch = src[i];
+            if (quoted) {
+                if (ch === '"') {
+                    if (src[i + 1] === '"') {
+                        cell += '"';
+                        i += 1;
+                    }
+                    else
+                        quoted = false;
+                }
+                else
+                    cell += ch;
+                continue;
+            }
+            if (ch === '"' && cell === '')
+                quoted = true;
+            else if (ch === delimiter) {
+                row.push(cell);
+                cell = '';
+            }
+            else if (ch === '\n') {
+                row.push(cell);
+                rows.push(row);
+                row = [];
+                cell = '';
+            }
+            else if (ch !== '\r')
+                cell += ch;
+        }
+        if (cell !== '' || row.length) {
+            row.push(cell);
+            rows.push(row);
+        }
+        const clean = rows.filter((r) => r.some((c) => String(c).trim() !== ''));
+        if (!clean.length)
+            return { headers: [], rows: [], delimiter };
+        return { headers: clean[0].map((h) => String(h).trim()), rows: clean.slice(1).map((r) => r.map((c) => String(c).trim())), delimiter };
+    }
+    /** Tự nhận cột theo tiêu đề: {trường: chỉ số cột dạng chuỗi}; trường không nhận ra thì không có khóa. */
+    function guessMapping(headers) {
+        const keys = arr(headers).map(headKey);
+        const used = [];
+        const out = {};
+        const passes = [(k, n) => k === n, (k, n) => k.indexOf(`${n} `) === 0];
+        passes.forEach((match) => {
+            IMPORT_FIELDS.forEach((f) => {
+                if (out[f.key] !== undefined)
+                    return;
+                for (let j = 0; j < f.names.length; j++) {
+                    const idx = keys.findIndex((k, i) => used.indexOf(i) < 0 && match(k, f.names[j]));
+                    if (idx >= 0) {
+                        out[f.key] = String(idx);
+                        used.push(idx);
+                        return;
+                    }
+                }
+            });
+        });
+        return out;
+    }
+    /** Số trong file: 1.234.567 / 1,234,567.5 / 1.234,5 / (1.000) / -500; trống -> null, không đọc được -> NaN. */
+    function parseAmount(raw) {
+        const orig = String(raw === null || raw === undefined ? '' : raw).trim();
+        if (!orig)
+            return null;
+        let s = orig.replace(/[\s ]/g, '').replace(/[^\d.,\-()]/g, '');
+        if (!/\d/.test(s))
+            return NaN;
+        let neg = false;
+        if (/^\(.*\)$/.test(s)) {
+            neg = true;
+            s = s.slice(1, -1);
+        }
+        if (s[0] === '-') {
+            neg = !neg;
+            s = s.slice(1);
+        }
+        const dot = s.lastIndexOf('.');
+        const comma = s.lastIndexOf(',');
+        let norm = s;
+        if (dot >= 0 && comma >= 0) {
+            const dec = dot > comma ? '.' : ',';
+            norm = s.split(dec === '.' ? ',' : '.').join('').replace(dec, '.');
+        }
+        else if (comma >= 0)
+            norm = /^\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, '') : s.replace(',', '.');
+        else if (dot >= 0)
+            norm = /^\d{1,3}(\.\d{3})+$/.test(s) ? s.replace(/\./g, '') : s;
+        if (!/^\d+(\.\d+)?$/.test(norm))
+            return NaN;
+        const n = Number(norm);
+        return neg ? -n : n;
+    }
+    /** Ngày trong file: dd/mm/yyyy, d-m-yyyy, dd.mm.yyyy, yyyy-mm-dd (có giờ phía sau cũng được), số ngày kiểu Excel -> ISO; trống -> null, sai -> ''. */
+    function parseDay(raw) {
+        const s = String(raw === null || raw === undefined ? '' : raw).trim();
+        if (!s)
+            return null;
+        let y;
+        let mo;
+        let d;
+        let m = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[ T].*)?$/.exec(s);
+        if (m) {
+            y = Number(m[1]);
+            mo = Number(m[2]);
+            d = Number(m[3]);
+        }
+        else if ((m = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?:\s.*)?$/.exec(s))) {
+            d = Number(m[1]);
+            mo = Number(m[2]);
+            y = Number(m[3]);
+        }
+        else if (/^\d{5}$/.test(s)) {
+            const dt = new Date(Date.UTC(1899, 11, 30) + Number(s) * 86400000);
+            y = dt.getUTCFullYear();
+            mo = dt.getUTCMonth() + 1;
+            d = dt.getUTCDate();
+        }
+        else
+            return '';
+        if (mo < 1 || mo > 12 || d < 1 || d > new Date(Date.UTC(y, mo, 0)).getUTCDate())
+            return '';
+        return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+    /** Loại chứng từ: trống -> I; I / S / C hoặc chữ (hóa đơn, bán lẻ, trả hàng, invoice, cash sale, return...); lạ -> null. */
+    function parseTranType(raw) {
+        const k = headKey(raw);
+        if (!k)
+            return 'I';
+        if (['i', 'hd', 'hoa don', 'invoice', 'custinvc', 'ban hang'].indexOf(k) >= 0)
+            return 'I';
+        if (['s', 'ban le', 'ban thu tien ngay', 'cash sale', 'cashsale', 'pos'].indexOf(k) >= 0)
+            return 'S';
+        if (['c', 'tra hang', 'tra lai', 'hang tra lai', 'return', 'credit memo', 'credit', 'custcred'].indexOf(k) >= 0)
+            return 'C';
+        return null;
+    }
+    /**
+     * Bảng đã đọc + ánh xạ cột -> dòng chuẩn {row, docNo, lineNo, tranType, date, ..., errors: [mã]}. Dòng thiếu số dòng được đánh số
+     * theo thứ tự trong cùng chứng từ (khóa chống trùng ổn định khi nạp lại cùng file). Mã lỗi: noDoc, badType, badDate, noEmployee,
+     * badNumber, noAmount, duplicate.
+     */
+    function buildImportRows(table, mapping) {
+        const map = mapping || {};
+        const col = (r, k) => {
+            const i = map[k];
+            return i === '' || i === undefined || i === null ? '' : str(r[Number(i)]).trim();
+        };
+        const lineSeq = {};
+        const seen = {};
+        return arr(table && table.rows).map((r, i) => {
+            const errors = [];
+            const add = (c) => errors.indexOf(c) < 0 && errors.push(c);
+            const docNo = col(r, 'docNo');
+            if (!docNo)
+                add('noDoc');
+            let lineNo = col(r, 'lineNo');
+            lineSeq[docNo] = (lineSeq[docNo] || 0) + 1;
+            if (!lineNo)
+                lineNo = String(lineSeq[docNo]);
+            const tranType = parseTranType(col(r, 'tranType'));
+            if (tranType === null)
+                add('badType');
+            const date = parseDay(col(r, 'date'));
+            if (!date)
+                add('badDate');
+            const employee = col(r, 'employee');
+            if (!employee)
+                add('noEmployee');
+            const nums = {};
+            ['revenue', 'cost', 'qty', 'collectedAmount'].forEach((k) => {
+                const v = parseAmount(col(r, k));
+                if (v !== null && isNaN(v))
+                    add('badNumber');
+                nums[k] = v === null || isNaN(v) ? null : v;
+            });
+            if (nums.revenue === null && nums.qty === null)
+                add('noAmount');
+            const cdRaw = col(r, 'collectedDate');
+            const collectedDate = cdRaw ? parseDay(cdRaw) : null;
+            if (cdRaw && !collectedDate)
+                add('badDate');
+            const key = `${docNo}|${lineNo}`;
+            if (docNo && seen[key])
+                add('duplicate');
+            seen[key] = true;
+            return {
+                row: i + 1,
+                docNo,
+                lineNo,
+                tranType: tranType || col(r, 'tranType'),
+                date: date || col(r, 'date'),
+                customerCode: col(r, 'customerCode'),
+                customerName: col(r, 'customerName'),
+                customerCategory: col(r, 'customerCategory'),
+                itemCode: col(r, 'itemCode'),
+                revenue: nums.revenue,
+                cost: nums.cost,
+                qty: nums.qty,
+                employee,
+                department: col(r, 'department'),
+                cls: col(r, 'cls'),
+                location: col(r, 'location'),
+                collectedDate: collectedDate || cdRaw,
+                collectedAmount: nums.collectedAmount,
+                errors,
+            };
+        });
+    }
+    /**
+     * Một dòng chuẩn -> phần tử `rows` của POST commissionImport (tên trường của record comm_txn). Phòng ban, class, địa điểm
+     * phải là id nội bộ (máy chủ báo lỗi dòng nếu không phải).
+     */
+    const importPayloadRow = (r, importBatch) => ({
+        doc_no: r.docNo,
+        line_no: r.lineNo,
+        tran_type: r.tranType,
+        date: r.date,
+        customer_code: r.customerCode,
+        customer_name: r.customerName,
+        customer_category: r.customerCategory,
+        item_code: r.itemCode,
+        revenue: r.revenue,
+        cost: r.cost,
+        qty: r.qty,
+        employee: r.employee,
+        department: r.department,
+        class: r.cls,
+        location: r.location,
+        collected_date: r.collectedDate || null,
+        collected_amount: r.collectedAmount,
+        import_batch: importBatch || '',
+    });
+    const IMPORT_ACTION = { new: 'create', create: 'create', update: 'update', ok: 'same', same: 'same', unchanged: 'same' };
+    /**
+     * Kết quả từng dòng của commissionImport -> {số dòng: {row, status: 'ok'|'error', action: 'create'|'update'|'same'|'', employee, errors}}.
+     * `pairs` = [{response, rows}] theo từng lượt gửi: `index` của máy chủ là vị trí (0) trong `rows` của lượt đó.
+     */
+    function mapImportResults(pairs) {
+        const out = {};
+        arr(pairs).forEach((p) => {
+            const sent = arr(p && p.rows);
+            const resp = (p && p.response) || {};
+            arr(resp.rows || resp.results).forEach((x) => {
+                const idx = numv(rd(x, 'index'));
+                const row = idx !== null && sent[idx] ? sent[idx].row : numv(rd(x, 'row'));
+                if (row === null)
+                    return;
+                const errors = arr(rd(x, 'messages', 'errors')).map((e) => (e && typeof e === 'object' ? { code: str(e.code), vi: str(e.vi), en: str(e.en) } : { code: '', vi: str(e), en: str(e) }));
+                const status = str(rd(x, 'status')).toLowerCase();
+                out[row] = { row, status: errors.length || status === 'error' || status === 'invalid' ? 'error' : 'ok', action: IMPORT_ACTION[status] || '', employeeName: str(rd(x, 'employeeName', 'employeeText')), errors };
+            });
+        });
+        return out;
+    }
+    /** Một dòng của GET commissionExternal. */
+    const mapExternal = (x, i) => ({
+        id: str(rd(x, 'id')) || `x${i}`,
+        sourceSystem: str(rd(x, 'sourceSystem', 'source_system')),
+        docNo: str(rd(x, 'docNo', 'doc_no')),
+        lineNo: str(rd(x, 'lineNo', 'line_no')),
+        tranType: str(rd(x, 'tranType', 'tran_type')).toUpperCase(),
+        date: str(rd(x, 'date')),
+        customer: [str(rd(x, 'customerCode', 'customer_code')), str(rd(x, 'customerName', 'customer_name'))].filter(Boolean).join(' '),
+        item: str(rd(x, 'itemCode', 'item_code', 'itemName')),
+        employee: [str(rd(x, 'employeeCode', 'code')), str(rd(x, 'employeeName', 'name'))].filter(Boolean).join(' ') || str(rd(x, 'employee')),
+        revenue: numv(rd(x, 'revenue')),
+        cost: numv(rd(x, 'cost')),
+        qty: numv(rd(x, 'qty', 'quantity')),
+        collectedAmount: numv(rd(x, 'collectedAmount', 'collected_amount')),
+        importBatch: str(rd(x, 'importBatch', 'import_batch')),
+        locked: bool(rd(x, 'locked', 'used')),
+    });
+    /** Nút trên hàng tiêu đề theo trạng thái bảng tính: {calc, approve, reopen, void} mỗi nút {enabled, reason (mã)}. */
+    function runActions(run, canWrite) {
+        const st = run ? run.status : '';
+        const no = (reason) => ({ enabled: false, reason });
+        if (!canWrite)
+            return { calc: no('readOnly'), approve: no('readOnly'), reopen: no('readOnly'), void: no('readOnly') };
+        if (!run || !run.id)
+            return { calc: { enabled: true, reason: '' }, approve: no('noRun'), reopen: no('noRun'), void: no('noRun') };
+        if (st === 'D')
+            return { calc: { enabled: true, reason: '' }, approve: { enabled: true, reason: '' }, reopen: no('notApproved'), void: { enabled: true, reason: '' } };
+        if (st === 'A')
+            return { calc: no('approved'), approve: no('approved'), reopen: { enabled: true, reason: '' }, void: no('approved') };
+        if (st === 'P')
+            return { calc: no('posted'), approve: no('posted'), reopen: no('posted'), void: no('posted') };
+        return { calc: { enabled: true, reason: '' }, approve: no('noRun'), reopen: no('noRun'), void: no('noRun') };
+    }
+    /** Quyền theo bootstrap: xem = administrator, kế toán, HR; ghi = administrator, kế toán (docs/COMMISSION.md mục 6). */
+    function rolesOf(user) {
+        const u = user || {};
+        const role = String(u.role || '');
+        const admin = role === 'administrator';
+        const acct = !!u.isAccountant || role === 'customrole_s4vp_accountant';
+        const hr = !!u.isHr || role === 'customrole_s4vp_hr';
+        return { canRead: admin || acct || hr, canWrite: admin || acct };
+    }
+    const canSeeCommission = (boot) => rolesOf(boot && boot.user).canRead;
+    // ================================================================== chữ
+    const TEXT$4 = {
+        vi: {
+            cm: {
+                title: 'Hoa hồng',
+                noSubsidiary: 'Chưa chọn công ty con.',
+                noRole: 'Vai trò của bạn không được xem hoa hồng.',
+                readOnly: 'Vai trò của bạn chỉ được xem.',
+                loading: 'Đang tải...',
+                refresh: 'Tải lại',
+                tabs: { run: 'Bảng tính', ext: 'Doanh số ngoài', plans: 'Kế hoạch', sim: 'Mô phỏng', label: 'Phần của màn hoa hồng' },
+                status: { D: 'Nháp đã tính', A: 'Đã duyệt', P: 'Đã vào bảng lương', none: 'Chưa tính' },
+                source: { N: 'Giao dịch NetSuite', X: 'Dữ liệu ngoài đã nạp', B: 'Cả hai' },
+                netsuite: 'NetSuite',
+                ext: {
+                    importBtn: 'Nạp doanh số ngoài',
+                    template: 'Tải file mẫu CSV',
+                    templateName: 'mau_doanh_so_ngoai.csv',
+                    sub: (m) => `Dòng doanh số từ hệ thống khác (DMS, POS, sàn...) có ngày chứng từ trong tháng ${m}. Kế hoạch có nguồn "Dữ liệu ngoài" hoặc "Cả hai" sẽ tính trên các dòng này.`,
+                    search: 'Tìm số chứng từ, khách, mặt hàng, nhân viên, nguồn',
+                    empty: 'Chưa có doanh số ngoài trong tháng. Bấm Nạp doanh số ngoài để dán từ Excel hoặc chọn file CSV.',
+                    total: (n) => `Tổng ${n} dòng`,
+                    locked: 'Đã dùng trong bảng tính đã duyệt',
+                    cols: { source: 'Nguồn', docNo: 'Số chứng từ', line: 'Dòng', date: 'Ngày', customer: 'Khách', item: 'Mặt hàng', employee: 'Nhân viên', revenue: 'Doanh thu', cost: 'Giá vốn', qty: 'Số lượng', collected: 'Đã thu', batch: 'Lô nạp' },
+                },
+                imp: {
+                    title: 'Nạp doanh số ngoài',
+                    system: 'Hệ thống nguồn',
+                    systemHint: 'Ví dụ DMS, POS, Shopee',
+                    paste: 'Dán từ Excel',
+                    pastePh: 'Chọn vùng trong Excel (kể cả dòng tiêu đề), Ctrl+C rồi dán vào đây',
+                    file: 'Hoặc chọn file CSV',
+                    fileHint: 'UTF-8, phân cách dấu phẩy hoặc chấm phẩy, dòng đầu là tiêu đề',
+                    read: (rows, cols, delim) => `Đã đọc ${rows} dòng, ${cols} cột (phân cách: ${delim}).`,
+                    delim: { tab: 'Tab', comma: 'dấu phẩy', semi: 'chấm phẩy' },
+                    noData: 'Chưa có dữ liệu.',
+                    mapping: 'Ánh xạ cột',
+                    mappingHint: 'Cột được tự nhận theo tiêu đề; sửa nếu chưa đúng.',
+                    unused: '(không dùng)',
+                    fields: { docNo: 'Số chứng từ', lineNo: 'Dòng', tranType: 'Loại (I / S / C)', date: 'Ngày', customerCode: 'Mã KH', customerName: 'Tên KH', customerCategory: 'Nhóm KH', itemCode: 'Mã hàng', revenue: 'Doanh thu', cost: 'Giá vốn', qty: 'Số lượng', employee: 'Mã NV hoặc email', department: 'Phòng ban (id nội bộ)', cls: 'Class (id nội bộ)', location: 'Địa điểm (id nội bộ)', collectedDate: 'Ngày thu', collectedAmount: 'Số đã thu' },
+                    missingReq: (names) => `Chưa ánh xạ cột bắt buộc: ${names}.`,
+                    preview: 'Xem trước',
+                    search: 'Tìm số chứng từ, nhân viên, lỗi',
+                    status: { pending: 'Chưa kiểm', ok: 'Hợp lệ', error: 'Lỗi', create: 'Tạo mới', update: 'Cập nhật', same: 'Không đổi' },
+                    counts: (total, ok, bad) => `${total} dòng - ${ok} hợp lệ - ${bad} lỗi`,
+                    errors: { noDoc: 'Thiếu số chứng từ', badType: 'Loại không hợp lệ (I, S, C)', badDate: 'Ngày không hợp lệ', noEmployee: 'Thiếu mã nhân viên', badNumber: 'Số không hợp lệ', noAmount: 'Thiếu doanh thu hoặc số lượng', duplicate: 'Trùng số chứng từ + dòng trong file' },
+                    cols: { row: 'Dòng', status: 'Trạng thái', docNo: 'Số chứng từ', line: 'Dòng CT', type: 'Loại', date: 'Ngày', customer: 'Khách', item: 'Mặt hàng', revenue: 'Doanh thu', qty: 'Số lượng', employee: 'Nhân viên', errors: 'Lỗi' },
+                    check: 'Kiểm tra',
+                    checking: 'Đang kiểm tra dữ liệu...',
+                    checked: (ok, bad) => (bad ? `Kiểm tra xong: ${ok} dòng hợp lệ, ${bad} dòng lỗi.` : `Kiểm tra xong: ${ok} dòng hợp lệ.`),
+                    skip: 'Bỏ qua dòng lỗi, chỉ ghi dòng hợp lệ',
+                    write: (n) => `Ghi ${n} dòng`,
+                    writing: (n) => `Đang ghi ${n} dòng doanh số ngoài...`,
+                    confirmSkip: (ok, bad) => `Ghi ${ok} dòng hợp lệ và bỏ qua ${bad} dòng lỗi?`,
+                    written: (n) => `Đã ghi ${n} dòng doanh số ngoài. Bấm Tính (hoặc Tính lại) ở tab Bảng tính để đưa vào hoa hồng.`,
+                    needCheck: 'Bấm Kiểm tra trước khi ghi.',
+                    needFix: 'Còn dòng lỗi: sửa file rồi dán lại, hoặc chọn bỏ qua dòng lỗi.',
+                    errSystem: 'Nhập tên hệ thống nguồn.',
+                    close: 'Đóng',
+                    fileFailed: 'Không đọc được file.',
+                },
+                basis: { R: 'Doanh thu thuần', G: 'Lãi gộp ước tính', Q: 'Số lượng bán' },
+                trigger: { I: 'Khi xuất hóa đơn', P: 'Khi thu tiền' },
+                credit: { R: 'NV kinh doanh trên chứng từ', T: 'Đội bán (% đóng góp)', F: 'Trường tùy chỉnh' },
+                window: { M: 'Theo tháng', Q: 'Lũy kế quý', Y: 'Lũy kế năm' },
+                draw: { N: 'Không', R: 'Ứng trước có thu hồi', G: 'Bảo đảm tối thiểu' },
+                overrideBasis: { B: 'Doanh số của cấp dưới', C: 'Hoa hồng của cấp dưới' },
+                method: { P: 'Tỷ lệ cố định', G: 'Thang lũy tiến', S: 'Thang bậc', A: 'Theo % đạt chỉ tiêu', U: 'Đơn giá / sản phẩm', B: 'Thưởng mốc' },
+                methodHelp: {
+                    P: 'Cơ sở x tỷ lệ %.',
+                    G: 'Mỗi khoảng cơ sở nhân % của khoảng đó (như thuế lũy tiến).',
+                    S: 'Toàn bộ cơ sở nhân % của bậc cao nhất đạt được.',
+                    A: 'Toàn bộ cơ sở nhân % của bậc % đạt chỉ tiêu (tăng tốc / giảm tốc).',
+                    U: 'Số lượng bán x số tiền mỗi đơn vị.',
+                    B: 'Số tiền cố định của bậc % đạt cao nhất đã qua.',
+                },
+                tranType: { I: 'Hóa đơn', S: 'Bán thu tiền ngay', C: 'Credit memo' },
+                run: {
+                    month: 'Tháng',
+                    sub: (name, from, to) => `${name} - từ ${from} đến ${to}`,
+                    subNone: (m) => `Tháng ${m} chưa có bảng tính. Bấm Tính để lấy giao dịch bán hàng và tính hoa hồng.`,
+                    calcAt: (v) => `tính lúc ${v}`,
+                    batch: 'Bảng lương',
+                    calc: 'Tính',
+                    recalc: 'Tính lại',
+                    approve: 'Duyệt',
+                    reopen: 'Mở lại',
+                    void: 'Hủy',
+                    reasons: {
+                        readOnly: 'Chỉ kế toán (hoặc quản trị) được thao tác bảng tính hoa hồng.',
+                        noRun: 'Chưa có bảng tính của tháng này.',
+                        notApproved: 'Bảng tính chưa duyệt.',
+                        approved: 'Bảng tính đã duyệt: mở lại trước khi tính lại hoặc hủy.',
+                        posted: 'Bảng tính đã vào bảng lương: đảo bảng lương trước.',
+                    },
+                    calculating: 'Đang tính hoa hồng...',
+                    calculated: (n) => `Đã tính hoa hồng cho ${n} nhân viên.`,
+                    calculatedNoCount: 'Đã tính hoa hồng.',
+                    confirmRecalc: (name) => `Tính lại bảng tính ${name}? Kết quả nháp hiện tại được thay bằng kết quả mới (điều chỉnh tay vẫn giữ).`,
+                    confirmApprove: (name, amount) => `Duyệt bảng tính ${name}, tổng hoa hồng ${amount}? Bảng lương có kỳ chứa ngày cuối của bảng tính sẽ lấy số này.`,
+                    approved: (name) => `Đã duyệt bảng tính ${name}.`,
+                    confirmReopen: (name) => `Mở lại bảng tính ${name} về nháp?`,
+                    reopened: (name) => `Đã mở lại bảng tính ${name}.`,
+                    voidTitle: (name) => `Hủy bảng tính ${name}`,
+                    voidIntro: 'Bảng tính bị đánh dấu không còn hiệu lực (không xóa). Tính lại tháng này sẽ tạo bảng tính mới.',
+                    voidReason: 'Lý do hủy',
+                    voidErr: 'Nhập lý do hủy.',
+                    voidRun: 'Hủy bảng tính',
+                    back: 'Quay lại',
+                    voided: (name) => `Đã hủy bảng tính ${name}.`,
+                },
+                kpi: {
+                    base: 'Tổng cơ sở tính',
+                    baseNote: 'Doanh thu / lãi gộp / số lượng theo kế hoạch',
+                    amount: 'Tổng hoa hồng phải trả',
+                    amountNote: (n) => (n ? `${n} cảnh báo cần xem` : 'Sau trần, điều chỉnh và ứng trước'),
+                    employees: 'Nhân viên',
+                    employeesNote: 'Có kết quả trong tháng',
+                    attainment: 'Bình quân % đạt',
+                    attainmentNote: 'Trên các dòng có chỉ tiêu',
+                },
+                cols: { code: 'Mã NV', name: 'Nhân viên', plan: 'Kế hoạch', quota: 'Chỉ tiêu', base: 'Cơ sở', attainment: '% đạt', earned: 'Hoa hồng kỳ', override: 'Quản lý', adjustments: 'Điều chỉnh', capped: 'Bị cắt', drawPaid: 'Ứng trước', payable: 'Phải trả', warnings: 'Cảnh báo' },
+                search: 'Tìm mã, tên, kế hoạch, số tiền',
+                empty: 'Chưa có kết quả. Bấm Tính để tính hoa hồng tháng này.',
+                total: (n) => `Tổng ${n} dòng`,
+                side: {
+                    explain: 'Diễn giải',
+                    credits: 'Giao dịch',
+                    shares: 'Phân đoạn',
+                    adjust: 'Điều chỉnh',
+                    label: 'Chi tiết kết quả',
+                    loading: 'Đang tải diễn giải...',
+                    failed: 'Không tải được diễn giải.',
+                    retry: 'Thử lại',
+                    pick: 'Chọn một dòng để xem diễn giải.',
+                    summary: { quota: 'Chỉ tiêu', base: 'Cơ sở trong kỳ', windowBase: 'Cơ sở lũy kế cửa sổ', attainment: '% đạt', gross: 'Hoa hồng lũy kế cửa sổ', priorPaid: 'Đã trả các kỳ trước', earned: 'Hoa hồng kỳ này', override: 'Hoa hồng quản lý', adjustments: 'Điều chỉnh tay', capped: 'Bị cắt bởi trần', drawPaid: 'Ứng trước trả bù', drawRecovered: 'Thu hồi ứng trước', drawBalance: 'Số dư ứng trước', payable: 'Phải trả vào lương' },
+                    warnings: 'Cảnh báo',
+                    components: 'Thành phần',
+                    steps: 'Các bước tính',
+                    noSteps: 'Không có dòng diễn giải.',
+                    compCols: { name: 'Thành phần', method: 'Cách tính', base: 'Cơ sở', amount: 'Hoa hồng' },
+                    credit: { source: 'Nguồn', search: 'Tìm số chứng từ, khách, mặt hàng, nguồn', tranNo: 'Số chứng từ', date: 'Ngày', customer: 'Khách', item: 'Mặt hàng', pct: '% ghi nhận', base: 'Cơ sở', empty: 'Không có giao dịch được ghi nhận.', open: 'Bấm một dòng để mở chứng từ.' },
+                    share: { search: 'Tìm phòng ban, lớp, địa điểm, dự án', department: 'Phòng ban', cls: 'Lớp (class)', location: 'Địa điểm', project: 'Dự án', amount: 'Số tiền', empty: 'Chưa có phân bổ theo phân đoạn.' },
+                    adj: {
+                        add: 'Thêm điều chỉnh',
+                        plan: 'Kế hoạch',
+                        amount: 'Số tiền',
+                        amountHint: 'Âm để giảm (ví dụ -500.000)',
+                        reason: 'Lý do',
+                        save: 'Thêm',
+                        errAmount: 'Nhập số tiền khác 0.',
+                        errReason: 'Nhập lý do điều chỉnh.',
+                        errPlan: 'Chọn kế hoạch.',
+                        saving: 'Đang thêm điều chỉnh...',
+                        saved: 'Đã thêm điều chỉnh. Bấm Tính lại để đưa vào bảng tính.',
+                        locked: 'Bảng tính đã duyệt hoặc đã vào lương: mở lại trước khi điều chỉnh.',
+                        list: 'Điều chỉnh đã có',
+                        search: 'Tìm lý do, số tiền',
+                        empty: 'Chưa có điều chỉnh tay.',
+                        cols: { date: 'Ngày', plan: 'Kế hoạch', amount: 'Số tiền', reason: 'Lý do', by: 'Người lập' },
+                    },
+                },
+                plans: {
+                    newPlan: 'Tạo kế hoạch',
+                    search: 'Tìm mã, mô tả, loại thu nhập',
+                    empty: 'Chưa có kế hoạch hoa hồng. Bấm Tạo kế hoạch.',
+                    cols: { source: 'Nguồn', name: 'Mã kế hoạch', description: 'Mô tả', basis: 'Cơ sở', window: 'Cửa sổ', components: 'Thành phần', assignees: 'Nhân viên', effective: 'Hiệu lực', earningType: 'Loại thu nhập', state: 'Tình trạng' },
+                    active: 'Đang dùng',
+                    inactive: 'Ngừng',
+                    expired: 'Hết hạn',
+                    range: (a, b) => `${a || '...'} - ${b || '...'}`,
+                    backToList: 'Danh sách kế hoạch',
+                    save: 'Lưu kế hoạch',
+                    discard: 'Bỏ thay đổi',
+                    saving: 'Đang lưu kế hoạch...',
+                    saved: (name) => `Đã lưu kế hoạch ${name}.`,
+                    dirty: 'Có thay đổi chưa lưu',
+                    confirmLeave: 'Bỏ các thay đổi chưa lưu của kế hoạch này?',
+                    newTitle: 'Kế hoạch mới',
+                    form: 'Thông tin kế hoạch',
+                    f: {
+                        source: 'Nguồn doanh số', sourceHint: 'Dữ liệu ngoài nạp ở tab Doanh số ngoài',
+                        name: 'Mã kế hoạch', description: 'Mô tả', subsidiary: 'Công ty con', allSubs: 'Mọi công ty', effective: 'Hiệu lực từ', expiration: 'Đến ngày', earningType: 'Loại thu nhập', basis: 'Cơ sở tính', trigger: 'Ghi nhận khi', creditSource: 'Người được ghi nhận', creditField: 'Id trường nhân viên trên chứng từ', creditFieldHint: 'Ví dụ custbody_sales_agent', window: 'Cửa sổ tính', includeReturns: 'Trừ hàng trả lại (credit memo)', clawbackDays: 'Truy thu hóa đơn quá hạn (ngày)', clawbackHint: '0 = tắt; chỉ áp khi ghi nhận lúc xuất hóa đơn', excludeItemTypes: 'Loại dòng bỏ qua', excludeHint: 'Cách nhau dấu phẩy', minAttainment: 'Ngưỡng % đạt tối thiểu', minHint: 'Dưới ngưỡng thì hoa hồng theo doanh số = 0', capAmount: 'Trần mỗi kỳ', capHint: 'Trống = không trần', drawType: 'Ứng trước (draw)', drawAmount: 'Mức ứng trước mỗi kỳ', overridePct: 'Hoa hồng quản lý %', overrideBasis: 'Tính trên', overrideHint: 'Quản lý khai ở lưới phân công',
+                    },
+                    err: { required: 'Bắt buộc.', dateOrder: 'Ngày kết thúc trước ngày bắt đầu.', positive: 'Nhập số tiền lớn hơn 0.', noRules: 'Kế hoạch cần ít nhất một thành phần.', ruleName: 'Thành phần thiếu tên.', rate: 'Nhập tỷ lệ %.', unit: 'Nhập đơn giá.', tiers: 'Thêm ít nhất một bậc.', tierValues: 'Bậc thiếu giá trị.', employee: 'Chọn nhân viên.', quotaRow: 'Chọn nhân viên, tháng và nhập chỉ tiêu.', fix: (n) => `Còn ${n} ô chưa hợp lệ, xem các dòng báo đỏ.` },
+                    rules: 'Thành phần (cách tính)',
+                    rulesSearch: 'Tìm tên, cách tính',
+                    rulesEmpty: 'Chưa có thành phần.',
+                    addRule: 'Thêm thành phần',
+                    newRuleName: (n) => `Thành phần ${n}`,
+                    ruleCols: { sequence: 'TT', name: 'Tên', method: 'Cách tính', value: 'Tỷ lệ / đơn giá', filters: 'Bộ lọc', remove: '' },
+                    tiersCount: (n) => `${n} bậc`,
+                    filtersCount: (n) => (n ? `${n} điều kiện` : 'Mọi giao dịch'),
+                    remove: 'Bỏ',
+                    removeOf: (name) => `Bỏ ${name}`,
+                    rule: {
+                        title: (name) => `Thành phần: ${name}`,
+                        pick: 'Chọn một thành phần ở lưới bên trái để sửa.',
+                        name: 'Tên thành phần', sequence: 'Thứ tự', method: 'Cách tính', rate: 'Tỷ lệ %', unitAmount: 'Số tiền mỗi đơn vị',
+                        methods: 'Các cách tính',
+                        filters: 'Bộ lọc giao dịch (trống = không lọc)',
+                        classes: 'Lớp (class)', departments: 'Phòng ban', locations: 'Địa điểm', custCategories: 'Nhóm khách hàng', items: 'Mặt hàng', itemsHint: 'Id nội bộ mặt hàng, cách nhau dấu phẩy',
+                        add: 'Thêm...',
+                        removeChip: (name) => `Bỏ điều kiện ${name}`,
+                        newCustomer: 'Chỉ khách mới', newDays: 'Khách mới trong (ngày)',
+                        tiers: 'Bậc thang',
+                        noTiers: 'Cách tính này không dùng bậc thang.',
+                        addTier: 'Thêm bậc',
+                        tierFromMoney: 'Từ cơ sở',
+                        tierFromPct: 'Từ % đạt',
+                        tierRate: 'Tỷ lệ %',
+                        tierAmount: 'Tiền thưởng',
+                        tiersEmpty: 'Chưa có bậc.',
+                        tierOrder: 'Bậc được sắp theo giá trị "từ" khi lưu.',
+                    },
+                    assign: 'Phân công nhân viên',
+                    assignSearch: 'Tìm nhân viên, quản lý, chỉ tiêu',
+                    assignEmpty: 'Chưa phân công nhân viên nào.',
+                    addAssign: 'Thêm nhân viên',
+                    assignCols: { employee: 'Nhân viên', effective: 'Từ ngày', expiration: 'Đến ngày', quota: 'Chỉ tiêu tháng', manager: 'Quản lý nhận hoa hồng', remove: '' },
+                    noManager: 'Không có',
+                    pickEmployee: 'Chọn nhân viên',
+                    quotas: 'Chỉ tiêu riêng theo tháng',
+                    quotasHint: 'Ghi đè chỉ tiêu tháng của phân công cho đúng tháng đó.',
+                    quotasSearch: 'Tìm nhân viên, tháng, chỉ tiêu',
+                    quotasEmpty: 'Chưa có chỉ tiêu riêng.',
+                    addQuota: 'Thêm chỉ tiêu',
+                    quotaCols: { employee: 'Nhân viên', month: 'Tháng', quota: 'Chỉ tiêu', remove: '' },
+                },
+                sim: {
+                    intro: 'Thử nhanh một kế hoạch: nhập doanh số (hoặc số lượng) và chỉ tiêu, kết quả tự tính lại sau khi gõ.',
+                    plan: 'Kế hoạch',
+                    pickPlan: 'Chọn kế hoạch',
+                    base: 'Cơ sở (doanh thu / lãi gộp)',
+                    qty: 'Số lượng',
+                    quota: 'Chỉ tiêu',
+                    quotaHint: 'Cần cho cách tính theo % đạt và thưởng mốc',
+                    result: 'Kết quả mô phỏng',
+                    amount: 'Hoa hồng',
+                    attainment: '% đạt',
+                    working: 'Đang tính...',
+                    waiting: 'Chọn kế hoạch và nhập cơ sở hoặc số lượng.',
+                    failed: 'Không mô phỏng được.',
+                    noPlans: 'Chưa có kế hoạch. Tạo kế hoạch ở tab Kế hoạch trước.',
+                },
+            },
+        },
+        en: {
+            cm: {
+                title: 'Commission',
+                noSubsidiary: 'No subsidiary selected.',
+                noRole: 'Your role cannot view commissions.',
+                readOnly: 'Your role is view only.',
+                loading: 'Loading...',
+                refresh: 'Refresh',
+                tabs: { run: 'Calculation', ext: 'External sales', plans: 'Plans', sim: 'Simulation', label: 'Commission sections' },
+                status: { D: 'Draft calculated', A: 'Approved', P: 'In payroll', none: 'Not calculated' },
+                source: { N: 'NetSuite transactions', X: 'Imported external data', B: 'Both' },
+                netsuite: 'NetSuite',
+                ext: {
+                    importBtn: 'Import external sales',
+                    template: 'Download CSV template',
+                    templateName: 'external_sales_template.csv',
+                    sub: (m) => `Sales lines from other systems (DMS, POS, marketplaces...) dated in ${m}. Plans whose source is "Imported external data" or "Both" use these lines.`,
+                    search: 'Search document, customer, item, employee, source',
+                    empty: 'No external sales this month. Click Import external sales to paste from Excel or choose a CSV file.',
+                    total: (n) => `Total of ${n} lines`,
+                    locked: 'Used in an approved calculation',
+                    cols: { source: 'Source', docNo: 'Document', line: 'Line', date: 'Date', customer: 'Customer', item: 'Item', employee: 'Employee', revenue: 'Revenue', cost: 'Cost', qty: 'Quantity', collected: 'Collected', batch: 'Import batch' },
+                },
+                imp: {
+                    title: 'Import external sales',
+                    system: 'Source system',
+                    systemHint: 'For example DMS, POS, Shopee',
+                    paste: 'Paste from Excel',
+                    pastePh: 'Select the range in Excel (including the header row), press Ctrl+C and paste here',
+                    file: 'Or choose a CSV file',
+                    fileHint: 'UTF-8, comma or semicolon separated, first row is the header',
+                    read: (rows, cols, delim) => `Read ${rows} rows, ${cols} columns (separator: ${delim}).`,
+                    delim: { tab: 'Tab', comma: 'comma', semi: 'semicolon' },
+                    noData: 'No data yet.',
+                    mapping: 'Column mapping',
+                    mappingHint: 'Columns are matched by their headers; correct them if needed.',
+                    unused: '(not used)',
+                    fields: { docNo: 'Document number', lineNo: 'Line', tranType: 'Type (I / S / C)', date: 'Date', customerCode: 'Customer code', customerName: 'Customer name', customerCategory: 'Customer category', itemCode: 'Item code', revenue: 'Revenue', cost: 'Cost', qty: 'Quantity', employee: 'Employee ID or email', department: 'Department (internal id)', cls: 'Class (internal id)', location: 'Location (internal id)', collectedDate: 'Collected date', collectedAmount: 'Collected amount' },
+                    missingReq: (names) => `Required columns not mapped: ${names}.`,
+                    preview: 'Preview',
+                    search: 'Search document, employee, error',
+                    status: { pending: 'Not checked', ok: 'Valid', error: 'Error', create: 'New', update: 'Update', same: 'Unchanged' },
+                    counts: (total, ok, bad) => `${total} rows - ${ok} valid - ${bad} with errors`,
+                    errors: { noDoc: 'Missing document number', badType: 'Invalid type (I, S, C)', badDate: 'Invalid date', noEmployee: 'Missing employee ID', badNumber: 'Invalid number', noAmount: 'Missing revenue or quantity', duplicate: 'Duplicate document + line in the file' },
+                    cols: { row: 'Row', status: 'Status', docNo: 'Document', line: 'Doc. line', type: 'Type', date: 'Date', customer: 'Customer', item: 'Item', revenue: 'Revenue', qty: 'Quantity', employee: 'Employee', errors: 'Errors' },
+                    check: 'Check',
+                    checking: 'Checking the data...',
+                    checked: (ok, bad) => (bad ? `Check complete: ${ok} valid rows, ${bad} rows with errors.` : `Check complete: ${ok} valid rows.`),
+                    skip: 'Skip rows with errors, write valid rows only',
+                    write: (n) => `Write ${n} rows`,
+                    writing: (n) => `Writing ${n} external sales rows...`,
+                    confirmSkip: (ok, bad) => `Write ${ok} valid rows and skip ${bad} rows with errors?`,
+                    written: (n) => `${n} external sales rows written. Click Calculate (or Recalculate) in the Calculation tab to include them.`,
+                    needCheck: 'Click Check before writing.',
+                    needFix: 'Some rows have errors: fix the file and paste again, or choose to skip them.',
+                    errSystem: 'Enter the source system name.',
+                    close: 'Close',
+                    fileFailed: 'The file could not be read.',
+                },
+                basis: { R: 'Net revenue', G: 'Estimated gross profit', Q: 'Quantity sold' },
+                trigger: { I: 'On invoice', P: 'On payment' },
+                credit: { R: 'Sales rep on the transaction', T: 'Sales team (contribution %)', F: 'Custom field' },
+                window: { M: 'Monthly', Q: 'Quarter to date', Y: 'Year to date' },
+                draw: { N: 'None', R: 'Recoverable draw', G: 'Guaranteed minimum' },
+                overrideBasis: { B: 'Subordinates sales', C: 'Subordinates commission' },
+                method: { P: 'Flat rate', G: 'Graduated tiers', S: 'Step tiers', A: 'Attainment based', U: 'Per unit', B: 'Milestone bonus' },
+                methodHelp: {
+                    P: 'Base x rate %.',
+                    G: 'Each slice of the base times the rate of that slice (like progressive tax).',
+                    S: 'The whole base times the rate of the highest tier reached.',
+                    A: 'The whole base times the rate of the attainment tier (accelerator / decelerator).',
+                    U: 'Quantity sold x amount per unit.',
+                    B: 'Fixed amount of the highest attainment tier passed.',
+                },
+                tranType: { I: 'Invoice', S: 'Cash sale', C: 'Credit memo' },
+                run: {
+                    month: 'Month',
+                    sub: (name, from, to) => `${name} - from ${from} to ${to}`,
+                    subNone: (m) => `No calculation for ${m} yet. Click Calculate to read sales transactions and compute commissions.`,
+                    calcAt: (v) => `calculated at ${v}`,
+                    batch: 'Payroll batch',
+                    calc: 'Calculate',
+                    recalc: 'Recalculate',
+                    approve: 'Approve',
+                    reopen: 'Reopen',
+                    void: 'Void',
+                    reasons: {
+                        readOnly: 'Only accounting (or an administrator) can operate commission calculations.',
+                        noRun: 'There is no calculation for this month.',
+                        notApproved: 'The calculation is not approved.',
+                        approved: 'The calculation is approved: reopen it before recalculating or voiding.',
+                        posted: 'The calculation is in payroll: reverse the payroll batch first.',
+                    },
+                    calculating: 'Calculating commissions...',
+                    calculated: (n) => `Commissions calculated for ${n} employees.`,
+                    calculatedNoCount: 'Commissions calculated.',
+                    confirmRecalc: (name) => `Recalculate ${name}? The current draft results are replaced (manual adjustments are kept).`,
+                    confirmApprove: (name, amount) => `Approve ${name}, total commission ${amount}? The payroll batch whose period contains the end date will pick it up.`,
+                    approved: (name) => `${name} approved.`,
+                    confirmReopen: (name) => `Reopen ${name} back to draft?`,
+                    reopened: (name) => `${name} reopened.`,
+                    voidTitle: (name) => `Void ${name}`,
+                    voidIntro: 'The calculation is marked inactive (not deleted). Calculating this month again creates a new one.',
+                    voidReason: 'Reason',
+                    voidErr: 'Enter the reason.',
+                    voidRun: 'Void calculation',
+                    back: 'Back',
+                    voided: (name) => `${name} voided.`,
+                },
+                kpi: {
+                    base: 'Total base',
+                    baseNote: 'Revenue / gross profit / quantity per plan',
+                    amount: 'Total commission payable',
+                    amountNote: (n) => (n ? `${n} warnings to review` : 'After cap, adjustments and draw'),
+                    employees: 'Employees',
+                    employeesNote: 'With a result this month',
+                    attainment: 'Average attainment',
+                    attainmentNote: 'Over rows with a quota',
+                },
+                cols: { code: 'Emp. ID', name: 'Employee', plan: 'Plan', quota: 'Quota', base: 'Base', attainment: 'Attainment', earned: 'Earned', override: 'Override', adjustments: 'Adjustments', capped: 'Capped', drawPaid: 'Draw', payable: 'Payable', warnings: 'Warnings' },
+                search: 'Search ID, name, plan, amount',
+                empty: 'No results yet. Click Calculate to compute commissions for this month.',
+                total: (n) => `Total of ${n} rows`,
+                side: {
+                    explain: 'Explanation',
+                    credits: 'Transactions',
+                    shares: 'Segments',
+                    adjust: 'Adjustments',
+                    label: 'Result details',
+                    loading: 'Loading the explanation...',
+                    failed: 'The explanation could not be loaded.',
+                    retry: 'Retry',
+                    pick: 'Select a row to see the explanation.',
+                    summary: { quota: 'Quota', base: 'Base this period', windowBase: 'Window to date base', attainment: 'Attainment', gross: 'Window to date commission', priorPaid: 'Paid in earlier periods', earned: 'Earned this period', override: 'Override commission', adjustments: 'Manual adjustments', capped: 'Cut by the cap', drawPaid: 'Draw paid', drawRecovered: 'Draw recovered', drawBalance: 'Draw balance', payable: 'Payable through payroll' },
+                    warnings: 'Warnings',
+                    components: 'Components',
+                    steps: 'Calculation steps',
+                    noSteps: 'No explanation lines.',
+                    compCols: { name: 'Component', method: 'Method', base: 'Base', amount: 'Commission' },
+                    credit: { source: 'Source', search: 'Search document, customer, item, source', tranNo: 'Document', date: 'Date', customer: 'Customer', item: 'Item', pct: 'Credit %', base: 'Base', empty: 'No credited transactions.', open: 'Click a row to open the transaction.' },
+                    share: { search: 'Search department, class, location, project', department: 'Department', cls: 'Class', location: 'Location', project: 'Project', amount: 'Amount', empty: 'No segment allocation yet.' },
+                    adj: {
+                        add: 'Add adjustment',
+                        plan: 'Plan',
+                        amount: 'Amount',
+                        amountHint: 'Negative to reduce (for example -500,000)',
+                        reason: 'Reason',
+                        save: 'Add',
+                        errAmount: 'Enter a non-zero amount.',
+                        errReason: 'Enter the reason.',
+                        errPlan: 'Select a plan.',
+                        saving: 'Adding the adjustment...',
+                        saved: 'Adjustment added. Click Recalculate to include it.',
+                        locked: 'The calculation is approved or in payroll: reopen it before adjusting.',
+                        list: 'Existing adjustments',
+                        search: 'Search reason, amount',
+                        empty: 'No manual adjustments.',
+                        cols: { date: 'Date', plan: 'Plan', amount: 'Amount', reason: 'Reason', by: 'Created by' },
+                    },
+                },
+                plans: {
+                    newPlan: 'New plan',
+                    search: 'Search code, description, earning type',
+                    empty: 'No commission plans yet. Click New plan.',
+                    cols: { source: 'Source', name: 'Plan code', description: 'Description', basis: 'Basis', window: 'Window', components: 'Components', assignees: 'Employees', effective: 'Effective', earningType: 'Earning type', state: 'State' },
+                    active: 'Active',
+                    inactive: 'Inactive',
+                    expired: 'Expired',
+                    range: (a, b) => `${a || '...'} - ${b || '...'}`,
+                    backToList: 'Plan list',
+                    save: 'Save plan',
+                    discard: 'Discard changes',
+                    saving: 'Saving the plan...',
+                    saved: (name) => `Plan ${name} saved.`,
+                    dirty: 'Unsaved changes',
+                    confirmLeave: 'Discard the unsaved changes of this plan?',
+                    newTitle: 'New plan',
+                    form: 'Plan details',
+                    f: {
+                        source: 'Sales source', sourceHint: 'External data is imported in the External sales tab',
+                        name: 'Plan code', description: 'Description', subsidiary: 'Subsidiary', allSubs: 'All subsidiaries', effective: 'Effective from', expiration: 'Until', earningType: 'Earning type', basis: 'Basis', trigger: 'Credit when', creditSource: 'Credited person', creditField: 'Employee field id on the transaction', creditFieldHint: 'For example custbody_sales_agent', window: 'Window', includeReturns: 'Deduct returns (credit memos)', clawbackDays: 'Claw back overdue invoices (days)', clawbackHint: '0 = off; only when crediting on invoice', excludeItemTypes: 'Line types to skip', excludeHint: 'Comma separated', minAttainment: 'Minimum attainment %', minHint: 'Below it, sales based commission is 0', capAmount: 'Cap per period', capHint: 'Empty = no cap', drawType: 'Draw', drawAmount: 'Draw amount per period', overridePct: 'Override %', overrideBasis: 'Calculated on', overrideHint: 'Managers are set in the assignment grid',
+                    },
+                    err: { required: 'Required.', dateOrder: 'The end date is before the start date.', positive: 'Enter an amount greater than zero.', noRules: 'The plan needs at least one component.', ruleName: 'The component has no name.', rate: 'Enter the rate %.', unit: 'Enter the unit amount.', tiers: 'Add at least one tier.', tierValues: 'A tier is missing values.', employee: 'Select the employee.', quotaRow: 'Select the employee and month, and enter the quota.', fix: (n) => `${n} fields are invalid, see the rows in red.` },
+                    rules: 'Components (calculation methods)',
+                    rulesSearch: 'Search name, method',
+                    rulesEmpty: 'No components yet.',
+                    addRule: 'Add component',
+                    newRuleName: (n) => `Component ${n}`,
+                    ruleCols: { sequence: 'Seq.', name: 'Name', method: 'Method', value: 'Rate / unit amount', filters: 'Filters', remove: '' },
+                    tiersCount: (n) => `${n} tiers`,
+                    filtersCount: (n) => (n ? `${n} conditions` : 'All transactions'),
+                    remove: 'Remove',
+                    removeOf: (name) => `Remove ${name}`,
+                    rule: {
+                        title: (name) => `Component: ${name}`,
+                        pick: 'Select a component in the grid on the left to edit it.',
+                        name: 'Component name', sequence: 'Sequence', method: 'Method', rate: 'Rate %', unitAmount: 'Amount per unit',
+                        methods: 'Calculation methods',
+                        filters: 'Transaction filters (empty = no filter)',
+                        classes: 'Classes', departments: 'Departments', locations: 'Locations', custCategories: 'Customer categories', items: 'Items', itemsHint: 'Item internal ids, comma separated',
+                        add: 'Add...',
+                        removeChip: (name) => `Remove condition ${name}`,
+                        newCustomer: 'New customers only', newDays: 'New customer within (days)',
+                        tiers: 'Tiers',
+                        noTiers: 'This method does not use tiers.',
+                        addTier: 'Add tier',
+                        tierFromMoney: 'From base',
+                        tierFromPct: 'From attainment %',
+                        tierRate: 'Rate %',
+                        tierAmount: 'Bonus amount',
+                        tiersEmpty: 'No tiers yet.',
+                        tierOrder: 'Tiers are sorted by their "from" value when saved.',
+                    },
+                    assign: 'Employee assignments',
+                    assignSearch: 'Search employee, manager, quota',
+                    assignEmpty: 'No employees assigned yet.',
+                    addAssign: 'Add employee',
+                    assignCols: { employee: 'Employee', effective: 'From', expiration: 'Until', quota: 'Monthly quota', manager: 'Manager receiving override', remove: '' },
+                    noManager: 'None',
+                    pickEmployee: 'Select employee',
+                    quotas: 'Monthly quota overrides',
+                    quotasHint: 'Overrides the assignment quota for that month only.',
+                    quotasSearch: 'Search employee, month, quota',
+                    quotasEmpty: 'No quota overrides.',
+                    addQuota: 'Add quota',
+                    quotaCols: { employee: 'Employee', month: 'Month', quota: 'Quota', remove: '' },
+                },
+                sim: {
+                    intro: 'Try a plan quickly: enter sales (or quantity) and the quota, the result recalculates as you type.',
+                    plan: 'Plan',
+                    pickPlan: 'Select plan',
+                    base: 'Base (revenue / gross profit)',
+                    qty: 'Quantity',
+                    quota: 'Quota',
+                    quotaHint: 'Needed by attainment based and milestone methods',
+                    result: 'Simulation result',
+                    amount: 'Commission',
+                    attainment: 'Attainment',
+                    working: 'Calculating...',
+                    waiting: 'Select a plan and enter the base or the quantity.',
+                    failed: 'The simulation failed.',
+                    noPlans: 'No plans yet. Create one in the Plans tab first.',
+                },
+            },
+        },
+    };
+    // ================================================================== màn hình
+    const RUN_TONE = { D: 'warn', A: 'info', P: 'ok' };
+    const BASIS = ['R', 'G', 'Q'];
+    const TRIGGERS = ['I', 'P'];
+    const CREDITS = ['R', 'T', 'F'];
+    const WINDOWS = ['M', 'Q', 'Y'];
+    const DRAWS = ['N', 'R', 'G'];
+    const OVERRIDES = ['B', 'C'];
+    const METHODS = ['P', 'G', 'S', 'A', 'U', 'B'];
+    const SOURCES = ['N', 'X', 'B'];
+    const SUB_TABS = ['run', 'ext', 'plans', 'sim'];
+    const TRAN_RECORD = { I: 'invoice', S: 'cashsale', C: 'creditmemo' };
+    const SIM_DELAY = 400;
+    const FILTER_KEYS = [
+        { key: 'fClasses', lookup: 'classes', label: 'classes' },
+        { key: 'fDepartments', lookup: 'departments', label: 'departments' },
+        { key: 'fLocations', lookup: 'locations', label: 'locations' },
+        { key: 'fCustCategories', lookup: 'customerCategories', label: 'custCategories' },
+    ];
+    const opts = (codes, labels) => codes.map((c) => ({ value: c, label: (labels && labels[c]) || c }));
+    const sumBy = (rows, key) => rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
+    const labelOf = (options, value) => {
+        const o = (options || []).find((x) => x.value === String(value));
+        return o ? o.label : str(value);
+    };
+    function CommissionView({ app }) {
+        const t = pick(TEXT$4).cm;
+        const boot = app.boot || {};
+        const roles = rolesOf(boot.user);
+        const canWrite = roles.canWrite;
+        const subsidiary = app.subsidiary || '';
+        const params = (app.route && app.route.params) || {};
+        const [tab, setTab] = core.useState(SUB_TABS.indexOf(params.tab) >= 0 ? params.tab : 'run');
+        const [month, setMonth] = core.useState(/^\d{4}-\d{2}$/.test(str(params.month)) ? params.month : previousMonth(localToday()));
+        const [view, setView] = core.useState(null);
+        const [stamp, setStamp] = core.useState(0);
+        const [selected, setSelected] = core.useState('');
+        const detailsRef = core.useRef({});
+        const [details, setDetails] = core.useState({});
+        const [sideTab, setSideTab] = core.useState('explain');
+        const adjRef = core.useRef({ plan: '', amount: '', reason: '', errors: {} });
+        const [adj, setAdj] = core.useState(adjRef.current);
+        const voidRef = core.useRef(null);
+        const [voidDlg, setVoidDlg] = core.useState(null);
+        const setupRef = core.useRef(null);
+        const [setup, setSetup] = core.useState(null);
+        const draftRef = core.useRef(null);
+        const [draft, setDraft] = core.useState(null);
+        const [ruleKey, setRuleKey] = core.useState('');
+        const [errs, setErrs] = core.useState(null);
+        const simRef = core.useRef({ plan: '', base: '', qty: '', quota: '' });
+        const [sim, setSim] = core.useState(simRef.current);
+        const [simOut, setSimOut] = core.useState({ state: '', data: null, error: '' });
+        const alive = core.useRef(true);
+        const viewSeq = core.useRef(0);
+        const simSeq = core.useRef(0);
+        const simTimer = core.useRef(null);
+        const [ext, setExt] = core.useState(null);
+        const extSeq = core.useRef(0);
+        const impRef = core.useRef(null);
+        const [imp, setImp] = core.useState(null);
+        const fileReader = core.useRef(null);
+        core.useEffect(() => {
+            alive.current = true;
+            return () => {
+                alive.current = false;
+                if (simTimer.current)
+                    clearTimeout(simTimer.current);
+            };
+        }, []);
+        // ------------------------------------------------------------------ nạp dữ liệu
+        const putDetails = (next) => {
+            detailsRef.current = next;
+            setDetails(next);
+        };
+        const loadView = () => {
+            if (!subsidiary || !roles.canRead || !monthInt(month))
+                return Promise.resolve();
+            viewSeq.current += 1;
+            const mine = viewSeq.current;
+            return app.run(t.loading, call({ action: ACTIONS.view, subsidiary, month: monthInt(month) })).then((r) => {
+                if (!alive.current || mine !== viewSeq.current || !r)
+                    return;
+                putDetails({});
+                setView(mapView(r));
+                setStamp(Date.now());
+            });
+        };
+        core.useEffect(() => {
+            loadView();
+        }, [subsidiary, month]);
+        const loadSetup = (force) => {
+            if (!subsidiary || !roles.canRead)
+                return Promise.resolve(null);
+            const cur = setupRef.current;
+            if (cur && cur.sub === subsidiary && !force)
+                return Promise.resolve(cur);
+            return app.run(t.loading, call({ action: ACTIONS.setup, subsidiary })).then((r) => {
+                if (!alive.current || !r)
+                    return null;
+                const next = Object.assign(mapSetup(r), { sub: subsidiary });
+                setupRef.current = next;
+                setSetup(next);
+                return next;
+            });
+        };
+        core.useEffect(() => {
+            if (tab !== 'run' || sideTab === 'adjust')
+                loadSetup(false);
+        }, [tab, subsidiary, sideTab]);
+        const rows = view ? view.rows : [];
+        const run = view ? view.run : null;
+        const current = rows.find((r) => r.id === selected) || rows[0] || null;
+        const currentId = current ? current.resultId : '';
+        const loadDetail = (id) => {
+            if (!id)
+                return;
+            putDetails(Object.assign({}, detailsRef.current, { [id]: { state: 'loading' } }));
+            call({ action: ACTIONS.result, id }).then((r) => {
+                if (!alive.current)
+                    return;
+                putDetails(Object.assign({}, detailsRef.current, { [id]: { state: 'ok', data: mapResult(r) } }));
+            }, (e) => {
+                if (!alive.current)
+                    return;
+                putDetails(Object.assign({}, detailsRef.current, { [id]: { state: 'error', error: errorText(e) } }));
+            });
+        };
+        core.useEffect(() => {
+            if (tab === 'run' && currentId && !detailsRef.current[currentId])
+                loadDetail(currentId);
+        }, [currentId, stamp, tab]);
+        // ------------------------------------------------------------------ thao tác bảng tính
+        const acts = runActions(run, canWrite);
+        const runName = run ? run.name || run.id : '';
+        const after = (r, doneText) => {
+            if (!r || !alive.current)
+                return r;
+            return loadView().then(() => {
+                if (alive.current)
+                    app.notify(typeof doneText === 'function' ? doneText(r) : doneText, 'ok');
+                return r;
+            });
+        };
+        const calculate = () => {
+            const go = () => app.run(t.run.calculating, post({ action: ACTIONS.calculate, subsidiary, month: monthInt(month) })).then((r) => after(r, (res) => {
+                const n = numv(rd(res, 'employees', 'count', 'results'));
+                return n ? t.run.calculated(n) : t.run.calculatedNoCount;
+            }));
+            if (run && run.id)
+                app.confirm(t.run.confirmRecalc(runName), go);
+            else
+                go();
+        };
+        const approve = () => app.confirm(t.run.confirmApprove(runName, money(view.kpis.totalAmount) || '0'), () => app.run(t.loading, post({ action: ACTIONS.approve, run: run.id })).then((r) => after(r, t.run.approved(runName))));
+        const reopen = () => app.confirm(t.run.confirmReopen(runName), () => app.run(t.loading, post({ action: ACTIONS.reopen, run: run.id })).then((r) => after(r, t.run.reopened(runName))));
+        const putVoid = (v) => {
+            voidRef.current = v;
+            setVoidDlg(v);
+        };
+        const submitVoid = () => {
+            const d = voidRef.current;
+            if (!d)
+                return;
+            const reason = str(d.reason).trim();
+            if (!reason) {
+                putVoid(Object.assign({}, d, { error: t.run.voidErr }));
+                return;
+            }
+            putVoid(null);
+            app.run(t.loading, post({ action: ACTIONS.void, run: d.id, reason })).then((r) => after(r, t.run.voided(d.name)));
+        };
+        // ------------------------------------------------------------------ điều chỉnh tay
+        const putAdj = (patch) => {
+            adjRef.current = Object.assign({}, adjRef.current, patch);
+            setAdj(adjRef.current);
+        };
+        const adjLocked = !!run && (run.status === 'A' || run.status === 'P');
+        const saveAdjust = (row) => {
+            const a = adjRef.current;
+            const plan = a.plan || row.plan;
+            const amount = toNumber(a.amount);
+            const reason = str(a.reason).trim();
+            const errors = {};
+            if (!plan)
+                errors.plan = t.side.adj.errPlan;
+            if (!amount)
+                errors.amount = t.side.adj.errAmount;
+            if (!reason)
+                errors.reason = t.side.adj.errReason;
+            putAdj({ errors });
+            if (Object.keys(errors).length)
+                return;
+            app.run(t.side.adj.saving, post({ action: ACTIONS.adjust, subsidiary, employee: row.employee, plan, month: monthInt(month), amount, reason })).then((r) => {
+                if (!r || !alive.current)
+                    return;
+                putAdj({ amount: '', reason: '', errors: {} });
+                if (row.resultId)
+                    loadDetail(row.resultId);
+                app.notify(t.side.adj.saved, 'ok');
+            });
+        };
+        // ------------------------------------------------------------------ kế hoạch
+        const plans = setup ? setup.plans : [];
+        const lookups = setup ? setup.lookups : { classes: [], departments: [], locations: [], customerCategories: [], employees: [], items: [] };
+        const employeeOptions = lookups.employees;
+        const earningOptions = setup && setup.earningTypes.length
+            ? setup.earningTypes
+            : arr(boot.earningTypes).map((e) => ({ value: str(e.code) || str(e.id), label: [str(e.code), str(e.name)].filter(Boolean).join(' - ') }));
+        const putDraft = (next, dirty) => {
+            const d = next ? Object.assign({}, next, { dirty: dirty === undefined ? true : dirty }) : null;
+            draftRef.current = d;
+            setDraft(d);
+        };
+        const patchDraft = (patch) => putDraft(Object.assign({}, draftRef.current, patch));
+        const setPlanField = (k) => (v) => patchDraft({ [k]: v });
+        const openPlan = (p) => {
+            const d = p ? mapPlan(JSON.parse(JSON.stringify(planPayloadSource(p)))) : newPlanDraft(subsidiary, localToday());
+            putDraft(d, false);
+            setRuleKey(d.rules.length ? d.rules[0].key : '');
+            setErrs(null);
+        };
+        const leavePlan = () => {
+            const close = () => {
+                putDraft(null);
+                setErrs(null);
+            };
+            if (draftRef.current && draftRef.current.dirty)
+                app.confirm(t.plans.confirmLeave, close);
+            else
+                close();
+        };
+        const discardPlan = () => {
+            const d = draftRef.current;
+            if (!d)
+                return;
+            const orig = d.id ? plans.find((p) => p.id === d.id) : null;
+            app.confirm(t.plans.confirmLeave, () => openPlan(orig));
+        };
+        const savePlan = () => {
+            const d = draftRef.current;
+            if (!d)
+                return;
+            const v = validatePlan(d);
+            setErrs(v);
+            if (v.count) {
+                const badRule = Object.keys(v.rules)[0];
+                if (badRule)
+                    setRuleKey(badRule);
+                return;
+            }
+            const body = Object.assign({ action: ACTIONS.planSave, subsidiary }, planPayload(d));
+            app.run(t.plans.saving, post(body)).then((r) => {
+                if (!r || !alive.current)
+                    return;
+                const planObj = r.plan;
+                const id = str(rd(r, 'id', 'planId')) || (planObj && typeof planObj === 'object' ? str(planObj.id) : str(planObj)) || d.id;
+                loadSetup(true).then((sNext) => {
+                    if (!alive.current)
+                        return;
+                    const saved = sNext && id ? sNext.plans.find((p) => p.id === id) : null;
+                    if (saved)
+                        openPlan(saved);
+                    else
+                        putDraft(Object.assign({}, draftRef.current), false);
+                    app.notify(t.plans.saved(d.name), 'ok');
+                });
+            });
+        };
+        // Rule / phân công / chỉ tiêu
+        const rulesOf = () => (draftRef.current ? draftRef.current.rules : []);
+        const setRule = (key, patch) => patchDraft({ rules: rulesOf().map((r) => (r.key === key ? Object.assign({}, r, patch) : r)) });
+        const addRule = () => {
+            const r = Object.assign(newRule(rulesOf().length + 1), { name: t.plans.newRuleName(rulesOf().length + 1) });
+            patchDraft({ rules: rulesOf().concat([r]) });
+            setRuleKey(r.key);
+        };
+        const removeRule = (key) => {
+            const next = rulesOf().filter((r) => r.key !== key);
+            patchDraft({ rules: next });
+            if (ruleKey === key)
+                setRuleKey(next.length ? next[0].key : '');
+        };
+        const setTier = (rk, tk, patch) => setRule(rk, { tiers: rulesOf().find((r) => r.key === rk).tiers.map((x) => (x.key === tk ? Object.assign({}, x, patch) : x)) });
+        const addTier = (rk) => setRule(rk, { tiers: rulesOf().find((r) => r.key === rk).tiers.concat([{ key: newKey('nt'), id: '', fromValue: '', rate: '', amount: '' }]) });
+        const removeTier = (rk, tk) => setRule(rk, { tiers: rulesOf().find((r) => r.key === rk).tiers.filter((x) => x.key !== tk) });
+        const listOf = (k) => (draftRef.current ? draftRef.current[k] : []);
+        const setLine = (k, key, patch) => patchDraft({ [k]: listOf(k).map((x) => (x.key === key ? Object.assign({}, x, patch) : x)) });
+        const addAssign = () => patchDraft({ assignments: listOf('assignments').concat([{ key: newKey('na'), id: '', employee: '', effective: draftRef.current.effective || '', expiration: '', quota: '', manager: '' }]) });
+        const addQuota = () => patchDraft({ quotas: listOf('quotas').concat([{ key: newKey('nq'), id: '', employee: '', month: month || '', quota: '' }]) });
+        const removeLine = (k, key) => patchDraft({ [k]: listOf(k).filter((x) => x.key !== key) });
+        // ------------------------------------------------------------------ mô phỏng
+        const runSim = (v) => {
+            if (simTimer.current)
+                clearTimeout(simTimer.current);
+            simSeq.current += 1;
+            const mine = simSeq.current;
+            const base = toNumber(v.base);
+            const qty = toNumber(v.qty);
+            if (!v.plan || (base === null && qty === null)) {
+                setSimOut({ state: '', data: null, error: '' });
+                return;
+            }
+            setSimOut({ state: 'working', data: simOut.data, error: '' });
+            simTimer.current = setTimeout(() => {
+                call({ action: ACTIONS.simulate, plan: v.plan, base: base === null ? 0 : base, qty: qty === null ? 0 : qty, quota: toNumber(v.quota) === null ? undefined : toNumber(v.quota) }).then((r) => {
+                    if (!alive.current || mine !== simSeq.current)
+                        return;
+                    const x = (r && (r.result || r)) || {};
+                    setSimOut({ state: 'ok', data: { amount: numv(rd(x, 'amount', 'total')), attainment: pctOf(rd(x, 'attainment'), PCT.attainmentIsRatio), components: arr(x.components).map(mapComponent), steps: stepsOf(x.steps), warnings: arr(x.warnings) }, error: '' });
+                }, (e) => {
+                    if (!alive.current || mine !== simSeq.current)
+                        return;
+                    setSimOut({ state: 'error', data: null, error: errorText(e) });
+                });
+            }, SIM_DELAY);
+        };
+        const setSimField = (k) => (v) => {
+            const patch = { [k]: v };
+            // Chọn kế hoạch: gợi ý chỉ tiêu bằng chỉ tiêu tháng của phân công đầu tiên
+            if (k === 'plan' && !str(simRef.current.quota)) {
+                const p = plans.find((x) => x.id === v);
+                const q = p && p.assignments.find((a) => numv(a.quota));
+                if (q)
+                    patch.quota = q.quota;
+            }
+            simRef.current = Object.assign({}, simRef.current, patch);
+            setSim(simRef.current);
+            runSim(simRef.current);
+        };
+        // ------------------------------------------------------------------ doanh số ngoài: danh sách của tháng và hộp thoại nạp
+        const loadExt = () => {
+            if (!subsidiary || !roles.canRead || !monthInt(month))
+                return Promise.resolve();
+            extSeq.current += 1;
+            const mine = extSeq.current;
+            return app.run(t.loading, call({ action: ACTIONS.external, subsidiary, month: monthInt(month) })).then((r) => {
+                if (!alive.current || mine !== extSeq.current || !r)
+                    return;
+                setExt({ month, sub: subsidiary, rows: arr(r.rows || r.items || r.lines).map(mapExternal) });
+            });
+        };
+        core.useEffect(() => {
+            if (tab === 'ext')
+                loadExt();
+        }, [tab, subsidiary, month]);
+        const putImp = (v) => {
+            impRef.current = v;
+            setImp(v);
+        };
+        const patchImp = (patch) => impRef.current && putImp(Object.assign({}, impRef.current, patch));
+        const withRows = (v) => Object.assign({}, v, { rows: buildImportRows(v.table, v.mapping), results: null, message: '' });
+        const openImport = () => {
+            const d = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const prev = impRef.current;
+            putImp({ system: (prev && prev.system) || '', stamp: `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`, text: '', fileName: '', table: { headers: [], rows: [], delimiter: ',' }, mapping: {}, rows: [], results: null, skip: false, error: '', systemError: '', message: '' });
+        };
+        const setImpText = (text, fileName) => {
+            const prev = impRef.current;
+            if (!prev)
+                return;
+            const table = parseDelimited(text);
+            const sameHead = prev.table.headers.join('\u0001') === table.headers.join('\u0001') && Object.keys(prev.mapping).length;
+            putImp(withRows(Object.assign({}, prev, { text, fileName: fileName === undefined ? prev.fileName : fileName, table, mapping: sameHead ? prev.mapping : guessMapping(table.headers), error: '' })));
+        };
+        const setImpMap = (key, v) => {
+            const prev = impRef.current;
+            putImp(withRows(Object.assign({}, prev, { mapping: Object.assign({}, prev.mapping, { [key]: v }) })));
+        };
+        // File CSV: đọc bằng FileReader (UTF-8) qua trình nghe "change" gốc (UIF không bắn onChange)
+        fileReader.current = (file) => {
+            if (!file)
+                return;
+            try {
+                const fr = new FileReader();
+                fr.onload = () => alive.current && setImpText(String(fr.result || ''), file.name);
+                fr.onerror = () => patchImp({ error: t.imp.fileFailed });
+                fr.readAsText(file, 'UTF-8');
+            }
+            catch (e) {
+                patchImp({ error: t.imp.fileFailed });
+            }
+        };
+        core.useEffect(() => {
+            if (!imp)
+                return;
+            try {
+                const el = document.getElementById('s4vp-cm-file');
+                if (el && !el.__s4vpFile) {
+                    el.__s4vpFile = true;
+                    el.addEventListener('change', () => fileReader.current && fileReader.current(el.files && el.files[0]));
+                }
+            }
+            catch (e) {
+                // bỏ qua: vẫn dán được từ Excel
+            }
+        });
+        // Trạng thái từng dòng: lỗi của trình duyệt (định dạng) cộng lỗi máy chủ (mã NV không có, trùng khóa với dòng đã khóa...)
+        const importView = (v) => arr(v && v.rows).map((r) => {
+            const sv = v.results ? v.results[r.row] : null;
+            const errors = r.errors.map((c) => t.imp.errors[c] || c).concat(sv ? sv.errors.map((e) => localized(e) || e.code) : []);
+            const status = errors.length || (sv && sv.status === 'error') ? 'error' : v.results ? 'ok' : 'pending';
+            const statusText = status === 'ok' && sv && t.imp.status[sv.action] ? t.imp.status[sv.action] : t.imp.status[status];
+            return Object.assign({}, r, { id: `i${r.row}`, status, statusText, errorText: errors.join('; '), employeeText: sv && sv.employeeName ? `${r.employee} - ${sv.employeeName}` : r.employee });
+        });
+        const sendImport = (list, dryRun) => {
+            const v = impRef.current;
+            const system = str(v.system).trim();
+            const out = [];
+            let chain = Promise.resolve();
+            const batch = `${system}-${v.stamp}`;
+            for (let i = 0; i < list.length; i += IMPORT_CHUNK) {
+                const part = list.slice(i, i + IMPORT_CHUNK);
+                chain = chain.then(() => post({ action: ACTIONS.importExt, subsidiary, sourceSystem: system, importBatch: batch, dryRun, rows: part.map((r) => importPayloadRow(r, batch)) }).then((r) => out.push({ response: r || {}, rows: part })));
+            }
+            return app.run(dryRun ? t.imp.checking : t.imp.writing(list.length), chain.then(() => out));
+        };
+        const checkImport = () => {
+            const v = impRef.current;
+            if (!str(v.system).trim()) {
+                patchImp({ systemError: t.imp.errSystem });
+                return;
+            }
+            const good = v.rows.filter((r) => !r.errors.length);
+            if (!good.length) {
+                patchImp({ results: {}, systemError: '', message: t.imp.checked(0, v.rows.length) });
+                return;
+            }
+            sendImport(good, true).then((responses) => {
+                if (!responses || !alive.current || impRef.current !== v)
+                    return;
+                const next = Object.assign({}, v, { results: mapImportResults(responses), systemError: '' });
+                const shown = importView(next);
+                const bad = shown.filter((r) => r.status === 'error').length;
+                putImp(Object.assign(next, { message: t.imp.checked(shown.length - bad, bad) }));
+            });
+        };
+        const writeImport = () => {
+            const v = impRef.current;
+            const shown = importView(v);
+            const ok = shown.filter((r) => r.status === 'ok');
+            const bad = shown.length - ok.length;
+            const go = () => sendImport(ok, false).then((responses) => {
+                if (!responses || !alive.current)
+                    return;
+                const res = mapImportResults(responses);
+                const failed = Object.keys(res).filter((k) => res[k].status === 'error');
+                if (failed.length && impRef.current) {
+                    putImp(Object.assign({}, impRef.current, { results: Object.assign({}, impRef.current.results, res), message: t.imp.checked(ok.length - failed.length, bad + failed.length) }));
+                    return;
+                }
+                const counted = responses.some((p) => has(rd(p.response, 'written', 'saved')));
+                const n = counted ? responses.reduce((acc, p) => acc + (numv(rd(p.response, 'written', 'saved')) || 0), 0) : ok.length;
+                putImp(null);
+                if (tab === 'ext')
+                    loadExt().then(() => alive.current && app.notify(t.imp.written(n), 'ok'));
+                else {
+                    setExt(null);
+                    app.notify(t.imp.written(n), 'ok');
+                }
+            });
+            if (bad)
+                app.confirm(t.imp.confirmSkip(ok.length, bad), go);
+            else
+                go();
+        };
+        const downloadTemplate = () => download(t.ext.templateName, templateCsv());
+        // ------------------------------------------------------------------ phần vẽ dùng chung
+        const line = (label, value, strong) => (jsxs("div", { class: strong ? 's4vp-line s4vp-cm-strong' : 's4vp-line', children: [jsx("span", { class: "s4vp-muted", children: label }), jsx("span", { class: "s4vp-cm-val", children: value })] }));
+        const stepList = (steps, label) => steps.length ? (jsx("ol", { class: "s4vp-cm-steps", "aria-label": label, children: steps.map((x, i) => (jsx("li", { children: localized(x) }, `st${i}`))) })) : (jsx(Empty, { text: t.side.noSteps }));
+        const methodText = (m) => (t.method[m] ? `${m} - ${t.method[m]}` : m);
+        const componentTable = (components, basis) => (jsx("div", { class: "s4vp-cm-box", children: jsx(Table, { label: t.side.components, columns: [
+                    { key: 'name', label: t.side.compCols.name },
+                    { key: 'methodText', label: t.side.compCols.method, nowrap: true },
+                    { key: 'base', label: t.side.compCols.base, type: basis === 'Q' ? 'num' : 'money', nowrap: true },
+                    { key: 'amount', label: t.side.compCols.amount, type: 'money', nowrap: true },
+                ], rows: components.map((c) => Object.assign({}, c, { id: c.key, methodText: methodText(c.method) })), total: components.length > 1 ? { name: '', amount: sumBy(components, 'amount') } : null, empty: t.side.noSteps }) }));
+        // ------------------------------------------------------------------ tab Bảng tính
+        const kpis = view ? view.kpis : {};
+        const statCards = [
+            { key: 'base', label: t.kpi.base, value: money(kpis.totalBase) || '0', note: t.kpi.baseNote },
+            { key: 'amount', label: t.kpi.amount, value: money(kpis.totalAmount) || '0', note: t.kpi.amountNote(kpis.warnings || 0), tone: kpis.warnings ? 'warn' : run && run.status === 'A' ? 'ok' : '' },
+            { key: 'emp', label: t.kpi.employees, value: num(kpis.employees || 0) || '0', note: t.kpi.employeesNote },
+            { key: 'att', label: t.kpi.attainment, value: kpis.avgAttainment === null || kpis.avgAttainment === undefined ? '-' : pctText(kpis.avgAttainment), note: t.kpi.attainmentNote },
+        ];
+        const gridRows = rows.map((r) => Object.assign({}, r, { attainmentText: pctText(r.attainment) }));
+        const gridTotal = gridRows.length > 1 ? { code: t.total(gridRows.length), base: sumBy(gridRows, 'base'), earned: sumBy(gridRows, 'earned'), override: sumBy(gridRows, 'override'), adjustments: sumBy(gridRows, 'adjustments'), payable: sumBy(gridRows, 'payable') } : null;
+        const anyOverride = gridRows.some((r) => r.override);
+        const anyCapped = gridRows.some((r) => r.capped);
+        const anyDraw = gridRows.some((r) => r.drawPaid);
+        const gridColumns = [
+            { key: 'code', label: t.cols.code, nowrap: true, render: (r) => jsx("span", { class: "s4vp-link", children: r.code || r.employee }) },
+            { key: 'name', label: t.cols.name, render: (r) => (jsxs("span", { class: "s4vp-cm-who", children: [jsx("span", { class: "s4vp-cm-who-n", children: r.name }), r.department ? jsx("span", { class: "s4vp-small", children: r.department }) : null] })) },
+            { key: 'planName', label: t.cols.plan, nowrap: true, render: (r) => jsx("span", { class: "s4vp-cm-clip", title: r.planName, children: r.planName || r.plan }) },
+            { key: 'quota', label: t.cols.quota, type: 'money', nowrap: true },
+            { key: 'base', label: t.cols.base, type: 'money', nowrap: true },
+            { key: 'attainment', label: t.cols.attainment, align: 'right', nowrap: true, render: (r) => r.attainmentText },
+            { key: 'earned', label: t.cols.earned, type: 'money', nowrap: true },
+            anyOverride ? { key: 'override', label: t.cols.override, type: 'money', nowrap: true } : null,
+            { key: 'adjustments', label: t.cols.adjustments, type: 'money', nowrap: true },
+            anyCapped ? { key: 'capped', label: t.cols.capped, type: 'money', nowrap: true } : null,
+            anyDraw ? { key: 'drawPaid', label: t.cols.drawPaid, type: 'money', nowrap: true } : null,
+            { key: 'payable', label: t.cols.payable, type: 'money', nowrap: true, render: (r) => jsx("b", { children: money(r.payable) }) },
+            { key: 'warnings', label: t.cols.warnings, align: 'center', nowrap: true, render: (r) => (r.warnings ? jsx(Badge, { text: String(r.warnings), tone: "warn" }) : '') },
+        ];
+        const explainTab = (row, d) => {
+            const sm = t.side.summary;
+            const moneyOrNum = (v) => (d.basis === 'Q' ? num(v) : money(v));
+            return (jsxs("div", { class: "s4vp-cm-body", children: [d.warnings.length ? (jsxs("div", { class: "s4vp-cm-warn", role: "note", children: [jsx("b", { children: t.side.warnings }), d.warnings.map((w, i) => (jsx("span", { children: localized(w) || w.code }, `w${i}`)))] })) : null, jsxs("div", { class: "s4vp-cm-info", children: [d.quota !== null ? line(sm.quota, money(d.quota)) : null, line(sm.base, moneyOrNum(d.base !== null ? d.base : row.base)), d.windowBase !== null && d.windowBase !== d.base ? line(sm.windowBase, moneyOrNum(d.windowBase)) : null, line(sm.attainment, pctText(d.attainment !== null ? d.attainment : row.attainment) || '-'), d.gross !== null && d.priorPaid ? line(sm.gross, money(d.gross)) : null, d.priorPaid ? line(sm.priorPaid, money(-d.priorPaid)) : null, line(sm.earned, money(d.earned !== null ? d.earned : row.earned) || '0'), d.override ? line(sm.override, money(d.override)) : null, d.adjustments ? line(sm.adjustments, money(d.adjustments)) : null, d.capped ? line(sm.capped, money(-d.capped)) : null, d.drawPaid ? line(sm.drawPaid, money(d.drawPaid)) : null, d.drawRecovered ? line(sm.drawRecovered, money(-d.drawRecovered)) : null, d.drawBalance ? line(sm.drawBalance, money(d.drawBalance)) : null, line(sm.payable, money(d.payable !== null ? d.payable : row.payable) || '0', true)] }), d.components.length ? jsx("div", { class: "s4vp-cm-sub", children: t.side.components }) : null, d.components.length ? componentTable(d.components, d.basis) : null, jsx("div", { class: "s4vp-cm-sub", children: t.side.steps }), stepList(d.steps, t.side.steps)] }));
+        };
+        const creditsTab = (d) => {
+            const c = t.side.credit;
+            const isNs = (src) => !src || ['N', 'NS', 'NETSUITE'].indexOf(src.toUpperCase()) >= 0;
+            const list = d.credits.map((x) => Object.assign({}, x, { typeText: t.tranType[x.tranType] || x.tranType, pctText: pctText(x.pct), sourceText: isNs(x.source) ? t.netsuite : x.source, external: !isNs(x.source) }));
+            return (jsx("div", { class: "s4vp-cm-box", children: jsx(Table, { label: t.side.credits, columns: [
+                        { key: 'tranNo', label: c.tranNo, nowrap: true, render: (x) => (jsxs("span", { class: "s4vp-cm-who", children: [jsx("span", { class: x.tranId ? 's4vp-link' : '', children: x.tranNo || x.tranId }), jsx("span", { class: "s4vp-small", children: x.typeText })] })) },
+                        { key: 'date', label: c.date, type: 'date', nowrap: true },
+                        { key: 'sourceText', label: c.source, nowrap: true, render: (x) => (x.external ? jsx(Badge, { text: x.sourceText, tone: "info" }) : jsx("span", { class: "s4vp-small", children: x.sourceText })) },
+                        { key: 'customer', label: c.customer, render: (x) => jsx("span", { class: "s4vp-cm-clip", title: x.customer, children: x.customer }) },
+                        { key: 'item', label: c.item, render: (x) => jsx("span", { class: "s4vp-cm-clip", title: x.item, children: x.item }) },
+                        { key: 'pct', label: c.pct, align: 'right', nowrap: true, render: (x) => x.pctText },
+                        { key: 'base', label: c.base, type: d.basis === 'Q' ? 'num' : 'money', nowrap: true },
+                    ], rows: list, onRowClick: (x) => !x.external && x.tranId && TRAN_RECORD[x.tranType] && openRecord(TRAN_RECORD[x.tranType], x.tranId), total: list.length > 1 ? { tranNo: '', base: sumBy(list, 'base') } : null, empty: c.empty, search: true, searchPlaceholder: c.search, maxHeight: "max(220px, calc(100vh - 470px))" }) }));
+        };
+        const sharesTab = (d) => {
+            const c = t.side.share;
+            return (jsx("div", { class: "s4vp-cm-box", children: jsx(Table, { label: t.side.shares, columns: [
+                        { key: 'department', label: c.department },
+                        { key: 'cls', label: c.cls },
+                        { key: 'location', label: c.location },
+                        { key: 'project', label: c.project },
+                        { key: 'amount', label: c.amount, type: 'money', nowrap: true },
+                    ], rows: d.shares, total: d.shares.length > 1 ? { department: '', amount: sumBy(d.shares, 'amount') } : null, empty: c.empty, search: true, searchPlaceholder: c.search }) }));
+        };
+        const adjustTab = (row, d) => {
+            const c = t.side.adj;
+            const e = adj.errors || {};
+            const mine = rows.filter((r) => r.employee === row.employee);
+            const planOpts = mine.map((r) => ({ value: r.plan, label: r.planName || r.plan })).concat(plans.map((p) => ({ value: p.id, label: p.name }))).filter((o, i, a) => o.value && a.findIndex((x) => x.value === o.value) === i);
+            const disabledWhy = !canWrite ? t.readOnly : adjLocked ? c.locked : '';
+            const list = d ? d.adjustList.map((x) => Object.assign({}, x, { planText: x.planName || labelOf(planOpts, x.plan) })) : [];
+            return (jsxs("div", { class: "s4vp-cm-body", children: [jsx("div", { class: "s4vp-cm-sub", children: c.add }), disabledWhy ? jsx("div", { class: "s4vp-cm-note", role: "note", children: disabledWhy }) : null, jsxs("div", { class: "s4vp-cm-adj", children: [jsx(Field, { label: c.plan, required: true, hint: e.plan ? jsx("span", { class: "s4vp-cm-err", children: e.plan }) : null, children: jsx(Select, { value: adj.plan || row.plan, options: planOpts, onInput: (v) => putAdj({ plan: v }), disabled: !!disabledWhy }) }), jsx(Field, { label: c.amount, required: true, hint: e.amount ? jsx("span", { class: "s4vp-cm-err", children: e.amount }) : c.amountHint, children: jsx(MoneyInput, { value: adj.amount, decimals: 0, onInput: (v) => putAdj({ amount: v }), disabled: !!disabledWhy }) })] }), jsx(Field, { label: c.reason, required: true, hint: e.reason ? jsx("span", { class: "s4vp-cm-err", children: e.reason }) : null, children: jsx(TextArea, { value: adj.reason, rows: 2, onInput: (v) => putAdj({ reason: v }), disabled: !!disabledWhy }) }), jsx("div", { class: "s4vp-actions", children: jsx(Button, { label: c.save, kind: "primary", disabled: !!disabledWhy || !!app.busy, title: disabledWhy, onClick: () => saveAdjust(row) }) }), jsx("div", { class: "s4vp-cm-sub", children: c.list }), jsx("div", { class: "s4vp-cm-box", children: jsx(Table, { label: c.list, columns: [
+                                { key: 'date', label: c.cols.date, type: 'date', nowrap: true },
+                                { key: 'planText', label: c.cols.plan, nowrap: true },
+                                { key: 'amount', label: c.cols.amount, type: 'money', nowrap: true },
+                                { key: 'reason', label: c.cols.reason },
+                                { key: 'by', label: c.cols.by, nowrap: true },
+                            ], rows: list, total: list.length > 1 ? { date: '', amount: sumBy(list, 'amount') } : null, empty: c.empty, search: true, searchPlaceholder: c.search }) })] }));
+        };
+        const detailPanel = (row) => {
+            const st = detailsRef.current[row.resultId] || details[row.resultId] || null;
+            const d = st && st.state === 'ok' ? st.data : null;
+            let body = null;
+            if (!row.resultId)
+                body = jsx(Empty, { text: t.side.failed });
+            else if (!st || st.state === 'loading')
+                body = jsx(Empty, { text: t.side.loading });
+            else if (st.state === 'error')
+                body = (jsxs("div", { class: "s4vp-cm-body", children: [jsx("div", { class: "s4vp-cm-warn s4vp-cm-bad", role: "alert", children: `${t.side.failed} ${st.error || ''}` }), jsx("div", { children: jsx(Button, { label: t.side.retry, onClick: () => loadDetail(row.resultId) }) })] }));
+            else if (sideTab === 'credits')
+                body = creditsTab(d);
+            else if (sideTab === 'shares')
+                body = sharesTab(d);
+            else if (sideTab !== 'adjust')
+                body = explainTab(row, d);
+            if (sideTab === 'adjust')
+                body = adjustTab(row, d);
+            const tabs = [
+                { value: 'explain', label: t.side.explain },
+                { value: 'credits', label: t.side.credits, count: d ? d.credits.length : null },
+                { value: 'shares', label: t.side.shares, count: d ? d.shares.length : null },
+                { value: 'adjust', label: t.side.adjust, count: d && d.adjustList.length ? d.adjustList.length : null },
+            ];
+            return (jsxs(SidePanel, { title: `${row.code} ${row.name}`.trim() || row.employee, sub: [row.planName, row.department].filter(Boolean).join(' · '), children: [jsx(Tabs, { items: tabs, value: sideTab, onPick: setSideTab, label: t.side.label }), body] }));
+        };
+        const runTab = () => (jsxs("div", { class: "s4vp-cm", children: [jsx(StatCards, { cards: statCards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.tabs.run, children: jsx(Table, { label: t.tabs.run, columns: gridColumns, rows: gridRows, keyOf: (r) => r.id, onRowClick: (r) => setSelected(r.id), selectedKey: current ? current.id : '', total: gridTotal, empty: t.empty, search: true, searchPlaceholder: t.search, maxHeight: "max(260px, calc(100vh - 384px))" }) }) }), jsx("div", { class: "s4vp-col-side s4vp-cm-side", children: current ? detailPanel(current) : jsx(SidePanel, { title: t.side.label, children: jsx(Empty, { text: t.side.pick }) }) })] })] }));
+        // ------------------------------------------------------------------ tab Kế hoạch
+        const planState = (p) => {
+            if (p.inactive)
+                return { text: t.plans.inactive, tone: 'muted' };
+            if (p.expiration && p.expiration < localToday())
+                return { text: t.plans.expired, tone: 'warn' };
+            return { text: t.plans.active, tone: 'ok' };
+        };
+        const planListTab = () => {
+            const list = plans.map((p) => {
+                const stt = planState(p);
+                return {
+                    id: p.id || p.key,
+                    plan: p,
+                    name: p.name,
+                    description: p.description,
+                    basisText: t.basis[p.basis] || p.basis,
+                    sourceText: t.source[p.source] || p.source,
+                    windowText: t.window[p.window] || p.window,
+                    components: p.rules.length,
+                    assignees: p.assignments.length,
+                    rangeText: t.plans.range(fmtDate(p.effective), fmtDate(p.expiration)),
+                    earningText: labelOf(earningOptions, p.earningType),
+                    stateText: stt.text,
+                    tone: stt.tone,
+                };
+            });
+            return (jsx(Card, { flush: true, label: t.tabs.plans, children: jsx(Table, { label: t.tabs.plans, columns: [
+                        { key: 'name', label: t.plans.cols.name, nowrap: true, render: (r) => jsx("span", { class: "s4vp-link", children: r.name || r.id }) },
+                        { key: 'description', label: t.plans.cols.description, render: (r) => jsx("span", { class: "s4vp-cm-clip", title: r.description, children: r.description }) },
+                        { key: 'sourceText', label: t.plans.cols.source, nowrap: true },
+                        { key: 'basisText', label: t.plans.cols.basis, nowrap: true },
+                        { key: 'windowText', label: t.plans.cols.window, nowrap: true },
+                        { key: 'components', label: t.plans.cols.components, type: 'num', nowrap: true },
+                        { key: 'assignees', label: t.plans.cols.assignees, type: 'num', nowrap: true },
+                        { key: 'rangeText', label: t.plans.cols.effective, nowrap: true },
+                        { key: 'earningText', label: t.plans.cols.earningType, nowrap: true },
+                        { key: 'stateText', label: t.plans.cols.state, nowrap: true, render: (r) => jsx(Badge, { text: r.stateText, tone: r.tone }) },
+                    ], rows: list, onRowClick: (r) => openPlan(r.plan), empty: t.plans.empty, search: true, searchPlaceholder: t.plans.search, maxHeight: "max(260px, calc(100vh - 300px))" }) }));
+        };
+        const errText = (code) => (code ? t.plans.err[code] || code : '');
+        const fieldErr = (k) => {
+            const code = errs && errs.plan[k];
+            return code ? jsx("span", { class: "s4vp-cm-err", children: errText(code) }) : null;
+        };
+        const multiPick = (label, options, values, onChange) => {
+            const chosen = idList(values);
+            const left = options.filter((o) => chosen.indexOf(o.value) < 0);
+            return (jsx(Field, { label: label, children: jsxs("div", { class: "s4vp-cm-chips", children: [chosen.map((id) => {
+                            const name = labelOf(options, id);
+                            return (jsxs("span", { class: "s4vp-cm-chip", children: [jsx("span", { children: name }), jsx("button", { type: "button", class: "s4vp-cm-chip-x", "aria-label": t.plans.rule.removeChip(name), title: t.plans.rule.removeChip(name), onClick: () => onChange(chosen.filter((x) => x !== id)), children: '×' })] }, `c${id}`));
+                        }), jsx("span", { class: "s4vp-cm-chip-add", children: jsx(SearchSelect, { value: "", options: left, placeholder: t.plans.rule.add, ariaLabel: label, onInput: (v) => v && onChange(chosen.concat([v])) }) })] }) }));
+        };
+        const planForm = (d) => {
+            const f = t.plans.f;
+            const subs = arr(boot.subsidiaries).map((x) => ({ value: str(x.id), label: str(x.name) }));
+            return (jsxs(Card, { title: t.plans.form, sub: d.dirty ? jsx("span", { class: "s4vp-cm-dirty", children: t.plans.dirty }) : null, children: [jsxs("div", { class: "s4vp-form s4vp-cm-form", children: [jsx(Field, { label: f.name, required: true, hint: fieldErr('name'), children: jsx(TextInput, { value: d.name, onInput: setPlanField('name') }) }), jsx(Field, { label: f.description, children: jsx(TextInput, { value: d.description, onInput: setPlanField('description') }) }), jsx(Field, { label: f.subsidiary, children: jsx(AutoSelect, { value: d.subsidiary, options: subs, placeholder: f.allSubs, onInput: setPlanField('subsidiary') }) }), jsx(Field, { label: f.earningType, required: true, hint: fieldErr('earningType'), children: jsx(SearchSelect, { value: d.earningType, options: earningOptions, onInput: setPlanField('earningType'), ariaLabel: f.earningType }) }), jsx(Field, { label: f.effective, children: jsx(DateInput, { value: d.effective, onInput: setPlanField('effective') }) }), jsx(Field, { label: f.expiration, hint: fieldErr('expiration'), children: jsx(DateInput, { value: d.expiration, min: d.effective || '', onInput: setPlanField('expiration') }) }), jsx(Field, { label: f.source, hint: d.source !== 'N' ? f.sourceHint : null, children: jsx(Select, { value: d.source, options: opts(SOURCES, t.source), onInput: setPlanField('source') }) }), jsx(Field, { label: f.basis, children: jsx(Select, { value: d.basis, options: opts(BASIS, t.basis), onInput: setPlanField('basis') }) }), jsx(Field, { label: f.trigger, children: jsx(Select, { value: d.trigger, options: opts(TRIGGERS, t.trigger), onInput: setPlanField('trigger') }) }), jsx(Field, { label: f.creditSource, children: jsx(Select, { value: d.creditSource, options: opts(CREDITS, t.credit), onInput: setPlanField('creditSource') }) }), d.creditSource === 'F' ? (jsx(Field, { label: f.creditField, required: true, hint: fieldErr('creditField') || f.creditFieldHint, children: jsx(TextInput, { value: d.creditField, onInput: setPlanField('creditField') }) })) : null, jsx(Field, { label: f.window, children: jsx(Select, { value: d.window, options: opts(WINDOWS, t.window), onInput: setPlanField('window') }) }), jsx(Field, { label: f.clawbackDays, hint: f.clawbackHint, children: jsx(NumberInput, { value: d.clawbackDays, min: 0, step: 1, disabled: d.trigger !== 'I', onInput: setPlanField('clawbackDays') }) }), jsx(Field, { label: f.excludeItemTypes, hint: f.excludeHint, children: jsx(TextInput, { value: d.excludeItemTypes, onInput: setPlanField('excludeItemTypes') }) }), jsx(Field, { label: f.minAttainment, hint: f.minHint, children: jsx(NumberInput, { value: d.minAttainment, min: 0, step: 0.01, onInput: setPlanField('minAttainment') }) }), jsx(Field, { label: f.capAmount, hint: f.capHint, children: jsx(MoneyInput, { value: d.capAmount, decimals: 0, onInput: setPlanField('capAmount') }) }), jsx(Field, { label: f.drawType, children: jsx(Select, { value: d.drawType, options: opts(DRAWS, t.draw), onInput: setPlanField('drawType') }) }), jsx(Field, { label: f.drawAmount, required: d.drawType !== 'N', hint: fieldErr('drawAmount'), children: jsx(MoneyInput, { value: d.drawAmount, decimals: 0, disabled: d.drawType === 'N', onInput: setPlanField('drawAmount') }) }), jsx(Field, { label: f.overridePct, hint: f.overrideHint, children: jsx(NumberInput, { value: d.overridePct, min: 0, max: 100, step: 0.01, onInput: setPlanField('overridePct') }) }), jsx(Field, { label: f.overrideBasis, children: jsx(Select, { value: d.overrideBasis, options: opts(OVERRIDES, t.overrideBasis), onInput: setPlanField('overrideBasis') }) }), jsx(Field, { label: f.includeReturns, children: jsx(Checkbox, { checked: !!d.includeReturns, inField: true, label: f.includeReturns, ariaLabel: f.includeReturns, onInput: setPlanField('includeReturns') }) })] }), errs && errs.plan.rules ? jsx("div", { class: "s4vp-cm-err", children: errText(errs.plan.rules) }) : null] }));
+        };
+        const ruleValueText = (r) => {
+            if (r.method === 'P')
+                return has(r.rate) ? pctText(toNumber(r.rate)) : '';
+            if (r.method === 'U')
+                return has(r.unitAmount) ? money(toNumber(r.unitAmount)) : '';
+            return t.plans.tiersCount(r.tiers.length);
+        };
+        const filterCount = (r) => FILTER_KEYS.concat([{ key: 'fItems' }]).reduce((n, k) => n + idList(r[k.key]).length, 0) + (r.fNewCustomer ? 1 : 0);
+        const rulesGrid = (d) => {
+            const list = d.rules.map((r) => Object.assign({}, r, { id: r.key, methodText: methodText(r.method), valueText: ruleValueText(r), filterText: t.plans.filtersCount(filterCount(r)) }));
+            const ruleErr = errs ? errs.rules : {};
+            return (jsx(Card, { flush: true, title: t.plans.rules, actions: [jsx(Button, { label: t.plans.addRule, kind: "dashed", small: true, disabled: !canWrite, onClick: addRule })], children: jsx(Table, { label: t.plans.rules, columns: [
+                        { key: 'sequence', label: t.plans.ruleCols.sequence, type: 'num', nowrap: true },
+                        { key: 'name', label: t.plans.ruleCols.name, render: (r) => (jsxs("span", { class: "s4vp-cm-who", children: [jsx("span", { class: "s4vp-link", children: r.name || '-' }), ruleErr[r.key] ? jsx("span", { class: "s4vp-cm-err", children: errText(ruleErr[r.key]) }) : null] })) },
+                        { key: 'methodText', label: t.plans.ruleCols.method, nowrap: true },
+                        { key: 'valueText', label: t.plans.ruleCols.value, align: 'right', nowrap: true },
+                        { key: 'filterText', label: t.plans.ruleCols.filters, nowrap: true },
+                        { key: 'remove', label: '', noRowClick: true, render: (r) => jsx(Button, { small: true, kind: "ghost", label: t.plans.remove, ariaLabel: t.plans.removeOf(r.name), disabled: !canWrite, onClick: () => removeRule(r.key) }) },
+                    ], rows: list, keyOf: (r) => r.key, onRowClick: (r) => setRuleKey(r.key), selectedKey: ruleKey, empty: t.plans.rulesEmpty, search: true, searchPlaceholder: t.plans.rulesSearch }) }));
+        };
+        const ruleEditor = (d) => {
+            const r = d.rules.find((x) => x.key === ruleKey);
+            const c = t.plans.rule;
+            if (!r)
+                return (jsx(SidePanel, { title: t.plans.rules, children: jsx(Empty, { text: c.pick }) }));
+            const tiered = TIER_METHODS.indexOf(r.method) >= 0;
+            const fromPct = tierFromIsPct(r.method);
+            const err = errs && errs.rules[r.key] ? jsx("span", { class: "s4vp-cm-err", children: errText(errs.rules[r.key]) }) : null;
+            return (jsxs(SidePanel, { title: c.title(r.name || '-'), sub: methodText(r.method), children: [err ? jsx("div", { children: err }) : null, jsxs("div", { class: "s4vp-cm-pair", children: [jsx(Field, { label: c.name, required: true, children: jsx(TextInput, { value: r.name, onInput: (v) => setRule(r.key, { name: v }) }) }), jsx(Field, { label: c.sequence, children: jsx(NumberInput, { value: r.sequence, min: 0, step: 1, onInput: (v) => setRule(r.key, { sequence: v }) }) })] }), jsx(Field, { label: c.method, required: true, children: jsx(Select, { value: r.method, options: METHODS.map((m) => ({ value: m, label: methodText(m) })), onInput: (v) => setRule(r.key, { method: v }) }) }), jsx("dl", { class: "s4vp-cm-methods", "aria-label": c.methods, children: METHODS.map((m) => (jsxs("div", { class: m === r.method ? 's4vp-cm-method s4vp-on' : 's4vp-cm-method', children: [jsx("dt", { children: `${m} - ${t.method[m]}` }), jsx("dd", { children: t.methodHelp[m] })] }, `m${m}`))) }), r.method === 'P' ? (jsx(Field, { label: c.rate, required: true, children: jsx(NumberInput, { value: r.rate, min: 0, max: 100, step: 0.01, onInput: (v) => setRule(r.key, { rate: v }) }) })) : null, r.method === 'U' ? (jsx(Field, { label: c.unitAmount, required: true, children: jsx(MoneyInput, { value: r.unitAmount, decimals: 0, onInput: (v) => setRule(r.key, { unitAmount: v }) }) })) : null, jsx("div", { class: "s4vp-cm-sub", children: c.tiers }), tiered ? (jsxs("div", { class: "s4vp-cm-box s4vp-cm-edit", children: [jsx(Table, { label: c.tiers, columns: [
+                                    { key: 'fromValue', label: fromPct ? c.tierFromPct : c.tierFromMoney, align: 'right', render: (x) => (fromPct ? jsx(NumberInput, { value: x.fromValue, min: 0, step: 0.01, ariaLabel: c.tierFromPct, onInput: (v) => setTier(r.key, x.key, { fromValue: v }) }) : jsx(MoneyInput, { value: x.fromValue === '' ? '' : toNumber(x.fromValue), decimals: 0, ariaLabel: c.tierFromMoney, onInput: (v) => setTier(r.key, x.key, { fromValue: v }) })) },
+                                    r.method === 'B'
+                                        ? { key: 'amount', label: c.tierAmount, align: 'right', render: (x) => jsx(MoneyInput, { value: x.amount, decimals: 0, ariaLabel: c.tierAmount, onInput: (v) => setTier(r.key, x.key, { amount: v }) }) }
+                                        : { key: 'rate', label: c.tierRate, align: 'right', render: (x) => jsx(NumberInput, { value: x.rate, min: 0, max: 100, step: 0.01, ariaLabel: c.tierRate, onInput: (v) => setTier(r.key, x.key, { rate: v }) }) },
+                                    { key: 'remove', label: '', render: (x) => jsx(Button, { small: true, kind: "ghost", label: t.plans.remove, onClick: () => removeTier(r.key, x.key) }) },
+                                ], rows: r.tiers.map((x) => Object.assign({}, x, { id: x.key })), keyOf: (x) => x.key, empty: c.tiersEmpty, search: true, toolbar: jsx(Button, { label: c.addTier, kind: "dashed", small: true, onClick: () => addTier(r.key) }) }), jsx("div", { class: "s4vp-small s4vp-cm-pad", children: c.tierOrder })] })) : (jsx("div", { class: "s4vp-small", children: c.noTiers })), jsx("div", { class: "s4vp-cm-sub", children: c.filters }), FILTER_KEYS.map((fk) => (jsx("div", { children: multiPick(c[fk.label], lookups[fk.lookup], r[fk.key], (v) => setRule(r.key, { [fk.key]: v })) }, fk.key))), lookups.items.length ? (multiPick(c.items, lookups.items, r.fItems, (v) => setRule(r.key, { fItems: v }))) : (jsx(Field, { label: c.items, hint: c.itemsHint, children: jsx(TextInput, { value: idList(r.fItems).join(','), onInput: (v) => setRule(r.key, { fItems: v }) }) })), jsxs("div", { class: "s4vp-cm-pair", children: [jsx(Field, { label: c.newCustomer, children: jsx(Checkbox, { checked: !!r.fNewCustomer, inField: true, label: c.newCustomer, ariaLabel: c.newCustomer, onInput: (v) => setRule(r.key, { fNewCustomer: v }) }) }), jsx(Field, { label: c.newDays, children: jsx(NumberInput, { value: r.newDays, min: 1, step: 1, disabled: !r.fNewCustomer, onInput: (v) => setRule(r.key, { newDays: v }) }) })] })] }));
+        };
+        const assignGrid = (d) => {
+            const c = t.plans.assignCols;
+            const aErr = errs ? errs.assignments : {};
+            const list = d.assignments.map((a) => Object.assign({}, a, { id: a.key, employeeText: labelOf(employeeOptions, a.employee), managerText: a.manager ? labelOf(employeeOptions, a.manager) : '', quotaText: money(toNumber(a.quota)) }));
+            return (jsx(Card, { flush: true, title: t.plans.assign, children: jsx("div", { class: "s4vp-cm-edit", children: jsx(Table, { label: t.plans.assign, columns: [
+                            { key: 'employee', label: c.employee, width: 230, render: (a) => (jsxs("span", { class: "s4vp-cm-who", children: [jsx(SearchSelect, { value: a.employee, options: employeeOptions, placeholder: t.plans.pickEmployee, ariaLabel: c.employee, onInput: (v) => setLine('assignments', a.key, { employee: v }) }), aErr[a.key] ? jsx("span", { class: "s4vp-cm-err", children: errText(aErr[a.key]) }) : null] })) },
+                            { key: 'effective', label: c.effective, width: 150, render: (a) => jsx(DateInput, { value: a.effective, ariaLabel: c.effective, onInput: (v) => setLine('assignments', a.key, { effective: v }) }) },
+                            { key: 'expiration', label: c.expiration, width: 150, render: (a) => jsx(DateInput, { value: a.expiration, min: a.effective || '', ariaLabel: c.expiration, onInput: (v) => setLine('assignments', a.key, { expiration: v }) }) },
+                            { key: 'quota', label: c.quota, align: 'right', width: 150, render: (a) => jsx(MoneyInput, { value: a.quota, decimals: 0, ariaLabel: c.quota, onInput: (v) => setLine('assignments', a.key, { quota: v }) }) },
+                            { key: 'manager', label: c.manager, width: 220, render: (a) => jsx(SearchSelect, { value: a.manager, options: employeeOptions, placeholder: t.plans.noManager, ariaLabel: c.manager, onInput: (v) => setLine('assignments', a.key, { manager: v }) }) },
+                            { key: 'remove', label: '', render: (a) => jsx(Button, { small: true, kind: "ghost", label: t.plans.remove, ariaLabel: t.plans.removeOf(a.employeeText), onClick: () => removeLine('assignments', a.key) }) },
+                        ], rows: list, keyOf: (a) => a.key, empty: t.plans.assignEmpty, search: true, searchPlaceholder: t.plans.assignSearch, toolbar: jsx(Button, { label: t.plans.addAssign, kind: "dashed", small: true, disabled: !canWrite, onClick: addAssign }) }) }) }));
+        };
+        const quotaGrid = (d) => {
+            const c = t.plans.quotaCols;
+            const qErr = errs ? errs.quotas : {};
+            const list = d.quotas.map((q) => Object.assign({}, q, { id: q.key, employeeText: labelOf(employeeOptions, q.employee), monthText: monthText(q.month) }));
+            return (jsx(Card, { flush: true, title: t.plans.quotas, sub: t.plans.quotasHint, children: jsx("div", { class: "s4vp-cm-edit", children: jsx(Table, { label: t.plans.quotas, columns: [
+                            { key: 'employee', label: c.employee, width: 230, render: (q) => (jsxs("span", { class: "s4vp-cm-who", children: [jsx(SearchSelect, { value: q.employee, options: employeeOptions, placeholder: t.plans.pickEmployee, ariaLabel: c.employee, onInput: (v) => setLine('quotas', q.key, { employee: v }) }), qErr[q.key] ? jsx("span", { class: "s4vp-cm-err", children: errText(qErr[q.key]) }) : null] })) },
+                            { key: 'month', label: c.month, width: 150, render: (q) => jsx(MonthInput, { value: q.month, ariaLabel: c.month, onInput: (v) => setLine('quotas', q.key, { month: v }) }) },
+                            { key: 'quota', label: c.quota, align: 'right', width: 160, render: (q) => jsx(MoneyInput, { value: q.quota, decimals: 0, ariaLabel: c.quota, onInput: (v) => setLine('quotas', q.key, { quota: v }) }) },
+                            { key: 'remove', label: '', render: (q) => jsx(Button, { small: true, kind: "ghost", label: t.plans.remove, ariaLabel: t.plans.removeOf(q.employeeText), onClick: () => removeLine('quotas', q.key) }) },
+                        ], rows: list, keyOf: (q) => q.key, empty: t.plans.quotasEmpty, search: true, searchPlaceholder: t.plans.quotasSearch, toolbar: jsx(Button, { label: t.plans.addQuota, kind: "dashed", small: true, disabled: !canWrite, onClick: addQuota }) }) }) }));
+        };
+        const planEditor = (d) => (jsxs("div", { class: "s4vp-cm", children: [errs && errs.count ? jsx("div", { class: "s4vp-cm-warn s4vp-cm-bad", role: "alert", children: t.plans.err.fix(errs.count) }) : null, planForm(d), jsxs("div", { class: "s4vp-cols", children: [jsxs("div", { class: "s4vp-col-main", children: [rulesGrid(d), assignGrid(d), quotaGrid(d)] }), jsx("div", { class: "s4vp-col-side s4vp-cm-side", children: ruleEditor(d) })] })] }));
+        // ------------------------------------------------------------------ tab Mô phỏng
+        const simTab = () => {
+            const c = t.sim;
+            const planOpts = plans.filter((p) => p.id && !p.inactive).map((p) => ({ value: p.id, label: p.description ? `${p.name} - ${p.description}` : p.name }));
+            const out = simOut.data;
+            const plan = plans.find((p) => p.id === sim.plan) || null;
+            const quota = toNumber(sim.quota);
+            const base = toNumber(sim.base);
+            const localAtt = quota > 0 && base !== null ? (base / quota) * 100 : null;
+            const att = out && out.attainment !== null ? out.attainment : localAtt;
+            return (jsx("div", { class: "s4vp-cm", children: jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-side", children: jsxs(Card, { title: t.tabs.sim, sub: c.intro, children: [planOpts.length ? null : jsx("div", { class: "s4vp-cm-note", children: c.noPlans }), jsx(Field, { label: c.plan, required: true, children: jsx(AutoSelect, { value: sim.plan, options: planOpts, placeholder: c.pickPlan, onInput: setSimField('plan'), ariaLabel: c.plan }) }), plan ? jsx("div", { class: "s4vp-small", children: [t.basis[plan.basis], t.window[plan.window], plan.rules.map((r) => `${r.name} (${r.method})`).join(', ')].filter(Boolean).join(' · ') }) : null, jsx(Field, { label: c.base, children: jsx(MoneyInput, { value: sim.base, decimals: 0, onInput: setSimField('base') }) }), jsx(Field, { label: c.qty, children: jsx(NumberInput, { value: sim.qty, min: 0, step: "any", onInput: setSimField('qty') }) }), jsx(Field, { label: c.quota, hint: c.quotaHint, children: jsx(MoneyInput, { value: sim.quota, decimals: 0, onInput: setSimField('quota') }) })] }) }), jsx("div", { class: "s4vp-col-main", children: jsxs(Card, { title: c.result, sub: simOut.state === 'working' ? c.working : '', children: [simOut.state === 'error' ? jsx("div", { class: "s4vp-cm-warn s4vp-cm-bad", role: "alert", children: `${c.failed} ${simOut.error || ''}` }) : null, out ? (jsxs("div", { class: "s4vp-cm-body", children: [jsx(StatCards, { cards: [
+                                                    { key: 'amt', label: c.amount, value: money(out.amount) || '0', tone: out.amount ? 'ok' : '' },
+                                                    { key: 'att', label: c.attainment, value: att === null ? '-' : pctText(att) },
+                                                ] }), out.warnings.length ? (jsx("div", { class: "s4vp-cm-warn", role: "note", children: out.warnings.map((w, i) => (jsx("span", { children: w && typeof w === 'object' ? localized(w) || str(w.code) : str(w) }, `sw${i}`))) })) : null, out.components.length ? componentTable(out.components, plan ? plan.basis : '') : null, jsx("div", { class: "s4vp-cm-sub", children: t.side.steps }), stepList(out.steps, t.side.steps)] })) : simOut.state === 'error' ? null : (jsx(Empty, { text: c.waiting }))] }) })] }) }));
+        };
+        // ------------------------------------------------------------------ tab Doanh số ngoài
+        const extTab = () => {
+            const c = t.ext.cols;
+            const list = ext && ext.month === month && ext.sub === subsidiary ? ext.rows : [];
+            const total = list.length > 1 ? { sourceSystem: t.ext.total(list.length), revenue: sumBy(list, 'revenue'), cost: sumBy(list, 'cost'), qty: sumBy(list, 'qty'), collectedAmount: sumBy(list, 'collectedAmount') } : null;
+            return (jsx(Card, { flush: true, label: t.tabs.ext, children: jsx(Table, { label: t.tabs.ext, columns: [
+                        { key: 'sourceSystem', label: c.source, nowrap: true, render: (x) => jsx(Badge, { text: x.sourceSystem, tone: "info" }) },
+                        { key: 'docNo', label: c.docNo, nowrap: true, render: (x) => (jsxs("span", { class: "s4vp-cm-who", children: [jsx("span", { children: x.docNo }), jsx("span", { class: "s4vp-small", children: [t.tranType[x.tranType] || x.tranType, x.locked ? t.ext.locked : ''].filter(Boolean).join(' · ') })] })) },
+                        { key: 'lineNo', label: c.line, align: 'right', nowrap: true },
+                        { key: 'date', label: c.date, type: 'date', nowrap: true },
+                        { key: 'customer', label: c.customer, render: (x) => jsx("span", { class: "s4vp-cm-clip", title: x.customer, children: x.customer }) },
+                        { key: 'item', label: c.item, nowrap: true },
+                        { key: 'employee', label: c.employee, render: (x) => jsx("span", { class: "s4vp-cm-clip", title: x.employee, children: x.employee }) },
+                        { key: 'revenue', label: c.revenue, type: 'money', nowrap: true },
+                        { key: 'cost', label: c.cost, type: 'money', nowrap: true },
+                        { key: 'qty', label: c.qty, type: 'num', nowrap: true },
+                        { key: 'collectedAmount', label: c.collected, type: 'money', nowrap: true },
+                        { key: 'importBatch', label: c.batch, nowrap: true, render: (x) => jsx("span", { class: "s4vp-small", children: x.importBatch }) },
+                    ], rows: list, total: total, empty: t.ext.empty, search: true, searchPlaceholder: t.ext.search, maxHeight: "max(260px, calc(100vh - 300px))" }) }));
+        };
+        const importDialog = () => {
+            const c = t.imp;
+            const v = imp;
+            const shown = importView(v);
+            const bad = shown.filter((r) => r.status === 'error').length;
+            const ok = shown.length - bad;
+            const checked = !!v.results;
+            const colOpts = v.table.headers.map((h, i) => ({ value: String(i), label: `${i + 1}. ${h || '-'}` }));
+            const missing = IMPORT_FIELDS.filter((f) => f.required && !has(v.mapping[f.key])).map((f) => c.fields[f.key]);
+            const delimText = v.table.delimiter === '\t' ? c.delim.tab : v.table.delimiter === ';' ? c.delim.semi : c.delim.comma;
+            let why = '';
+            if (!checked)
+                why = c.needCheck;
+            else if (!ok || (bad && !v.skip))
+                why = c.needFix;
+            const close = () => putImp(null);
+            return (jsxs(Dialog, { title: c.title, width: 1120, onClose: close, actions: [
+                    jsx("span", { class: "s4vp-cm-dlg-l", children: jsx(Button, { kind: "link", label: t.ext.template, onClick: downloadTemplate }) }),
+                    jsx(Button, { label: c.close, onClick: close }),
+                    jsx(Button, { label: c.check, kind: checked ? 'default' : 'primary', disabled: !shown.length || missing.length > 0 || !!app.busy, onClick: checkImport }),
+                    jsx(Button, { label: c.write(ok), kind: checked ? 'primary' : 'default', disabled: !!why || !canWrite || !!app.busy, title: why, onClick: writeImport }),
+                ], children: [jsxs("div", { class: "s4vp-cm-imp-top", children: [jsx(Field, { label: c.system, required: true, hint: v.systemError ? jsx("span", { class: "s4vp-cm-err", children: v.systemError }) : c.systemHint, children: jsx(TextInput, { value: v.system, onInput: (x) => patchImp({ system: x, systemError: '', results: null, message: '' }) }) }), jsx(Field, { label: c.file, hint: v.error ? jsx("span", { class: "s4vp-cm-err", children: v.error }) : v.fileName || c.fileHint, children: jsx("input", { id: "s4vp-cm-file", type: "file", accept: ".csv,.txt,text/csv,text/plain", class: "s4vp-in s4vp-cm-file" }) })] }), jsx(Field, { label: c.paste, hint: v.table.headers.length ? c.read(v.table.rows.length, v.table.headers.length, delimText) : c.noData, children: jsx(TextArea, { value: v.text, rows: 4, placeholder: c.pastePh, onInput: (x) => setImpText(x), ariaLabel: c.paste }) }), v.table.headers.length ? (jsxs("div", { class: "s4vp-cm-body", children: [jsxs("div", { class: "s4vp-cm-sub", children: [c.mapping, jsx("span", { class: "s4vp-small", children: ` - ${c.mappingHint}` })] }), jsx("div", { class: "s4vp-cm-map", children: IMPORT_FIELDS.map((f) => (jsx(Field, { label: c.fields[f.key], required: !!f.required, children: jsx(Select, { value: v.mapping[f.key] || '', options: colOpts, placeholder: c.unused, onInput: (x) => setImpMap(f.key, x), ariaLabel: c.fields[f.key] }) }, f.key))) }), missing.length ? jsx("div", { class: "s4vp-cm-warn s4vp-cm-bad", role: "alert", children: c.missingReq(missing.join(', ')) }) : null] })) : null, shown.length ? (jsxs("div", { class: "s4vp-cm-body", children: [jsxs("div", { class: "s4vp-cm-sub", children: [c.preview, jsx("span", { class: "s4vp-small", children: ` - ${c.counts(shown.length, checked ? ok : shown.length - shown.filter((r) => r.errors.length).length, bad)}` })] }), jsx("div", { class: "s4vp-cm-box", children: jsx(Table, { label: c.preview, columns: [
+                                        { key: 'row', label: c.cols.row, type: 'num', nowrap: true },
+                                        { key: 'statusText', label: c.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: r.status === 'error' ? 'error' : r.status === 'ok' ? 'ok' : 'muted' }) },
+                                        { key: 'docNo', label: c.cols.docNo, nowrap: true },
+                                        { key: 'lineNo', label: c.cols.line, align: 'right', nowrap: true },
+                                        { key: 'tranType', label: c.cols.type, nowrap: true },
+                                        { key: 'date', label: c.cols.date, type: 'date', nowrap: true },
+                                        { key: 'customerName', label: c.cols.customer, render: (r) => jsx("span", { class: "s4vp-cm-clip", title: r.customerName || r.customerCode, children: r.customerName || r.customerCode }) },
+                                        { key: 'itemCode', label: c.cols.item, nowrap: true },
+                                        { key: 'revenue', label: c.cols.revenue, type: 'money', nowrap: true },
+                                        { key: 'qty', label: c.cols.qty, type: 'num', nowrap: true },
+                                        { key: 'employeeText', label: c.cols.employee, nowrap: true },
+                                        { key: 'errorText', label: c.cols.errors, render: (r) => (r.errorText ? jsx("span", { class: "s4vp-cm-err", children: r.errorText }) : '') },
+                                    ], rows: shown, empty: c.noData, search: true, searchPlaceholder: c.search, maxHeight: "260px" }) }), checked && bad && ok ? jsx(Checkbox, { checked: !!v.skip, label: c.skip, onInput: (x) => patchImp({ skip: x }) }) : null, v.message ? jsx("div", { class: bad ? 's4vp-cm-warn' : 's4vp-cm-note', role: "status", children: v.message }) : null] })) : null] }));
+        };
+        // ------------------------------------------------------------------ khung
+        const pickTab = (v) => {
+            if (v === tab)
+                return;
+            if (tab === 'plans' && draftRef.current && draftRef.current.dirty)
+                app.confirm(t.plans.confirmLeave, () => {
+                    putDraft(null);
+                    setErrs(null);
+                    setTab(v);
+                });
+            else
+                setTab(v);
+        };
+        const reasonText = (code) => (code ? t.run.reasons[code] || '' : '');
+        let actions = [];
+        let status = null;
+        let sub = '';
+        if (!roles.canRead)
+            sub = t.noRole;
+        else if (!subsidiary)
+            sub = t.noSubsidiary;
+        else if (tab === 'run') {
+            status = run ? { text: t.status[run.status] || run.status, tone: RUN_TONE[run.status] || 'muted' } : view ? { text: t.status.none, tone: 'muted' } : null;
+            sub = run ? [t.run.sub(runName, fmtDate(run.from), fmtDate(run.to)), run.calcAt ? t.run.calcAt(run.calcAt.replace('T', ' ').slice(0, 16)) : ''].filter(Boolean).join(' - ') : view ? t.run.subNone(monthText(month)) : '';
+            const btn = (key, label, kind, onClick) => jsx(Button, { label: label, kind: kind, disabled: !acts[key].enabled || !!app.busy, title: reasonText(acts[key].reason), onClick: onClick });
+            actions = [
+                jsx("span", { class: "s4vp-cm-month", children: jsx(MonthInput, { value: month, onInput: (v) => /^\d{4}-\d{2}$/.test(v) && v !== month && (setSelected(''), setMonth(v)), ariaLabel: t.run.month, width: 160 }) }),
+                run && run.batch ? jsx(Button, { kind: "link", label: `${t.run.batch} ${run.batchName || run.batch}`, onClick: () => app.go('payrollRun', { id: run.batch }) }) : null,
+                jsx(Button, { label: t.refresh, kind: "ghost", onClick: () => loadView() }),
+                jsx(Button, { label: t.ext.importBtn, disabled: !canWrite || !!app.busy, title: canWrite ? '' : t.readOnly, onClick: openImport }),
+                btn('void', t.run.void, 'danger', () => putVoid({ id: run.id, name: runName, reason: '', error: '' })),
+                btn('reopen', t.run.reopen, 'default', reopen),
+                btn('approve', t.run.approve, run && run.status === 'D' ? 'primary' : 'default', approve),
+                btn('calc', run && run.id ? t.run.recalc : t.run.calc, run && run.status === 'D' ? 'default' : 'primary', calculate),
+            ];
+        }
+        else if (tab === 'ext') {
+            sub = t.ext.sub(monthText(month));
+            actions = [
+                jsx("span", { class: "s4vp-cm-month", children: jsx(MonthInput, { value: month, onInput: (v) => /^\d{4}-\d{2}$/.test(v) && v !== month && (setSelected(''), setMonth(v)), ariaLabel: t.run.month, width: 160 }) }),
+                jsx(Button, { label: t.refresh, kind: "ghost", onClick: () => loadExt() }),
+                jsx(Button, { label: t.ext.template, kind: "ghost", onClick: downloadTemplate }),
+                jsx(Button, { label: t.ext.importBtn, kind: "primary", disabled: !canWrite || !!app.busy, title: canWrite ? '' : t.readOnly, onClick: openImport }),
+            ];
+        }
+        else if (tab === 'plans') {
+            if (draft) {
+                status = draft.dirty ? { text: t.plans.dirty, tone: 'warn' } : null;
+                actions = [
+                    jsx(Button, { label: t.plans.discard, kind: "ghost", disabled: !draft.dirty, onClick: discardPlan }),
+                    jsx(Button, { label: t.plans.save, kind: "primary", disabled: !canWrite || !!app.busy, title: canWrite ? '' : t.readOnly, onClick: savePlan }),
+                ];
+                sub = canWrite ? '' : t.readOnly;
+            }
+            else {
+                actions = [jsx(Button, { label: t.refresh, kind: "ghost", onClick: () => loadSetup(true) }), jsx(Button, { label: t.plans.newPlan, kind: "primary", disabled: !canWrite, title: canWrite ? '' : t.readOnly, onClick: () => openPlan(null) })];
+                sub = canWrite ? '' : t.readOnly;
+            }
+        }
+        const title = tab === 'plans' && draft ? `${t.title} - ${draft.name || t.plans.newTitle}` : t.title;
+        let content = null;
+        if (roles.canRead && subsidiary) {
+            if (tab === 'run')
+                content = runTab();
+            else if (tab === 'ext')
+                content = extTab();
+            else if (tab === 'plans')
+                content = draft ? planEditor(draft) : planListTab();
+            else
+                content = simTab();
+        }
+        return (jsxs(Page, { children: [jsx(PageHeader, { title: title, status: status, sub: sub, back: tab === 'plans' && draft ? { label: t.plans.backToList, onClick: leavePlan } : null, actions: actions }), roles.canRead && subsidiary ? jsx(Tabs, { items: SUB_TABS.map((k) => ({ value: k, label: t.tabs[k] })), value: tab, onPick: pickTab, label: t.tabs.label }) : null, content, imp ? importDialog() : null, voidDlg ? (jsx(Dialog, { title: t.run.voidTitle(voidDlg.name), width: 520, onClose: () => putVoid(null), actions: [jsx(Button, { label: t.run.back, onClick: () => putVoid(null) }), jsx(Button, { label: t.run.voidRun, kind: "danger", disabled: !!app.busy, onClick: submitVoid })], children: jsxs("div", { class: "s4vp-cm-body", children: [jsx("span", { children: t.run.voidIntro }), jsx(Field, { label: t.run.voidReason, required: true, hint: voidDlg.error ? jsx("span", { class: "s4vp-cm-err", children: voidDlg.error }) : null, children: jsx(TextArea, { value: voidDlg.reason, rows: 3, onInput: (v) => putVoid(Object.assign({}, voidRef.current, { reason: v, error: '' })), ariaLabel: t.run.voidReason }) })] }) })) : null] }));
+    }
+    // Bản sao dữ liệu thô của một kế hoạch đã map (để mở biểu mẫu từ bản gốc, sửa không đụng danh sách)
+    function planPayloadSource(p) {
+        return {
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            subsidiary: p.subsidiary,
+            effective: p.effective,
+            expiration: p.expiration,
+            source: p.source,
+            basis: p.basis,
+            trigger: p.trigger,
+            creditSource: p.creditSource,
+            creditField: p.creditField,
+            window: p.window,
+            includeReturns: p.includeReturns,
+            clawbackDays: p.clawbackDays,
+            excludeItemTypes: p.excludeItemTypes,
+            earningType: p.earningType,
+            minAttainment: p.minAttainment,
+            capAmount: p.capAmount,
+            drawType: p.drawType,
+            drawAmount: p.drawAmount,
+            overridePct: p.overridePct,
+            overrideBasis: p.overrideBasis,
+            isInactive: p.inactive,
+            rules: p.rules,
+            assignments: p.assignments,
+            quotas: p.quotas,
+        };
     }
 
     const TEXT$3 = {
@@ -12937,7 +15382,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         vi: {
             title: 'Lương VN',
             nav: 'Phân hệ',
-            tabs: { home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập' },
+            tabs: { home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', commission: 'Hoa hồng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập' },
             more: 'Khác',
             outputs: 'Sản lượng - khoán tổ',
             permits: 'Giấy phép lao động',
@@ -12956,7 +15401,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         en: {
             title: 'VN Payroll',
             nav: 'Module',
-            tabs: { home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup' },
+            tabs: { home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', commission: 'Commission', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup' },
             more: 'More',
             outputs: 'Output - team piecework',
             permits: 'Work permits',
@@ -12974,15 +15419,15 @@ input[type="number"].s4vp-in{padding-right:4px}
         },
     };
     // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
-    const VIEWS = { home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView };
+    const VIEWS = { home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView };
     const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
     // Tab đang sáng theo view
     const TAB_OF = {
         home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
-        profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
+        profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', commission: 'commission', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
     };
     // View mở khi bấm tab
-    const VIEW_OF_TAB = { home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setupHub' };
+    const VIEW_OF_TAB = { home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', commission: 'commission', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setupHub' };
     const DEFAULT_VIEW = 'home';
     const known = (view) => !!VIEWS[view] || LEGACY.indexOf(view) >= 0;
     // Hash dạng #/view?k=v; hash lạ (hoặc trống) về Trang chủ
@@ -13180,7 +15625,8 @@ input[type="number"].s4vp-in{padding-right:4px}
             reloadBoot: () => reloadBoot(true),
         };
         const activeTab = TAB_OF[current.view] || '';
-        const tabs = Object.keys(VIEW_OF_TAB).map((k) => {
+        // Tab Hoa hồng chỉ hiện với vai trò được xem (administrator, kế toán, HR - docs/COMMISSION.md mục 6)
+        const tabs = Object.keys(VIEW_OF_TAB).filter((k) => k !== 'commission' || canSeeCommission(boot)).map((k) => {
             const attrs = { type: 'button', class: `s4vp-navtab${activeTab === k ? ' s4vp-on' : ''}`, onClick: () => go(VIEW_OF_TAB[k]) };
             if (activeTab === k)
                 attrs['aria-current'] = 'page';

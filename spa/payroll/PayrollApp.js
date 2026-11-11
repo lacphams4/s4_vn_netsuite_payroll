@@ -19,6 +19,7 @@ import ReportsHubView from './views/reportsHub.js';
 import AdvancesView from './views/advancesV2.js';
 import SetupHubView from './views/setupHub.js';
 import OutputsView from './views/outputsV2.js';
+import CommissionView, {canSeeCommission} from './views/commission.js';
 import PayrollRunView from './views/payrollRun.js';
 import CheckDetailView from './views/checkDetail.js';
 import LegacyView from './views/legacy.js';
@@ -27,7 +28,7 @@ const TEXT = {
 	vi: {
 		title: 'Lương VN',
 		nav: 'Phân hệ',
-		tabs: {home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập'},
+		tabs: {home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', commission: 'Hoa hồng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập'},
 		more: 'Khác',
 		outputs: 'Sản lượng - khoán tổ',
 		permits: 'Giấy phép lao động',
@@ -46,7 +47,7 @@ const TEXT = {
 	en: {
 		title: 'VN Payroll',
 		nav: 'Module',
-		tabs: {home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup'},
+		tabs: {home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', commission: 'Commission', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup'},
 		more: 'More',
 		outputs: 'Output - team piecework',
 		permits: 'Work permits',
@@ -65,15 +66,15 @@ const TEXT = {
 };
 
 // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
-const VIEWS = {home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView};
+const VIEWS = {home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView};
 const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
 // Tab đang sáng theo view
 const TAB_OF = {
 	home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
-	profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
+	profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', commission: 'commission', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
 };
 // View mở khi bấm tab
-const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setupHub'};
+const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', commission: 'commission', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setupHub'};
 const DEFAULT_VIEW = 'home';
 const known = (view) => !!VIEWS[view] || LEGACY.indexOf(view) >= 0;
 
@@ -268,7 +269,8 @@ export default function PayrollApp() {
 	};
 
 	const activeTab = TAB_OF[current.view] || '';
-	const tabs = Object.keys(VIEW_OF_TAB).map((k) => {
+	// Tab Hoa hồng chỉ hiện với vai trò được xem (administrator, kế toán, HR - docs/COMMISSION.md mục 6)
+	const tabs = Object.keys(VIEW_OF_TAB).filter((k) => k !== 'commission' || canSeeCommission(boot)).map((k) => {
 		const attrs = {type: 'button', class: `s4vp-navtab${activeTab === k ? ' s4vp-on' : ''}`, onClick: () => go(VIEW_OF_TAB[k])};
 		if (activeTab === k) attrs['aria-current'] = 'page';
 		return (

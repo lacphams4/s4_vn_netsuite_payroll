@@ -2517,6 +2517,58 @@ define([], () => {
 					"id": "custrecord_s4vp_oe_void_reason",
 					"type": "textarea",
 					"target": null
+				},
+				"src_tran": {
+					"id": "custrecord_s4vp_oe_src_tran",
+					"type": "text",
+					"target": null
+				},
+				"src": {
+					"id": "custrecord_s4vp_oe_src",
+					"type": "select",
+					"target": "rec:out_source"
+				}
+			}
+		},
+		"out_source": {
+			"type": "customrecord_s4vp_out_source",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_osr_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"tran_type": {
+					"id": "custrecord_s4vp_osr_tran_type",
+					"type": "select",
+					"target": "list:out_tran_type"
+				},
+				"employee_field": {
+					"id": "custrecord_s4vp_osr_employee_field",
+					"type": "text",
+					"target": null
+				},
+				"team_field": {
+					"id": "custrecord_s4vp_osr_team_field",
+					"type": "text",
+					"target": null
+				},
+				"rate_table": {
+					"id": "custrecord_s4vp_osr_rate_table",
+					"type": "select",
+					"target": "rec:rate_table"
+				},
+				"qty_sign": {
+					"id": "custrecord_s4vp_osr_qty_sign",
+					"type": "int",
+					"target": null
+				},
+				"department_from_line": {
+					"id": "custrecord_s4vp_osr_department_from_line",
+					"type": "check",
+					"target": null
 				}
 			}
 		},
@@ -3492,6 +3544,604 @@ define([], () => {
 				}
 			}
 		},
+		"comm_plan": {
+			"type": "customrecord_s4vp_comm_plan",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_cpl_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"description": {
+					"id": "custrecord_s4vp_cpl_description",
+					"type": "text",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_cpl_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiration": {
+					"id": "custrecord_s4vp_cpl_expiration",
+					"type": "date",
+					"target": null
+				},
+				"basis": {
+					"id": "custrecord_s4vp_cpl_basis",
+					"type": "select",
+					"target": "list:cm_basis"
+				},
+				"trigger": {
+					"id": "custrecord_s4vp_cpl_trigger",
+					"type": "select",
+					"target": "list:cm_trigger"
+				},
+				"credit_source": {
+					"id": "custrecord_s4vp_cpl_credit_source",
+					"type": "select",
+					"target": "list:cm_credit"
+				},
+				"credit_field": {
+					"id": "custrecord_s4vp_cpl_credit_field",
+					"type": "text",
+					"target": null
+				},
+				"window": {
+					"id": "custrecord_s4vp_cpl_window",
+					"type": "select",
+					"target": "list:cm_window"
+				},
+				"include_returns": {
+					"id": "custrecord_s4vp_cpl_include_returns",
+					"type": "check",
+					"target": null
+				},
+				"clawback_days": {
+					"id": "custrecord_s4vp_cpl_clawback_days",
+					"type": "int",
+					"target": null
+				},
+				"exclude_item_types": {
+					"id": "custrecord_s4vp_cpl_exclude_item_types",
+					"type": "text",
+					"target": null
+				},
+				"earning_type": {
+					"id": "custrecord_s4vp_cpl_earning_type",
+					"type": "text",
+					"target": null
+				},
+				"min_attainment": {
+					"id": "custrecord_s4vp_cpl_min_attainment",
+					"type": "float",
+					"target": null
+				},
+				"cap_amount": {
+					"id": "custrecord_s4vp_cpl_cap_amount",
+					"type": "currency",
+					"target": null
+				},
+				"draw_type": {
+					"id": "custrecord_s4vp_cpl_draw_type",
+					"type": "select",
+					"target": "list:cm_draw"
+				},
+				"draw_amount": {
+					"id": "custrecord_s4vp_cpl_draw_amount",
+					"type": "currency",
+					"target": null
+				},
+				"override_pct": {
+					"id": "custrecord_s4vp_cpl_override_pct",
+					"type": "float",
+					"target": null
+				},
+				"override_basis": {
+					"id": "custrecord_s4vp_cpl_override_basis",
+					"type": "select",
+					"target": "list:cm_override"
+				},
+				"source": {
+					"id": "custrecord_s4vp_cpl_source",
+					"type": "select",
+					"target": "list:cm_source"
+				}
+			}
+		},
+		"comm_txn": {
+			"type": "customrecord_s4vp_comm_txn",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_cxt_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"source_system": {
+					"id": "custrecord_s4vp_cxt_source_system",
+					"type": "text",
+					"target": null
+				},
+				"doc_no": {
+					"id": "custrecord_s4vp_cxt_doc_no",
+					"type": "text",
+					"target": null
+				},
+				"line_no": {
+					"id": "custrecord_s4vp_cxt_line_no",
+					"type": "int",
+					"target": null
+				},
+				"tran_type": {
+					"id": "custrecord_s4vp_cxt_tran_type",
+					"type": "select",
+					"target": "list:cm_txn_type"
+				},
+				"date": {
+					"id": "custrecord_s4vp_cxt_date",
+					"type": "date",
+					"target": null
+				},
+				"customer_code": {
+					"id": "custrecord_s4vp_cxt_customer_code",
+					"type": "text",
+					"target": null
+				},
+				"customer_name": {
+					"id": "custrecord_s4vp_cxt_customer_name",
+					"type": "text",
+					"target": null
+				},
+				"customer_category": {
+					"id": "custrecord_s4vp_cxt_customer_category",
+					"type": "text",
+					"target": null
+				},
+				"first_sale_date": {
+					"id": "custrecord_s4vp_cxt_first_sale_date",
+					"type": "date",
+					"target": null
+				},
+				"item_code": {
+					"id": "custrecord_s4vp_cxt_item_code",
+					"type": "text",
+					"target": null
+				},
+				"item_type": {
+					"id": "custrecord_s4vp_cxt_item_type",
+					"type": "text",
+					"target": null
+				},
+				"class": {
+					"id": "custrecord_s4vp_cxt_class",
+					"type": "select",
+					"target": "class"
+				},
+				"department": {
+					"id": "custrecord_s4vp_cxt_department",
+					"type": "select",
+					"target": "department"
+				},
+				"location": {
+					"id": "custrecord_s4vp_cxt_location",
+					"type": "select",
+					"target": "location"
+				},
+				"project": {
+					"id": "custrecord_s4vp_cxt_project",
+					"type": "select",
+					"target": "project"
+				},
+				"revenue": {
+					"id": "custrecord_s4vp_cxt_revenue",
+					"type": "currency",
+					"target": null
+				},
+				"cost": {
+					"id": "custrecord_s4vp_cxt_cost",
+					"type": "currency",
+					"target": null
+				},
+				"qty": {
+					"id": "custrecord_s4vp_cxt_qty",
+					"type": "float",
+					"target": null
+				},
+				"employee": {
+					"id": "custrecord_s4vp_cxt_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"team": {
+					"id": "custrecord_s4vp_cxt_team",
+					"type": "textarea",
+					"target": null
+				},
+				"collected_date": {
+					"id": "custrecord_s4vp_cxt_collected_date",
+					"type": "date",
+					"target": null
+				},
+				"collected_amount": {
+					"id": "custrecord_s4vp_cxt_collected_amount",
+					"type": "currency",
+					"target": null
+				},
+				"import_batch": {
+					"id": "custrecord_s4vp_cxt_import_batch",
+					"type": "text",
+					"target": null
+				},
+				"note": {
+					"id": "custrecord_s4vp_cxt_note",
+					"type": "textarea",
+					"target": null
+				}
+			}
+		},
+		"comm_rule": {
+			"type": "customrecord_s4vp_comm_rule",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"plan": {
+					"id": "custrecord_s4vp_ccr_plan",
+					"type": "select",
+					"target": "rec:comm_plan"
+				},
+				"sequence": {
+					"id": "custrecord_s4vp_ccr_sequence",
+					"type": "int",
+					"target": null
+				},
+				"f_items": {
+					"id": "custrecord_s4vp_ccr_f_items",
+					"type": "text",
+					"target": null
+				},
+				"f_classes": {
+					"id": "custrecord_s4vp_ccr_f_classes",
+					"type": "text",
+					"target": null
+				},
+				"f_departments": {
+					"id": "custrecord_s4vp_ccr_f_departments",
+					"type": "text",
+					"target": null
+				},
+				"f_locations": {
+					"id": "custrecord_s4vp_ccr_f_locations",
+					"type": "text",
+					"target": null
+				},
+				"f_cust_categories": {
+					"id": "custrecord_s4vp_ccr_f_cust_categories",
+					"type": "text",
+					"target": null
+				},
+				"f_new_customer": {
+					"id": "custrecord_s4vp_ccr_f_new_customer",
+					"type": "check",
+					"target": null
+				},
+				"new_days": {
+					"id": "custrecord_s4vp_ccr_new_days",
+					"type": "int",
+					"target": null
+				},
+				"method": {
+					"id": "custrecord_s4vp_ccr_method",
+					"type": "select",
+					"target": "list:cm_method"
+				},
+				"rate": {
+					"id": "custrecord_s4vp_ccr_rate",
+					"type": "float",
+					"target": null
+				},
+				"unit_amount": {
+					"id": "custrecord_s4vp_ccr_unit_amount",
+					"type": "currency",
+					"target": null
+				}
+			}
+		},
+		"comm_tier": {
+			"type": "customrecord_s4vp_comm_tier",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"rule": {
+					"id": "custrecord_s4vp_ctr_rule",
+					"type": "select",
+					"target": "rec:comm_rule"
+				},
+				"from_value": {
+					"id": "custrecord_s4vp_ctr_from_value",
+					"type": "float",
+					"target": null
+				},
+				"rate": {
+					"id": "custrecord_s4vp_ctr_rate",
+					"type": "float",
+					"target": null
+				},
+				"amount": {
+					"id": "custrecord_s4vp_ctr_amount",
+					"type": "currency",
+					"target": null
+				}
+			}
+		},
+		"comm_assign": {
+			"type": "customrecord_s4vp_comm_assign",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"plan": {
+					"id": "custrecord_s4vp_cas_plan",
+					"type": "select",
+					"target": "rec:comm_plan"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_cas_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"effective": {
+					"id": "custrecord_s4vp_cas_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiration": {
+					"id": "custrecord_s4vp_cas_expiration",
+					"type": "date",
+					"target": null
+				},
+				"quota": {
+					"id": "custrecord_s4vp_cas_quota",
+					"type": "currency",
+					"target": null
+				},
+				"manager": {
+					"id": "custrecord_s4vp_cas_manager",
+					"type": "select",
+					"target": "employee"
+				}
+			}
+		},
+		"comm_quota": {
+			"type": "customrecord_s4vp_comm_quota",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"plan": {
+					"id": "custrecord_s4vp_cqt_plan",
+					"type": "select",
+					"target": "rec:comm_plan"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_cqt_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"month": {
+					"id": "custrecord_s4vp_cqt_month",
+					"type": "int",
+					"target": null
+				},
+				"quota": {
+					"id": "custrecord_s4vp_cqt_quota",
+					"type": "currency",
+					"target": null
+				}
+			}
+		},
+		"comm_run": {
+			"type": "customrecord_s4vp_comm_run",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_crn_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"month": {
+					"id": "custrecord_s4vp_crn_month",
+					"type": "int",
+					"target": null
+				},
+				"date_from": {
+					"id": "custrecord_s4vp_crn_date_from",
+					"type": "date",
+					"target": null
+				},
+				"date_to": {
+					"id": "custrecord_s4vp_crn_date_to",
+					"type": "date",
+					"target": null
+				},
+				"status": {
+					"id": "custrecord_s4vp_crn_status",
+					"type": "select",
+					"target": "list:cm_run_status"
+				},
+				"batch": {
+					"id": "custrecord_s4vp_crn_batch",
+					"type": "select",
+					"target": "rec:batch"
+				},
+				"total_base": {
+					"id": "custrecord_s4vp_crn_total_base",
+					"type": "float",
+					"target": null
+				},
+				"total_amount": {
+					"id": "custrecord_s4vp_crn_total_amount",
+					"type": "currency",
+					"target": null
+				},
+				"employees": {
+					"id": "custrecord_s4vp_crn_employees",
+					"type": "int",
+					"target": null
+				},
+				"calc_at": {
+					"id": "custrecord_s4vp_crn_calc_at",
+					"type": "text",
+					"target": null
+				},
+				"approved_by": {
+					"id": "custrecord_s4vp_crn_approved_by",
+					"type": "select",
+					"target": "employee"
+				},
+				"note": {
+					"id": "custrecord_s4vp_crn_note",
+					"type": "textarea",
+					"target": null
+				}
+			}
+		},
+		"comm_result": {
+			"type": "customrecord_s4vp_comm_result",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"run": {
+					"id": "custrecord_s4vp_crs_run",
+					"type": "select",
+					"target": "rec:comm_run"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_crs_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"plan": {
+					"id": "custrecord_s4vp_crs_plan",
+					"type": "select",
+					"target": "rec:comm_plan"
+				},
+				"earning_type": {
+					"id": "custrecord_s4vp_crs_earning_type",
+					"type": "text",
+					"target": null
+				},
+				"quota": {
+					"id": "custrecord_s4vp_crs_quota",
+					"type": "currency",
+					"target": null
+				},
+				"base": {
+					"id": "custrecord_s4vp_crs_base",
+					"type": "float",
+					"target": null
+				},
+				"window_base": {
+					"id": "custrecord_s4vp_crs_window_base",
+					"type": "float",
+					"target": null
+				},
+				"attainment": {
+					"id": "custrecord_s4vp_crs_attainment",
+					"type": "float",
+					"target": null
+				},
+				"gross": {
+					"id": "custrecord_s4vp_crs_gross",
+					"type": "currency",
+					"target": null
+				},
+				"prior_paid": {
+					"id": "custrecord_s4vp_crs_prior_paid",
+					"type": "currency",
+					"target": null
+				},
+				"earned": {
+					"id": "custrecord_s4vp_crs_earned",
+					"type": "currency",
+					"target": null
+				},
+				"override_amount": {
+					"id": "custrecord_s4vp_crs_override_amount",
+					"type": "currency",
+					"target": null
+				},
+				"adjustments": {
+					"id": "custrecord_s4vp_crs_adjustments",
+					"type": "currency",
+					"target": null
+				},
+				"capped": {
+					"id": "custrecord_s4vp_crs_capped",
+					"type": "currency",
+					"target": null
+				},
+				"draw_paid": {
+					"id": "custrecord_s4vp_crs_draw_paid",
+					"type": "currency",
+					"target": null
+				},
+				"draw_recovered": {
+					"id": "custrecord_s4vp_crs_draw_recovered",
+					"type": "currency",
+					"target": null
+				},
+				"draw_balance": {
+					"id": "custrecord_s4vp_crs_draw_balance",
+					"type": "currency",
+					"target": null
+				},
+				"payable": {
+					"id": "custrecord_s4vp_crs_payable",
+					"type": "currency",
+					"target": null
+				},
+				"detail": {
+					"id": "custrecord_s4vp_crs_detail",
+					"type": "clob",
+					"target": null
+				}
+			}
+		},
+		"comm_adjust": {
+			"type": "customrecord_s4vp_comm_adjust",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"employee": {
+					"id": "custrecord_s4vp_cad_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"plan": {
+					"id": "custrecord_s4vp_cad_plan",
+					"type": "select",
+					"target": "rec:comm_plan"
+				},
+				"month": {
+					"id": "custrecord_s4vp_cad_month",
+					"type": "int",
+					"target": null
+				},
+				"amount": {
+					"id": "custrecord_s4vp_cad_amount",
+					"type": "currency",
+					"target": null
+				},
+				"reason": {
+					"id": "custrecord_s4vp_cad_reason",
+					"type": "textarea",
+					"target": null
+				}
+			}
+		},
 		"contract": {
 			"type": "customrecord_s4vp_contract",
 			"includeName": false,
@@ -4024,6 +4674,14 @@ define([], () => {
 				"C": "val_s4vp_output_status_c"
 			}
 		},
+		"out_tran_type": {
+			"type": "customlist_s4vp_out_tran_type",
+			"values": {
+				"Build": "val_s4vp_out_tran_type_build",
+				"WOCompl": "val_s4vp_out_tran_type_wocompl",
+				"ItemShip": "val_s4vp_out_tran_type_itemship"
+			}
+		},
 		"wp_doc_type": {
 			"type": "customlist_s4vp_wp_doc_type",
 			"values": {
@@ -4140,6 +4798,87 @@ define([], () => {
 				"O": "val_s4vp_bck_status_o",
 				"A": "val_s4vp_bck_status_a",
 				"R": "val_s4vp_bck_status_r"
+			}
+		},
+		"cm_basis": {
+			"type": "customlist_s4vp_cm_basis",
+			"values": {
+				"R": "val_s4vp_cm_basis_r",
+				"G": "val_s4vp_cm_basis_g",
+				"Q": "val_s4vp_cm_basis_q"
+			}
+		},
+		"cm_trigger": {
+			"type": "customlist_s4vp_cm_trigger",
+			"values": {
+				"I": "val_s4vp_cm_trigger_i",
+				"P": "val_s4vp_cm_trigger_p"
+			}
+		},
+		"cm_credit": {
+			"type": "customlist_s4vp_cm_credit",
+			"values": {
+				"R": "val_s4vp_cm_credit_r",
+				"T": "val_s4vp_cm_credit_t",
+				"F": "val_s4vp_cm_credit_f"
+			}
+		},
+		"cm_window": {
+			"type": "customlist_s4vp_cm_window",
+			"values": {
+				"M": "val_s4vp_cm_window_m",
+				"Q": "val_s4vp_cm_window_q",
+				"Y": "val_s4vp_cm_window_y"
+			}
+		},
+		"cm_draw": {
+			"type": "customlist_s4vp_cm_draw",
+			"values": {
+				"N": "val_s4vp_cm_draw_n",
+				"R": "val_s4vp_cm_draw_r",
+				"G": "val_s4vp_cm_draw_g"
+			}
+		},
+		"cm_override": {
+			"type": "customlist_s4vp_cm_override",
+			"values": {
+				"B": "val_s4vp_cm_override_b",
+				"C": "val_s4vp_cm_override_c"
+			}
+		},
+		"cm_method": {
+			"type": "customlist_s4vp_cm_method",
+			"values": {
+				"P": "val_s4vp_cm_method_p",
+				"G": "val_s4vp_cm_method_g",
+				"S": "val_s4vp_cm_method_s",
+				"A": "val_s4vp_cm_method_a",
+				"U": "val_s4vp_cm_method_u",
+				"B": "val_s4vp_cm_method_b"
+			}
+		},
+		"cm_run_status": {
+			"type": "customlist_s4vp_cm_run_status",
+			"values": {
+				"D": "val_s4vp_cm_run_status_d",
+				"A": "val_s4vp_cm_run_status_a",
+				"P": "val_s4vp_cm_run_status_p"
+			}
+		},
+		"cm_source": {
+			"type": "customlist_s4vp_cm_source",
+			"values": {
+				"N": "val_s4vp_cm_source_n",
+				"X": "val_s4vp_cm_source_x",
+				"B": "val_s4vp_cm_source_b"
+			}
+		},
+		"cm_txn_type": {
+			"type": "customlist_s4vp_cm_txn_type",
+			"values": {
+				"I": "val_s4vp_cm_txn_type_i",
+				"S": "val_s4vp_cm_txn_type_s",
+				"C": "val_s4vp_cm_txn_type_c"
 			}
 		},
 		"hrc_type": {

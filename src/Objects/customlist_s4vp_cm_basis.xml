@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_cm_basis">
+  <name>S4VP cm_basis</name>
+  <description>S4 VN Payroll code list cm_basis; values keep the Acumatica codes (R, G, Q).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_cm_basis_r">
+      <value>R - Doanh thu thuần chưa thuế</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_basis_g">
+      <value>G - Lãi gộp ước tính</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_basis_q">
+      <value>Q - Số lượng bán</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

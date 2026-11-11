@@ -18,6 +18,7 @@
  *        timeLines, manualEarnings: [{earningType, quantity, rate, multiplier, amount, amountLocked, description, project, branch, workCenter, sub}],
  *        deductions: [{code, name, amount, account}], openAdvances: [{refNbr, date, balance}], prior: {earnings, absenceWorkingDays, otherTaxDeductions},
  *        leaveRemaining, yearToDateOvertimeHours, outputAmounts, salesAmount, outputShares, shiftCounts, rosterDays, allocationVersions,
+ *        commissionLines: [{earningType, amount, shares: [{sub, workCenter, branch, project, amount}], runId, runIds}] (hoa hồng đã duyệt),
  *        defaults: {project, task, branch, workCenter},
  *        accounts: {workCenters, projects, departments, employeeAccount, employeeSub, defaultAccount, defaultSub}}
  *        (workCenters / projects / departments: bảng của core/CostAccountRules.buildMaps; loại lao động do hàm này tự điền)
@@ -115,6 +116,18 @@ define([
 			const t = typeByCode[norm(m.earningType)];
 			if (!t) throw Errors.invalid(`Earning type ${m.earningType} does not exist.`, `Loại thu nhập ${m.earningType} không tồn tại.`);
 			earnings.push(Rules.manualLine(Object.assign({}, m, { earningType: norm(m.earningType) }), t));
+		}
+
+		// 5b. Hoa hồng đã duyệt (docs/COMMISSION.md mục 7): dòng source "C", số lượng 1, đơn giá = số tiền, miễn thuế theo loại thu
+		// nhập như dòng nhập tay; shares là phân đoạn chi phí (CostAllocationBuilder dùng làm đích riêng)
+		for (const cl of emp.commissionLines || []) {
+			const code = norm(cl.earningType);
+			const t = typeByCode[code];
+			if (!t) throw Errors.invalid(`Earning type ${cl.earningType} does not exist.`, `Loại thu nhập ${cl.earningType} không tồn tại.`);
+			const line = Rules.manualLine({ earningType: code, description: cl.description || "", quantity: 1, rate: Money.round(cl.amount), multiplier: 1 }, t);
+			if (line.amount === 0) continue;
+			const runIds = cl.runIds || (blank(cl.runId) ? [] : [cl.runId]);
+			earnings.push(Object.assign(line, { source: "C", shares: cl.shares || [], runId: blank(cl.runId) ? runIds[0] || null : cl.runId, runIds }));
 		}
 
 		// 6. Lõi phiếu lương

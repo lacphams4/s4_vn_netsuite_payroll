@@ -187,6 +187,10 @@
       <permlevel>FULL</permlevel>
     </permission>
     <permission>
+      <permkey>[customrecord_s4vp_out_source]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
       <permkey>[customrecord_s4vp_output_line]</permkey>
       <permlevel>FULL</permlevel>
     </permission>
@@ -249,6 +253,42 @@
     <permission>
       <permkey>[customrecord_s4vp_audit_log]</permkey>
       <permlevel>CREATE</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_plan]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_txn]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_rule]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_tier]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_assign]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_quota]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_run]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_result]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_comm_adjust]</permkey>
+      <permlevel>VIEW</permlevel>
     </permission>
     <permission>
       <permkey>[customrecord_s4vp_contract]</permkey>

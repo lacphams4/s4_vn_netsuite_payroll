@@ -17,7 +17,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth", "../api/LaborAnalytics", "../api/HrCore", "../api/ReportsHub", "../api/AdvancesV2", "../api/SetupHub", "../api/OutputsV2", "../api/Approvals"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals) => {
+define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth", "../api/LaborAnalytics", "../api/HrCore", "../api/ReportsHub", "../api/AdvancesV2", "../api/SetupHub", "../api/OutputsV2", "../api/Approvals", "../api/CommissionV2", "../api/OutputSources"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
@@ -54,7 +54,9 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 
 	// ---------------------------------------------------------------- mô-đun route của giao diện bản 2
 	// Thứ tự đăng ký quyết định mô-đun nào thắng khi trùng tên action (không nên trùng); action cũ luôn được ưu tiên.
-	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals];
+	// CommissionV2: hoa hồng (đọc "payroll", ghi "acct"); OutputSources: sản lượng từ giao dịch (outputSources, outputSourcePreview,
+	// outputSourceGenerate - quyền khai trong mô-đun)
+	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources];
 	const ROLE_SETS = {
 		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
 		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
@@ -94,6 +96,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	const PERIOD_ID_ACTIONS = ["closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance", "processPunches", "loadSheetEmployees"];
 	// Thao tác trên phiếu sản lượng: body.id là id phiếu; kỳ của phiếu lấy từ kết quả (Output.act / voidEntry trả period)
 	const OUTPUT_ACTIONS = ["outputAction", "voidOutput"];
+	// Hoa hồng: body.run là id bảng tính hoa hồng (không phải bảng lương) - ghi vào id của nhật ký
+	const COMMISSION_RUN_ACTIONS = ["commissionApprove", "commissionReopen", "commissionVoid"];
 
 	/** Ghi nhật ký sau POST thành công; lỗi ở đây chỉ ghi log, không ảnh hưởng kết quả thao tác. */
 	function audit(action, body, result) {
@@ -108,7 +112,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 			else if (action === "createBatch") batch = (result && result.id) || batch;
 			else if (OUTPUT_ACTIONS.includes(action)) period = (result && result.period) || period;
 			const employee = b.employee || values.employee || null;
-			AuditLog.record({ action, batch: batch || null, period: period || null, id: b.id || null, lineId: b.lineId || null, employee, result });
+			const id = COMMISSION_RUN_ACTIONS.includes(action) ? b.run || null : b.id || null;
+			AuditLog.record({ action, batch: batch || null, period: period || null, id, lineId: b.lineId || null, employee, result });
 		} catch (e) {
 			log.error({ title: "s4vp_rl_api audit", details: String((e && e.message) || e).slice(0, 300) });
 		}

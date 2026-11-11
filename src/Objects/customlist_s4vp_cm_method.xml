@@ -1,0 +1,32 @@
+<customlist scriptid="customlist_s4vp_cm_method">
+  <name>S4VP cm_method</name>
+  <description>S4 VN Payroll code list cm_method; values keep the Acumatica codes (P, G, S, A, U, B).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_cm_method_p">
+      <value>P - Tỷ lệ cố định</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_method_g">
+      <value>G - Thang lũy tiến theo giá trị</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_method_s">
+      <value>S - Thang bậc theo giá trị</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_method_a">
+      <value>A - Theo % đạt chỉ tiêu</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_method_u">
+      <value>U - Đơn giá trên số lượng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_method_b">
+      <value>B - Thưởng mốc % đạt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

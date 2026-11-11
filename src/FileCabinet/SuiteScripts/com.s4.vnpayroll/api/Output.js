@@ -105,7 +105,9 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 			subsidiary: e.subsidiary, doc_date: e.doc_date, period: e.period || null, type: e.type, rate_table: e.rate_table, team: e.team || null, split_method: e.split_method || null,
 			project: e.project || null, location: e.location || null, work_center: e.work_center || null, department: e.department || null, description: e.description || "",
 		};
-		const entryId = cur ? (Store.update("output", id, header), id) : Store.create("output", Object.assign(header, { status: "H", total: 0, split_total: 0 }));
+		// Nguồn giao dịch (OutputSources): ghi src / src_tran ngay lúc tạo để lỗi giữa chừng không để lại phiếu mồ côi sinh trùng
+		const origin = !cur && !blank(v.src_tran) ? { src: v.src || null, src_tran: v.src_tran } : {};
+		const entryId = cur ? (Store.update("output", id, header), id) : Store.create("output", Object.assign(header, origin, { status: "H", total: 0, split_total: 0 }));
 
 		if (lines) {
 			for (const old of linesOf(entryId)) Store.remove("output_line", old.id);

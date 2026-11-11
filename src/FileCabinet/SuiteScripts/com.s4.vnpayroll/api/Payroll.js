@@ -484,6 +484,69 @@ define([
 	}
 
 	/**
+	 * Hoa hồng đã duyệt cho bảng lương (docs/COMMISSION.md mục 7): bảng tính hoa hồng đang hoạt động cùng công ty con, trạng thái
+	 * A (hoặc P của chính bảng lương này), ngày cuối nằm trong kỳ lương; kết quả của nhân viên trong lô gom theo nhân viên và loại
+	 * thu nhập (cộng payable, gộp shares cùng phân đoạn). Hai truy vấn cho cả lô, không theo từng nhân viên. Đọc lỗi (thiếu quyền,
+	 * record chưa deploy) thì dừng tính kèm thông báo rõ: bỏ qua im lặng sẽ làm nhân viên mất hoa hồng mà không ai biết.
+	 * @returns {{lines: {employee: [{earningType, amount, shares, runId, runIds}]}, runs: {employee: [runId]}}}
+	 */
+	function commissionFor(c, batchId, empIds) {
+		const out = { lines: {}, runs: {} };
+		if (!empIds.length) return out;
+		let runs;
+		try {
+			runs = Lean.select("comm_run", ["status", "batch", "date_to"], { where: "{subsidiary} = ?", params: [c.batch.subsidiary], tag: "s4vp_calc_comm_runs" });
+		} catch (e) {
+			throw fail(
+				`Cannot read commission runs (${(e && e.message) || e}). Check the role's permission on S4VP commission records.`,
+				`Không đọc được bảng tính hoa hồng (${(e && e.message) || e}). Kiểm tra quyền của vai trò trên các record hoa hồng S4VP.`
+			);
+		}
+		runs = runs.filter((r) => (r.status === "A" || (r.status === "P" && String(r.batch) === String(batchId))) && !blank(r.date_to) && Dates.within(r.date_to, c.period.start, c.period.end));
+		if (!runs.length) return out;
+		const rows = Lean.select("comm_result", ["run", "employee", "earning_type", "payable", "detail"], {
+			where: `{employee} IN (${Lean.idList(empIds)}) AND {run} IN (${Lean.idList(runs.map((r) => r.id))})`, tag: "s4vp_calc_comm_results",
+		});
+		const groups = {};
+		for (const r of rows) {
+			if (!r.payable || blank(r.employee)) continue;
+			const key = `${r.employee}|${norm(r.earning_type)}`;
+			const g = groups[key] || (groups[key] = { employee: String(r.employee), earningType: norm(r.earning_type), amount: 0, shares: {}, runIds: [] });
+			g.amount += Number(r.payable) || 0;
+			if (!g.runIds.includes(String(r.run))) g.runIds.push(String(r.run));
+			for (const s of parseDetail(r).shares || []) {
+				const k = [s.sub, s.workCenter, s.branch, s.project].map((v) => (blank(v) ? "" : String(v))).join("|");
+				const cur = g.shares[k] || (g.shares[k] = { sub: s.sub || "", workCenter: s.workCenter || "", branch: s.branch || "", project: s.project || "", amount: 0 });
+				cur.amount += Number(s.amount) || 0;
+			}
+		}
+		for (const g of Object.values(groups)) {
+			(out.lines[g.employee] = out.lines[g.employee] || []).push({ earningType: g.earningType, amount: g.amount, shares: Object.values(g.shares), runId: g.runIds[0], runIds: g.runIds });
+			out.runs[g.employee] = [...new Set((out.runs[g.employee] || []).concat(g.runIds))];
+		}
+		return out;
+	}
+
+	/** Ghi sổ bảng lương: bảng tính hoa hồng đã dùng (A) -> P + bảng lương. Chạy lại được. */
+	function markCommissionRuns(batchId, runIds) {
+		if (!runIds.length) return;
+		for (const r of Store.findIn("comm_run", "id", runIds)) {
+			if (r.status === "A") Store.submit("comm_run", r.id, { status: "P", batch: batchId });
+		}
+	}
+
+	/** Đảo bảng lương: bảng tính hoa hồng đã vào bảng lương này về A. Record chưa deploy thì bỏ qua. */
+	function unmarkCommissionRuns(batchId) {
+		let runs;
+		try {
+			runs = Store.find("comm_run", { where: "{batch} = ?", params: [batchId] });
+		} catch (e) {
+			return;
+		}
+		for (const r of runs) if (r.status === "P") Store.submit("comm_run", r.id, { status: "A", batch: null });
+	}
+
+	/**
 	 * Bọc bộ đọc tham số pháp lý để ghi lại mức giảm trừ bản thân mà bộ tính thuế ĐÃ ĐỌC khi tính một nhân viên (kết quả của
 	 * PayrollEngine chỉ trả tổng giảm trừ gia cảnh). Không đổi giá trị nào; mọi hàm khác của provider dùng nguyên bản.
 	 * @returns {{provider, seen: {self?: number}}}
@@ -566,6 +629,8 @@ define([
 		// Sản lượng / doanh số (4.3.5), giấy phép lao động (3.9), bảng tỷ lệ phân bổ (4.5.3): đọc một lần cho cả lô
 		const outputs = Output.forPayroll(c.period.id, batchId, empIds, c.batch.subsidiary);
 		ectx.rateTables = outputs.rateTables || {};
+		// Hoa hồng đã duyệt (docs/COMMISSION.md mục 7): hai truy vấn cho cả lô
+		const commission = commissionFor(c, batchId, empIds);
 		// Giấy phép lao động chỉ xét hồ sơ người nước ngoài (WorkPermits.forPayroll tự lọc như vậy): lô không có ai thì không truy vấn
 		const permits = WorkPermits.forPayroll(empIds.filter((id) => foreign.has(id)), c.period.start, c.period.end);
 		const plans = AllocationPlans.forPayroll(empIds);
@@ -607,6 +672,7 @@ define([
 					outputAmounts: (outputs.outputAmounts || {})[line.employee] || {},
 					salesAmount: (outputs.salesAmount || {})[line.employee] || 0,
 					outputShares: (outputs.shares || {})[line.employee] || [],
+					commissionLines: commission.lines[line.employee] || [],
 					allocationVersions: plans[line.employee] || [],
 					extraWarnings: (wp && wp.warning ? [wp.warning] : []).concat(
 						(prof.salary_type || "M") === "H" && !(regular[line.employee] || []).length && !myInputs.some((i) => i.kind === "E")
@@ -643,6 +709,8 @@ define([
 						employmentType: emp.employmentType, expenseAccount: prof.expense_account || "", expenseSub: prof.department || e.department || "",
 						// Phiếu sản lượng đã dùng: ghi sổ chỉ khóa đúng các phiếu này (không khóa phiếu của bảng khác cùng kỳ)
 						outputRefs: [...new Set(emp.outputShares.map((s) => s.refNbr).filter(Boolean))],
+						// Bảng tính hoa hồng đã dùng: ghi sổ đặt P + bảng lương cho đúng các bảng này
+						commissionRuns: commission.runs[line.employee] || [],
 					}, extra)),
 				});
 			} catch (err) {
@@ -1175,12 +1243,14 @@ define([
 			hist.push({ batch: batchId, batchNbr: b.name, amount });
 			Store.submit("advance", a.id, { offset: off, balance: bal, status: bal <= 0 ? "C" : "O", history: JSON.stringify(hist) });
 		}
-		const refs = [...new Set(lines(batchId).flatMap((l) => parseDetail(l).outputRefs || []))];
+		const details = lines(batchId).map(parseDetail);
+		const refs = [...new Set(details.flatMap((d) => d.outputRefs || []))];
 		if (typeof Output.markIncludedRefs === "function") {
 			if (refs.length) Output.markIncludedRefs(batchId, refs);
 		} else {
 			Output.markIncluded(c.period.id, batchId);
 		}
+		markCommissionRuns(batchId, [...new Set(details.flatMap((d) => d.commissionRuns || []).map(String))]);
 		const used = {};
 		for (const e of model.employees) {
 			const nbrs = PlanRecords.usedVersions(e.allocations);
@@ -1293,6 +1363,7 @@ define([
 	function finishReverse(batchId) {
 		const b = getBatch(batchId);
 		Output.unmarkIncluded(batchId);
+		unmarkCommissionRuns(batchId);
 		// Cùng cách tra như khi ghi sổ (id, thiếu id thì số phiếu) để phiếu đã cấn trừ đều được hoàn
 		const offsets = {};
 		for (const l of lines(batchId)) for (const o of parseDetail(l).advanceOffsets || []) offsets[String(o.id || o.refNbr)] = { id: o.id, refNbr: o.refNbr, amount: 0 };

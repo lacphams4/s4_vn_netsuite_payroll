@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_cm_txn_type">
+  <name>S4VP cm_txn_type</name>
+  <description>S4 VN Payroll code list cm_txn_type; values keep the Acumatica codes (I, S, C).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_cm_txn_type_i">
+      <value>I - Hóa đơn</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_txn_type_s">
+      <value>S - Bán thu tiền ngay</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_cm_txn_type_c">
+      <value>C - Trả hàng</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

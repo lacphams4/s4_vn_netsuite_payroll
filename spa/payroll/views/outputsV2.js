@@ -8,12 +8,16 @@
  * Ghi: action cũ saveOutput (phiếu + dòng + thành viên, phòng ban), loadTeamMembers, splitOutput, outputAction (submit /
  * approve / reject kèm lý do / hold), voidOutput (hủy phiếu tạm giữ kèm lý do) theo ma trận quyền của RESTlet: chỉ
  * administrator và HR; kế toán chỉ xem. Hộp xác nhận có ô lý do bắt buộc là Dialog riêng của màn (app.confirm chỉ nhận chữ).
+ * Lấy từ giao dịch (api/OutputSources): GET outputSources, POST outputSourcePreview / outputSourceGenerate - hộp thoại chọn
+ * nguồn, khoảng ngày (mặc định kỳ đang xem), lưới xem trước có ô tìm, sinh phiếu Tạm giữ rồi nạp lại danh sách. Nguồn cấu
+ * hình trên form bản ghi chuẩn customrecord_s4vp_out_source.
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
+import url from 'N/url';
 import {call, post, openRecord, errorText} from '../lib/api.js';
 import {money, num, fmtDate, toNumber, localToday, fold} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, AutoSelect, Field, TextInput, TextArea, NumberInput, MoneyInput, DateInput, Dialog, SidePanel, SearchBox, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, AutoSelect, SearchSelect, Field, TextInput, TextArea, NumberInput, MoneyInput, DateInput, Dialog, SidePanel, SearchBox, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -265,6 +269,43 @@ const TEXT = {
 			created: (nbr) => `Đã tạo phiếu${nbr ? ` ${nbr}` : ''}. Nhập sản lượng ở khung bên phải.`,
 			saved: (nbr) => `Đã lưu phiếu ${nbr}.`,
 		},
+		// Sản lượng từ giao dịch (api/OutputSources, docs/COMMISSION.md mục 9)
+		src: {
+			open: 'Lấy từ giao dịch',
+			title: 'Lấy sản lượng từ giao dịch',
+			intro: 'Sinh phiếu Tạm giữ từ chứng từ lắp ráp, hoàn thành lệnh sản xuất hoặc xuất kho của NetSuite theo nguồn đã cấu hình. Dòng đã sinh không sinh lại; phiếu sinh ra vẫn phải gửi duyệt và duyệt như phiếu nhập tay.',
+			source: 'Nguồn sản lượng',
+			sourcePick: 'Chọn nguồn',
+			loadingSources: 'Đang tải danh sách nguồn...',
+			noSources: 'Chưa có nguồn sản lượng cho công ty con này. Tạo nguồn trên form bản ghi NetSuite: loại giao dịch, trường nhân viên hoặc tổ trên giao dịch, bảng đơn giá.',
+			newSource: 'Tạo nguồn trên bản ghi',
+			type: {Build: 'Lắp ráp (Assembly Build)', WOCompl: 'Hoàn thành lệnh sản xuất (Work Order Completion)', ItemShip: 'Xuất kho (Item Fulfillment)'},
+			from: 'Từ ngày',
+			to: 'Đến ngày',
+			preview: 'Xem trước',
+			previewing: 'Đang đọc giao dịch...',
+			generate: 'Sinh phiếu',
+			generateN: (n) => `Sinh ${n} phiếu`,
+			generating: 'Đang sinh phiếu...',
+			close: 'Đóng',
+			search: 'Tìm chứng từ, nhân viên, tổ, hạng mục, số tiền',
+			empty: 'Không có dòng giao dịch nào của nguồn này trong khoảng ngày.',
+			hint: 'Chọn nguồn và khoảng ngày rồi bấm Xem trước.',
+			cols: {tran: 'Chứng từ', date: 'Ngày', who: 'Nhân viên / tổ', item: 'Hạng mục', qty: 'Số lượng', rate: 'Đơn giá', amount: 'Thành tiền', status: 'Trạng thái'},
+			status: {N: 'Sẽ sinh', G: 'Đã sinh', S: 'Bỏ qua'},
+			generatedAs: (name) => `Đã sinh ${name}`,
+			skip: {NO_WORKER: 'Thiếu nhân viên / tổ', NO_ITEM: 'Thiếu mặt hàng', BAD_QTY: 'Số lượng không dương'},
+			rateMissing: 'Sẽ sinh - thiếu đơn giá',
+			team: (name) => `Tổ ${name}`,
+			sum: 'Tổng sẽ sinh',
+			summary: (c) => `${c.lines} dòng: ${c.ready} dòng sẽ sinh ${c.entries} phiếu, ${c.generated} dòng đã sinh, ${c.skipped} dòng bỏ qua.`,
+			missingNote: (n) => `${n} dòng chưa có đơn giá hiệu lực: phiếu vẫn được sinh với thành tiền 0, nhập đơn giá trên phiếu trước khi gửi duyệt.`,
+			truncated: 'Chỉ hiện 1.000 dòng đầu của khoảng ngày; khi sinh phiếu hệ thống xử lý hết khoảng ngày.',
+			errSource: 'Chọn nguồn sản lượng.',
+			errDates: 'Nhập khoảng ngày hợp lệ (từ ngày không sau đến ngày).',
+			done: (n) => (n ? `Đã sinh ${n} phiếu Tạm giữ. Kiểm tra rồi gửi duyệt.` : 'Không có dòng mới để sinh phiếu.'),
+			failed: (n, first) => `${n} phiếu không sinh được (${first}).`,
+		},
 	},
 	en: {
 		title: 'Output - piecework pay',
@@ -515,9 +556,47 @@ const TEXT = {
 			created: (nbr) => `Entry${nbr ? ` ${nbr}` : ''} created. Enter the output in the panel on the right.`,
 			saved: (nbr) => `Entry ${nbr} saved.`,
 		},
+		src: {
+			open: 'From transactions',
+			title: 'Output from transactions',
+			intro: 'Create on-hold entries from NetSuite assembly builds, work order completions or item fulfillments according to a configured source. Lines already generated are skipped; generated entries still go through submit and approval like manual entries.',
+			source: 'Output source',
+			sourcePick: 'Select a source',
+			loadingSources: 'Loading sources...',
+			noSources: 'No output source for this subsidiary yet. Create one on the NetSuite record form: transaction type, employee or team field on the transaction, rate table.',
+			newSource: 'Create a source on the record',
+			type: {Build: 'Assembly build', WOCompl: 'Work order completion', ItemShip: 'Item fulfillment'},
+			from: 'From',
+			to: 'To',
+			preview: 'Preview',
+			previewing: 'Reading transactions...',
+			generate: 'Generate entries',
+			generateN: (n) => `Generate ${n} entries`,
+			generating: 'Generating entries...',
+			close: 'Close',
+			search: 'Search transaction, employee, team, item, amount',
+			empty: 'No transaction lines of this source in the date range.',
+			hint: 'Select a source and a date range, then click Preview.',
+			cols: {tran: 'Transaction', date: 'Date', who: 'Employee / team', item: 'Item', qty: 'Quantity', rate: 'Rate', amount: 'Amount', status: 'Status'},
+			status: {N: 'To generate', G: 'Generated', S: 'Skipped'},
+			generatedAs: (name) => `Generated ${name}`,
+			skip: {NO_WORKER: 'No employee / team', NO_ITEM: 'No item', BAD_QTY: 'Quantity not positive'},
+			rateMissing: 'To generate - no rate',
+			team: (name) => `Team ${name}`,
+			sum: 'Total to generate',
+			summary: (c) => `${c.lines} lines: ${c.ready} lines will create ${c.entries} entries, ${c.generated} lines already generated, ${c.skipped} lines skipped.`,
+			missingNote: (n) => `${n} lines have no effective rate: the entries are still created with a zero amount; enter the rate on the entry before submitting.`,
+			truncated: 'Only the first 1,000 lines of the range are shown; generation processes the whole range.',
+			errSource: 'Select an output source.',
+			errDates: 'Enter a valid date range (the start date cannot be after the end date).',
+			done: (n) => (n ? `${n} on-hold entries generated. Check them, then submit.` : 'No new lines to generate entries from.'),
+			failed: (n, first) => `${n} entries could not be generated (${first}).`,
+		},
 	},
 };
 
+const SOURCE_TYPE = 'customrecord_s4vp_out_source';
+const SRC_TONE = {N: 'info', G: 'ok', S: 'muted'};
 const TONE = {H: 'muted', P: 'warn', A: 'info', C: 'ok'};
 const STATUSES = ['H', 'P', 'A', 'C'];
 const METHODS = ['D', 'F', 'H', 'P', 'E'];
@@ -592,6 +671,9 @@ export default function OutputsView({app}) {
 	// Hộp xác nhận có lý do bắt buộc: {mode: 'reject' | 'void', id, name, reason, error}
 	const [reasonDlg, setReasonDlg] = useState(null);
 	const reasonRef = useRef(null);
+	// Hộp thoại lấy từ giao dịch: {sources, recordType, source, from, to, preview, state: '' | 'preview' | 'generate', error, seq}
+	const [srcDlg, setSrcDlg] = useState(null);
+	const srcRef = useRef(null);
 	const formRef = useRef(null);
 	const draftRef = useRef(null);
 	const ratesRef = useRef({});
@@ -1508,6 +1590,167 @@ export default function OutputsView({app}) {
 		);
 	};
 
+	// ------------------------------------------------------------------ hộp thoại lấy từ giao dịch
+	const putSrc = (patch) => {
+		if (!srcRef.current) return;
+		srcRef.current = Object.assign({}, srcRef.current, patch);
+		setSrcDlg(srcRef.current);
+	};
+	const closeSrc = () => {
+		srcRef.current = null;
+		setSrcDlg(null);
+	};
+	/** Khoảng ngày mặc định: kỳ đang xem, không có thì kỳ mặc định chứa hôm nay, không có nữa thì tháng hiện tại. */
+	const srcRange = () => {
+		const pid = period || defaultPeriod(boot);
+		const p = pid ? periods.find((x) => String(x.id) === String(pid)) : null;
+		if (p && validIso(p.start) && validIso(p.end)) return {from: p.start, to: p.end};
+		const today = localToday();
+		const y = Number(today.slice(0, 4));
+		const m = Number(today.slice(5, 7));
+		const last = new Date(y, m, 0).getDate();
+		return {from: `${today.slice(0, 8)}01`, to: `${today.slice(0, 8)}${String(last).padStart(2, '0')}`};
+	};
+	const openSources = () => {
+		const range = srcRange();
+		srcRef.current = {sources: null, recordType: SOURCE_TYPE, source: '', from: range.from, to: range.to, preview: null, state: '', error: '', seq: 0};
+		setSrcDlg(srcRef.current);
+		call({action: 'outputSources', subsidiary}).then(
+			(r) => {
+				if (!alive.current) return;
+				const found = list(r && r.sources);
+				putSrc({sources: found, recordType: (r && r.recordType) || SOURCE_TYPE, source: found.length === 1 ? String(found[0].id) : ''});
+			},
+			(e) => alive.current && putSrc({sources: [], error: errorText(e)})
+		);
+	};
+	// Đổi nguồn hoặc ngày: bỏ kết quả xem trước cũ (lượt xem trước đang chạy bị bỏ qua nhờ seq)
+	const pickSrc = (patch) => putSrc(Object.assign({preview: null, error: '', state: '', seq: (srcRef.current ? srcRef.current.seq : 0) + 1}, patch));
+	const srcCheck = (d) => {
+		if (!d.source) return t.src.errSource;
+		if (!validIso(d.from) || !validIso(d.to) || d.from > d.to) return t.src.errDates;
+		return '';
+	};
+	/** Gửi POST, lỗi trả về {failure} (hiện trong hộp thoại) thay vì dải thông báo nằm sau lớp phủ. */
+	const sendQuiet = (body) => send(body).then((r) => r, (e) => ({failure: errorText(e) || 'Error'}));
+	const runPreview = () => {
+		const d = srcRef.current;
+		if (!d) return;
+		const error = srcCheck(d);
+		if (error) {
+			putSrc({error});
+			return;
+		}
+		const seq = d.seq + 1;
+		putSrc({seq, state: 'preview', error: '', preview: null});
+		app.run(t.src.previewing, sendQuiet({action: 'outputSourcePreview', source: d.source, from: d.from, to: d.to})).then((r) => {
+			if (!alive.current || !srcRef.current || srcRef.current.seq !== seq) return;
+			if (!r || r.failure) putSrc({state: '', error: (r && r.failure) || ''});
+			else putSrc({state: '', preview: r});
+		});
+	};
+	const runGenerate = () => {
+		const d = srcRef.current;
+		if (!d || !d.preview) return;
+		putSrc({state: 'generate', error: ''});
+		app.run(t.src.generating, sendQuiet({action: 'outputSourceGenerate', source: d.source, from: d.from, to: d.to})).then((r) => {
+			if (!alive.current) return;
+			if (!r || r.failure) {
+				putSrc({state: '', error: (r && r.failure) || ''});
+				return;
+			}
+			closeSrc();
+			load().then(() => {
+				if (!alive.current) return;
+				// post() gộp kết quả các lượt (more = true): cảnh báo có thể lặp
+				const warnings = list(r.warnings).map((w) => serverText(w.message, w.messageVi)).filter((x, i, a) => x && a.indexOf(x) === i);
+				const failed = list(r.failed);
+				const parts = [t.src.done(Number(r.created) || 0)];
+				if (failed.length) parts.push(t.src.failed(failed.length, `${failed[0].tranNo}: ${serverText(failed[0].message, failed[0].messageVi)}`));
+				app.notify(parts.concat(warnings.slice(0, 3)).join(' '), failed.length || warnings.length ? 'warn' : 'ok');
+			});
+		});
+	};
+	const srcStatus = (r) => {
+		if (r.status === 'G') return t.src.generatedAs(r.entryName || r.entry || '');
+		if (r.status === 'S') return t.src.skip[r.skip] || t.src.status.S;
+		return r.warning ? t.src.rateMissing : t.src.status.N;
+	};
+	const srcDialog = () => {
+		const d = srcDlg;
+		const sources = d.sources;
+		const options = list(sources).map((s) => ({value: String(s.id), label: [s.name, t.src.type[s.tranType] || s.tranType, s.rateTableCode].filter(Boolean).join(' - ')}));
+		const p = d.preview;
+		const counts = (p && p.counts) || {};
+		// Chữ hiển thị (người làm, ngày, trạng thái) đưa vào dòng để ô tìm khớp được
+		const rows = p
+			? list(p.rows).map((r) => Object.assign({}, r, {id: r.key, whoText: r.kind === 'T' ? t.src.team(r.who || '') : r.who || '', dateText: fmtDate(r.date), statusText: srcStatus(r)}))
+			: [];
+		const busy = !!d.state || !!app.busy;
+		const ready = Number(counts.ready) || 0;
+		const columns = [
+			{key: 'tranNo', label: t.src.cols.tran, nowrap: true},
+			{key: 'date', label: t.src.cols.date, type: 'date', nowrap: true},
+			{key: 'whoText', label: t.src.cols.who},
+			{key: 'item', label: t.src.cols.item, nowrap: true},
+			{key: 'qty', label: t.src.cols.qty, type: 'num', nowrap: true},
+			{key: 'rate', label: t.src.cols.rate, align: 'right', nowrap: true, render: (r) => (r.rate === null || r.rate === undefined ? '' : num(r.rate))},
+			{key: 'amount', label: t.src.cols.amount, align: 'right', nowrap: true, render: (r) => (r.amount === null || r.amount === undefined ? '' : money(r.amount) === '-' ? '0' : money(r.amount))},
+			{key: 'statusText', label: t.src.cols.status, nowrap: true, render: (r) => <Badge text={r.statusText} tone={r.status === 'N' && r.warning ? 'warn' : SRC_TONE[r.status] || 'muted'} />},
+		];
+		const newSource = () => window.open(url.resolveRecord({recordType: d.recordType || SOURCE_TYPE, isEditMode: true}), '_blank');
+		return (
+			<Dialog
+				title={t.src.title}
+				width={1040}
+				onClose={closeSrc}
+				actions={[
+					<Button label={t.src.close} onClick={closeSrc} />,
+					<Button label={t.src.preview} disabled={busy || !d.source} onClick={runPreview} />,
+					<Button label={ready ? t.src.generateN(counts.entries || 0) : t.src.generate} kind="primary" disabled={busy || !p || !ready || !canWrite} title={canWrite ? '' : t.readOnly} onClick={runGenerate} />,
+				]}
+			>
+				<div class="s4vp-out-body">
+					<span class="s4vp-small">{t.src.intro}</span>
+					<div class="s4vp-form">
+						<Field label={t.src.source} required={true}>
+							<SearchSelect value={d.source} onInput={(v) => pickSrc({source: v || ''})} options={options} placeholder={sources ? t.src.sourcePick : t.src.loadingSources} disabled={!sources || busy} />
+						</Field>
+						<Field label={t.src.from} required={true}>
+							<DateInput value={d.from} max={d.to || undefined} onInput={(v) => pickSrc({from: v})} disabled={busy} />
+						</Field>
+						<Field label={t.src.to} required={true}>
+							<DateInput value={d.to} min={d.from || undefined} onInput={(v) => pickSrc({to: v})} disabled={busy} />
+						</Field>
+					</div>
+					{sources && !sources.length ? (
+						<div class="s4vp-out-warn" role="note">
+							<span>{t.src.noSources}</span> <Button small={true} kind="link" label={t.src.newSource} onClick={newSource} />
+						</div>
+					) : null}
+					{d.error ? <div class="s4vp-out-warn s4vp-out-err" role="alert">{d.error}</div> : null}
+					{d.state ? <span class="s4vp-small">{d.state === 'preview' ? t.src.previewing : t.src.generating}</span> : null}
+					{p ? <span class="s4vp-small">{t.src.summary(counts)}</span> : !d.state ? <span class="s4vp-small">{t.src.hint}</span> : null}
+					{p && counts.rateMissing ? <div class="s4vp-out-warn" role="note">{t.src.missingNote(counts.rateMissing)}</div> : null}
+					{p && p.truncated ? <div class="s4vp-out-warn" role="note">{t.src.truncated}</div> : null}
+					{p ? (
+						<Table
+							label={t.src.title}
+							columns={columns}
+							rows={rows}
+							keyOf={(r) => r.key}
+							total={rows.length > 1 ? {tranNo: t.src.sum, amount: counts.amount ? money(counts.amount) : '0'} : null}
+							empty={t.src.empty}
+							search={true}
+							searchPlaceholder={t.src.search}
+							maxHeight="max(220px, calc(100vh - 460px))"
+						/>
+					) : null}
+				</div>
+			</Dialog>
+		);
+	};
+
 	// ------------------------------------------------------------------ bảng phiếu
 	const issueCode = filter.indexOf('i:') === 0 ? filter.slice(2) : '';
 	const rows = all
@@ -1572,6 +1815,7 @@ export default function OutputsView({app}) {
 					</span>,
 					<Button label={t.legacy} kind="ghost" onClick={() => app.go('outputs')} />,
 					<Button label={t.refresh} onClick={() => load()} />,
+					<Button label={t.src.open} disabled={!subsidiary || !canWrite || !!app.busy} title={canWrite ? '' : t.readOnly} onClick={openSources} />,
 					<Button label={t.newEntry} kind="primary" disabled={!subsidiary || !canWrite || !!app.busy} title={canWrite ? '' : t.readOnly} onClick={() => openForm(null)} />,
 				]}
 			/>
@@ -1613,6 +1857,7 @@ export default function OutputsView({app}) {
 			</div>
 			{form ? formDialog() : null}
 			{reasonDlg ? reasonDialog() : null}
+			{srcDlg ? srcDialog() : null}
 		</Page>
 	);
 }
