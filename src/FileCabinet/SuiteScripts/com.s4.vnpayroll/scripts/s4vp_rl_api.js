@@ -104,7 +104,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 			if (BATCH_ID_ACTIONS.includes(action)) batch = b.id || batch;
 			else if (PERIOD_ID_ACTIONS.includes(action)) period = b.id || period;
 			else if (action === "createBatch") batch = (result && result.id) || batch;
-			AuditLog.record({ action, batch: batch || null, period: period || null, id: b.id || null, lineId: b.lineId || null, result });
+			const employee = b.employee || values.employee || null;
+			AuditLog.record({ action, batch: batch || null, period: period || null, id: b.id || null, lineId: b.lineId || null, employee, result });
 		} catch (e) {
 			log.error({ title: "s4vp_rl_api audit", details: String((e && e.message) || e).slice(0, 300) });
 		}
@@ -271,8 +272,9 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	}
 
 	function calculate(id, background) {
-		const lines = Payroll.lines(id);
-		if (!background && lines.length <= SYNC_LIMIT) return Payroll.calculate(id);
+		// Chỉ cần số dòng: đọc id, không đọc cột detail của cả bảng lương
+		const count = typeof Payroll.lineIds === "function" ? Payroll.lineIds(id).length : Payroll.lines(id).length;
+		if (!background && count <= SYNC_LIMIT) return Payroll.calculate(id);
 		// Kiểm tra và giữ khóa trước khi gửi tác vụ (QC2 #1, #2); gửi lỗi thì gỡ khóa
 		Payroll.assertQueueable(id);
 		Payroll.markQueued(id);

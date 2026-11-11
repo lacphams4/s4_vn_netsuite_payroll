@@ -5,14 +5,21 @@
  * @NModuleScope SameAccount
  */
 define(["./Store", "./Settings", "../core/PayPeriodGenerator"], (Store, Settings, Generator) => {
+	/** Lỗi nghiệp vụ hai ngôn ngữ: RESTlet trả userMessage.en / userMessage.vi, giao diện hiện đúng một ngôn ngữ. */
+	function fail(en, vi) {
+		const e = new Error(`${en} / ${vi}`);
+		e.userMessage = { en, vi };
+		return e;
+	}
+
 	/** Sinh kỳ của năm cho nhóm lương; kỳ đã có (theo mã) không sinh lại. */
 	function generate(year, paygroupId) {
 		const group = paygroupId ? Store.get("paygroup", paygroupId) : Settings.paygroupByName("DEFAULT");
-		if (!group) throw new Error("Pay group not found / Không tìm thấy nhóm lương");
+		if (!group) throw fail("Pay group not found", "Không tìm thấy nhóm lương");
 		const code = String(group.name).trim().toUpperCase();
 		const freq = group.frequency || "M";
 		const bad = code === "DEFAULT" ? null : Generator.validatePayGroupId(code, freq);
-		if (bad) throw new Error(`${bad.message} / ${bad.messageVi}`);
+		if (bad) throw fail(bad.message, bad.messageVi || bad.message);
 		const settings = Settings.resolve(group.subsidiary, group);
 		const periods = Generator.withStandardDays(Generator.generate(Number(year), freq, code === "DEFAULT" ? "" : code, settings.weekStart), {
 			weeklyOff: settings.weeklyOffDays,
@@ -40,7 +47,7 @@ define(["./Store", "./Settings", "../core/PayPeriodGenerator"], (Store, Settings
 	/** Đóng kỳ: không được khi còn bảng lương chưa ghi sổ (trừ bảng đã đảo). */
 	function close(periodId) {
 		const open = Store.find("batch", { where: "{period} = ?", params: [periodId] }).filter((b) => b.status !== "R" && b.status !== "V");
-		if (open.length) throw new Error(`The period still has unreleased payroll batches: ${open.map((b) => b.name).join(", ")} / Kỳ còn bảng lương chưa ghi sổ`);
+		if (open.length) throw fail(`The period still has unreleased payroll batches: ${open.map((b) => b.name).join(", ")}`, `Kỳ còn bảng lương chưa ghi sổ: ${open.map((b) => b.name).join(", ")}`);
 		Store.submit("period", periodId, { status: "C" });
 	}
 
@@ -57,7 +64,7 @@ define(["./Store", "./Settings", "../core/PayPeriodGenerator"], (Store, Settings
 	/** Mở khóa công: chặn khi kỳ đã có bảng lương ghi sổ (kể cả đã đảo, 3.11 #5). */
 	function unlockAttendance(periodId) {
 		const released = Store.find("batch", { where: "{period} = ?", params: [periodId] }).filter((b) => b.status === "R" || b.status === "V");
-		if (released.length) throw new Error("The period has a released payroll batch; attendance cannot be unlocked. / Kỳ đã có bảng lương ghi sổ, không mở khóa công được.");
+		if (released.length) throw fail("The period has a released payroll batch; attendance cannot be unlocked.", "Kỳ đã có bảng lương ghi sổ, không mở khóa công được.");
 		for (const a of Store.find("attendance", { where: "{period} = ?", params: [periodId] })) if (a.status !== "O") Store.submit("attendance", a.id, { status: "O" });
 		Store.submit("period", periodId, { att_status: "O" });
 	}

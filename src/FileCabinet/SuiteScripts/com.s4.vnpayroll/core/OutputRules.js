@@ -8,6 +8,13 @@
 define(["./Money", "./Dates", "./RateTable", "./TeamSplitCalculator"], (Money, Dates, RateTable, TeamSplit) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
+	/** Lỗi nghiệp vụ hai ngôn ngữ: RESTlet trả userMessage.en / userMessage.vi, giao diện hiện đúng một ngôn ngữ. */
+	function fail(en, vi) {
+		const e = new Error(`${en} / ${vi}`);
+		e.userMessage = { en, vi };
+		return e;
+	}
+
 
 	/**
 	 * Định giá một dòng sản lượng.
@@ -33,7 +40,7 @@ define(["./Money", "./Dates", "./RateTable", "./TeamSplitCalculator"], (Money, D
 				warning = { code: "RATE_MISSING", message: `No rate for item ${item} on ${Dates.vn(date)}; enter the rate.`, messageVi: `Chưa có đơn giá cho hạng mục ${item} ngày ${Dates.vn(date)}; nhập đơn giá.` };
 			}
 		}
-		if (Money.D(line.qty || 0).lt(0) || rate.lt(0)) throw new Error("Quantity and rate cannot be negative / Số lượng, đơn giá không được âm");
+		if (Money.D(line.qty || 0).lt(0) || rate.lt(0)) throw fail("Quantity and rate cannot be negative", "Số lượng, đơn giá không được âm");
 		return { item, rate: rate.toNumber(), amount: Money.round(Money.D(line.qty || 0).times(rate)), warning };
 	}
 

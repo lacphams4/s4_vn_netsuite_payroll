@@ -308,3 +308,7 @@ Tab điều hướng vẫn trỏ về màn cũ cho tới khi người điều ph
 | Duyệt nhiều cấp, nhật ký nhân sự, thông báo hai ngôn ngữ | api/Approvals.js, tools/schema/approvals.mjs (`apv`), api/AuditLog.js, phần approve / reject / submit trong api/Payroll.js và api/PayrollRun.js, views/payrollRun.js (chỉ phần duyệt) | `apv` |
 | Tự phục vụ | scripts/s4vp_sl_my_payroll.js, core/SelfService*.js | - |
 | Tính lương nền nhanh hơn | scripts/s4vp_mr_calculate.js, phần calculate trong api/Payroll.js | - |
+
+Đợt 2 đã gộp (11/11/2026): tab Thiết lập -> `setupHub` (cũng là đích khi chưa thiết lập), menu Khác -> `outputsV2`. Mới: duyệt nhiều cấp (`approval_step` apv, `approval_log` apl; core/ApprovalFlow; GET `approvalState`, POST `approveStep` / `rejectStep`; mặc định tắt), nhật ký gắn nhân viên (`audit_log.employee`), thông báo máy chủ một ngôn ngữ (`fail(en, vi)`), cổng tự phục vụ (scripts/s4vp_sl_my_payroll.js + core/SelfService*.js; lọc cứng theo người đăng nhập), bản in mới của Suitelet in (`timesheet`, `contractorStatement`, `teamSplit`, `commission`, `contract`, `decision`), tính lương nền theo lô gọn (lô 100, ngữ cảnh tĩnh nhớ N/cache, concurrency 2), PayrollEngine trả `pitDetail`.
+
+Quy tắc bắt buộc (học từ account thật): JSON trả về qua RESTlet KHÔNG có khóa tên `error` ở bất kỳ cấp nào - N/https phía trình duyệt từ chối cả phản hồi và giao diện chỉ thấy "Cannot read properties of undefined (reading 'message')".

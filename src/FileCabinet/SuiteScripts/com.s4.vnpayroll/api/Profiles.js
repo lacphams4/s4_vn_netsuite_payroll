@@ -7,6 +7,13 @@
  */
 define(["./Store", "./Settings"], (Store, Settings) => {
 	const blank = (v) => v === null || v === undefined || v === "";
+	/** Lỗi nghiệp vụ hai ngôn ngữ: RESTlet trả userMessage.en / userMessage.vi, giao diện hiện đúng một ngôn ngữ. */
+	function fail(en, vi) {
+		const e = new Error(`${en} / ${vi}`);
+		e.userMessage = { en, vi };
+		return e;
+	}
+
 
 	/** Nhân viên của subsidiary kèm hồ sơ lương (nếu có) và lịch sử lương mới nhất. */
 	function list(subsidiary) {
@@ -38,7 +45,7 @@ define(["./Store", "./Settings"], (Store, Settings) => {
 	 * @param {{employee, subsidiary, profile: object, compensation?: {effective, base_salary, insurance_wage, allowance, package}, dependents?: Array}} input
 	 */
 	function save(input) {
-		if (blank(input.employee) || blank(input.subsidiary)) throw new Error("Employee and subsidiary are required / Thiếu nhân viên hoặc công ty con");
+		if (blank(input.employee) || blank(input.subsidiary)) throw fail("Employee and subsidiary are required", "Thiếu nhân viên hoặc công ty con");
 		const existing = Store.find("employee", { where: "{employee} = ?", params: [input.employee], includeInactive: true })[0];
 		const values = Object.assign({ employee: input.employee, subsidiary: input.subsidiary }, input.profile || {});
 		if (!values.name && !existing) values.name = input.name || String(input.employee);

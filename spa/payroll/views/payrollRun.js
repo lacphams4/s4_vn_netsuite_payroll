@@ -16,7 +16,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord, openJournal, printUrl, download, errorText} from '../lib/api.js';
 import {money, num, fmtDate, toNumber, quickFilter} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, Table, Badge, SearchBox, Dialog, Field, Select, TextInput, NumberInput, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, Table, Badge, SearchBox, Dialog, Field, Select, TextInput, NumberInput, TextArea, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -47,6 +47,30 @@ const TEXT = {
 			payslips: 'Phiếu lương', paymentSheet: 'Bảng thanh toán lương', contractor: 'Quyết toán cộng tác viên', bankFile: 'File chi lương ngân hàng', journal: 'Xem bút toán',
 		},
 		hrNoRelease: 'Vai trò nhân sự không ghi sổ; kế toán thực hiện bước này.',
+		// Duyệt nhiều cấp (api/Approvals): chỉ hiện khi công ty có khai cấp duyệt
+		apv: {
+			title: 'Các cấp duyệt',
+			level: (n) => `Cấp ${n}`,
+			approveLevel: (n) => `Duyệt cấp ${n}`,
+			state: {done: 'Đã duyệt', current: 'Đang chờ', todo: 'Chưa tới', rejected: 'Từ chối'},
+			approver: 'Người duyệt',
+			by: (who, at) => `${who || '-'}${at ? `, ${at}` : ''}`,
+			waived: 'cùng người duyệt cấp liền trước (cấp chỉ có một người duyệt)',
+			cannot: 'Bạn chưa duyệt được:',
+			approveTitle: (n, name) => `Duyệt cấp ${n}${name ? ` - ${name}` : ''}`,
+			approveText: (last) => (last ? 'Đây là cấp cuối: sau khi duyệt, bảng lương chuyển sang Đã duyệt và số liệu bị khóa cho đến khi mở lại.' : 'Bảng lương chuyển sang cấp duyệt kế tiếp.'),
+			approveOpen: (n) => `Còn ${n} điểm kiểm tra chưa xử lý.`,
+			rejectTitle: 'Từ chối bảng lương',
+			rejectText: 'Bảng lương về trạng thái Bị từ chối; người lập mở lại để sửa rồi gửi duyệt lại từ cấp 1.',
+			note: 'Ghi chú',
+			noteOptional: 'Không bắt buộc',
+			noteRequired: 'Bắt buộc: nêu lý do từ chối',
+			cancel: 'Hủy',
+			confirmApprove: 'Duyệt',
+			confirmReject: 'Từ chối',
+			approved: (r) => (r && r.final ? 'Đã duyệt cấp cuối, bảng lương đã duyệt' : `Đã duyệt cấp ${(r && r.level) || ''}`),
+			rejected: 'Đã từ chối bảng lương',
+		},
 		confirm: {
 			submit: 'Gửi bảng lương này đi duyệt? Sau khi gửi không sửa, không tính lại được cho đến khi mở lại.',
 			submitOpen: (n) => `Còn ${n} điểm kiểm tra chưa xử lý. Vẫn gửi bảng lương này đi duyệt?`,
@@ -241,6 +265,29 @@ const TEXT = {
 			payslips: 'Payslips', paymentSheet: 'Payment sheet', contractor: 'Contractor settlement', bankFile: 'Bank payment file', journal: 'View journal',
 		},
 		hrNoRelease: 'The HR role cannot release; an accountant performs this step.',
+		apv: {
+			title: 'Approval levels',
+			level: (n) => `Level ${n}`,
+			approveLevel: (n) => `Approve level ${n}`,
+			state: {done: 'Approved', current: 'Pending', todo: 'Not yet', rejected: 'Rejected'},
+			approver: 'Approver',
+			by: (who, at) => `${who || '-'}${at ? `, ${at}` : ''}`,
+			waived: 'same approver as the previous level (single approver for this level)',
+			cannot: 'You cannot approve yet:',
+			approveTitle: (n, name) => `Approve level ${n}${name ? ` - ${name}` : ''}`,
+			approveText: (last) => (last ? 'This is the final level: once approved, the batch becomes Approved and its figures are locked until it is reopened.' : 'The batch moves on to the next approval level.'),
+			approveOpen: (n) => `${n} review items are still open.`,
+			rejectTitle: 'Reject the batch',
+			rejectText: 'The batch becomes Rejected; the preparer reopens it, makes changes and submits it again from level 1.',
+			note: 'Note',
+			noteOptional: 'Optional',
+			noteRequired: 'Required: give the reason for rejecting',
+			cancel: 'Cancel',
+			confirmApprove: 'Approve',
+			confirmReject: 'Reject',
+			approved: (r) => (r && r.final ? 'Final level approved; the batch is approved' : `Level ${(r && r.level) || ''} approved`),
+			rejected: 'Batch rejected',
+		},
 		confirm: {
 			submit: 'Submit this batch for approval? It cannot be edited or recalculated until it is reopened.',
 			submitOpen: (n) => `${n} review items are still open. Submit this batch for approval anyway?`,
@@ -480,6 +527,15 @@ function buildAttention(data, checkItems, t) {
 	return {openRows: own.concat(items.filter(isOpenCheck).map(checkRow)), doneRows: items.filter((c) => !isOpenCheck(c)).map(checkRow)};
 }
 
+// Thời điểm ISO UTC của nhật ký duyệt -> giờ máy người dùng
+const fmtAt = (iso) => {
+	const d = new Date(String(iso || ''));
+	return isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN', {hour12: false});
+};
+// Trạng thái có thể đang qua các cấp duyệt (hỏi approvalState); trạng thái khác không cần hỏi
+const APV_STATUSES = ['C', 'P', 'J', 'A', 'R', 'V'];
+const APV_TONE = {done: 'ok', current: 'warn', todo: 'muted', rejected: 'error'};
+
 const jobKind = (job) => (!job ? '' : /^release:/.test(job) ? 'release' : /^reverse:/.test(job) ? 'reverse' : job === 'queued' ? 'queued' : 'calc');
 
 export default function PayrollRunView({app}) {
@@ -492,6 +548,10 @@ export default function PayrollRunView({app}) {
 	const [checks, setChecks] = useState(NO_CHECKS);
 	const [failed, setFailed] = useState(false);
 	const [version, setVersion] = useState(0);
+	// Duyệt nhiều cấp: null = công ty không khai cấp duyệt (màn hình như cũ) hoặc chưa tải
+	const [apv, setApv] = useState(null);
+	const [apvNote, setApvNote] = useState('');
+	const apvRequest = useRef(0);
 	const [filter, setFilter] = useState(FILTERS.indexOf(params.tab) >= 0 ? params.tab : 'all');
 	const [query, setQuery] = useState('');
 	const [limit, setLimit] = useState(PAGE_SIZE);
@@ -651,6 +711,22 @@ export default function PayrollRunView({app}) {
 		};
 	}, [id, job]);
 
+	// Trạng thái duyệt nhiều cấp: tải lại sau mỗi lần nạp bảng lương; lỗi hoặc máy chủ chưa có route thì coi như không khai cấp
+	const batchStatus = data && data.batch ? String(data.batch.status || '') : '';
+	useEffect(() => {
+		apvRequest.current += 1;
+		const mine = apvRequest.current;
+		if (!id || APV_STATUSES.indexOf(batchStatus) < 0) {
+			setApv(null);
+			return undefined;
+		}
+		call({action: 'approvalState', batch: id}).then(
+			(r) => alive.current && mine === apvRequest.current && setApv(r && r.enabled && Array.isArray(r.steps) ? r : null),
+			() => alive.current && mine === apvRequest.current && setApv(null)
+		);
+		return undefined;
+	}, [id, version, batchStatus]);
+
 	if (!id) {
 		return (
 			<Page>
@@ -731,6 +807,17 @@ export default function PayrollRunView({app}) {
 	const doRelease = () => app.confirm(t.confirm.release, () => act('release', null, (r) => (r.resumed ? t.done.resumed : t.done.released)));
 	const doReverse = () => app.confirm(t.confirm.reverse, () => act('reverse', null, (r) => (r.resumed ? t.done.resumed : t.done.reversed)));
 	const goAttendance = () => app.go('attendance', {period: period.id});
+	// Duyệt nhiều cấp: hộp xác nhận có ô ghi chú (từ chối bắt buộc ghi chú)
+	const multi = !!(apv && apv.enabled);
+	const openApvDialog = (kind) => {
+		setApvNote('');
+		setDialog({kind});
+	};
+	const sendApv = (action) =>
+		act(action, {batch: id, note: apvNote.trim()}, (r) => (action === 'rejectStep' ? t.apv.rejected : t.apv.approved(r))).then((r) => {
+			if (r && alive.current) setDialog(null);
+			return r;
+		});
 	const openJournalPreview = () => setTab('journal');
 	const bankFile = () =>
 		app.run(t.working, call({action: 'bankfile', id})).then((r) => {
@@ -756,6 +843,8 @@ export default function PayrollRunView({app}) {
 	else if (s === 'C' && calculated && periodOpen) {
 		primary = {label: t.act.submit, onClick: doSubmit};
 		secondary = {label: t.act.recalculate, onClick: doCalculate};
+	} else if (s === 'P' && multi) {
+		primary = apv.current ? {label: t.apv.approveLevel(apv.current), onClick: () => openApvDialog('apvApprove'), disabled: !apv.canApprove, title: apv.canApprove ? '' : apv.reason} : null;
 	} else if (s === 'P') primary = {label: t.act.approve, onClick: doApprove};
 	else if (s === 'J') primary = {label: t.act.reopen, onClick: () => app.confirm(t.confirm.reopen, () => act('reopen', null, () => t.done.reopened))};
 	else if (s === 'A') primary = isHr ? {label: t.act.release, disabled: true, title: t.hrNoRelease} : {label: t.act.release, onClick: doRelease};
@@ -778,8 +867,9 @@ export default function PayrollRunView({app}) {
 		item(editable && notShown(t.act.calculate) && notShown(t.act.recalculate), calculated ? t.act.recalculate : t.act.calculate, doCalculate, working),
 		item(s === 'H' && notShown(t.act.removeHold), t.act.removeHold, () => act('removeHold'), working),
 		item(s === 'B' || s === 'C', t.act.hold, () => act('hold'), working),
-		item(s === 'C' && calculated, t.act.approveNow, doApprove, working),
-		item(s === 'C' || s === 'P', t.act.reject, () => app.confirm(t.confirm.reject, () => act('reject', null, () => t.done.rejected)), working),
+		item(s === 'C' && calculated && !multi, t.act.approveNow, doApprove, working),
+		item(s === 'C' || (s === 'P' && !multi), t.act.reject, () => app.confirm(t.confirm.reject, () => act('reject', null, () => t.done.rejected)), working),
+		item(s === 'P' && multi, t.act.reject, () => openApvDialog('apvReject'), working || !(apv && apv.canReject)),
 		item(['A', 'P', 'C', 'B'].indexOf(s) >= 0, t.act.reopen, () => app.confirm(t.confirm.reopen, () => act('reopen', null, () => t.done.reopened)), working),
 		item(!isHr && s === 'R', t.act.agencyBills, () => app.confirm(t.confirm.agencyBills, () => act('agencyBills', null, t.done.bills)), working),
 		item(!isHr && s === 'R', t.act.completeRelease, () => act('release', null, (r) => (r.resumed ? t.done.resumed : t.done.released)), working),
@@ -1462,9 +1552,59 @@ export default function PayrollRunView({app}) {
 		);
 	};
 
+	// ------------------------------------------------------------------ các cấp duyệt (chỉ khi công ty khai cấp duyệt)
+	const renderApproval = () => {
+		if (!multi || !apv.steps.length) return null;
+		return (
+			<Card title={t.apv.title} label={t.apv.title}>
+				<div style={{display: 'flex', flexWrap: 'wrap', gap: '16px'}}>
+					{apv.steps.map((st) => (
+						<div key={`apv${st.level}`} style={{minWidth: '200px', flex: '1 1 200px'}}>
+							<div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+								<span style={{fontWeight: '600'}}>{`${t.apv.level(st.level)}${st.name ? ` - ${st.name}` : ''}`}</span>
+								<Badge text={t.apv.state[st.state] || st.state} tone={APV_TONE[st.state] || 'muted'} />
+							</div>
+							<div class="s4vp-small">{`${t.apv.approver}: ${st.approverName || '-'}`}</div>
+							{st.state === 'done' || st.state === 'rejected' ? <div class="s4vp-small">{t.apv.by(st.by, fmtAt(st.at))}</div> : null}
+							{st.note ? <div class="s4vp-small" style={{overflowWrap: 'anywhere'}}>{st.note}</div> : null}
+							{st.waived ? <div class="s4vp-small s4vp-muted">{t.apv.waived}</div> : null}
+						</div>
+					))}
+				</div>
+				{s === 'P' && apv.current && !apv.canApprove && apv.reason ? (
+					<div class="s4vp-small" role="status" style={{marginTop: '8px'}}>
+						{`${t.apv.cannot} ${apv.reason}`}
+					</div>
+				) : null}
+			</Card>
+		);
+	};
+
 	// ------------------------------------------------------------------ hộp thoại
 	const renderDialog = () => {
 		if (!dialog) return null;
+		if (dialog.kind === 'apvApprove' || dialog.kind === 'apvReject') {
+			const isReject = dialog.kind === 'apvReject';
+			if (!apv) return null;
+			const ready = !isReject || !!apvNote.trim();
+			return (
+				<Dialog
+					title={isReject ? t.apv.rejectTitle : t.apv.approveTitle(apv.current, apv.currentName)}
+					onClose={() => setDialog(null)}
+					actions={[
+						<Button label={t.apv.cancel} onClick={() => setDialog(null)} />,
+						<Button kind="primary" label={isReject ? t.apv.confirmReject : t.apv.confirmApprove} disabled={!ready || working} onClick={() => sendApv(isReject ? 'rejectStep' : 'approveStep')} />,
+					]}
+				>
+					<div style={{whiteSpace: 'pre-wrap'}}>{isReject ? t.apv.rejectText : [t.apv.approveText(!!apv.final)].concat(openCount > 0 ? [t.apv.approveOpen(openCount)] : []).join(' ')}</div>
+					<div class="s4vp-form">
+						<Field label={t.apv.note} hint={isReject ? t.apv.noteRequired : t.apv.noteOptional}>
+							<TextArea value={apvNote} onInput={setApvNote} rows={3} ariaLabel={t.apv.note} />
+						</Field>
+					</div>
+				</Dialog>
+			);
+		}
 		if (dialog.kind === 'time') {
 			const tm = t.panel.time;
 			return (
@@ -1571,6 +1711,7 @@ export default function PayrollRunView({app}) {
 				</Card>
 			) : null}
 			<Stepper steps={steps} label={t.stepsLabel} />
+			{renderApproval()}
 			<StatCards cards={cards} />
 			<div class="s4vp-cols s4vp-cols-half">
 				<div class="s4vp-col-half">

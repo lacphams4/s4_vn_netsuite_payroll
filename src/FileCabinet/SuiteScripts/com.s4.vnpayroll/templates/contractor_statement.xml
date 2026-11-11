@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<!-- VP644100 / VP644110 / VP644010 Bảng kê xác nhận thù lao cộng tác viên, A4 dọc, mỗi người một trang. Dữ liệu: alias data, dựng bằng core/PrintModelExtra.contractorStatement. -->
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<macrolist>
+		<macro id="pagefooter">
+			<table width="100%"><tr><td align="right" style="font-size: 7pt; color: #666666;"><pagenumber/> / <totalpages/></td></tr></table>
+		</macro>
+	</macrolist>
+	<style type="text/css">
+		body { font-family: NotoSans, sans-serif; font-size: 8.5pt; }
+		td { padding: 2px 3px; vertical-align: top; }
+		table.grid { border-collapse: collapse; }
+		table.grid th { border: 0.5pt solid #000000; font-weight: bold; vertical-align: middle; padding: 3px; font-size: 7.5pt; }
+		p.h { margin: 0; text-align: center; }
+		table.grid td { border: 0.5pt solid #000000; font-size: 7.5pt; }
+		.b { font-weight: bold; }
+		.i { font-style: italic; }
+		.title { font-size: 13pt; font-weight: bold; }
+		.small { font-size: 7pt; }
+		p.sec { font-weight: bold; background-color: #eeeeee; padding: 3px; margin-top: 8px; margin-bottom: 4px; border-top: 0.5pt solid #000000; border-bottom: 0.5pt solid #000000; }
+	</style>
+</head>
+<body size="A4" padding="1.2cm 1.4cm 1.0cm 1.6cm" footer="pagefooter" footer-height="0.6cm">
+	<#list data.pages as p>
+	<table width="100%"><tr>
+		<#list data.logos as l><td width="10%" style="vertical-align: middle;"><img src="${l.url?html}" style="height: 28px;" /></td></#list>
+		<td style="vertical-align: middle;"><span class="b">${data.companyName?html}</span><#list data.companyLines as c><br/>${c?html}</#list></td>
+	</tr></table>
+	<p class="title" align="center">${data.title?html}</p>
+	<p align="center">${data.periodLine?html}</p>
+	<p align="center" class="i">${data.windowLine?html}</p>
+	<table width="100%" style="margin-top: 6px;">
+		<#list p.info as f><tr><td width="38%">${f.label?html}</td><td class="b">${f.value?html}</td></tr></#list>
+	</table>
+
+	<p class="sec">${data.labels.a?html}</p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<thead><tr>
+			<th width="5%" align="center"><p class="h" align="center">${data.labels.stt?html}</p></th>
+			<th width="11%" align="center"><p class="h" align="center">${data.labels.date?html}</p></th>
+			<th width="23%" align="center"><p class="h" align="center">${data.labels.work?html}</p></th>
+			<th width="21%" align="center"><p class="h" align="center">${data.labels.memo?html}</p></th>
+			<th width="9%" align="center"><p class="h" align="center">${data.labels.source?html}</p></th>
+			<th width="9%" align="center"><p class="h" align="center">${data.labels.hours?html}</p></th>
+			<th width="22%" align="center"><p class="h" align="center">${data.labels.reason?html}</p></th>
+		</tr></thead>
+		<#list p.rows as r>
+		<tr style="font-weight: ${r.weight};">
+			<td align="center">${r.stt}</td><td align="center">${r.date}</td><td>${r.work?html}</td><td>${r.memo?html}</td>
+			<td align="right">${r.source}</td><td align="right">${r.hours}</td><td>${r.reason?html}</td>
+		</tr>
+		</#list>
+		<tr>
+			<td colspan="4" class="b" align="center">${data.labels.total?html}</td>
+			<td align="right" class="b">${p.total.source}</td><td align="right" class="b">${p.total.hours}</td><td></td>
+		</tr>
+	</table>
+
+	<p class="sec">${data.labels.b?html}</p>
+	<table width="100%" style="page-break-inside: avoid;">
+		<#list p.pay as f><tr><td width="70%" style="padding-left: 14px;">${f.label?html}</td><td align="right">${f.value}</td></tr></#list>
+		<tr>
+			<td class="b" style="border: 0.5pt solid #000000; font-size: 10pt; padding: 4px;">${data.labels.net?html}</td>
+			<td class="b" align="right" style="border: 0.5pt solid #000000; font-size: 10pt; padding: 4px;">${p.net}</td>
+		</tr>
+	</table>
+	<p class="i" style="margin-top: 3px;">${data.labels.words?html}: ${p.netWords?html}</p>
+	<p class="small i" align="right">${data.currencyLine?html}</p>
+
+	<p class="sec">${data.labels.c?html}</p>
+	<p>${data.labels.confirm?html}</p>
+	<table width="100%" table-layout="fixed" style="margin-top: 8px; page-break-inside: avoid;">
+		<tr><#list p.signers as s><td width="50%" align="center"><span class="b">${s.title?html}</span><br/><span class="small i">${data.signNote?html}</span><br/><br/><br/><br/>${s.name?html}</td></#list></tr>
+	</table>
+	<p class="small i" style="margin-top: 6px;">${data.labels.confidential?html}</p>
+
+	<p class="sec">${data.labels.d?html}</p>
+	<table class="grid" width="60%" table-layout="fixed" style="page-break-inside: avoid;">
+		<thead><tr>
+			<th width="70%" align="center"><p class="h" align="center">${data.labels.week?html}</p></th>
+			<th width="30%" align="center"><p class="h" align="center">${data.labels.weekHours?html}</p></th>
+		</tr></thead>
+		<#list p.weeks as w><tr><td>${w.label}</td><td align="right">${w.hours}</td></tr></#list>
+		<tr><td class="b">${data.labels.weekTotal?html}</td><td align="right" class="b">${p.weekTotal}</td></tr>
+	</table>
+	<#list p.breaks as b><pbr/></#list>
+	</#list>
+</body>
+</pdf>

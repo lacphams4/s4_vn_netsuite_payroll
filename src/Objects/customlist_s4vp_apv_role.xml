@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_apv_role">
+  <name>S4VP apv_role</name>
+  <description>S4 VN Payroll code list apv_role; values keep the Acumatica codes (H, A, D).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_apv_role_h">
+      <value>H - Nhân sự (S4VP Payroll HR)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_apv_role_a">
+      <value>A - Kế toán (S4VP Payroll Accountant)</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_apv_role_d">
+      <value>D - Administrator</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

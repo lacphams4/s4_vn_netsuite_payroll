@@ -11,6 +11,13 @@
  */
 define(["./Store", "./Settings", "../core/ReportData", "../core/PayrollReports"], (Store, Settings, ReportData, PayrollReports) => {
 	const blank = (v) => v === null || v === undefined || v === "";
+	/** Lỗi nghiệp vụ hai ngôn ngữ: RESTlet trả userMessage.en / userMessage.vi, giao diện hiện đúng một ngôn ngữ. */
+	function fail(en, vi) {
+		const e = new Error(`${en} / ${vi}`);
+		e.userMessage = { en, vi };
+		return e;
+	}
+
 
 	function employeeInfo(ids) {
 		const out = {};
@@ -75,7 +82,7 @@ define(["./Store", "./Settings", "../core/ReportData", "../core/PayrollReports"]
 	 */
 	function insurance(p) {
 		const tm = String(p.taxMonth || "");
-		if (!/^\d{6}$/.test(tm)) throw new Error("Tax month must be yyyyMM / Tháng tính thuế phải dạng yyyyMM");
+		if (!/^\d{6}$/.test(tm)) throw fail("Tax month must be yyyyMM", "Tháng tính thuế phải dạng yyyyMM");
 		const prev = ReportData.prevMonth(tm);
 		const opt = { releasedOnly: !!p.releasedOnly };
 		const cur = load(batchesFor(p.subsidiary, (m) => m === tm, opt));
@@ -90,7 +97,7 @@ define(["./Store", "./Settings", "../core/ReportData", "../core/PayrollReports"]
 	function pitQuarter(p) {
 		const year = Number(p.year);
 		const quarter = Number(p.quarter);
-		if (!(year >= 2000) || !(quarter >= 1 && quarter <= 4)) throw new Error("Year and quarter are required / Thiếu năm hoặc quý");
+		if (!(year >= 2000) || !(quarter >= 1 && quarter <= 4)) throw fail("Year and quarter are required", "Thiếu năm hoặc quý");
 		const src = load(batchesFor(p.subsidiary, (m) => Number(m.slice(0, 4)) === year && PayrollReports.quarterOf(m) === quarter, { releasedOnly: !!p.releasedOnly }));
 		return ReportData.pitQuarterReport(src.rows, year, quarter);
 	}
@@ -98,7 +105,7 @@ define(["./Store", "./Settings", "../core/ReportData", "../core/PayrollReports"]
 	/** VP404000 dữ liệu quyết toán năm; schedule '05-1' | '05-2' | ''. */
 	function pitAnnual(p) {
 		const year = Number(p.year);
-		if (!(year >= 2000)) throw new Error("Year is required / Thiếu năm");
+		if (!(year >= 2000)) throw fail("Year is required", "Thiếu năm");
 		const src = load(batchesFor(p.subsidiary, (m) => Number(m.slice(0, 4)) === year, { releasedOnly: !!p.releasedOnly }));
 		return ReportData.pitAnnualReport(src.rows, year, p.schedule || "");
 	}
@@ -145,7 +152,7 @@ define(["./Store", "./Settings", "../core/ReportData", "../core/PayrollReports"]
 	/** VP405000 chi phí nhân sự theo tài khoản so với bút toán ghi sổ (bảng đã ghi sổ của tháng). */
 	function costByAccount(p) {
 		const tm = String(p.taxMonth || "");
-		if (!/^\d{6}$/.test(tm)) throw new Error("Tax month must be yyyyMM / Tháng tính thuế phải dạng yyyyMM");
+		if (!/^\d{6}$/.test(tm)) throw fail("Tax month must be yyyyMM", "Tháng tính thuế phải dạng yyyyMM");
 		const batches = batchesFor(p.subsidiary, (m) => m === tm, { releasedOnly: p.releasedOnly !== false });
 		const src = load(batches);
 		const gl = journalLines(batches.filter((b) => b.status === "R").map((b) => b.journal));
@@ -184,7 +191,7 @@ define(["./Store", "./Settings", "../core/ReportData", "../core/PayrollReports"]
 			case "cost":
 				return costByAccount(Object.assign(p, { releasedOnly: params.releasedOnly !== "F" }));
 			default:
-				throw new Error(`Unknown report ${params.type} / Báo cáo không hợp lệ`);
+				throw fail(`Unknown report ${params.type}`, `Báo cáo không hợp lệ: ${params.type}`);
 		}
 	}
 

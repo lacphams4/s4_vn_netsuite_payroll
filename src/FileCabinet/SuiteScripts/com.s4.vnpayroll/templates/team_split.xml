@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<!-- VP645000 / VP645010 Bảng chia lương tổ của một phiếu sản lượng, A4 dọc. Dữ liệu: alias data, dựng bằng core/PrintModelExtra.teamSplit. -->
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<macrolist>
+		<macro id="pagefooter">
+			<table width="100%"><tr><td align="right" style="font-size: 7pt; color: #666666;"><pagenumber/> / <totalpages/></td></tr></table>
+		</macro>
+	</macrolist>
+	<style type="text/css">
+		body { font-family: NotoSans, sans-serif; font-size: 8.5pt; }
+		td { padding: 2px 3px; vertical-align: top; }
+		table.grid { border-collapse: collapse; }
+		table.grid th { border: 0.5pt solid #000000; font-weight: bold; vertical-align: middle; padding: 3px; font-size: 7.5pt; }
+		p.h { margin: 0; text-align: center; }
+		table.grid td { border: 0.5pt solid #000000; font-size: 8pt; }
+		.b { font-weight: bold; }
+		.i { font-style: italic; }
+		.title { font-size: 13pt; font-weight: bold; }
+		.small { font-size: 7pt; }
+		p.sec { font-weight: bold; margin-top: 8px; margin-bottom: 3px; }
+		p.warn { font-weight: bold; border: 1pt solid #000000; padding: 4px; margin-top: 6px; }
+	</style>
+</head>
+<body size="A4" padding="1.2cm 1.2cm 1.0cm 1.4cm" footer="pagefooter" footer-height="0.6cm">
+	<table width="100%"><tr>
+		<#list data.logos as l><td width="10%" style="vertical-align: middle;"><img src="${l.url?html}" style="height: 28px;" /></td></#list>
+		<td style="vertical-align: middle;"><span class="b">${data.companyName?html}</span><#list data.companyLines as c><br/>${c?html}</#list></td>
+	</tr></table>
+	<p class="title" align="center">${data.title?html}</p>
+	<p align="center">${data.docLine?html}</p>
+	<table width="100%" style="margin-top: 6px;">
+		<#list data.info as f><tr><td width="22%">${f.label?html}</td><td class="b">${f.value?html}</td></tr></#list>
+	</table>
+	<#list data.warnings as w><p class="warn">${w?html}</p></#list>
+	<#list data.notes as n><p class="i">${n?html}</p></#list>
+	<p align="right" class="small i">${data.currencyLine?html}</p>
+
+	<p class="sec">${data.labels.i?html}</p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<thead><tr>
+			<th width="6%" align="center"><p class="h" align="center">${data.labels.stt?html}</p></th>
+			<th width="40%" align="center"><p class="h" align="center">${data.labels.item?html}</p></th>
+			<th width="9%" align="center"><p class="h" align="center">${data.labels.uom?html}</p></th>
+			<th width="13%" align="center"><p class="h" align="center">${data.labels.qty?html}</p></th>
+			<th width="14%" align="center"><p class="h" align="center">${data.labels.rate?html}</p></th>
+			<th width="18%" align="center"><p class="h" align="center">${data.labels.amount?html}</p></th>
+		</tr></thead>
+		<#list data.lines as r>
+		<tr>
+			<td align="center">${r.stt}</td><td>${r.item?html}</td><td align="center">${r.uom?html}</td>
+			<td align="right">${r.qty}</td><td align="right">${r.rate}</td><td align="right">${r.amount}</td>
+		</tr>
+		</#list>
+		<tr><td colspan="5" class="b" align="center">${data.labels.lineTotal?html}</td><td align="right" class="b">${data.lineTotal}</td></tr>
+	</table>
+
+	<p class="sec">${data.labels.ii?html}</p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<thead><tr>
+			<th width="5%" align="center"><p class="h" align="center">${data.labels.stt?html}</p></th>
+			<th width="10%" align="center"><p class="h" align="center">${data.labels.code?html}</p></th>
+			<th width="24%" align="center"><p class="h" align="center">${data.labels.name?html}</p></th>
+			<th width="9%" align="center"><p class="h" align="center">${data.labels.workDays?html}</p></th>
+			<th width="8%" align="center"><p class="h" align="center">${data.labels.hours?html}</p></th>
+			<th width="8%" align="center"><p class="h" align="center">${data.labels.factor?html}</p></th>
+			<th width="8%" align="center"><p class="h" align="center">${data.labels.percent?html}</p></th>
+			<th width="15%" align="center"><p class="h" align="center">${data.labels.share?html}</p></th>
+			<th width="13%" align="center"><p class="h" align="center">${data.labels.sign?html}</p></th>
+		</tr></thead>
+		<#list data.members as r>
+		<tr>
+			<td align="center">${r.stt}</td><td>${r.code?html}</td><td>${r.name?html}</td>
+			<td align="right">${r.workDays}</td><td align="right">${r.hours}</td><td align="right">${r.factor}</td><td align="right">${r.percent}</td>
+			<td align="right" class="b">${r.amount}</td><td></td>
+		</tr>
+		</#list>
+		<tr>
+			<td colspan="3" class="b" align="center">${data.labels.total?html}</td>
+			<td align="right" class="b">${data.memberTotal.workDays}</td><td align="right" class="b">${data.memberTotal.hours}</td><td></td>
+			<td align="right" class="b">${data.memberTotal.percent}</td><td align="right" class="b">${data.memberTotal.amount}</td><td></td>
+		</tr>
+	</table>
+	<p class="i" style="margin-top: 4px;">${data.words?html}</p>
+	<#list data.warnings as w><p class="warn">${w?html}</p></#list>
+	<table width="100%" table-layout="fixed" style="margin-top: 10px; page-break-inside: avoid;">
+		<tr><#list data.signers as s><td width="33%" align="center"><span class="b">${s.title?html}</span><br/><span class="small i">${data.signNote?html}</span><br/><br/><br/><br/>${s.name?html}</td></#list></tr>
+	</table>
+</body>
+</pdf>

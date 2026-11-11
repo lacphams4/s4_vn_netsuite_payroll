@@ -705,6 +705,119 @@ select.s4vp-in{padding-right:28px}
 .s4vp-hr-alloc-head{font-size:12px;color:var(--s4vp-sub)}
 .s4vp-hr-sub{font-size:12px;font-weight:600;color:var(--s4vp-sub);padding:8px 12px 2px}
 @media (max-width:812px){.s4vp-hr-alloc-row{grid-template-columns:1fr 1fr}.s4vp-hr-tl-row{grid-template-columns:84px minmax(0,1fr)}}
+.s4vp-out-period{display:inline-flex}
+.s4vp-out-period .s4vp-in{min-height:36px}
+.s4vp-out-todo{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:6px 12px;background:var(--s4vp-warn-bg);border:1px solid #F3D49B;border-radius:12px}
+.s4vp-out-todo-l{font-size:13px;font-weight:700;color:var(--s4vp-warn);margin-right:4px}
+.s4vp-out-todo-btn{font-size:13px;min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--s4vp-warn-line);background:var(--s4vp-surface);color:var(--s4vp-warn);white-space:nowrap;cursor:pointer}
+.s4vp-out-todo-btn.s4vp-on{background:var(--s4vp-warn);border-color:var(--s4vp-warn);color:#FFFFFF}
+.s4vp-out-todo .s4vp-btn{min-height:32px}
+.s4vp-out-clip{display:block;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4vp-out-status{display:inline-flex;gap:6px;align-items:center}
+.s4vp-out-flag{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--s4vp-warn-bg);color:var(--s4vp-warn);font-size:12px;font-weight:700}
+.s4vp-out-diff{color:var(--s4vp-err);font-weight:700}
+.s4vp-out-plain{font-variant-numeric:tabular-nums}
+.s4vp-out-side > .s4vp-side{max-height:max(316px,calc(100vh - 328px));overflow-y:auto;gap:10px}
+.s4vp-out-side > .s4vp-side > *{flex-shrink:0}
+.s4vp-out-body > *{flex-shrink:0}
+.s4vp-out-side-low > .s4vp-side{max-height:max(296px,calc(100vh - 376px))}
+.s4vp-out-side .s4vp-side-h .s4vp-btn{min-height:32px}
+.s4vp-out-steps{display:flex;flex-wrap:nowrap;gap:3px;align-items:center;overflow-x:auto;padding-bottom:1px}
+.s4vp-out-steps .s4vp-out-step{padding:0 8px 0 3px;font-size:12px;gap:4px;flex:0 0 auto}
+.s4vp-out-steps .s4vp-out-step-n{width:20px;height:20px;font-size:11px}
+.s4vp-out-step{display:inline-flex;gap:6px;align-items:center;min-height:32px;padding:0 10px 0 4px;border:1px solid var(--s4vp-line);border-radius:999px;background:var(--s4vp-surface);color:var(--s4vp-sub);font-size:13px;cursor:pointer;white-space:nowrap}
+.s4vp-out-step-n{width:22px;height:22px;border-radius:50%;border:1px solid var(--s4vp-ctl);display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.s4vp-out-step-done{color:var(--s4vp-ok)}
+.s4vp-out-step-done .s4vp-out-step-n{background:var(--s4vp-ok-bg);border-color:var(--s4vp-ok-bg);font-weight:700}
+.s4vp-out-step-cur{color:var(--s4vp-text);font-weight:700}
+.s4vp-out-step-cur .s4vp-out-step-n{background:var(--s4vp-accent);border-color:var(--s4vp-accent);color:#FFFFFF}
+.s4vp-out-step-on{border-color:var(--s4vp-accent);box-shadow:inset 0 0 0 1px var(--s4vp-accent);background:var(--s4vp-accent-soft)}
+.s4vp-out-issues{display:flex;flex-direction:column;gap:6px}
+.s4vp-out-issue{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:13px;padding:3px 4px 3px 10px;min-height:32px;border-radius:8px;background:var(--s4vp-warn-bg);color:var(--s4vp-warn)}
+.s4vp-out-issue .s4vp-btn{min-height:30px;flex:0 0 auto}
+.s4vp-out-body{display:flex;flex-direction:column;gap:8px;min-width:0}
+.s4vp-out-box{border:1px solid var(--s4vp-line);border-radius:10px;overflow:hidden}
+.s4vp-out-box .s4vp-tbl-bar{padding:6px 8px}
+.s4vp-out-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.s4vp-out-method{display:inline-flex}
+.s4vp-out-dirty{font-size:12px;font-weight:600;color:#8A4B00}
+.s4vp-out-sum{margin-left:auto;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.s4vp-out-warn{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--s4vp-warn-bg);color:var(--s4vp-warn)}
+.s4vp-out-warn.s4vp-out-err{background:var(--s4vp-err-bg);color:var(--s4vp-err)}
+.s4vp-out-okay{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--s4vp-ok-bg);color:var(--s4vp-ok)}
+.s4vp-out-err{color:var(--s4vp-err);font-size:12px}
+.s4vp-out-bar{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between}
+.s4vp-out-bar > .s4vp-small{flex:1 1 200px;min-width:0}
+.s4vp-out-bar .s4vp-in{min-height:32px}
+.s4vp-out-grid{border:1px solid var(--s4vp-line);border-radius:10px;overflow:auto;max-height:max(200px,calc(100vh - 520px))}
+.s4vp-out-grid .s4vp-tbl th{position:sticky;top:0;z-index:1}
+.s4vp-out-grid .s4vp-tbl td{padding:4px 6px}
+.s4vp-out-grid .s4vp-tbl th{padding:6px}
+.s4vp-out-grid .s4vp-in{min-height:32px;padding:0 8px}
+.s4vp-out-grid .s4vp-btn{min-height:32px}
+.s4vp-out-grid .s4vp-empty{padding:14px}
+.s4vp-out-uom{display:block;margin-top:2px}
+.s4vp-out-fixed{font-variant-numeric:tabular-nums}
+.s4vp-out-who{display:flex;flex-wrap:wrap;gap:0 8px;align-items:baseline;min-width:0}
+.s4vp-out-who-n{font-weight:600;overflow-wrap:anywhere}
+.s4vp-out-find{display:flex;flex-direction:column;gap:6px}
+.s4vp-out-results{border:1px solid var(--s4vp-line);border-radius:8px;max-height:112px;overflow-y:auto;display:flex;flex-direction:column}
+.s4vp-out-result{display:flex;gap:12px;align-items:center;justify-content:space-between;min-height:36px;padding:4px 12px;border:0;border-bottom:1px solid var(--s4vp-line-soft);background:var(--s4vp-surface);color:var(--s4vp-text);font-size:14px;text-align:left;cursor:pointer}
+.s4vp-out-result:hover,.s4vp-out-result:focus-visible{background:var(--s4vp-accent-soft)}
+.s4vp-out-result[disabled]{color:var(--s4vp-sub);background:#F7F8F9;cursor:default}
+.s4vp-out-hint{padding:8px 12px;font-size:13px;color:var(--s4vp-sub)}
+.s4vp-out-info{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--s4vp-line-soft);border-bottom:1px solid var(--s4vp-line-soft)}
+.s4vp-out-info .s4vp-line{align-items:baseline}
+.s4vp-out-val{text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0}
+/* setup hub (views/setupHub.js) */
+.s4vp-st-hub{display:flex;flex-direction:column;gap:var(--s4vp-gap);min-width:0}
+.s4vp-st-bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;min-width:0}
+.s4vp-st-bar .s4vp-tabs{border-bottom:0}
+.s4vp-st-grow{flex:1 1 auto}
+.s4vp-st-groups{column-width:560px;column-gap:var(--s4vp-gap)}
+.s4vp-st-groups > .s4vp-card{break-inside:avoid;margin-bottom:var(--s4vp-gap)}
+.s4vp-st-rows{display:flex;flex-direction:column}
+.s4vp-st-row{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:8px 14px;border-top:1px solid var(--s4vp-line-soft)}
+.s4vp-st-state{min-width:0}
+.s4vp-st-main{display:flex;flex-direction:column;gap:1px;min-width:0}
+.s4vp-st-name{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.s4vp-st-name .s4vp-small{font-weight:400}
+.s4vp-st-desc{font-size:12px;color:var(--s4vp-sub);overflow-wrap:anywhere}
+.s4vp-st-issue{font-size:12px;color:var(--s4vp-warn);overflow-wrap:anywhere}
+.s4vp-st-issue-err{color:var(--s4vp-err)}
+.s4vp-st-acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center}
+.s4vp-tbl .s4vp-st-acts{flex-wrap:nowrap;justify-content:flex-start}
+.s4vp-st-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.s4vp-st-step{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:8px 0;border-top:1px solid var(--s4vp-line-soft)}
+.s4vp-st-step:first-child{border-top:0}
+.s4vp-st-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#EEF0F2;color:var(--s4vp-sub)}
+.s4vp-st-step-done .s4vp-st-num{background:var(--s4vp-ok-bg);color:var(--s4vp-ok)}
+.s4vp-st-step-current .s4vp-st-num{background:var(--s4vp-accent);color:#FFFFFF}
+.s4vp-st-step-current .s4vp-st-name{color:var(--s4vp-accent-dark)}
+.s4vp-st-note{font-size:13px;padding:8px 12px;border-radius:8px;background:var(--s4vp-info-bg);color:var(--s4vp-info)}
+.s4vp-st-note-warn{background:var(--s4vp-warn-bg);color:var(--s4vp-warn)}
+.s4vp-st-err{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--s4vp-err-bg);color:var(--s4vp-err)}
+.s4vp-st-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px 14px}
+.s4vp-st-form-narrow{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 10px}
+.s4vp-st-test-btn{display:flex;align-items:flex-end}
+.s4vp-st-cards{column-width:440px;column-gap:var(--s4vp-gap)}
+.s4vp-st-cards > .s4vp-card{break-inside:avoid;margin-bottom:var(--s4vp-gap)}
+.s4vp-st-kv{display:flex;flex-direction:column;gap:6px}
+.s4vp-st-kv-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;align-items:baseline}
+.s4vp-st-kv-row > span:first-child{flex:1 1 auto;min-width:0}
+.s4vp-st-kv-row > span:last-child{text-align:right;max-width:55%;overflow-wrap:anywhere}
+.s4vp-st-val{font-weight:600}
+.s4vp-st-cell{display:flex;flex-direction:column;gap:1px;min-width:0}
+.s4vp-st-side{gap:var(--s4vp-gap)}
+.s4vp-st-prio{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:3px;font-size:13px}
+.s4vp-st-result{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--s4vp-line-soft)}
+.s4vp-st-result-h{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.s4vp-st-result-v{font-size:16px;font-weight:700;color:var(--s4vp-accent-dark)}
+.s4vp-st-levels{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.s4vp-st-level{display:flex;justify-content:space-between;gap:12px;padding:3px 8px;border-radius:6px}
+.s4vp-st-level-on{background:var(--s4vp-accent-soft);font-weight:600}
+.s4vp-st-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:812px){.s4vp-st-groups,.s4vp-st-cards{column-width:auto;column-count:1}.s4vp-st-row{grid-template-columns:1fr}.s4vp-st-acts{justify-content:flex-start}}
 `;
     let done = false;
     // Chèn CSS một lần; gọi ở đầu mỗi lần vẽ khung cũng không sao (đã có thẻ thì bỏ qua)
@@ -795,10 +908,10 @@ select.s4vp-in{padding-right:28px}
     };
     const cx$1 = (...names) => names.filter(Boolean).join(' ');
     const px = (v) => (typeof v === 'number' ? `${v}px` : v);
-    const blank$3 = (v) => v === null || v === undefined || v === false;
-    const text = (v) => (blank$3(v) ? '' : String(v));
+    const blank$4 = (v) => v === null || v === undefined || v === false;
+    const text = (v) => (blank$4(v) ? '' : String(v));
     // Danh sách nút / phần tử do nơi gọi truyền vào: bọc từng phần tử có khóa để UIF không phải đoán khóa
-    const keyed = (nodes) => (Array.isArray(nodes) ? nodes : blank$3(nodes) ? [] : [nodes]).filter((n) => !blank$3(n)).map((n, i) => jsx("span", { style: { display: 'contents' }, children: n }, `k${i}`));
+    const keyed = (nodes) => (Array.isArray(nodes) ? nodes : blank$4(nodes) ? [] : [nodes]).filter((n) => !blank$4(n)).map((n, i) => jsx("span", { style: { display: 'contents' }, children: n }, `k${i}`));
     /** Đọc giá trị ô nhập từ message onInput của UIF (phần tử DOM ở m.element, dự phòng m._element, m.target). */
     function valueOf(m) {
         try {
@@ -836,9 +949,9 @@ select.s4vp-in{padding-right:28px}
         const t = pick(TEXT$d);
         const parents = (crumbs || []).filter((c) => c && c.onClick);
         const up = back && back.onClick ? back : parents.length ? parents[parents.length - 1] : null;
-        const upLabel = up ? (blank$3(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
+        const upLabel = up ? (blank$4(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
         const acts = keyed(actions);
-        return (jsxs("div", { class: "s4vp-ph", children: [jsxs("div", { class: "s4vp-ph-main", children: [up ? (jsx("button", { type: "button", class: "s4vp-back", "aria-label": upLabel, title: upLabel, onClick: () => up.onClick(), children: '‹' })) : null, jsxs("div", { class: "s4vp-ph-text", children: [jsxs("div", { class: "s4vp-ph-title", children: [jsx("h1", { title: text(title), children: text(title) }), status && status.text ? Badge({ text: status.text, tone: status.tone, large: true }) : null] }), blank$3(sub) || sub === '' ? null : jsx("div", { class: "s4vp-ph-sub", children: sub })] })] }), acts.length ? jsx("div", { class: "s4vp-actions", children: acts }) : null] }));
+        return (jsxs("div", { class: "s4vp-ph", children: [jsxs("div", { class: "s4vp-ph-main", children: [up ? (jsx("button", { type: "button", class: "s4vp-back", "aria-label": upLabel, title: upLabel, onClick: () => up.onClick(), children: '‹' })) : null, jsxs("div", { class: "s4vp-ph-text", children: [jsxs("div", { class: "s4vp-ph-title", children: [jsx("h1", { title: text(title), children: text(title) }), status && status.text ? Badge({ text: status.text, tone: status.tone, large: true }) : null] }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-ph-sub", children: sub })] })] }), acts.length ? jsx("div", { class: "s4vp-actions", children: acts }) : null] }));
     }
     // ------------------------------------------------------------------ nút, menu
     /** kind: 'primary' | 'default' | 'ghost' | 'link' | 'danger' | 'dashed'; small, block: tùy chọn kích thước. */
@@ -909,14 +1022,14 @@ select.s4vp-in{padding-right:28px}
                     attrs['aria-current'] = 'step';
                 const tone = s.noteTone || (state === 'current' ? 'warn' : '');
                 const body = [jsx("span", { class: "s4vp-step-n", children: String(i + 1) }, "n"), jsx("span", { children: text(s.label) }, "l")];
-                if (!blank$3(s.note) && s.note !== '')
+                if (!blank$4(s.note) && s.note !== '')
                     body.push(jsx("span", { class: cx$1('s4vp-step-note', tone ? `s4vp-t-${tone}` : ''), children: text(s.note) }, "t"));
                 return (jsx("li", { ...attrs, children: s.onClick ? jsx("button", { type: "button", class: "s4vp-step-btn", onClick: () => s.onClick(), children: body }) : body }, s.key || `s${i}`));
             }) }));
     }
     /** cards: [{label, value, note, tone, onClick}]. */
     function StatCards({ cards }) {
-        return (jsx("div", { class: "s4vp-stats", children: (cards || []).filter(Boolean).map((c, i) => (jsxs("div", { class: cx$1('s4vp-stat', c.tone ? `s4vp-t-${c.tone}` : ''), children: [jsx("div", { class: "s4vp-stat-l", children: text(c.label) }), jsx("div", { class: "s4vp-stat-v", children: text(c.value) }), blank$3(c.note) || c.note === '' ? null : jsx("div", { class: "s4vp-stat-n", children: c.note })] }, c.key || `c${i}`))) }));
+        return (jsx("div", { class: "s4vp-stats", children: (cards || []).filter(Boolean).map((c, i) => (jsxs("div", { class: cx$1('s4vp-stat', c.tone ? `s4vp-t-${c.tone}` : ''), children: [jsx("div", { class: "s4vp-stat-l", children: text(c.label) }), jsx("div", { class: "s4vp-stat-v", children: text(c.value) }), blank$4(c.note) || c.note === '' ? null : jsx("div", { class: "s4vp-stat-n", children: c.note })] }, c.key || `c${i}`))) }));
     }
     /** Bộ lọc nhanh dạng viên: items [{value, label, count, tone}], value đang chọn, onPick(value). */
     function Chips({ items, value, onPick, label }) {
@@ -925,7 +1038,7 @@ select.s4vp-in{padding-right:28px}
             attrs['aria-label'] = label;
         return (jsx("div", { ...attrs, children: (items || []).filter(Boolean).map((it) => {
                 const on = it.value === value;
-                return (jsx("button", { type: "button", class: cx$1('s4vp-chip', on ? 's4vp-on' : '', it.tone ? `s4vp-t-${it.tone}` : ''), "aria-pressed": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$3(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
+                return (jsx("button", { type: "button", class: cx$1('s4vp-chip', on ? 's4vp-on' : '', it.tone ? `s4vp-t-${it.tone}` : ''), "aria-pressed": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
             }) }));
     }
     /** items [{value, label, count}], value đang chọn, onPick(value). */
@@ -935,7 +1048,7 @@ select.s4vp-in{padding-right:28px}
             attrs['aria-label'] = label;
         return (jsx("div", { ...attrs, children: (items || []).filter(Boolean).map((it) => {
                 const on = it.value === value;
-                return (jsx("button", { type: "button", role: "tab", class: cx$1('s4vp-tab', on ? 's4vp-on' : ''), "aria-selected": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$3(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
+                return (jsx("button", { type: "button", role: "tab", class: cx$1('s4vp-tab', on ? 's4vp-on' : ''), "aria-selected": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
             }) }));
     }
     /** tone: 'ok' | 'warn' | 'error' | 'info' | 'muted'. */
@@ -947,7 +1060,7 @@ select.s4vp-in{padding-right:28px}
         const attrs = { class: cx$1('s4vp-card', tone ? `s4vp-t-${tone}` : '') };
         if (label || title)
             attrs['aria-label'] = label || text(title);
-        return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$3(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$1('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
+        return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$1('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
     }
     function Empty({ text: label }) {
         const t = pick(TEXT$d);
@@ -1011,7 +1124,7 @@ select.s4vp-in{padding-right:28px}
         const attrs = controlAttrs(p, id, '');
         attrs.value = want;
         const options = (p.options || []).filter(Boolean).map((o) => (typeof o === 'object' ? { value: text(o.value), label: text(o.label) } : { value: text(o), label: text(o) }));
-        const list = blank$3(p.placeholder) ? options : [{ value: '', label: text(p.placeholder) }].concat(options.filter((o) => o.value !== ''));
+        const list = blank$4(p.placeholder) ? options : [{ value: '', label: text(p.placeholder) }].concat(options.filter((o) => o.value !== ''));
         delete attrs.placeholder;
         return (jsx("select", { ...attrs, children: list.map((o) => {
                 const a = { value: o.value };
@@ -1053,7 +1166,7 @@ select.s4vp-in{padding-right:28px}
     }
     /** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. */
     function Field({ label, children, hint }) {
-        return (jsxs("label", { class: "s4vp-field", children: [jsx("span", { children: text(label) }), children, blank$3(hint) || hint === '' ? null : jsx("span", { class: "s4vp-field-hint", children: hint })] }));
+        return (jsxs("label", { class: "s4vp-field", children: [jsx("span", { children: text(label) }), children, blank$4(hint) || hint === '' ? null : jsx("span", { class: "s4vp-field-hint", children: hint })] }));
     }
     // ------------------------------------------------------------------ bảng
     const TYPE_FORMAT = { money, num, pct, date: fmtDate };
@@ -1064,7 +1177,7 @@ select.s4vp-in{padding-right:28px}
         try {
             if (col.render) {
                 const v = col.render(row);
-                return blank$3(v) ? '' : v;
+                return blank$4(v) ? '' : v;
             }
             return formatCell$1(col, row[col.key]);
         }
@@ -1092,7 +1205,7 @@ select.s4vp-in{padding-right:28px}
         const keyFor = (row, i) => {
             try {
                 const k = keyOf ? keyOf(row) : row && row.id;
-                return blank$3(k) || k === '' ? `i${i}` : String(k);
+                return blank$4(k) || k === '' ? `i${i}` : String(k);
             }
             catch (e) {
                 return `i${i}`;
@@ -1111,7 +1224,7 @@ select.s4vp-in{padding-right:28px}
                                         return (jsx("th", { ...a, children: text(c.label) }, `h${c.key || i}`));
                                     }) }) }), jsxs("tbody", { children: [shown.rows.map((row, i) => {
                                         const k = keyFor(row, i);
-                                        const a = { class: cx$1('s4vp-row', !blank$3(selectedKey) && String(selectedKey) === k ? 's4vp-sel' : '') };
+                                        const a = { class: cx$1('s4vp-row', !blank$4(selectedKey) && String(selectedKey) === k ? 's4vp-sel' : '') };
                                         if (onRowClick)
                                             a.onClick = () => Date.now() - cellClickAt > 80 && onRowClick(row);
                                         return (jsx("tr", { ...a, children: cols.map((c, j) => {
@@ -1151,7 +1264,7 @@ select.s4vp-in{padding-right:28px}
     /** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols"> (tỷ lệ 6:4), hoặc trong <div class="s4vp-col-side"> khi cột phải có nhiều khối. */
     function SidePanel({ title, sub, onClose, children, actions }) {
         const t = pick(TEXT$d);
-        return (jsxs("aside", { class: "s4vp-side", "aria-label": text(title), children: [jsxs("div", { class: "s4vp-side-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-side-t", children: text(title) }), blank$3(sub) || sub === '' ? null : jsx("div", { class: "s4vp-side-s", children: sub })] }), jsxs("div", { class: "s4vp-actions", children: [keyed(actions), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] })] }), children] }));
+        return (jsxs("aside", { class: "s4vp-side", "aria-label": text(title), children: [jsxs("div", { class: "s4vp-side-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-side-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-side-s", children: sub })] }), jsxs("div", { class: "s4vp-actions", children: [keyed(actions), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] })] }), children] }));
     }
 
     const TEXT$c = {
@@ -1404,7 +1517,7 @@ select.s4vp-in{padding-right:28px}
     };
     const STATUS_ORDER = ['H', 'B', 'C', 'J', 'P', 'A', 'R', 'V'];
     const TONE_RANK = { error: 0, warn: 1, info: 2 };
-    const STATE_TONE = { done: 'ok', overdue: 'error', due: 'warn', upcoming: 'muted' };
+    const STATE_TONE$1 = { done: 'ok', overdue: 'error', due: 'warn', upcoming: 'muted' };
     const RUN_LIMIT = 6;
     // Kiểu dáng riêng của trang chủ (theo mẫu), viết bằng đối tượng style vì CSS chung không thuộc phân hệ này
     const S = {
@@ -1429,7 +1542,7 @@ select.s4vp-in{padding-right:28px}
         stack: { display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-start' },
         hello: { display: 'flex', flexDirection: 'column', gap: '2px' },
     };
-    const list$1 = (v) => (Array.isArray(v) ? v : []);
+    const list$3 = (v) => (Array.isArray(v) ? v : []);
     const count = (v) => {
         const n = Number(v);
         return isFinite(n) && n > 0 ? Math.floor(n) : 0;
@@ -1481,7 +1594,7 @@ select.s4vp-in{padding-right:28px}
         out.step = current ? t.stepOf(done + 1, total, labels[current] || current) : t.stepsDone(total);
         // Bước đang làm tính nửa bước để thanh tiến độ không đứng ở 0 khi mới bắt đầu
         out.percent = total ? Math.round(((current ? done + 0.5 : total) / total) * 100) : 0;
-        const step = list$1(run.steps).find((s) => s && s.key === current) || {};
+        const step = list$3(run.steps).find((s) => s && s.key === current) || {};
         if (run.kind === 'payroll') {
             const status = t.status[run.status] || run.status || '';
             out.title = t.payrollTitle(run.description, run.name);
@@ -1582,7 +1695,7 @@ select.s4vp-in{padding-right:28px}
         }, [subsidiary]);
         const go = (target) => target && target.view && app.go(target.view, target.params || {});
         const today = (data && data.today) || localToday();
-        const subsidiaryName = (list$1(boot.subsidiaries).find((s) => String(s.id) === String(subsidiary)) || {}).name || '';
+        const subsidiaryName = (list$3(boot.subsidiaries).find((s) => String(s.id) === String(subsidiary)) || {}).name || '';
         const headerLine = [`${weekday(today, t.weekdays)}, ${fmtDate(today)}`, subsidiaryName, `${t.roleLabel} ${t.roles[role]}`].filter((x) => x).join(' · ');
         const header = (jsx(PageHeader, { title: t.title, sub: jsxs("div", { style: S.hello, children: [jsx("div", { children: headerLine }), jsx("div", { children: `${t.hello((boot.user || {}).name || '')} ${t.focus[role]}` })] }), actions: [jsx(Button, { label: t.refresh, disabled: !subsidiary || !!app.busy, onClick: () => load() })] }));
         // ---------------------------------------------------------------- trạng thái chưa có dữ liệu
@@ -1601,7 +1714,7 @@ select.s4vp-in{padding-right:28px}
         // ---------------------------------------------------------------- số liệu đã có
         const period = data.period || null;
         const net = data.net || {};
-        const runs = list$1(data.runs).map((r) => {
+        const runs = list$3(data.runs).map((r) => {
             try {
                 return describeRun(t, r);
             }
@@ -1623,7 +1736,7 @@ select.s4vp-in{padding-right:28px}
         // Bảng lương đang dở đi xa nhất trong quy trình là việc "tiếp tục" của thao tác nhanh
         const firstRunning = runs.filter((r) => r.group === 'running' && r.kind === 'payroll').reduce((best, r) => (!best || r.done > best.done ? r : best), null);
         const attendanceRun = runs.find((r) => r.kind === 'attendance');
-        const todos = list$1(data.todos)
+        const todos = list$3(data.todos)
             .map((x, i) => {
             const mine = role === 'admin' || role === 'other' || x.owner === 'all' || x.owner === role;
             return Object.assign(describeTodo(t, x || {}, mine), { order: i });
@@ -1672,12 +1785,12 @@ select.s4vp-in{padding-right:28px}
             { key: 'owner', label: t.todoCols.owner, nowrap: true },
             { key: 'action', label: t.todoCols.action, nowrap: true, align: 'right', noRowClick: true, render: (r) => jsx(Button, { small: true, label: r.action, onClick: () => go(r) }) },
         ];
-        const deadlines = list$1(data.deadlines).filter((d) => d && d.key && d.date);
+        const deadlines = list$3(data.deadlines).filter((d) => d && d.key && d.date);
         const permits = data.permits || null;
         const sideItems = deadlines.map((d) => ({
             key: `d:${d.key}`,
             title: t.deadlineText[d.key] || d.key,
-            tone: STATE_TONE[d.state] || 'muted',
+            tone: STATE_TONE$1[d.state] || 'muted',
             badge: d.state === 'done' ? t.done : d.state === 'overdue' ? t.tones.error : '',
             text: d.state === 'done' ? t.due(fmtDate(d.date)) : dueText(t, d),
             link: d.state === 'done' || !t.deadlineLink[d.key] ? null : { label: t.deadlineLink[d.key], go: d.key === 'lockAttendance' ? { view: 'attendance', params: period ? { period: period.id } : {} } : data.deadlineBatch ? { view: 'payrollRun', params: { id: data.deadlineBatch.id } } : { view: 'payrollList' } },
@@ -2000,7 +2113,7 @@ select.s4vp-in{padding-right:28px}
     const cx = (...names) => names.filter(Boolean).join(' ');
     const shortDate = (iso) => (/^\d{4}-\d{2}-\d{2}$/.test(String(iso || '')) ? `${String(iso).slice(8, 10)}/${String(iso).slice(5, 7)}` : '');
     const KIND_CLASS = { P: 's4vp-atd-kP', T: 's4vp-atd-kT', U: 's4vp-atd-kU', S: 's4vp-atd-kS', A: 's4vp-atd-kA', M: 's4vp-atd-kM', '?': 's4vp-atd-kQ', O: 's4vp-atd-kO' };
-    const TONE$3 = { H: 'muted', P: 'warn', A: 'ok' };
+    const TONE$4 = { H: 'muted', P: 'warn', A: 'ok' };
     /** Lớp CSS của một ô ngày: nhóm ký hiệu, cột ngày nghỉ, dấu chờ xử lý / làm thêm / trễ sớm, ô đang chọn. */
     function cellClass(c, day, on) {
         const pending = c.p || c.hp;
@@ -2592,7 +2705,7 @@ select.s4vp-in{padding-right:28px}
                         { key: 'typeText', label: t.panel.cols.type },
                         { key: 'range', label: t.panel.cols.range, nowrap: true },
                         { key: 'qty', label: t.panel.cols.qty, align: 'right', nowrap: true },
-                        { key: 'statusText', label: t.panel.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: TONE$3[r.status] || 'muted' }) },
+                        { key: 'statusText', label: t.panel.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: TONE$4[r.status] || 'muted' }) },
                     ], rows: myDocs.map((d) => Object.assign({}, d, { key: `${d.type}${d.id}`, typeText: t.exc.docTypes[d.type] || d.type, range: `${shortDate(d.from)}${d.to && d.to !== d.from ? ` - ${shortDate(d.to)}` : ''}`, qty: docQty(d), statusText: t.exc.status[d.status] || d.status })), keyOf: (r) => r.key, search: true, searchPlaceholder: t.panel.searchDocs, empty: t.panel.noDocs, maxHeight: 300 }));
             }
             else if (activeTab === 'punches') {
@@ -2674,9 +2787,9 @@ select.s4vp-in{padding-right:28px}
             cols: { number: 'Number', period: 'Period', status: 'Status', step: 'Progress', description: 'Description', count: 'Employees', gross: 'Gross', eeIns: 'Employee insurance', erIns: 'Employer insurance', pit: 'PIT', net: 'Net pay', journal: 'Journal' },
         },
     };
-    const TONE$2 = { H: 'muted', B: 'info', C: 'warn', P: 'warn', A: 'ok', J: 'error', R: 'ok', V: 'muted' };
+    const TONE$3 = { H: 'muted', B: 'info', C: 'warn', P: 'warn', A: 'ok', J: 'error', R: 'ok', V: 'muted' };
     // Bước đang làm của bảng lương suy từ trạng thái (rút gọn của core/RunSteps: danh sách không biết công đã khóa hay số cảnh báo)
-    const stepOf = (r) => {
+    const stepOf$1 = (r) => {
         const s = String(r.status || '');
         if (s === 'R')
             return { key: 'done' };
@@ -2760,13 +2873,13 @@ select.s4vp-in{padding-right:28px}
         }, { name: t.total(rows.length) }) : null;
         // Chữ trạng thái đưa vào dữ liệu dòng để ô tìm khớp được "Đã tính", "Chờ duyệt"...
         const data = rows.map((r) => {
-            const st = stepOf(r);
+            const st = stepOf$1(r);
             return Object.assign({}, r, { statusText: t.status[r.status] || '', stepText: st.n ? t.stepOf(st.n, t.step[st.key]) : t.step[st.key] });
         });
         const columns = [
             { key: 'name', label: t.cols.number, nowrap: true, render: (r) => jsx("span", { class: "s4vp-link", children: r.name || r.id }) },
             { key: 'periodName', label: t.cols.period, nowrap: true },
-            { key: 'status', label: t.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: t.status[r.status] || r.status || '', tone: TONE$2[r.status] || 'muted' }) },
+            { key: 'status', label: t.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: t.status[r.status] || r.status || '', tone: TONE$3[r.status] || 'muted' }) },
             { key: 'stepText', label: t.cols.step, nowrap: true, render: (r) => jsx("span", { class: "s4vp-small", children: r.stepText }) },
             { key: 'description', label: t.cols.description },
             { key: 'emp_count', label: t.cols.count, type: 'num', nowrap: true },
@@ -3976,9 +4089,9 @@ select.s4vp-in{padding-right:28px}
             },
         },
     };
-    const blank$2 = (v) => v === null || v === undefined || v === '';
+    const blank$3 = (v) => v === null || v === undefined || v === '';
     const isIso = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
-    const str = (v) => (blank$2(v) ? '' : String(v));
+    const str = (v) => (blank$3(v) ? '' : String(v));
     const nextDay = (iso) => {
         if (!isIso(iso))
             return '';
@@ -4008,18 +4121,18 @@ select.s4vp-in{padding-right:28px}
         if (c.titleNew)
             parts.push(`${t.tl.title}: ${arrow(c.titleOld, c.titleNew)}`);
         if (pay) {
-            if (!blank$2(c.payNew))
-                parts.push(`${t.tl.salaryWord}: ${blank$2(c.payOld) ? money(c.payNew) : arrow(money(c.payOld), money(c.payNew))}`);
-            if (!blank$2(c.ins))
+            if (!blank$3(c.payNew))
+                parts.push(`${t.tl.salaryWord}: ${blank$3(c.payOld) ? money(c.payNew) : arrow(money(c.payOld), money(c.payNew))}`);
+            if (!blank$3(c.ins))
                 parts.push(t.tl.insWage(money(c.ins)));
-            if (!blank$2(c.allow))
+            if (!blank$3(c.allow))
                 parts.push(t.tl.allowance(money(c.allow)));
         }
         return parts.join('; ');
     }
     function eventView(t, ev, pay) {
         const type = t.contractType[ev.code] || '';
-        const join = (list) => list.filter((x) => !blank$2(x)).join(', ');
+        const join = (list) => list.filter((x) => !blank$3(x)).join(', ');
         switch (ev.kind) {
             case 'hire':
                 return { title: t.tl.hire, detail: '' };
@@ -4282,7 +4395,7 @@ select.s4vp-in{padding-right:28px}
         });
         const reqDate = (e, k, required) => {
             const v = formRef.current[k];
-            if (blank$2(v)) {
+            if (blank$3(v)) {
                 if (required)
                     e[k] = t.err.required;
             }
@@ -4291,7 +4404,7 @@ select.s4vp-in{padding-right:28px}
         };
         const reqNum = (e, k, required) => {
             const v = formRef.current[k];
-            if (blank$2(v)) {
+            if (blank$3(v)) {
                 return;
             }
             const n = toNumber(v);
@@ -4301,7 +4414,7 @@ select.s4vp-in{padding-right:28px}
                 e[k] = t.err.negative;
         };
         const reqText = (e, k) => {
-            if (blank$2(formRef.current[k]) || !String(formRef.current[k]).trim())
+            if (blank$3(formRef.current[k]) || !String(formRef.current[k]).trim())
                 e[k] = t.err.required;
         };
         const fails = (e) => {
@@ -4310,7 +4423,7 @@ select.s4vp-in{padding-right:28px}
             setErrs(Object.assign({ server: t.err.fix }, e));
             return true;
         };
-        const numOrNull = (k) => (blank$2(formRef.current[k]) ? null : toNumber(formRef.current[k]));
+        const numOrNull = (k) => (blank$3(formRef.current[k]) ? null : toNumber(formRef.current[k]));
         const F = (k, label, control, hint) => (jsx(Field, { label: label, hint: errs[k] ? jsx("span", { class: "s4vp-hr-err", children: errs[k] }) : hint, children: control }));
         const txt = (k, extra) => jsx(TextInput, { value: str(form[k]), onInput: setField(k), ...(extra || {}) });
         const dat = (k, extra) => jsx(DateInput, { value: str(form[k]), onInput: setField(k), ...(extra || {}) });
@@ -4345,9 +4458,9 @@ select.s4vp-in{padding-right:28px}
                 reqNum(e, 'new_ins_wage');
                 reqNum(e, 'new_allowance');
             }
-            if (type === 'S' && blank$2(v.new_salary) && blank$2(v.new_ins_wage) && blank$2(v.new_allowance))
+            if (type === 'S' && blank$3(v.new_salary) && blank$3(v.new_ins_wage) && blank$3(v.new_allowance))
                 e.new_salary = t.err.needOne;
-            if ((type === 'T' || type === 'P') && blank$2(v.new_department) && blank$2(v.new_title) && blank$2(v.new_salary) && blank$2(v.new_ins_wage) && blank$2(v.new_allowance))
+            if ((type === 'T' || type === 'P') && blank$3(v.new_department) && blank$3(v.new_title) && blank$3(v.new_salary) && blank$3(v.new_ins_wage) && blank$3(v.new_allowance))
                 e.new_department = t.err.needChange;
             if (fails(e))
                 return;
@@ -4395,7 +4508,7 @@ select.s4vp-in{padding-right:28px}
                 }
                 if (!appendix && v.type !== 'U') {
                     reqDate(e, 'expiry', v.type === 'P' || v.type === 'F');
-                    if (!e.expiry && !e.effective && !blank$2(v.expiry) && v.expiry < v.effective)
+                    if (!e.expiry && !e.effective && !blank$3(v.expiry) && v.expiry < v.effective)
                         e.expiry = t.err.endBeforeStart;
                 }
                 values = Object.assign(values, { employee: emp.id, effective: v.effective, title: v.title || '' });
@@ -4435,7 +4548,7 @@ select.s4vp-in{padding-right:28px}
             reqDate(e, 'from', true);
             reqDate(e, 'to', false);
             reqDate(e, 'birth_date', false);
-            if (!e.to && !e.from && !blank$2(v.to) && v.to < v.from)
+            if (!e.to && !e.from && !blank$3(v.to) && v.to < v.from)
                 e.to = t.err.endBeforeStart;
             if (fails(e))
                 return;
@@ -4510,7 +4623,7 @@ select.s4vp-in{padding-right:28px}
         const missing = prof ? [!prof.hasTaxCode && t.status.noTax, !prof.hasPersonalId && t.status.noId, !prof.hasSiNumber && t.status.noSi, !prof.hasBank && t.status.noBank].filter(Boolean) : [];
         const activeDeps = (data.dependents || []).filter((x) => x.active).length;
         const deptName = (prof && prof.departmentName) || emp.departmentName || '';
-        const fact = (label, value) => (jsxs("div", { class: "s4vp-hr-fact", children: [jsx("span", { class: "s4vp-hr-fact-l", children: label }), jsx("span", { class: "s4vp-hr-fact-v", children: blank$2(value) ? '-' : value })] }));
+        const fact = (label, value) => (jsxs("div", { class: "s4vp-hr-fact", children: [jsx("span", { class: "s4vp-hr-fact-l", children: label }), jsx("span", { class: "s4vp-hr-fact-v", children: blank$3(value) ? '-' : value })] }));
         const contractFact = current ? `${t.contractType[current.type] || ''}${current.expiry ? ` - ${t.tl.until(fmtDate(current.expiry))}` : ''}` : t.card.none;
         const dueItems = data.due || [];
         const dueList = dueItems.length ? (jsx("div", { class: "s4vp-hr-due", children: dueItems.map((x) => {
@@ -4661,7 +4774,7 @@ select.s4vp-in{padding-right:28px}
                             { key: 'issueText', label: t.cols.issue, nowrap: true },
                             { key: 'effective', label: t.cols.effective, type: 'date', nowrap: true },
                             { key: 'expiry', label: t.cols.expiry, type: 'date', nowrap: true },
-                            { key: 'daysLeft', label: t.cols.left, nowrap: true, render: (r) => (r.status === 'A' && !blank$2(r.daysLeft) ? jsx(Badge, { text: t.due.left(r.daysLeft), tone: r.daysLeft < 0 ? 'error' : r.daysLeft <= (data.permitDays || 60) ? 'warn' : 'ok' }) : '') },
+                            { key: 'daysLeft', label: t.cols.left, nowrap: true, render: (r) => (r.status === 'A' && !blank$3(r.daysLeft) ? jsx(Badge, { text: t.due.left(r.daysLeft), tone: r.daysLeft < 0 ? 'error' : r.daysLeft <= (data.permitDays || 60) ? 'warn' : 'ok' }) : '') },
                             { key: 'statusText', label: t.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: PERMIT_TONE[r.status] || 'muted' }) },
                         ], rows: rows, onRowClick: pickRow('permit'), selectedKey: sel.permit, empty: t.card.permitsEmpty, search: true, searchPlaceholder: t.card.find, toolbar: tools, maxHeight: TAB_HEIGHT }), prof && !prof.foreign ? (jsx("div", { class: "s4vp-hr-pager", children: jsx("span", { children: t.card.notForeign }) })) : null] }));
         };
@@ -4701,7 +4814,7 @@ select.s4vp-in{padding-right:28px}
                 const type = isRaise ? 'S' : form.type;
                 const org = ['H', 'T', 'P'].indexOf(type) >= 0;
                 const payType = pay && (org || type === 'S');
-                const cur = (v) => (comp && !blank$2(v) ? t.f.current(money(v)) : '');
+                const cur = (v) => (comp && !blank$3(v) ? t.f.current(money(v)) : '');
                 return (jsxs(Dialog, { title: isRaise ? t.dlg.raise : dlg.id ? t.dlg.decisionEdit : t.dlg.decisionNew, width: 640, onClose: close, actions: dialogActions([jsx(Button, { label: t.act.saveDraft, disabled: saving, onClick: () => saveDecision(false) }), jsx(Button, { label: t.act.saveApply, kind: "primary", disabled: saving, onClick: () => saveDecision(true) })]), children: [serverBox, jsx("div", { class: "s4vp-hr-note", children: isRaise ? t.dlg.raiseHint : t.dlg.decisionHint }), jsxs("div", { class: "s4vp-form", children: [isRaise ? null : F('type', t.f.decisionType, jsx(Select, { value: str(form.type), onInput: setField('type'), options: opt(t.decisionType) })), F('number', t.f.decisionNumber, txt('number')), F('sign_date', t.f.signDate, dat('sign_date')), F('effective', `${t.f.effective} *`, dat('effective')), org ? F('new_department', t.f.newDepartment, jsx(Select, { value: str(form.new_department), onInput: setField('new_department'), options: lk('departments'), placeholder: t.f.keep }), deptName ? t.f.current(deptName) : '') : null, org ? F('new_title', t.f.newTitle, txt('new_title'), data.title ? t.f.current(data.title) : '') : null, payType ? F('new_salary', isRaise ? `${t.f.newSalary} *` : t.f.newSalary, amt('new_salary'), cur(comp && comp.base_salary)) : null, payType ? F('new_ins_wage', t.f.newInsWage, amt('new_ins_wage'), cur(comp && comp.insurance_wage)) : null, payType ? F('new_allowance', t.f.newAllowance, amt('new_allowance'), cur(comp && comp.allowance)) : null] }), F('note', t.f.note, jsx(TextArea, { value: str(form.note), onInput: setField('note'), rows: 2 }))] }));
             }
             if (dlg.kind === 'contract') {
@@ -5004,14 +5117,14 @@ select.s4vp-in{padding-right:28px}
     const PAGE_SIZE$1 = 200;
     // Chiều cao khung bảng: phần còn lại của màn hình dưới tiêu đề, thẻ số, tab và thanh công cụ (không thấp hơn 240 px)
     const GRID_HEIGHT = 'max(200px, calc(100vh - 464px))';
-    const blank$1 = (v) => v === null || v === undefined || v === '';
+    const blank$2 = (v) => v === null || v === undefined || v === '';
     const monthLabel = (m) => (/^\d{6}$/.test(String(m || '')) ? `${String(m).slice(4, 6)}/${String(m).slice(0, 4)}` : '');
     const quarterOfMonth = (m) => Math.floor((Number(String(m).slice(4, 6)) - 1) / 3) + 1;
-    const formatCell = (col, v) => (col.type === 'money' ? money(v) : col.type === 'number' ? num(v) : col.type === 'pct' ? pct(v) : blank$1(v) ? '' : String(v));
+    const formatCell = (col, v) => (col.type === 'money' ? money(v) : col.type === 'number' ? num(v) : col.type === 'pct' ? pct(v) : blank$2(v) ? '' : String(v));
     const isRight = (col) => col.align === 'right' || (!col.align && (col.type === 'money' || col.type === 'number' || col.type === 'pct'));
     // CSV cho Excel: UTF-8 có BOM, mọi ô trong ngoặc kép, số để nguyên (không chèn dấu phân cách hàng nghìn)
     function toCsv(columns, rows) {
-        const esc = (v) => `"${String(blank$1(v) ? '' : v).replace(/"/g, '""')}"`;
+        const esc = (v) => `"${String(blank$2(v) ? '' : v).replace(/"/g, '""')}"`;
         const cols = columns.filter((c) => c.csv !== false);
         const head = cols.map((c) => esc(c.label)).join(',');
         const body = rows.map((r) => cols.map((c) => esc(r[c.key])).join(','));
@@ -5048,7 +5161,7 @@ select.s4vp-in{padding-right:28px}
             try {
                 if (c.render) {
                     const v = c.render(row);
-                    return blank$1(v) || v === false ? '' : v;
+                    return blank$2(v) || v === false ? '' : v;
                 }
                 return formatCell(c, row[c.key]);
             }
@@ -5076,7 +5189,7 @@ select.s4vp-in{padding-right:28px}
         return (jsxs("div", { class: "s4vp-rp-grid", children: [jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: toolbar || null }), jsxs("div", { class: "s4vp-tbl-bar-r", children: [shown.rows.length > PAGE_SIZE$1 ? (jsxs("span", { class: "s4vp-rp-pager", children: [jsx("span", { class: "s4vp-tbl-count", children: t.rows(num(at * PAGE_SIZE$1 + 1), num(Math.min((at + 1) * PAGE_SIZE$1, shown.rows.length)), num(shown.rows.length)) }), jsx("button", { ...prevAttrs, children: '‹' }), jsx("button", { ...nextAttrs, children: '›' })] })) : (jsx("span", { class: "s4vp-tbl-count", children: shown.count === null ? t.count(num(all.length)) : t.matches(num(shown.count)) })), jsx(SearchBox, { value: query, onInput: (v) => {
                                         setQuery(v);
                                         setPage(0);
-                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$1(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$7).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$1(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
+                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$2(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$7).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$2(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
     }
     function Grid(props) {
         return jsx(GridImpl, { ...props });
@@ -5090,7 +5203,7 @@ select.s4vp-in{padding-right:28px}
         return (jsx("div", { class: "s4vp-rp-notes", children: list.map((n, i) => (jsx("div", { class: `s4vp-rp-note s4vp-rp-note-${n.tone || 'info'}`, role: n.tone === 'error' ? 'alert' : 'status', children: n.text }, `n${i}`))) }));
     }
     // ------------------------------------------------------------------ phiếu in (trang HTML rời mở ở tab mới)
-    const escapeHtml = (s) => String(blank$1(s) ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapeHtml = (s) => String(blank$2(s) ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     function sheetHtml({ title, heading, lines, columns, rows, notes, foot, printLabel }) {
         const head = columns.map((c) => `<th>${escapeHtml(c.label)}</th>`).join('');
         const body = rows.map((r) => `<tr>${columns.map((c) => `<td class="${isRight(c) ? 'n' : c.center ? 'c' : ''}">${escapeHtml(c.print ? c.print(r) : formatCell(c, r[c.key]))}</td>`).join('')}</tr>`).join('');
@@ -5337,7 +5450,7 @@ select.s4vp-in{padding-right:28px}
             const totals = data.totals || {};
             const rows = data.rows || [];
             const d02 = (data.d02 && data.d02.rows) || [];
-            const hasC12 = !blank$1(data.c12Amount);
+            const hasC12 = !blank$2(data.c12Amount);
             const diff = Number(data.c12Difference) || 0;
             const notes = [];
             if (hasC12)
@@ -5844,11 +5957,11 @@ select.s4vp-in{padding-right:28px}
             },
         },
     };
-    const TONE$1 = { H: 'muted', B: 'warn', O: 'info', C: 'ok' };
-    const STATUSES = ['H', 'B', 'O', 'C'];
-    const RECORD_TYPE = 'customrecord_s4vp_advance';
-    const SEARCH_DELAY$1 = 300;
-    const validIso = (v) => {
+    const TONE$2 = { H: 'muted', B: 'warn', O: 'info', C: 'ok' };
+    const STATUSES$1 = ['H', 'B', 'O', 'C'];
+    const RECORD_TYPE$1 = 'customrecord_s4vp_advance';
+    const SEARCH_DELAY$2 = 300;
+    const validIso$2 = (v) => {
         const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v || ''));
         if (!m)
             return false;
@@ -5856,7 +5969,7 @@ select.s4vp-in{padding-right:28px}
         return d.getFullYear() === Number(m[1]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3]);
     };
     const empLabel = (r) => `${r.employeeCode || r.code || ''} ${r.employeeName || r.name || ''}`.trim();
-    const list = (v) => (Array.isArray(v) ? v : []);
+    const list$2 = (v) => (Array.isArray(v) ? v : []);
     function AdvancesView({ app }) {
         const t = pick(TEXT$6);
         const boot = app.boot || {};
@@ -5905,7 +6018,7 @@ select.s4vp-in{padding-right:28px}
         const view = data || {};
         const counts = view.counts || {};
         const cards = view.cards || {};
-        const all = list(view.rows);
+        const all = list$2(view.rows);
         // ------------------------------------------------------------------ thao tác trên một phiếu
         const act = (action, row, doneText) => {
             const work = post({ action, id: row.id }).then((r) => {
@@ -5956,14 +6069,14 @@ select.s4vp-in{padding-right:28px}
                 call({ action: 'employeeSearch', subsidiary, q }).then((r) => {
                     if (!alive.current || mine !== searchSeq.current)
                         return;
-                    const items = list(r && r.items);
+                    const items = list$2(r && r.items);
                     setFound({ items, more: !!(r && r.more), state: items.length ? '' : 'none' });
                 }, (e) => {
                     if (!alive.current || mine !== searchSeq.current)
                         return;
                     setFound({ items: [], more: false, state: 'error', error: errorText(e) });
                 });
-            }, SEARCH_DELAY$1);
+            }, SEARCH_DELAY$2);
         };
         const addLine = (e) => {
             if (!e || linesRef.current.some((l) => l.id === String(e.id)))
@@ -5978,7 +6091,7 @@ select.s4vp-in{padding-right:28px}
         };
         const validate = (v, rows) => {
             const out = { lines: {} };
-            if (!validIso(v.date))
+            if (!validIso$2(v.date))
                 out.date = t.form.errDate;
             if (!rows.length)
                 out.general = t.form.errNoLines;
@@ -6034,7 +6147,7 @@ select.s4vp-in{padding-right:28px}
         const dueText = (r) => {
             if (r.status !== 'O')
                 return '';
-            const parts = list(r.pending).map((p) => t.due.inBatch(p.batchNbr, p.period));
+            const parts = list$2(r.pending).map((p) => t.due.inBatch(p.batchNbr, p.period));
             if (r.nextPeriod && r.nextPeriod.name)
                 parts.push(t.due.expected(r.nextPeriod.name));
             return parts.join(', ');
@@ -6057,12 +6170,12 @@ select.s4vp-in{padding-right:28px}
             { key: 'amount', label: t.cols.amount, type: 'money', nowrap: true },
             { key: 'offset', label: t.cols.offset, type: 'money', nowrap: true },
             { key: 'balance', label: t.cols.balance, type: 'money', nowrap: true },
-            { key: 'status', label: t.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: TONE$1[r.status] || 'muted' }) },
+            { key: 'status', label: t.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: TONE$2[r.status] || 'muted' }) },
             wide ? { key: 'dueText', label: t.cols.due, render: (r) => jsx("span", { class: "s4vp-small", children: r.dueText }) } : null,
             wide ? { key: 'memo', label: t.cols.memo, render: (r) => jsx("span", { class: "s4vp-adv-memo", title: r.memo || '', children: r.memo || '' }) } : null,
             wide ? { key: 'journal', label: t.cols.journal, nowrap: true, noRowClick: true, render: (r) => (r.journal ? jsx(Button, { kind: "link", label: r.journalText, onClick: () => openJournal(r.journal) }) : '') } : null,
         ];
-        const chipItems = [{ value: '', label: t.chips.all, count: counts.all || 0 }].concat(STATUSES.map((s) => ({ value: s, label: t.status[s], count: counts[s] || 0, tone: s === 'B' && counts.B ? 'warn' : '' })));
+        const chipItems = [{ value: '', label: t.chips.all, count: counts.all || 0 }].concat(STATUSES$1.map((s) => ({ value: s, label: t.status[s], count: counts[s] || 0, tone: s === 'B' && counts.B ? 'warn' : '' })));
         const pendingPost = cards.pendingPost || {};
         const openCard = cards.open || {};
         const settled = cards.settled || {};
@@ -6075,9 +6188,9 @@ select.s4vp-in{padding-right:28px}
         // ------------------------------------------------------------------ khung chi tiết
         const line = (label, value, strong) => (jsxs("div", { class: "s4vp-line", style: strong ? { fontWeight: '700' } : {}, children: [jsx("span", { class: "s4vp-muted", children: label }), jsx("span", { class: "s4vp-adv-val", children: value })] }));
         const detailPanel = (r) => {
-            const offsets = list(r.history)
+            const offsets = list$2(r.history)
                 .map((h, i) => ({ id: `h${i}`, batch: h.batch, batchNbr: h.batchNbr || h.batch, period: h.period || '', amount: h.amount, stateText: t.detail.posted, tone: 'ok' }))
-                .concat(list(r.pending).map((p, i) => ({ id: `p${i}`, batch: p.batch, batchNbr: p.batchNbr || p.batch, period: p.period || '', amount: p.amount, stateText: t.detail.pending, tone: 'warn' })));
+                .concat(list$2(r.pending).map((p, i) => ({ id: `p${i}`, batch: p.batch, batchNbr: p.batchNbr || p.batch, period: p.period || '', amount: p.amount, stateText: t.detail.pending, tone: 'warn' })));
             const offsetTotal = offsets.length > 1 ? { batchNbr: t.detail.offsetsTotal, amount: offsets.reduce((s, o) => s + (Number(o.amount) || 0), 0) } : null;
             const buttons = [];
             let reason = '';
@@ -6093,9 +6206,9 @@ select.s4vp-in{padding-right:28px}
                     reason = t.detail.releaseAcctOnly;
                 buttons.push(jsx(Button, { label: t.detail.release, kind: "primary", disabled: !!reason || !!app.busy, title: reason, onClick: () => release(r) }));
             }
-            buttons.push(jsx(Button, { label: t.detail.openRecord, onClick: () => openRecord(RECORD_TYPE, r.id) }));
+            buttons.push(jsx(Button, { label: t.detail.openRecord, onClick: () => openRecord(RECORD_TYPE$1, r.id) }));
             const free = Math.max(0, (Number(r.balance) || 0) - (Number(r.pendingAmount) || 0));
-            return (jsxs(SidePanel, { title: r.name || String(r.id), sub: [empLabel(r), r.department].filter(Boolean).join(' · '), onClose: () => setSelected(''), children: [jsxs("div", { class: "s4vp-adv-state", children: [jsx(Badge, { text: r.statusText, tone: TONE$1[r.status] || 'muted', large: true }), jsx("span", { class: "s4vp-small", children: t.detail.next[r.status] || '' })] }), jsx("div", { class: "s4vp-actions s4vp-adv-acts", children: buttons.map((b, i) => jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`)) }), reason ? jsx("div", { class: "s4vp-adv-reason", role: "note", children: reason }) : null, jsxs("div", { class: "s4vp-adv-info", children: [line(t.detail.date, fmtDate(r.date)), line(t.detail.amount, money(r.amount), true), r.status === 'O' || r.status === 'C' ? line(t.detail.offset, money(r.offset)) : null, r.status === 'O' || r.status === 'C' ? line(t.detail.balance, money(r.balance), true) : null, r.status === 'O' && r.pendingAmount ? line(t.detail.inOpenBatches, money(r.pendingAmount)) : null, r.status === 'O' && free > 0 ? line(t.detail.nextPeriod, r.nextPeriod && r.nextPeriod.name ? r.nextPeriod.name : t.detail.noNextPeriod) : null, line(t.detail.cashAccount, r.cashAccountName || (r.cashAccount ? String(r.cashAccount) : t.detail.noCashAccount)), r.project ? line(t.detail.project, r.projectName || String(r.project)) : null, r.memo ? line(t.detail.memo, r.memo) : null, line(t.detail.journal, r.journal ? jsx(Button, { kind: "link", label: r.journalText, onClick: () => openJournal(r.journal) }) : t.detail.noJournal)] }), jsx("div", { class: "s4vp-adv-sub", children: t.detail.offsets }), offsets.length ? (jsx("div", { class: "s4vp-adv-offsets", children: jsx(Table, { label: t.detail.offsets, columns: [
+            return (jsxs(SidePanel, { title: r.name || String(r.id), sub: [empLabel(r), r.department].filter(Boolean).join(' · '), onClose: () => setSelected(''), children: [jsxs("div", { class: "s4vp-adv-state", children: [jsx(Badge, { text: r.statusText, tone: TONE$2[r.status] || 'muted', large: true }), jsx("span", { class: "s4vp-small", children: t.detail.next[r.status] || '' })] }), jsx("div", { class: "s4vp-actions s4vp-adv-acts", children: buttons.map((b, i) => jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`)) }), reason ? jsx("div", { class: "s4vp-adv-reason", role: "note", children: reason }) : null, jsxs("div", { class: "s4vp-adv-info", children: [line(t.detail.date, fmtDate(r.date)), line(t.detail.amount, money(r.amount), true), r.status === 'O' || r.status === 'C' ? line(t.detail.offset, money(r.offset)) : null, r.status === 'O' || r.status === 'C' ? line(t.detail.balance, money(r.balance), true) : null, r.status === 'O' && r.pendingAmount ? line(t.detail.inOpenBatches, money(r.pendingAmount)) : null, r.status === 'O' && free > 0 ? line(t.detail.nextPeriod, r.nextPeriod && r.nextPeriod.name ? r.nextPeriod.name : t.detail.noNextPeriod) : null, line(t.detail.cashAccount, r.cashAccountName || (r.cashAccount ? String(r.cashAccount) : t.detail.noCashAccount)), r.project ? line(t.detail.project, r.projectName || String(r.project)) : null, r.memo ? line(t.detail.memo, r.memo) : null, line(t.detail.journal, r.journal ? jsx(Button, { kind: "link", label: r.journalText, onClick: () => openJournal(r.journal) }) : t.detail.noJournal)] }), jsx("div", { class: "s4vp-adv-sub", children: t.detail.offsets }), offsets.length ? (jsx("div", { class: "s4vp-adv-offsets", children: jsx(Table, { label: t.detail.offsets, columns: [
                                 { key: 'batchNbr', label: t.detail.batch, nowrap: true, render: (o) => jsx("span", { class: "s4vp-link", children: o.batchNbr }) },
                                 { key: 'period', label: t.detail.period, nowrap: true },
                                 { key: 'amount', label: t.detail.offsetAmount, type: 'money', nowrap: true },
@@ -6113,7 +6226,7 @@ select.s4vp-in{padding-right:28px}
             const lineErrors = errors.lines || {};
             const commonAmount = toNumber(form.amount);
             const sum = lines.reduce((s, l) => s + (amountOf(l, form) > 0 ? amountOf(l, form) : 0), 0);
-            const accounts = list(view.cashAccounts).map((a) => ({ value: a.id, label: `${a.number || ''} ${a.name || ''}`.trim() }));
+            const accounts = list$2(view.cashAccounts).map((a) => ({ value: a.id, label: `${a.number || ''} ${a.name || ''}`.trim() }));
             const addedIds = lines.map((l) => l.id);
             const firstNew = found.items.find((e) => addedIds.indexOf(String(e.id)) < 0);
             return (jsxs(Dialog, { title: t.form.title, width: 860, onClose: () => setDialog(false), actions: [
@@ -6142,21 +6255,2823 @@ select.s4vp-in{padding-right:28px}
     }
 
     const TEXT$5 = {
-        vi: { title: 'Thiết lập', building: 'Màn hình này đang được dựng lại với giao diện mới.', openOld: 'Mở màn hình hiện tại' },
-        en: { title: 'Setup', building: 'This screen is being rebuilt with the new interface.', openOld: 'Open the current screen' },
+        vi: {
+            title: 'Thiết lập',
+            sub: 'Tình trạng thiết lập của phân hệ lương. Mục thiếu hoặc cần chú ý được đánh dấu để xử lý trước.',
+            refresh: 'Tải lại',
+            legacy: 'Màn hình cũ',
+            loading: 'Đang tải...',
+            working: 'Đang xử lý...',
+            noSubsidiary: 'Chưa chọn công ty con.',
+            hrOnly: 'Chỉ nhân sự (hoặc quản trị) được sửa mục này.',
+            acctOnly: 'Chỉ kế toán (hoặc quản trị) được sửa tài khoản.',
+            open: 'Mở',
+            openList: 'Danh sách',
+            openListLong: 'Mở danh sách NetSuite',
+            openListTitle: 'Mở danh sách bản ghi NetSuite ở tab mới',
+            noList: 'Không tìm thấy loại bản ghi này trên tài khoản.',
+            save: 'Lưu',
+            cancel: 'Hủy',
+            edit: 'Sửa',
+            yes: 'Có',
+            no: 'Không',
+            inherit: 'Kế thừa thiết lập chung',
+            inherited: (v) => `Kế thừa (${v})`,
+            notSet: 'Chưa khai',
+            renderError: 'Không hiển thị được mục này.',
+            search: 'Tìm mục thiết lập',
+            filter: { all: 'Tất cả', todo: 'Cần xử lý', optional: 'Tùy chọn', label: 'Lọc theo tình trạng' },
+            state: { ok: 'Đủ', missing: 'Thiếu', attention: 'Cần chú ý', optional: 'Tùy chọn', unknown: 'Không đọc được' },
+            count: (n) => `${n} bản ghi`,
+            none: 'Không có mục nào khớp.',
+            summary: (s) => `${s.missing || 0} mục thiếu, ${s.attention || 0} mục cần chú ý`,
+            summaryOk: 'Các mục bắt buộc đã đủ',
+            sections: { start: 'Bắt đầu', company: 'Công ty và tài khoản', periods: 'Kỳ và nhóm lương', legal: 'Pháp lý', earnings: 'Thu nhập và quy tắc', attendance: 'Chấm công và phép', output: 'Sản lượng và tổ đội' },
+            items: {
+                defaults: { name: 'Nạp mặc định VN', desc: 'Tham số pháp lý, biểu thuế, khoản trích, ngày lễ, loại thu nhập, loại nghỉ, nhóm lương DEFAULT và thiết lập chung.' },
+                industry: { name: 'Gói theo ngành', desc: 'Loại thu nhập, nhóm lương, bảng đơn giá và quy tắc mẫu cho xây dựng, thương mại, sản xuất.' },
+                employees: { name: 'Hồ sơ lương nhân viên', desc: 'Nhân viên của công ty con đang chọn đã có hồ sơ lương.' },
+                general: { name: 'Thiết lập chung', desc: 'Ngày công chuẩn, loại thu nhập mặc định, duyệt, giờ công, phân bổ, trích tháng 13.' },
+                company: { name: 'Thiết lập theo công ty con', desc: 'Giá trị riêng của công ty con đang chọn và người ký trên báo cáo; ô trống kế thừa thiết lập chung.' },
+                accounts: { name: 'Tài khoản kế toán mặc định', desc: 'Tài khoản 334, thuế TNCN, tạm ứng, chi phí mặc định, cơ quan thuế.' },
+                insAccounts: { name: 'Tài khoản bảo hiểm theo thành phần', desc: 'Tài khoản phải trả và cơ quan thu của từng khoản trích theo lương.' },
+                costAccounts: { name: 'Tài khoản chi phí lương theo đích', desc: 'Tài khoản chi phí riêng theo dự án, class hoặc phòng ban.' },
+                approvals: { name: 'Cấp duyệt bảng lương', desc: 'Các cấp phải duyệt trước khi ghi sổ bảng lương, người duyệt và ngưỡng tổng thực lĩnh.' },
+                paygroups: { name: 'Nhóm lương', desc: 'Tần suất kỳ, ngày công chuẩn và nguồn công của từng nhóm.' },
+                periods: { name: 'Kỳ lương', desc: 'Sinh kỳ theo năm, đóng và mở kỳ, trạng thái công.' },
+                params: { name: 'Tham số pháp lý', desc: 'Giảm trừ gia cảnh, mức tham chiếu, lương tối thiểu vùng, hệ số làm thêm theo ngày hiệu lực.' },
+                pitBrackets: { name: 'Biểu thuế TNCN', desc: 'Biểu lũy tiến từng phần theo ngày hiệu lực.' },
+                insComps: { name: 'Khoản trích theo lương', desc: 'Tỷ lệ BHXH, BHYT, BHTN, KPCĐ phần người lao động và doanh nghiệp.' },
+                holidays: { name: 'Ngày lễ', desc: 'Lịch nghỉ lễ dùng để tính ngày công chuẩn và làm thêm ngày lễ.' },
+                earningTypes: { name: 'Loại thu nhập', desc: 'Lương, phụ cấp, làm thêm, thưởng và cách tính thuế từng loại.' },
+                earningRules: { name: 'Quy tắc thu nhập', desc: 'Cách tính từng khoản thu nhập khi chạy lương.' },
+                benefitPkgs: { name: 'Gói phúc lợi', desc: 'Bộ phụ cấp gán cho hồ sơ lương.' },
+                leaveTypes: { name: 'Loại nghỉ', desc: 'Nghỉ phép, nghỉ không lương, nghỉ hưởng BHXH.' },
+                leavePolicies: { name: 'Chính sách phép năm', desc: 'Số ngày phép, thâm niên, chuyển phép.' },
+                attSymbols: { name: 'Ký hiệu bảng công', desc: 'Ký hiệu dùng trên bảng chấm công.' },
+                attRules: { name: 'Quy tắc trừ công trễ sớm', desc: 'Số phút trễ, sớm và mức trừ công.' },
+                shifts: { name: 'Ca làm việc', desc: 'Giờ vào, giờ ra, nghỉ giữa ca.' },
+                shiftPatterns: { name: 'Mẫu xoay ca', desc: 'Chu kỳ ca dùng để phân ca.' },
+                rateTables: { name: 'Bảng đơn giá', desc: 'Đơn giá khoán, công đoạn, sản phẩm, thang hoa hồng.' },
+                teams: { name: 'Tổ đội', desc: 'Tổ, chuyền, cửa hàng và cách chia tiền tổ.' },
+            },
+            accountCount: (n) => `${n}/8 mục đã khai`,
+            insCount: (n) => `${n} khoản trích đang hiệu lực`,
+            packCount: (n) => `${n} gói đã nạp`,
+            levelCount: (n) => `${n} cấp`,
+            employeeCount: (n) => `${n} hồ sơ`,
+            periodCount: (n, last) => (last ? `${n} kỳ, đến ${last}` : `${n} kỳ`),
+            issues: {
+                UNREADABLE: () => 'Vai trò của bạn không đọc được bảng này, hoặc bảng chưa được cài.',
+                EMPTY: () => 'Chưa có bản ghi nào.',
+                NONE: () => 'Chưa dùng.',
+                NOT_LOADED: () => 'Chưa nạp mặc định VN.',
+                NO_SETUP: () => 'Chưa có thiết lập chung: hãy nạp mặc định VN.',
+                NO_BASE_EARNING: () => 'Chưa chọn loại thu nhập lương cơ bản.',
+                NO_SUBSIDIARY: () => 'Chưa chọn công ty con.',
+                INHERITS: () => 'Chưa có bản ghi riêng: công ty con dùng toàn bộ thiết lập chung.',
+                COMPANY_DISABLED: () => 'Phân hệ lương đang tắt cho công ty con này.',
+                NO_SIGNERS: () => 'Chưa khai người lập biểu, kế toán trưởng, giám đốc để in báo cáo.',
+                NO_EMPLOYEES: () => 'Công ty con này chưa có hồ sơ lương nào.',
+                ACCOUNTS_MISSING: (i, t) => `Thiếu tài khoản bắt buộc: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
+                ACCOUNTS_OPTIONAL: (i, t) => `Chưa khai: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
+                INS_NO_ACCOUNT: (i) => `Chưa có tài khoản phải trả: ${i.list.join(', ')}.`,
+                INS_NO_VENDOR: (i) => `Chưa có cơ quan thu: ${i.list.join(', ')}.`,
+                UNVERIFIED: (i) => `${i.n} tham số chưa đối chiếu văn bản gốc: ${i.list.join(', ')}${i.n > i.list.length ? '...' : ''}.`,
+                NO_HOLIDAYS_YEAR: (i) => `Chưa có ngày lễ của năm ${i.n}.`,
+                NO_PERIODS: () => 'Chưa sinh kỳ lương nào.',
+                NO_CURRENT: (i) => `Không có kỳ chứa ngày hôm nay: ${i.list.join(', ')}.`,
+                NEXT_MISSING: (i) => `Chưa sinh kỳ kế tiếp: ${i.list.join(', ')}.`,
+                GROUP_WITHOUT_PERIODS: (i) => `Nhóm lương chưa có kỳ: ${i.list.join(', ')}.`,
+                SINGLE_LEVEL: () => 'Chưa khai cấp duyệt - bảng lương đang duyệt một cấp như trước.',
+                APPROVER_MISSING: (i) => `${i.n} dòng chưa có người duyệt hoặc vai trò duyệt.`,
+            },
+            accountNames: {
+                acc_payable: 'TK phải trả người lao động (334)', acc_expense: 'TK chi phí lương mặc định', acc_pit: 'TK thuế TNCN (3335)', acc_advance: 'TK tạm ứng (141)',
+                acc_other_ded: 'TK khấu trừ khác', acc_13th: 'TK trích trước tháng 13 (335)', acc_contractor: 'TK phải trả cộng tác viên (3388 / 331)', pit_vendor: 'Cơ quan thuế', location: 'Địa điểm mặc định cho chứng từ',
+            },
+            accountHints: {
+                acc_payable: 'Bắt buộc: bên Có khi ghi sổ bảng lương, bên Nợ khi chi lương.',
+                acc_expense: 'Bắt buộc: dùng khi không có tài khoản theo đích và hồ sơ nhân viên không khai tài khoản.',
+                acc_pit: 'Bắt buộc: thuế TNCN khấu trừ phải nộp.',
+                acc_advance: 'Cần khi ghi sổ tạm ứng lương và cấn trừ qua bảng lương.',
+                acc_other_ded: 'Khấu trừ sau thuế nhập tay trên bảng lương.',
+                acc_13th: 'Cần khi trích trước lương tháng 13 hằng tháng.',
+                acc_contractor: 'Thù lao phải trả cộng tác viên; trống thì dùng tài khoản 334.',
+                pit_vendor: 'Nhà cung cấp đại diện cơ quan thuế để lập bill nộp thuế TNCN.',
+                location: 'Dùng cho bút toán lương và bill khi tài khoản NetSuite bắt buộc địa điểm.',
+            },
+            first: {
+                title: 'Thiết lập lần đầu',
+                sub: 'Làm lần lượt từng bước. Bước tùy chọn có thể bỏ qua.',
+                done: 'Xong',
+                todo: 'Chưa làm',
+                optional: 'Tùy chọn',
+                label: 'Trình tự thiết lập lần đầu',
+                steps: {
+                    defaults: { name: 'Nạp mặc định VN', desc: 'Tạo tham số pháp lý, danh mục và thiết lập chung. Chỉ thêm phần còn thiếu, chạy lại không ghi đè.', action: 'Nạp mặc định VN', again: 'Nạp bổ sung' },
+                    industry: { name: 'Chọn gói theo ngành', desc: 'Nếu doanh nghiệp thuộc xây dựng, thương mại hoặc sản xuất: nạp danh mục và quy tắc mẫu của ngành.', action: 'Chọn gói ngành', again: 'Chọn gói ngành' },
+                    accounts: { name: 'Khai tài khoản kế toán', desc: 'Tài khoản mặc định và tài khoản phải trả của từng khoản bảo hiểm - kế toán khai.', action: 'Khai tài khoản', again: 'Xem tài khoản' },
+                    periods: { name: 'Sinh kỳ lương', desc: 'Sinh các kỳ của năm cho nhóm lương đang dùng.', action: 'Sinh kỳ lương', again: 'Xem kỳ lương' },
+                    employees: { name: 'Nạp nhân viên', desc: 'Tạo hồ sơ lương, hợp đồng và mức lương cho nhân viên.', action: 'Mở Nhân sự', again: 'Mở Nhân sự' },
+                },
+            },
+            defaults: {
+                confirm: 'Nạp bổ sung mặc định VN? Hệ thống chỉ thêm phần còn thiếu (so theo mã và ngày hiệu lực), không ghi đè dữ liệu đã có.',
+                done: (created, skipped) => `Đã nạp mặc định VN: thêm ${created} bản ghi, ${skipped} bản ghi đã có sẵn.`,
+            },
+            pack: {
+                title: 'Nạp gói theo ngành',
+                intro: 'Gói chỉ thêm phần chưa có (so theo mã). Quy tắc cần mức tiền do doanh nghiệp quyết định được nạp ở trạng thái ngừng dùng để rà lại trước khi bật.',
+                pick: 'Gói ngành',
+                pickHint: 'Nhóm lương của gói được tạo cho công ty con đang chọn.',
+                placeholder: 'Chọn gói',
+                loaded: 'đã nạp đủ',
+                load: 'Nạp gói',
+                needDefaults: 'Hãy nạp mặc định VN trước.',
+                done: (name, n, skipped) => `Đã nạp gói ${name}: thêm ${n} mục${skipped ? `; ${skipped} ca và mẫu xoay ca chưa được nạp tự động` : ''}.`,
+            },
+            lists: {
+                region: { I: 'Vùng I', II: 'Vùng II', III: 'Vùng III', IV: 'Vùng IV' },
+                overtime_source: { R: 'Đơn làm thêm đã duyệt', T: 'Timesheet' },
+                allocation_method: { S: 'Theo thiết lập', T: 'Giờ timesheet', F: 'Bảng tỷ lệ cố định', R: 'Ngày phân ca' },
+                allocation_fallback: { P: 'Bảng tỷ lệ rồi dự án mặc định', D: 'Dự án mặc định' },
+                alloc_version: { E: 'Phiên bản hiệu lực cuối kỳ', D: 'Chia theo ngày lịch' },
+                accrual13_basis: { P: 'Lương hợp đồng và gói phúc lợi', C: 'Chỉ lương hợp đồng' },
+            },
+            general: {
+                title: 'Thiết lập chung và theo công ty con',
+                sub: 'Thiết lập chung áp dụng cho mọi công ty con; công ty con chỉ khai những mục khác với thiết lập chung.',
+                tabs: { setup: 'Chung', company: (name) => `Công ty con: ${name}` },
+                tabsLabel: 'Phạm vi thiết lập',
+                noSetup: 'Chưa có thiết lập chung. Hãy nạp mặc định VN trước.',
+                noCompany: 'Công ty con này chưa có bản ghi riêng: đang dùng toàn bộ thiết lập chung. Bấm Sửa ở một nhóm để tạo.',
+                accountsNote: 'Tài khoản kế toán khai ở mục Tài khoản kế toán mặc định.',
+                openAccounts: 'Mở tài khoản kế toán',
+                openRecord: 'Mở bản ghi NetSuite',
+                groups: {
+                    work: 'Ngày công và vùng lương', earning: 'Loại thu nhập mặc định', insurance: 'Bảo hiểm và công đoàn', approval: 'Duyệt và ghi sổ', time: 'Giờ công và chấm công',
+                    alloc: 'Phân bổ chi phí', accrual: 'Trích trước lương tháng 13', companyState: 'Trạng thái', signers: 'Người ký trên báo cáo',
+                },
+                editTitle: (group, scope) => `Sửa: ${group} - ${scope}`,
+                scopeSetup: 'thiết lập chung',
+                saved: 'Đã lưu thiết lập.',
+                errNumber: (label) => `${label}: giá trị phải là số.`,
+                errWeekly: 'Ngày nghỉ hằng tuần: nhập các số 0 - 6 cách nhau bằng dấu phẩy (0 = Chủ nhật), ví dụ 0,6.',
+                fields: {
+                    std_days: { label: 'Ngày công chuẩn / tháng', hint: 'Trống: tính theo lịch từng kỳ (trừ ngày nghỉ tuần và ngày lễ).' },
+                    hours_per_day: { label: 'Giờ chuẩn / ngày', hint: 'Dùng quy đổi lương giờ và làm thêm; thường là 8.' },
+                    weekly_off: { label: 'Ngày nghỉ hằng tuần', hint: '0 = Chủ nhật ... 6 = Thứ bảy, cách nhau bằng dấu phẩy. Ví dụ 0,6.' },
+                    region: { label: 'Vùng lương tối thiểu', hint: 'Dùng kiểm tra lương tối thiểu vùng và trần BHTN.' },
+                    base_et: { label: 'Loại thu nhập lương cơ bản', hint: 'Dòng lương theo hợp đồng trên bảng lương.' },
+                    allow_et: { label: 'Loại thu nhập phụ cấp', hint: 'Phụ cấp cố định khai trên hồ sơ lương.' },
+                    meal_et: { label: 'Loại thu nhập ăn ca', hint: 'Tiền ăn giữa ca, miễn thuế đến mức trần.' },
+                    ctr_et: { label: 'Loại thu nhập thù lao cộng tác viên', hint: 'Dùng cho hợp đồng dịch vụ, khấu trừ 10%.' },
+                    payout_et: { label: 'Loại thu nhập trả phép khi nghỉ việc', hint: 'Thanh toán ngày phép chưa nghỉ.' },
+                    meal_amount: { label: 'Mức ăn ca / tháng', hint: 'Số tiền ăn ca mặc định cho một tháng đủ công.' },
+                    union_fund: { label: 'Doanh nghiệp đóng kinh phí công đoàn', hint: 'Tắt nếu doanh nghiệp không thuộc diện đóng 2%.' },
+                    accident_rate: { label: 'Tỷ lệ BHTNLĐ ghi đè', hint: 'Số thập phân, ví dụ 0,003. Trống: dùng tỷ lệ của khoản trích.' },
+                    ext_ot: { label: 'Ngành được làm thêm 300 giờ / năm', hint: 'Bật thì giới hạn làm thêm năm là 300 giờ thay vì 200 giờ.' },
+                    require_approval: { label: 'Bắt buộc duyệt bảng lương', hint: 'Bảng lương phải được duyệt trước khi ghi sổ.' },
+                    auto_approve: { label: 'Tự duyệt bút toán và bill do phân hệ tạo', hint: 'Dùng khi tài khoản NetSuite bật duyệt bút toán hoặc bill.' },
+                    time_approval: { label: 'Chỉ lấy giờ đã duyệt', hint: 'Chỉ dòng timesheet đã duyệt mới vào giờ công tính lương.' },
+                    ot_source: { label: 'Nguồn giờ làm thêm', hint: 'Lấy giờ làm thêm từ đơn làm thêm đã duyệt hoặc từ timesheet.' },
+                    require_lock: { label: 'Bắt buộc khóa công trước khi tính lương', hint: 'Chặn tính lương khi bảng công của kỳ chưa khóa.' },
+                    leave_policy: { label: 'Chính sách phép mặc định', hint: 'Áp dụng cho nhân viên không khai chính sách riêng.' },
+                    wp_blocks: { label: 'Chặn tính lương khi thiếu giấy phép lao động', hint: 'Áp dụng cho lao động nước ngoài hết hạn hoặc chưa có giấy phép.' },
+                    alloc_method: { label: 'Phương pháp phân bổ', hint: 'Cách chia chi phí lương cho dự án, phòng ban, class.' },
+                    alloc_fallback: { label: 'Phân bổ dự phòng', hint: 'Dùng khi phương pháp chính không có dữ liệu trong kỳ.' },
+                    alloc_version: { label: 'Chế độ phiên bản bảng tỷ lệ', hint: 'Khi bảng tỷ lệ đổi giữa kỳ: lấy bản cuối kỳ hoặc chia theo ngày.' },
+                    acc13_basis: { label: 'Cơ sở trích trước tháng 13', hint: 'Phần thu nhập dùng để tính số trích mỗi tháng.' },
+                    acc13_months: { label: 'Số tháng chia trích trước', hint: 'Thường là 12: mỗi tháng trích 1/12.' },
+                    enabled: { label: 'Bật phân hệ lương cho công ty con', hint: 'Tắt thì công ty con không hiện trong danh sách chọn.' },
+                    preparer: { label: 'Người lập biểu', hint: 'In trên bảng lương, tờ khai.' },
+                    chief_accountant: { label: 'Kế toán trưởng', hint: 'In trên bảng lương, tờ khai.' },
+                    director: { label: 'Giám đốc', hint: 'In trên bảng lương, tờ khai.' },
+                },
+            },
+            accounts: {
+                title: 'Tài khoản kế toán',
+                sub: 'Tài khoản mặc định khi ghi sổ lương và tài khoản phải trả của từng khoản bảo hiểm. Công ty con khai tài khoản nào thì dùng tài khoản đó, còn lại kế thừa thiết lập chung.',
+                tabs: { defaults: 'Tài khoản mặc định', ins: 'Tài khoản bảo hiểm' },
+                tabsLabel: 'Nhóm tài khoản',
+                search: 'Tìm mục, số tài khoản',
+                editSetup: 'Sửa tài khoản chung',
+                editCompany: 'Sửa cho công ty con',
+                cols: { item: 'Mục', common: 'Thiết lập chung', company: 'Công ty con', effective: 'Đang áp dụng', state: 'Tình trạng' },
+                required: 'Bắt buộc',
+                missing: 'Thiếu',
+                set: 'Đã khai',
+                optional: 'Chưa khai',
+                titleSetup: 'Tài khoản mặc định - thiết lập chung',
+                titleCompany: (name) => `Tài khoản mặc định - ${name}`,
+                companyHint: 'Để trống ô nào thì công ty con dùng tài khoản của thiết lập chung.',
+                pickAccount: 'Chưa khai',
+                saved: 'Đã lưu tài khoản.',
+                ins: {
+                    search: 'Tìm khoản trích, tài khoản, cơ quan thu',
+                    cols: { code: 'Mã', name: 'Khoản trích', ee: 'Người lao động', er: 'Doanh nghiệp', account: 'Tài khoản phải trả', vendor: 'Cơ quan thu', state: 'Tình trạng' },
+                    expired: 'Hết hiệu lực',
+                    noAccount: 'Thiếu tài khoản',
+                    noVendor: 'Thiếu cơ quan thu',
+                    ok: 'Đủ',
+                    editTitle: (code) => `Tài khoản của khoản trích ${code}`,
+                    hint: 'Ghi cho mọi dòng (mọi ngày hiệu lực) của khoản trích này.',
+                    account: 'Tài khoản phải trả (338x)',
+                    vendor: 'Cơ quan thu',
+                    vendorHint: 'Dùng khi lập bill nộp cho cơ quan thu.',
+                    empty: 'Chưa có khoản trích nào. Hãy nạp mặc định VN.',
+                },
+            },
+            cost: {
+                title: 'Tài khoản chi phí lương theo đích',
+                sub: 'Gán tài khoản chi phí riêng cho dự án, class hoặc phòng ban. Dòng phân bổ không khớp đích nào thì dùng tài khoản của hồ sơ nhân viên, rồi tài khoản mặc định.',
+                add: 'Thêm tài khoản',
+                search: 'Tìm đích, tài khoản, công ty con',
+                unavailable: 'Không đọc được bảng tài khoản theo đích: bảng chưa được cài hoặc vai trò của bạn chưa có quyền.',
+                empty: 'Chưa khai tài khoản theo đích nào: mọi chi phí lương đi vào tài khoản của hồ sơ nhân viên hoặc tài khoản mặc định.',
+                emptyFilter: 'Không có dòng nào ở nhóm này.',
+                chips: { active: 'Đang dùng', all: 'Tất cả', label: 'Lọc dòng tài khoản' },
+                cols: { type: 'Loại đích', target: 'Đích', labor: 'Loại lao động', account: 'Tài khoản chi phí', subsidiary: 'Công ty con', effective: 'Hiệu lực từ', state: 'Tình trạng', act: 'Thao tác' },
+                types: { W: 'Class', P: 'Dự án', D: 'Phòng ban' },
+                labor: { E: 'Nhân viên', C: 'Cộng tác viên', all: 'Mọi loại' },
+                shared: 'Dùng chung',
+                always: 'Luôn hiệu lực',
+                states: { inUse: 'Đang áp dụng', overridden: 'Bị dòng khác thay', future: 'Chưa đến ngày', otherSubsidiary: 'Công ty con khác', accountInactive: 'Tài khoản đã ngừng', inactive: 'Ngừng dùng', invalid: 'Thiếu đích' },
+                retire: 'Ngừng dùng',
+                restore: 'Dùng lại',
+                retireOf: (name) => `Ngừng dùng dòng ${name}`,
+                restoreOf: (name) => `Dùng lại dòng ${name}`,
+                editOf: (name) => `Sửa dòng ${name}`,
+                confirmRetire: (name, account) => `Ngừng dùng dòng "${name}" (tài khoản ${account})? Dòng không bị xóa; từ lần tính lương sau chi phí của đích này đi theo mức ưu tiên kế tiếp.`,
+                retired: 'Đã ngừng dùng dòng tài khoản.',
+                restored: 'Đã dùng lại dòng tài khoản.',
+                saved: 'Đã lưu tài khoản theo đích. Bảng lương tính lại sẽ dùng tài khoản mới.',
+                form: {
+                    titleNew: 'Thêm tài khoản theo đích',
+                    titleEdit: 'Sửa tài khoản theo đích',
+                    type: 'Loại đích',
+                    target: 'Đích',
+                    targetPick: 'Chọn đích',
+                    labor: 'Loại lao động',
+                    laborHint: 'Dòng riêng cho một loại lao động được dùng trước dòng cho mọi loại.',
+                    account: 'Tài khoản chi phí',
+                    accountPick: 'Chọn tài khoản',
+                    subsidiary: 'Công ty con',
+                    subsidiaryHint: 'Dòng của một công ty con thay dòng dùng chung cho cùng đích.',
+                    effective: 'Hiệu lực từ ngày',
+                    effectiveHint: 'Trống: luôn hiệu lực. Lấy dòng hiệu lực muộn nhất không sau ngày cuối kỳ lương.',
+                    note: 'Ghi chú',
+                    errTarget: 'Chưa chọn đích.',
+                    errAccount: 'Chưa chọn tài khoản chi phí.',
+                    errDate: 'Ngày hiệu lực không hợp lệ (dd/mm/yyyy).',
+                },
+                priority: {
+                    title: 'Thứ tự ưu tiên khi ghi sổ',
+                    label: 'Thứ tự ưu tiên chọn tài khoản chi phí',
+                    levels: [
+                        'Class của dòng phân bổ',
+                        'Dự án của dòng phân bổ',
+                        'Phòng ban riêng của dòng phân bổ',
+                        'Tài khoản chi phí trên hồ sơ lương nhân viên',
+                        'Phòng ban của nhân viên (khi dòng không có phòng ban riêng)',
+                        'Tài khoản chi phí lương mặc định',
+                    ],
+                    note: 'Trong mỗi mức: dòng đúng loại lao động trước dòng cho mọi loại; dòng của công ty con trước dòng dùng chung; cùng mức thì lấy ngày hiệu lực muộn nhất.',
+                },
+                test: {
+                    title: 'Thử chọn tài khoản',
+                    sub: 'Chọn đích của một dòng phân bổ để xem tài khoản sẽ được dùng.',
+                    workCenter: 'Class',
+                    project: 'Dự án',
+                    department: 'Phòng ban của dòng',
+                    labor: 'Loại lao động',
+                    date: 'Ngày cuối kỳ lương',
+                    any: 'Không chọn',
+                    run: 'Thử',
+                    result: 'Tài khoản được chọn',
+                    none: 'Không có tài khoản nào: chưa khai tài khoản chi phí lương mặc định.',
+                    by: { W: 'theo class', P: 'theo dự án', D: 'theo phòng ban của dòng', default: 'tài khoản mặc định', none: '' },
+                    level: { W: 'Class', P: 'Dự án', D: 'Phòng ban của dòng', default: 'Mặc định' },
+                    notGiven: 'không chọn',
+                    noMatch: 'không có dòng khớp',
+                    skip: 'Ô thử không xét mức 4 và 5 vì phụ thuộc từng nhân viên.',
+                    unreadable: 'Không đọc được bảng tài khoản theo đích; kết quả chỉ gồm tài khoản mặc định.',
+                    steps: 'Kết quả từng mức',
+                },
+            },
+            apv: {
+                title: 'Cấp duyệt bảng lương',
+                sub: 'Mỗi dòng là một người duyệt của một cấp; nhiều dòng cùng cấp là người duyệt thay thế nhau (một người duyệt là đủ).',
+                rule: 'Quy tắc: công ty con có dòng riêng thì chỉ dùng dòng riêng, không thì dùng dòng chung (không ghi công ty con). Dòng có ngưỡng lớn hơn tổng thực lĩnh của bảng lương được bỏ qua. Không khai dòng nào thì bảng lương duyệt một cấp như trước.',
+                add: 'Thêm người duyệt',
+                search: 'Tìm cấp, tên cấp, người duyệt, công ty con',
+                unavailable: 'Không đọc được bảng cấp duyệt: bảng chưa được cài hoặc vai trò của bạn chưa có quyền.',
+                empty: 'Chưa khai cấp duyệt nào: bảng lương đang duyệt một cấp như trước.',
+                emptyFilter: 'Không có dòng nào ở nhóm này.',
+                chips: { active: 'Đang dùng', all: 'Tất cả', label: 'Lọc dòng cấp duyệt' },
+                cols: { level: 'Cấp', name: 'Tên cấp', approver: 'Người duyệt', minNet: 'Ngưỡng tổng thực lĩnh', subsidiary: 'Công ty con', state: 'Tình trạng', act: 'Thao tác' },
+                roles: { H: 'Vai trò Nhân sự', A: 'Vai trò Kế toán', D: 'Administrator' },
+                always: 'Luôn cần',
+                fromAmount: (v) => `Từ ${v}`,
+                shared: 'Mọi công ty con',
+                states: { inUse: 'Đang áp dụng', replaced: 'Bị dòng riêng thay', otherSubsidiary: 'Công ty con khác', inactive: 'Ngừng dùng', invalid: 'Thiếu người duyệt' },
+                effective: (name) => `Áp dụng cho ${name}`,
+                effectiveShared: 'Áp dụng khi không chọn công ty con',
+                single: 'Duyệt một cấp như trước (chưa có dòng nào áp dụng).',
+                levelName: (n, name) => `Cấp ${n}${name ? ` - ${name}` : ''}`,
+                or: 'hoặc',
+                retireOf: (name) => `Ngừng dùng dòng ${name}`,
+                restoreOf: (name) => `Dùng lại dòng ${name}`,
+                editOf: (name) => `Sửa dòng ${name}`,
+                confirmRetire: (name) => `Ngừng dùng dòng "${name}"? Dòng không bị xóa; bảng lương gửi duyệt từ nay không cần người này duyệt.`,
+                retired: 'Đã ngừng dùng dòng cấp duyệt.',
+                restored: 'Đã dùng lại dòng cấp duyệt.',
+                saved: 'Đã lưu cấp duyệt. Áp dụng cho bảng lương gửi duyệt từ nay.',
+                form: {
+                    titleNew: 'Thêm người duyệt',
+                    titleEdit: 'Sửa người duyệt',
+                    level: 'Cấp',
+                    levelHint: 'Số nguyên từ 1; duyệt lần lượt từ cấp nhỏ đến cấp lớn.',
+                    name: 'Tên cấp',
+                    nameHint: 'Ví dụ: Kế toán trưởng, Giám đốc.',
+                    approver: 'Người duyệt (nhân viên)',
+                    approverPick: 'Không chọn - dùng vai trò',
+                    approverHint: 'Chọn nhân viên cụ thể, hoặc để trống và chọn vai trò.',
+                    role: 'Vai trò duyệt',
+                    rolePick: 'Không chọn',
+                    roleHint: 'Bất kỳ ai đăng nhập bằng vai trò này đều duyệt được cấp này. Không dùng khi đã chọn nhân viên.',
+                    minNet: 'Ngưỡng tổng thực lĩnh',
+                    minNetHint: 'Chỉ cần dòng này khi tổng thực lĩnh của bảng lương từ ngưỡng trở lên. Trống: luôn cần.',
+                    subsidiary: 'Công ty con',
+                    subsidiaryHint: 'Trống: áp dụng cho mọi công ty con chưa có dòng riêng.',
+                    errLevel: 'Cấp phải là số nguyên từ 1.',
+                    errName: 'Chưa nhập tên cấp.',
+                    errWho: 'Chọn người duyệt hoặc vai trò duyệt.',
+                    errNet: 'Ngưỡng tổng thực lĩnh phải là số không âm.',
+                },
+            },
+            periodsSec: {
+                title: 'Kỳ lương',
+                sub: 'Sinh kỳ theo năm cho từng nhóm lương, đóng kỳ sau khi ghi sổ xong. Khóa và mở khóa công làm ở màn Chấm công.',
+                generate: 'Sinh kỳ',
+                year: 'Năm',
+                paygroup: 'Nhóm lương',
+                allGroups: 'Mọi nhóm lương',
+                allYears: 'Mọi năm',
+                search: 'Tìm mã kỳ, nhóm lương, ngày',
+                empty: 'Chưa có kỳ lương nào. Bấm Sinh kỳ để tạo các kỳ của năm.',
+                emptyFilter: 'Không có kỳ nào khớp bộ lọc.',
+                cols: { code: 'Mã kỳ', paygroup: 'Nhóm lương', start: 'Từ ngày', end: 'Đến ngày', stdDays: 'Ngày công chuẩn', taxMonth: 'Tháng thuế', status: 'Trạng thái kỳ', att: 'Trạng thái công', act: 'Thao tác' },
+                status: { O: 'Mở', C: 'Đã đóng' },
+                att: { O: 'Công mở', L: 'Công đã khóa' },
+                current: 'Kỳ hiện tại',
+                close: 'Đóng kỳ',
+                reopen: 'Mở lại kỳ',
+                attendance: 'Chấm công',
+                closeOf: (code) => `Đóng kỳ ${code}`,
+                reopenOf: (code) => `Mở lại kỳ ${code}`,
+                attendanceOf: (code) => `Mở chấm công kỳ ${code}`,
+                confirmClose: (code) => `Đóng kỳ ${code}? Kỳ đã đóng không tạo thêm bảng lương được. Hệ thống từ chối nếu kỳ còn bảng lương chưa ghi sổ.`,
+                confirmReopen: (code) => `Mở lại kỳ ${code}? Kỳ mở lại cho phép tạo và sửa bảng lương của kỳ.`,
+                closed: (code) => `Đã đóng kỳ ${code}.`,
+                reopened: (code) => `Đã mở lại kỳ ${code}.`,
+                genTitle: 'Sinh kỳ lương',
+                genRun: (y) => (/^\d{4}$/.test(String(y || '').trim()) ? `Sinh các kỳ năm ${String(y).trim()}` : 'Sinh các kỳ'),
+                genHint: 'Kỳ đã có (theo mã) không sinh lại. Ngày công chuẩn tính theo ngày nghỉ tuần và ngày lễ đã khai.',
+                genNeedSetup: 'Hãy nạp mặc định VN trước khi sinh kỳ.',
+                errYear: 'Năm gồm 4 chữ số.',
+                errGroup: 'Chưa chọn nhóm lương.',
+                generated: (n, skipped) => `Đã sinh ${n} kỳ${skipped ? `, ${skipped} kỳ đã có sẵn` : ''}.`,
+                total: (n) => `${n} kỳ`,
+            },
+            legal: {
+                title: 'Tham số pháp lý',
+                sub: 'Giá trị theo văn bản pháp luật và ngày hiệu lực. Màn này chỉ xem và đánh dấu đã đối chiếu; sửa giá trị trên bản ghi NetSuite.',
+                tabs: { params: 'Tham số', brackets: 'Biểu thuế TNCN', components: 'Khoản trích theo lương' },
+                tabsLabel: 'Nhóm dữ liệu pháp lý',
+                search: 'Tìm mã, diễn giải, căn cứ, giá trị',
+                chips: { all: 'Tất cả', unverified: 'Chưa đối chiếu', label: 'Lọc tham số' },
+                groups: { PIT: 'Thuế TNCN', INS: 'Bảo hiểm', MINWAGE: 'Lương tối thiểu vùng', OT: 'Làm thêm giờ' },
+                cols: {
+                    code: 'Mã', description: 'Diễn giải', value: 'Giá trị', effective: 'Hiệu lực từ', expiration: 'Đến', legalRef: 'Căn cứ pháp lý', verified: 'Đối chiếu', act: 'Thao tác',
+                    level: 'Bậc', upper: 'Thu nhập tính thuế đến', rate: 'Thuế suất', name: 'Khoản trích', ee: 'Người lao động', er: 'Doanh nghiệp', cap: 'Hệ số trần', state: 'Tình trạng',
+                },
+                verified: 'Đã đối chiếu',
+                unverified: 'Chưa đối chiếu',
+                current: 'Đang hiệu lực',
+                notCurrent: 'Ngoài hiệu lực',
+                topBracket: 'Bậc cao nhất',
+                verify: 'Đánh dấu đã đối chiếu',
+                verifyOf: (code) => `Đánh dấu đã đối chiếu ${code}`,
+                confirmVerify: (p) => `Xác nhận đã đối chiếu tham số ${p.code} (${p.description || ''}) = ${p.valueText}, hiệu lực từ ${p.effectiveText}, với văn bản gốc${p.legalRef ? `: ${p.legalRef}` : ''}?\n\nThao tác chỉ đổi cờ đối chiếu, không đổi giá trị. Nếu giá trị chưa đúng, hãy sửa trên bản ghi NetSuite trước.`,
+                verifiedDone: (code) => `Đã đánh dấu đối chiếu ${code}.`,
+                empty: 'Chưa có dữ liệu. Hãy nạp mặc định VN.',
+                emptyFilter: 'Không có tham số nào khớp bộ lọc.',
+                unverifiedNote: (n) => `${n} tham số chưa đối chiếu văn bản gốc - đã đưa lên đầu lưới. Kế toán trưởng cần kiểm tra trước khi dùng để tính lương chính thức.`,
+            },
+        },
+        en: {
+            title: 'Setup',
+            sub: 'Setup status of the payroll module. Missing items and items needing attention are flagged so you can handle them first.',
+            refresh: 'Refresh',
+            legacy: 'Previous screen',
+            loading: 'Loading...',
+            working: 'Working...',
+            noSubsidiary: 'No subsidiary selected.',
+            hrOnly: 'Only HR (or an administrator) can change this.',
+            acctOnly: 'Only accounting (or an administrator) can change accounts.',
+            open: 'Open',
+            openList: 'List',
+            openListLong: 'Open NetSuite list',
+            openListTitle: 'Open the NetSuite record list in a new tab',
+            noList: 'This record type was not found in the account.',
+            save: 'Save',
+            cancel: 'Cancel',
+            edit: 'Edit',
+            yes: 'Yes',
+            no: 'No',
+            inherit: 'Inherit general setup',
+            inherited: (v) => `Inherited (${v})`,
+            notSet: 'Not set',
+            renderError: 'This section could not be displayed.',
+            search: 'Search setup items',
+            filter: { all: 'All', todo: 'To do', optional: 'Optional', label: 'Filter by status' },
+            state: { ok: 'Complete', missing: 'Missing', attention: 'Attention', optional: 'Optional', unknown: 'Unreadable' },
+            count: (n) => `${n} records`,
+            none: 'No matching items.',
+            summary: (s) => `${s.missing || 0} missing, ${s.attention || 0} need attention`,
+            summaryOk: 'All required items are complete',
+            sections: { start: 'Getting started', company: 'Company and accounts', periods: 'Periods and pay groups', legal: 'Statutory', earnings: 'Earnings and rules', attendance: 'Attendance and leave', output: 'Output and teams' },
+            items: {
+                defaults: { name: 'Load VN defaults', desc: 'Statutory parameters, tax brackets, contributions, holidays, earning types, leave types, the DEFAULT pay group and general setup.' },
+                industry: { name: 'Industry pack', desc: 'Sample earning types, pay groups, rate tables and rules for construction, trade and manufacturing.' },
+                employees: { name: 'Employee payroll profiles', desc: 'Employees of the selected subsidiary have payroll profiles.' },
+                general: { name: 'General setup', desc: 'Standard days, default earning types, approval, hours, allocation, 13th-month accrual.' },
+                company: { name: 'Subsidiary setup', desc: 'Values specific to the selected subsidiary and report signers; empty fields inherit the general setup.' },
+                accounts: { name: 'Default GL accounts', desc: 'Accounts for wages payable, PIT, advances, default expense, tax authority.' },
+                insAccounts: { name: 'Insurance accounts by component', desc: 'Payable account and agency of each payroll contribution.' },
+                costAccounts: { name: 'Payroll expense accounts by target', desc: 'Specific expense accounts by project, class or department.' },
+                approvals: { name: 'Payroll approval levels', desc: 'Levels that must approve a payroll batch before release, their approvers and net pay thresholds.' },
+                paygroups: { name: 'Pay groups', desc: 'Period frequency, standard days and attendance source of each group.' },
+                periods: { name: 'Pay periods', desc: 'Generate periods by year, close and reopen periods, attendance status.' },
+                params: { name: 'Statutory parameters', desc: 'Deductions, reference wage, regional minimum wages, overtime factors by effective date.' },
+                pitBrackets: { name: 'PIT brackets', desc: 'Progressive brackets by effective date.' },
+                insComps: { name: 'Payroll contributions', desc: 'Employee and employer rates for social, health, unemployment insurance and union fund.' },
+                holidays: { name: 'Public holidays', desc: 'Holiday calendar used for standard days and holiday overtime.' },
+                earningTypes: { name: 'Earning types', desc: 'Wages, allowances, overtime, bonuses and their tax treatment.' },
+                earningRules: { name: 'Earning rules', desc: 'How each earning is calculated in a payroll run.' },
+                benefitPkgs: { name: 'Benefit packages', desc: 'Sets of allowances assigned to payroll profiles.' },
+                leaveTypes: { name: 'Leave types', desc: 'Annual leave, unpaid leave, social insurance leave.' },
+                leavePolicies: { name: 'Annual leave policies', desc: 'Leave days, seniority, carry-over.' },
+                attSymbols: { name: 'Attendance symbols', desc: 'Symbols used on the attendance sheet.' },
+                attRules: { name: 'Late and early deduction rules', desc: 'Minutes late or early and the deduction.' },
+                shifts: { name: 'Shifts', desc: 'Start time, end time, break.' },
+                shiftPatterns: { name: 'Shift patterns', desc: 'Shift cycles used for rostering.' },
+                rateTables: { name: 'Rate tables', desc: 'Piece rates, operations, products, commission tiers.' },
+                teams: { name: 'Teams', desc: 'Crews, lines, stores and how team pay is split.' },
+            },
+            accountCount: (n) => `${n}/8 set`,
+            insCount: (n) => `${n} contributions in effect`,
+            packCount: (n) => `${n} packs loaded`,
+            levelCount: (n) => (n === 1 ? '1 level' : `${n} levels`),
+            employeeCount: (n) => `${n} profiles`,
+            periodCount: (n, last) => (last ? `${n} periods, up to ${last}` : `${n} periods`),
+            issues: {
+                UNREADABLE: () => 'Your role cannot read this table, or the table is not installed.',
+                EMPTY: () => 'No records yet.',
+                NONE: () => 'Not used.',
+                NOT_LOADED: () => 'VN defaults have not been loaded.',
+                NO_SETUP: () => 'No general setup yet: load the VN defaults.',
+                NO_BASE_EARNING: () => 'The base salary earning type is not selected.',
+                NO_SUBSIDIARY: () => 'No subsidiary selected.',
+                INHERITS: () => 'No specific record: the subsidiary uses the general setup.',
+                COMPANY_DISABLED: () => 'Payroll is turned off for this subsidiary.',
+                NO_SIGNERS: () => 'Preparer, chief accountant and director are not set for printed reports.',
+                NO_EMPLOYEES: () => 'This subsidiary has no payroll profile yet.',
+                ACCOUNTS_MISSING: (i, t) => `Required accounts missing: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
+                ACCOUNTS_OPTIONAL: (i, t) => `Not set: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
+                INS_NO_ACCOUNT: (i) => `No payable account: ${i.list.join(', ')}.`,
+                INS_NO_VENDOR: (i) => `No agency: ${i.list.join(', ')}.`,
+                UNVERIFIED: (i) => `${i.n} parameters not verified against the legal source: ${i.list.join(', ')}${i.n > i.list.length ? '...' : ''}.`,
+                NO_HOLIDAYS_YEAR: (i) => `No public holidays for ${i.n}.`,
+                NO_PERIODS: () => 'No pay periods generated yet.',
+                NO_CURRENT: (i) => `No period contains today: ${i.list.join(', ')}.`,
+                NEXT_MISSING: (i) => `The next period is not generated: ${i.list.join(', ')}.`,
+                GROUP_WITHOUT_PERIODS: (i) => `Pay groups without periods: ${i.list.join(', ')}.`,
+                SINGLE_LEVEL: () => 'No approval levels set - payroll batches use single-level approval as before.',
+                APPROVER_MISSING: (i) => `${i.n} rows have no approver or approver role.`,
+            },
+            accountNames: {
+                acc_payable: 'Wages payable account (334)', acc_expense: 'Default payroll expense account', acc_pit: 'PIT payable account (3335)', acc_advance: 'Advance account (141)',
+                acc_other_ded: 'Other deductions account', acc_13th: '13th-month accrual account (335)', acc_contractor: 'Contractor payable account (3388 / 331)', pit_vendor: 'Tax authority', location: 'Default location for documents',
+            },
+            accountHints: {
+                acc_payable: 'Required: credited when payroll is released, debited when wages are paid.',
+                acc_expense: 'Required: used when no target account applies and the employee profile has no account.',
+                acc_pit: 'Required: PIT withheld and payable.',
+                acc_advance: 'Needed to post payroll advances and offset them through payroll.',
+                acc_other_ded: 'After-tax deductions entered manually on a payroll batch.',
+                acc_13th: 'Needed for the monthly 13th-month accrual.',
+                acc_contractor: 'Fees payable to contractors; when empty, account 334 is used.',
+                pit_vendor: 'Vendor representing the tax authority for PIT payment bills.',
+                location: 'Used on payroll journals and bills when the NetSuite account requires a location.',
+            },
+            first: {
+                title: 'First-time setup',
+                sub: 'Go through the steps in order. Optional steps can be skipped.',
+                done: 'Done',
+                todo: 'To do',
+                optional: 'Optional',
+                label: 'First-time setup sequence',
+                steps: {
+                    defaults: { name: 'Load VN defaults', desc: 'Creates statutory parameters, lists and the general setup. Only adds what is missing; running it again overwrites nothing.', action: 'Load VN defaults', again: 'Load missing defaults' },
+                    industry: { name: 'Choose an industry pack', desc: 'For construction, trade or manufacturing: load sample lists and rules for the industry.', action: 'Choose a pack', again: 'Choose a pack' },
+                    accounts: { name: 'Set GL accounts', desc: 'Default accounts and the payable account of each insurance component - set by accounting.', action: 'Set accounts', again: 'View accounts' },
+                    periods: { name: 'Generate pay periods', desc: 'Generate the periods of the year for the pay groups in use.', action: 'Generate periods', again: 'View periods' },
+                    employees: { name: 'Load employees', desc: 'Create payroll profiles, contracts and pay rates for employees.', action: 'Open Employees', again: 'Open Employees' },
+                },
+            },
+            defaults: {
+                confirm: 'Load missing VN defaults? Only missing items are added (matched by code and effective date); existing data is not overwritten.',
+                done: (created, skipped) => `VN defaults loaded: ${created} records added, ${skipped} already existed.`,
+            },
+            pack: {
+                title: 'Load an industry pack',
+                intro: 'A pack only adds what is missing (matched by code). Rules that need an amount decided by the company are loaded inactive so they can be reviewed before use.',
+                pick: 'Industry pack',
+                pickHint: 'Pay groups of the pack are created for the selected subsidiary.',
+                placeholder: 'Select a pack',
+                loaded: 'fully loaded',
+                load: 'Load pack',
+                needDefaults: 'Load the VN defaults first.',
+                done: (name, n, skipped) => `Pack ${name} loaded: ${n} items added${skipped ? `; ${skipped} shifts and shift patterns were not loaded automatically` : ''}.`,
+            },
+            lists: {
+                region: { I: 'Region I', II: 'Region II', III: 'Region III', IV: 'Region IV' },
+                overtime_source: { R: 'Approved overtime requests', T: 'Timesheet' },
+                allocation_method: { S: 'Per setup', T: 'Timesheet hours', F: 'Fixed ratio table', R: 'Rostered days' },
+                allocation_fallback: { P: 'Ratio table, then default project', D: 'Default project' },
+                alloc_version: { E: 'Version effective at period end', D: 'Split by calendar day' },
+                accrual13_basis: { P: 'Contract salary and benefit package', C: 'Contract salary only' },
+            },
+            general: {
+                title: 'General and subsidiary setup',
+                sub: 'The general setup applies to every subsidiary; a subsidiary only sets what differs from it.',
+                tabs: { setup: 'General', company: (name) => `Subsidiary: ${name}` },
+                tabsLabel: 'Setup scope',
+                noSetup: 'No general setup yet. Load the VN defaults first.',
+                noCompany: 'This subsidiary has no specific record: it uses the general setup. Click Edit on a group to create one.',
+                accountsNote: 'GL accounts are set under Default GL accounts.',
+                openAccounts: 'Open GL accounts',
+                openRecord: 'Open NetSuite record',
+                groups: {
+                    work: 'Work days and wage region', earning: 'Default earning types', insurance: 'Insurance and union', approval: 'Approval and posting', time: 'Hours and attendance',
+                    alloc: 'Cost allocation', accrual: '13th-month accrual', companyState: 'Status', signers: 'Report signers',
+                },
+                editTitle: (group, scope) => `Edit: ${group} - ${scope}`,
+                scopeSetup: 'general setup',
+                saved: 'Setup saved.',
+                errNumber: (label) => `${label}: the value must be a number.`,
+                errWeekly: 'Weekly days off: enter numbers 0 - 6 separated by commas (0 = Sunday), for example 0,6.',
+                fields: {
+                    std_days: { label: 'Standard work days / month', hint: 'Empty: computed from each period calendar (less weekly days off and holidays).' },
+                    hours_per_day: { label: 'Standard hours / day', hint: 'Used to convert hourly pay and overtime; usually 8.' },
+                    weekly_off: { label: 'Weekly days off', hint: '0 = Sunday ... 6 = Saturday, separated by commas. Example 0,6.' },
+                    region: { label: 'Minimum wage region', hint: 'Used for the regional minimum wage check and the unemployment insurance cap.' },
+                    base_et: { label: 'Base salary earning type', hint: 'The contract salary line on a payroll batch.' },
+                    allow_et: { label: 'Allowance earning type', hint: 'Fixed allowance set on the payroll profile.' },
+                    meal_et: { label: 'Meal allowance earning type', hint: 'Mid-shift meal, tax exempt up to the cap.' },
+                    ctr_et: { label: 'Contractor fee earning type', hint: 'Used for service contracts, 10% withholding.' },
+                    payout_et: { label: 'Leave payout earning type', hint: 'Payment of unused leave days at termination.' },
+                    meal_amount: { label: 'Meal allowance / month', hint: 'Default meal amount for a full month.' },
+                    union_fund: { label: 'Employer pays the union fund', hint: 'Turn off when the company is not subject to the 2% fund.' },
+                    accident_rate: { label: 'Accident insurance rate override', hint: 'Decimal, for example 0.003. Empty: the component rate is used.' },
+                    ext_ot: { label: 'Sector allowed 300 overtime hours / year', hint: 'When on, the yearly overtime limit is 300 hours instead of 200.' },
+                    require_approval: { label: 'Payroll approval required', hint: 'A payroll batch must be approved before release.' },
+                    auto_approve: { label: 'Auto-approve journals and bills created by payroll', hint: 'For accounts that use journal or bill approval.' },
+                    time_approval: { label: 'Approved hours only', hint: 'Only approved timesheet entries count as payroll hours.' },
+                    ot_source: { label: 'Overtime hours source', hint: 'Overtime hours come from approved overtime requests or from timesheets.' },
+                    require_lock: { label: 'Attendance lock required before calculation', hint: 'Blocks calculation while the period attendance is not locked.' },
+                    leave_policy: { label: 'Default leave policy', hint: 'Applies to employees without their own policy.' },
+                    wp_blocks: { label: 'Block payroll without a work permit', hint: 'Applies to foreign workers with an expired or missing permit.' },
+                    alloc_method: { label: 'Allocation method', hint: 'How payroll cost is split across projects, departments, classes.' },
+                    alloc_fallback: { label: 'Fallback allocation', hint: 'Used when the main method has no data in the period.' },
+                    alloc_version: { label: 'Ratio table version mode', hint: 'When the ratio table changes mid-period: use the period-end version or split by day.' },
+                    acc13_basis: { label: '13th-month accrual basis', hint: 'The earnings used to compute the monthly accrual.' },
+                    acc13_months: { label: 'Months to spread the accrual', hint: 'Usually 12: 1/12 is accrued each month.' },
+                    enabled: { label: 'Payroll enabled for the subsidiary', hint: 'When off, the subsidiary is not offered for selection.' },
+                    preparer: { label: 'Preparer', hint: 'Printed on payroll registers and declarations.' },
+                    chief_accountant: { label: 'Chief accountant', hint: 'Printed on payroll registers and declarations.' },
+                    director: { label: 'Director', hint: 'Printed on payroll registers and declarations.' },
+                },
+            },
+            accounts: {
+                title: 'GL accounts',
+                sub: 'Default accounts for payroll posting and the payable account of each insurance component. A subsidiary uses its own account where set, otherwise the general setup.',
+                tabs: { defaults: 'Default accounts', ins: 'Insurance accounts' },
+                tabsLabel: 'Account groups',
+                search: 'Search item, account number',
+                editSetup: 'Edit general accounts',
+                editCompany: 'Edit for the subsidiary',
+                cols: { item: 'Item', common: 'General setup', company: 'Subsidiary', effective: 'In effect', state: 'Status' },
+                required: 'Required',
+                missing: 'Missing',
+                set: 'Set',
+                optional: 'Not set',
+                titleSetup: 'Default accounts - general setup',
+                titleCompany: (name) => `Default accounts - ${name}`,
+                companyHint: 'Leave a field empty to use the account of the general setup.',
+                pickAccount: 'Not set',
+                saved: 'Accounts saved.',
+                ins: {
+                    search: 'Search contribution, account, agency',
+                    cols: { code: 'Code', name: 'Contribution', ee: 'Employee', er: 'Employer', account: 'Payable account', vendor: 'Agency', state: 'Status' },
+                    expired: 'Expired',
+                    noAccount: 'No account',
+                    noVendor: 'No agency',
+                    ok: 'Complete',
+                    editTitle: (code) => `Accounts of contribution ${code}`,
+                    hint: 'Saved on every row (every effective date) of this contribution.',
+                    account: 'Payable account (338x)',
+                    vendor: 'Agency',
+                    vendorHint: 'Used when creating the payment bill for the agency.',
+                    empty: 'No contributions yet. Load the VN defaults.',
+                },
+            },
+            cost: {
+                title: 'Payroll expense accounts by target',
+                sub: 'Assign a specific expense account to a project, class or department. An allocation line matching no target uses the employee profile account, then the default account.',
+                add: 'Add account',
+                search: 'Search target, account, subsidiary',
+                unavailable: 'The target account table cannot be read: it is not installed or your role has no access.',
+                empty: 'No target accounts yet: all payroll cost goes to the employee profile account or the default account.',
+                emptyFilter: 'No rows in this group.',
+                chips: { active: 'In use', all: 'All', label: 'Filter account rows' },
+                cols: { type: 'Target type', target: 'Target', labor: 'Labor type', account: 'Expense account', subsidiary: 'Subsidiary', effective: 'Effective from', state: 'Status', act: 'Actions' },
+                types: { W: 'Class', P: 'Project', D: 'Department' },
+                labor: { E: 'Employees', C: 'Contractors', all: 'All types' },
+                shared: 'Shared',
+                always: 'Always effective',
+                states: { inUse: 'Applied', overridden: 'Replaced by another row', future: 'Not yet effective', otherSubsidiary: 'Other subsidiary', accountInactive: 'Account inactive', inactive: 'Retired', invalid: 'No target' },
+                retire: 'Retire',
+                restore: 'Restore',
+                retireOf: (name) => `Retire row ${name}`,
+                restoreOf: (name) => `Restore row ${name}`,
+                editOf: (name) => `Edit row ${name}`,
+                confirmRetire: (name, account) => `Retire row "${name}" (account ${account})? The row is not deleted; from the next calculation the cost of this target follows the next priority level.`,
+                retired: 'Account row retired.',
+                restored: 'Account row restored.',
+                saved: 'Target account saved. Recalculated payroll batches will use the new account.',
+                form: {
+                    titleNew: 'Add target account',
+                    titleEdit: 'Edit target account',
+                    type: 'Target type',
+                    target: 'Target',
+                    targetPick: 'Select a target',
+                    labor: 'Labor type',
+                    laborHint: 'A row for one labor type is used before a row for all types.',
+                    account: 'Expense account',
+                    accountPick: 'Select an account',
+                    subsidiary: 'Subsidiary',
+                    subsidiaryHint: 'A row for one subsidiary replaces the shared row for the same target.',
+                    effective: 'Effective from',
+                    effectiveHint: 'Empty: always effective. The latest row effective on or before the period end is used.',
+                    note: 'Note',
+                    errTarget: 'Select a target.',
+                    errAccount: 'Select an expense account.',
+                    errDate: 'Invalid effective date (dd/mm/yyyy).',
+                },
+                priority: {
+                    title: 'Priority when posting',
+                    label: 'Priority order for the expense account',
+                    levels: [
+                        'Class of the allocation line',
+                        'Project of the allocation line',
+                        'Own department of the allocation line',
+                        'Expense account on the employee payroll profile',
+                        'Employee department (when the line has no department of its own)',
+                        'Default payroll expense account',
+                    ],
+                    note: 'Within a level: a row for the labor type before a row for all types; a subsidiary row before a shared row; then the latest effective date.',
+                },
+                test: {
+                    title: 'Test account selection',
+                    sub: 'Select the targets of an allocation line to see the account that will be used.',
+                    workCenter: 'Class',
+                    project: 'Project',
+                    department: 'Line department',
+                    labor: 'Labor type',
+                    date: 'Pay period end date',
+                    any: 'None',
+                    run: 'Test',
+                    result: 'Selected account',
+                    none: 'No account: the default payroll expense account is not set.',
+                    by: { W: 'by class', P: 'by project', D: 'by line department', default: 'default account', none: '' },
+                    level: { W: 'Class', P: 'Project', D: 'Line department', default: 'Default' },
+                    notGiven: 'not selected',
+                    noMatch: 'no matching row',
+                    skip: 'The test does not cover levels 4 and 5 because they depend on each employee.',
+                    unreadable: 'The target account table cannot be read; the result only covers the default account.',
+                    steps: 'Result by level',
+                },
+            },
+            apv: {
+                title: 'Payroll approval levels',
+                sub: 'Each row is one approver of a level; several rows on the same level are alternative approvers (one approval is enough).',
+                rule: 'Rule: a subsidiary that has its own rows uses only those rows, otherwise the shared rows (no subsidiary) apply. Rows whose threshold is above the batch net pay total are skipped. With no rows, payroll batches use single-level approval as before.',
+                add: 'Add approver',
+                search: 'Search level, level name, approver, subsidiary',
+                unavailable: 'The approval level table cannot be read: it is not installed or your role has no access.',
+                empty: 'No approval levels yet: payroll batches use single-level approval as before.',
+                emptyFilter: 'No rows in this group.',
+                chips: { active: 'In use', all: 'All', label: 'Filter approval rows' },
+                cols: { level: 'Level', name: 'Level name', approver: 'Approver', minNet: 'Net pay threshold', subsidiary: 'Subsidiary', state: 'Status', act: 'Actions' },
+                roles: { H: 'HR role', A: 'Accountant role', D: 'Administrator' },
+                always: 'Always',
+                fromAmount: (v) => `From ${v}`,
+                shared: 'All subsidiaries',
+                states: { inUse: 'Applied', replaced: 'Replaced by own rows', otherSubsidiary: 'Other subsidiary', inactive: 'Retired', invalid: 'No approver' },
+                effective: (name) => `Applies to ${name}`,
+                effectiveShared: 'Applies when no subsidiary is selected',
+                single: 'Single-level approval as before (no row applies).',
+                levelName: (n, name) => `Level ${n}${name ? ` - ${name}` : ''}`,
+                or: 'or',
+                retireOf: (name) => `Retire row ${name}`,
+                restoreOf: (name) => `Restore row ${name}`,
+                editOf: (name) => `Edit row ${name}`,
+                confirmRetire: (name) => `Retire row "${name}"? The row is not deleted; batches submitted from now on no longer need this approver.`,
+                retired: 'Approval row retired.',
+                restored: 'Approval row restored.',
+                saved: 'Approval levels saved. They apply to batches submitted from now on.',
+                form: {
+                    titleNew: 'Add approver',
+                    titleEdit: 'Edit approver',
+                    level: 'Level',
+                    levelHint: 'Whole number from 1; levels approve in ascending order.',
+                    name: 'Level name',
+                    nameHint: 'For example: Chief accountant, Director.',
+                    approver: 'Approver (employee)',
+                    approverPick: 'None - use a role',
+                    approverHint: 'Select a specific employee, or leave empty and select a role.',
+                    role: 'Approver role',
+                    rolePick: 'None',
+                    roleHint: 'Anyone signed in with this role can approve the level. Not used when an employee is selected.',
+                    minNet: 'Net pay threshold',
+                    minNetHint: 'This row is needed only when the batch net pay total is at least this amount. Empty: always needed.',
+                    subsidiary: 'Subsidiary',
+                    subsidiaryHint: 'Empty: applies to every subsidiary without its own rows.',
+                    errLevel: 'The level must be a whole number from 1.',
+                    errName: 'Enter the level name.',
+                    errWho: 'Select an approver or an approver role.',
+                    errNet: 'The net pay threshold must be a non-negative number.',
+                },
+            },
+            periodsSec: {
+                title: 'Pay periods',
+                sub: 'Generate periods by year for each pay group, close a period once it is fully released. Attendance is locked and unlocked on the Attendance screen.',
+                generate: 'Generate periods',
+                year: 'Year',
+                paygroup: 'Pay group',
+                allGroups: 'All pay groups',
+                allYears: 'All years',
+                search: 'Search period, pay group, date',
+                empty: 'No pay periods yet. Click Generate periods to create the periods of a year.',
+                emptyFilter: 'No periods match the filter.',
+                cols: { code: 'Period', paygroup: 'Pay group', start: 'From', end: 'To', stdDays: 'Standard days', taxMonth: 'Tax month', status: 'Period status', att: 'Attendance status', act: 'Actions' },
+                status: { O: 'Open', C: 'Closed' },
+                att: { O: 'Attendance open', L: 'Attendance locked' },
+                current: 'Current period',
+                close: 'Close',
+                reopen: 'Reopen',
+                attendance: 'Attendance',
+                closeOf: (code) => `Close period ${code}`,
+                reopenOf: (code) => `Reopen period ${code}`,
+                attendanceOf: (code) => `Open attendance for period ${code}`,
+                confirmClose: (code) => `Close period ${code}? No more payroll batches can be created in a closed period. The system refuses when the period still has unreleased batches.`,
+                confirmReopen: (code) => `Reopen period ${code}? A reopened period allows payroll batches to be created and changed.`,
+                closed: (code) => `Period ${code} closed.`,
+                reopened: (code) => `Period ${code} reopened.`,
+                genTitle: 'Generate pay periods',
+                genRun: (y) => (/^\d{4}$/.test(String(y || '').trim()) ? `Generate periods for ${String(y).trim()}` : 'Generate periods'),
+                genHint: 'Existing periods (by code) are not generated again. Standard days follow the weekly days off and holidays on file.',
+                genNeedSetup: 'Load the VN defaults before generating periods.',
+                errYear: 'The year has 4 digits.',
+                errGroup: 'Select a pay group.',
+                generated: (n, skipped) => `${n} periods generated${skipped ? `, ${skipped} already existed` : ''}.`,
+                total: (n) => `${n} periods`,
+            },
+            legal: {
+                title: 'Statutory parameters',
+                sub: 'Values from legal documents by effective date. This screen is view only plus marking as verified; change values on the NetSuite record.',
+                tabs: { params: 'Parameters', brackets: 'PIT brackets', components: 'Payroll contributions' },
+                tabsLabel: 'Statutory data groups',
+                search: 'Search code, description, legal basis, value',
+                chips: { all: 'All', unverified: 'Not verified', label: 'Filter parameters' },
+                groups: { PIT: 'Personal income tax', INS: 'Insurance', MINWAGE: 'Regional minimum wage', OT: 'Overtime' },
+                cols: {
+                    code: 'Code', description: 'Description', value: 'Value', effective: 'Effective from', expiration: 'To', legalRef: 'Legal basis', verified: 'Verification', act: 'Actions',
+                    level: 'Bracket', upper: 'Assessable income up to', rate: 'Rate', name: 'Contribution', ee: 'Employee', er: 'Employer', cap: 'Cap factor', state: 'Status',
+                },
+                verified: 'Verified',
+                unverified: 'Not verified',
+                current: 'In effect',
+                notCurrent: 'Not in effect',
+                topBracket: 'Top bracket',
+                verify: 'Mark as verified',
+                verifyOf: (code) => `Mark ${code} as verified`,
+                confirmVerify: (p) => `Confirm that parameter ${p.code} (${p.description || ''}) = ${p.valueText}, effective from ${p.effectiveText}, was verified against the legal source${p.legalRef ? `: ${p.legalRef}` : ''}?\n\nThis only changes the verification flag, not the value. If the value is wrong, correct it on the NetSuite record first.`,
+                verifiedDone: (code) => `${code} marked as verified.`,
+                empty: 'No data yet. Load the VN defaults.',
+                emptyFilter: 'No parameters match the filter.',
+                unverifiedNote: (n) => `${n} parameters are not verified against the legal source - they are listed first. The chief accountant should check them before they are used for official payroll.`,
+            },
+        },
     };
+    // ------------------------------------------------------------------ hằng và hàm thuần
+    const list$1 = (v) => (Array.isArray(v) ? v : []);
+    const blank$1 = (v) => v === null || v === undefined || v === '';
+    const STATE_TONE = { ok: 'ok', missing: 'error', attention: 'warn', optional: 'muted', unknown: 'muted' };
+    const TODO_STATES = ['missing', 'attention', 'unknown'];
+    const TABLE_HEIGHT = 'max(240px, calc(100vh - 318px))';
+    // Mục của bảng tình trạng: section = mục dựng trong SPA; list = khóa trong boot.recordTypeIds để mở danh sách NetSuite
+    const ITEMS = {
+        defaults: { run: 'defaults' },
+        industry: { run: 'industry' },
+        employees: { go: 'employees' },
+        general: { section: 'general' },
+        company: { section: 'general', tab: 'company' },
+        accounts: { section: 'accounts' },
+        insAccounts: { section: 'accounts', tab: 'ins' },
+        costAccounts: { section: 'costAccounts' },
+        approvals: { section: 'approvals', list: 'approval_step' },
+        paygroups: { list: 'paygroup' },
+        periods: { section: 'periods', list: 'period' },
+        params: { section: 'legal', list: 'param' },
+        pitBrackets: { section: 'legal', tab: 'brackets', list: 'pit_bracket' },
+        insComps: { section: 'legal', tab: 'components', list: 'ins_comp' },
+        holidays: { list: 'holiday' },
+        earningTypes: { list: 'earning_type' },
+        earningRules: { list: 'earning_rule' },
+        benefitPkgs: { list: 'benefit_pkg' },
+        leaveTypes: { list: 'leave_type' },
+        leavePolicies: { list: 'leave_policy' },
+        attSymbols: { list: 'att_symbol' },
+        attRules: { list: 'att_rule' },
+        shifts: { list: 'shift' },
+        shiftPatterns: { list: 'shift_pattern' },
+        rateTables: { list: 'rate_table' },
+        teams: { list: 'team' },
+    };
+    // Kiểu ô: num, money, text, bool, inherit (Có / Không / kế thừa), list:<tên>, et (loại thu nhập), policy (chính sách phép)
+    const FIELD_TYPES = {
+        std_days: 'num', hours_per_day: 'num', weekly_off: 'text', region: 'list:region', base_et: 'et', allow_et: 'et', meal_et: 'et', ctr_et: 'et', payout_et: 'et', meal_amount: 'money',
+        union_fund: 'bool', accident_rate: 'num', ext_ot: 'bool', require_approval: 'bool', auto_approve: 'bool', time_approval: 'bool', ot_source: 'list:overtime_source', require_lock: 'bool',
+        leave_policy: 'policy', wp_blocks: 'bool', alloc_method: 'list:allocation_method', alloc_fallback: 'list:allocation_fallback', alloc_version: 'list:alloc_version',
+        acc13_basis: 'list:accrual13_basis', acc13_months: 'num', enabled: 'bool', preparer: 'text', chief_accountant: 'text', director: 'text',
+    };
+    const COMPANY_TYPES = { union_fund: 'inherit', ext_ot: 'inherit' };
+    const SETUP_GROUPS = [
+        { key: 'work', fields: ['std_days', 'hours_per_day', 'weekly_off', 'region'] },
+        { key: 'earning', fields: ['base_et', 'allow_et', 'meal_et', 'ctr_et', 'payout_et', 'meal_amount'] },
+        { key: 'insurance', fields: ['union_fund', 'accident_rate', 'ext_ot'] },
+        { key: 'approval', fields: ['require_approval', 'auto_approve'] },
+        { key: 'time', fields: ['time_approval', 'ot_source', 'require_lock', 'leave_policy', 'wp_blocks'] },
+        { key: 'alloc', fields: ['alloc_method', 'alloc_fallback', 'alloc_version'] },
+        { key: 'accrual', fields: ['acc13_basis', 'acc13_months'] },
+    ];
+    const COMPANY_GROUPS = [
+        { key: 'companyState', fields: ['enabled'] },
+        { key: 'insurance', fields: ['union_fund', 'region', 'accident_rate', 'ext_ot'] },
+        { key: 'accrual', fields: ['acc13_basis', 'acc13_months'] },
+        { key: 'signers', fields: ['preparer', 'chief_accountant', 'director'] },
+    ];
+    const ACCOUNT_KEYS = ['acc_payable', 'acc_expense', 'acc_pit', 'acc_advance', 'acc_other_ded', 'acc_13th', 'acc_contractor', 'pit_vendor', 'location'];
+    const REQUIRED_ACCOUNTS = ['acc_payable', 'acc_expense', 'acc_pit'];
+    const APV_TONE$1 = { inUse: 'ok', replaced: 'muted', otherSubsidiary: 'muted', inactive: 'muted', invalid: 'error' };
+    const COST_TONE = { inUse: 'ok', overridden: 'warn', future: 'info', otherSubsidiary: 'muted', accountInactive: 'error', inactive: 'muted', invalid: 'error' };
+    const TARGET_LIST = { W: 'classes', P: 'projects', D: 'departments' };
+    const validIso$1 = (v) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v || ''));
+        if (!m)
+            return false;
+        const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return d.getFullYear() === Number(m[1]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3]);
+    };
+    // Giá trị pháp lý có thể là tỷ lệ nhỏ (0,003) hoặc số tiền: giữ đủ chữ số thập phân
+    const plainNumber = (v) => (blank$1(v) || isNaN(Number(v)) ? '' : Number(v).toLocaleString('vi-VN', { maximumFractionDigits: 6 }));
+    const accountLabel = (a) => (a ? `${a.number || ''} ${a.name || ''}`.trim() : '');
     function SetupHubView({ app }) {
         const t = pick(TEXT$5);
-        return (jsxs(Page, { children: [jsx(PageHeader, { title: t.title }), jsxs(Card, { children: [jsx(Empty, { text: t.building }), jsx(Button, { label: t.openOld, onClick: () => app.go('setup') })] })] }));
+        const boot = app.boot || {};
+        const user = boot.user || {};
+        const subsidiary = app.subsidiary || '';
+        const params = (app.route && app.route.params) || {};
+        const section = String(params.section || '');
+        const tab = String(params.tab || '');
+        // Ma trận quyền: thiết lập do quản trị + HR sửa (action cũ, boot.user.canEditSetup); tài khoản do quản trị + kế toán sửa
+        const isAdmin = user.role === 'administrator';
+        const canSetup = isAdmin || !!user.canEditSetup;
+        const canAccounts = isAdmin || !!user.isAccountant || user.role === 'customrole_s4vp_accountant';
+        const subName = (id) => {
+            const s = list$1(boot.subsidiaries).find((x) => String(x.id) === String(id));
+            return s ? s.name : id ? `#${id}` : '';
+        };
+        const [status, setStatus] = core.useState(null);
+        const [data, setData] = core.useState(null);
+        const [legal, setLegal] = core.useState(null);
+        const [cost, setCost] = core.useState(null);
+        const [lookups, setLookups] = core.useState(null);
+        const [query, setQuery] = core.useState('');
+        const [filter, setFilter] = core.useState('all');
+        const [dialog, setDialog] = core.useState(null);
+        const formRef = core.useRef({});
+        const [form, setForm] = core.useState(formRef.current);
+        const [error, setError] = core.useState('');
+        const [costFilter, setCostFilter] = core.useState('active');
+        const testRef = core.useRef({ workCenter: '', project: '', department: '', laborType: '', date: '' });
+        const [testForm, setTestForm] = core.useState(testRef.current);
+        const [testResult, setTestResult] = core.useState(null);
+        const [periodYear, setPeriodYear] = core.useState('');
+        const [periodGroup, setPeriodGroup] = core.useState('');
+        const [legalFilter, setLegalFilter] = core.useState('all');
+        const [apv, setApv] = core.useState(null);
+        const [apvFilter, setApvFilter] = core.useState('active');
+        const alive = core.useRef(true);
+        const request = core.useRef(0);
+        const go = (sec, subTab) => app.go('setupHub', { section: sec || '', tab: subTab || '' });
+        const guard = () => {
+            request.current += 1;
+            const mine = request.current;
+            return () => alive.current && mine === request.current;
+        };
+        const fetchLookups = () => {
+            if (lookups)
+                return Promise.resolve(lookups);
+            // Tra danh mục phân đoạn dùng chung với màn Nhân sự; không đọc được thì để trống (ô chọn vẫn hiện giá trị đang lưu)
+            return call({ action: 'hrLookups' }).then((r) => {
+                if (alive.current)
+                    setLookups(r || {});
+                return r || {};
+            }, () => {
+                if (alive.current)
+                    setLookups({});
+                return {};
+            });
+        };
+        const load = () => {
+            const ok = guard();
+            if (section === 'general' || section === 'accounts') {
+                return app.run(t.loading, Promise.all([call({ action: 'setupData', subsidiary }), section === 'accounts' ? fetchLookups() : null])).then((r) => {
+                    if (r && ok())
+                        setData(r[0] || {});
+                });
+            }
+            if (section === 'legal')
+                return app.run(t.loading, call({ action: 'setupLegal' })).then((r) => r && ok() && setLegal(r));
+            if (section === 'costAccounts') {
+                return app.run(t.loading, Promise.all([call({ action: 'costAccounts', subsidiary }), fetchLookups()])).then((r) => {
+                    if (r && ok())
+                        setCost(r[0] || {});
+                });
+            }
+            if (section === 'periods')
+                return Promise.resolve();
+            if (section === 'approvals')
+                return app.run(t.loading, call({ action: 'approvalSteps', subsidiary })).then((r) => r && ok() && setApv(r));
+            return app.run(t.loading, call({ action: 'setupStatus', subsidiary })).then((r) => r && ok() && setStatus(r));
+        };
+        core.useEffect(() => {
+            alive.current = true;
+            load();
+            return () => {
+                alive.current = false;
+            };
+        }, [subsidiary, section]);
+        // ------------------------------------------------------------------ dùng chung
+        const setField = (k) => (v) => {
+            formRef.current = Object.assign({}, formRef.current, { [k]: v });
+            setForm(formRef.current);
+        };
+        const openDialog = (meta, values) => {
+            formRef.current = values || {};
+            setForm(formRef.current);
+            setError('');
+            setDialog(meta);
+        };
+        const closeDialog = () => {
+            setDialog(null);
+            setError('');
+        };
+        // Chạy thao tác ghi; xong thì đóng hộp thoại, tải lại mục đang xem rồi báo kết quả
+        const submit = (work, doneText, after) => app.run(t.working, work).then((r) => {
+            if (!r || !alive.current)
+                return undefined;
+            closeDialog();
+            const next = after ? after(r) : null;
+            return Promise.resolve(next)
+                .then(() => load())
+                .then(() => {
+                if (alive.current)
+                    app.notify(typeof doneText === 'function' ? doneText(r) : doneText, 'ok');
+                return r;
+            });
+        });
+        const listId = (k) => (boot.recordTypeIds || {})[k] || '';
+        const openList = (k) => {
+            const id = listId(k);
+            if (id)
+                window.open(`/app/common/custom/custrecordentrylist.nl?rectype=${encodeURIComponent(id)}`, '_blank');
+        };
+        const listButton = (k, long) => jsx(Button, { label: long ? t.openListLong : t.openList, kind: long ? 'default' : 'ghost', small: !long, disabled: !listId(k), title: listId(k) ? t.openListTitle : t.noList, onClick: () => openList(k) });
+        const errorLine = () => (error ? jsx("div", { class: "s4vp-st-err", role: "alert", children: error }) : null);
+        const note = (text, tone) => jsx("div", { class: tone === 'warn' ? 's4vp-st-note s4vp-st-note-warn' : 's4vp-st-note', role: "note", children: text });
+        const optionsWith = (options, value, label) => (blank$1(value) || options.some((o) => String(o.value) === String(value)) ? options : options.concat([{ value: String(value), label: label || `#${value}` }]));
+        // ------------------------------------------------------------------ nạp mặc định, gói ngành
+        const runDefaults = () => {
+            const work = () => submit(post({ action: 'loadDefaults' }), (r) => {
+                const sum = (bag) => Object.keys(bag || {}).reduce((s, k) => s + (Number(bag[k]) || 0), 0);
+                return t.defaults.done(sum(r.created), sum(r.skipped));
+            }, () => app.reloadBoot());
+            if (boot.setupReady)
+                app.confirm(t.defaults.confirm, work);
+            else
+                work();
+        };
+        const openPack = () => openDialog({ kind: 'pack' }, { code: '' });
+        const savePack = () => {
+            const code = formRef.current.code;
+            if (!code)
+                return setError(t.pack.placeholder);
+            const p = list$1(status && status.packs).find((x) => x.code === code) || { };
+            return submit(post({ action: 'loadIndustryPack', code, subsidiary: subsidiary || null }), (r) => {
+                const c = r.created || {};
+                const n = ['earningTypes', 'payGroups', 'rateTables', 'rules'].reduce((s, k) => s + list$1(c[k]).length, 0);
+                return t.pack.done(localized({ vi: p.nameVi, en: p.name }) || code, n, list$1(r.skippedShifts).length);
+            }, () => app.reloadBoot());
+        };
+        const packDialog = () => {
+            const options = list$1(status && status.packs).map((p) => ({ value: p.code, label: `${localized({ vi: p.nameVi, en: p.name }) || p.code}${p.loaded ? ` - ${t.pack.loaded}` : ''}` }));
+            return (jsxs(Dialog, { title: t.pack.title, width: 520, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.pack.load, kind: "primary", disabled: !form.code || !!app.busy, onClick: savePack })], children: [jsx("div", { children: t.pack.intro }), jsx(Field, { label: t.pack.pick, hint: t.pack.pickHint, children: jsx(Select, { value: form.code, onInput: setField('code'), options: options, placeholder: t.pack.placeholder }) }), errorLine()] }));
+        };
+        // ------------------------------------------------------------------ bảng tình trạng
+        const issueText = (i) => {
+            const f = t.issues[i.code];
+            try {
+                return f ? f(i, t) : i.code;
+            }
+            catch (e) {
+                return i.code;
+            }
+        };
+        const countText = (it) => {
+            if (blank$1(it.count) || (it.count === 0 && it.state === 'optional'))
+                return '';
+            if (it.key === 'accounts')
+                return t.accountCount(it.count);
+            if (it.key === 'insAccounts')
+                return t.insCount(it.count);
+            if (it.key === 'industry')
+                return t.packCount(it.count);
+            if (it.key === 'approvals')
+                return it.levels ? t.levelCount(it.levels) : '';
+            if (it.key === 'employees')
+                return t.employeeCount(it.count);
+            if (it.key === 'periods')
+                return t.periodCount(it.count, fmtDate(it.lastEnd));
+            if (it.key === 'general' || it.key === 'company')
+                return '';
+            return t.count(it.count);
+        };
+        const itemButtons = (it) => {
+            const def = ITEMS[it.key] || {};
+            const out = [];
+            const urgent = it.state === 'missing';
+            if (def.run === 'defaults')
+                out.push(jsx(Button, { small: true, kind: urgent ? 'primary' : 'default', label: urgent ? t.first.steps.defaults.action : t.first.steps.defaults.again, disabled: !canSetup || !!app.busy, title: canSetup ? '' : t.hrOnly, onClick: runDefaults }));
+            if (def.run === 'industry')
+                out.push(jsx(Button, { small: true, label: t.first.steps.industry.action, disabled: !canSetup || !boot.setupReady || !!app.busy, title: !canSetup ? t.hrOnly : boot.setupReady ? '' : t.pack.needDefaults, onClick: openPack }));
+            if (def.go)
+                out.push(jsx(Button, { small: true, kind: urgent ? 'primary' : 'default', label: t.open, onClick: () => app.go(def.go) }));
+            if (def.section)
+                out.push(jsx(Button, { small: true, kind: urgent ? 'primary' : 'default', label: t.open, ariaLabel: `${t.open} ${t.items[it.key].name}`, onClick: () => go(def.section, def.tab) }));
+            if (def.list)
+                out.push(listButton(def.list, false));
+            return out;
+        };
+        const itemRow = (it) => {
+            const tx = t.items[it.key] || { name: it.key, desc: '' };
+            const issues = list$1(it.issues).filter((i) => i.code !== 'NONE' || it.state !== 'ok');
+            const count = countText(it);
+            return (jsxs("div", { class: "s4vp-st-row", children: [jsx("div", { class: "s4vp-st-state", children: jsx(Badge, { text: t.state[it.state] || it.state, tone: STATE_TONE[it.state] || 'muted' }) }), jsxs("div", { class: "s4vp-st-main", children: [jsxs("div", { class: "s4vp-st-name", children: [jsx("span", { children: tx.name }), count ? jsx("span", { class: "s4vp-small", children: count }) : null] }), issues.length ? (jsx("div", { class: it.state === 'missing' ? 's4vp-st-issue s4vp-st-issue-err' : it.state === 'attention' ? 's4vp-st-issue' : 's4vp-st-desc', children: issues.map(issueText).join(' ') })) : (jsx("div", { class: "s4vp-st-desc", children: tx.desc }))] }), jsx("div", { class: "s4vp-st-acts", children: itemButtons(it).map((b, i) => jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`)) })] }, it.key));
+        };
+        const stepAction = (s) => {
+            const tx = t.first.steps[s.key];
+            const label = s.state === 'done' ? tx.again : tx.action;
+            const kind = s.state === 'current' ? 'primary' : 'default';
+            if (s.key === 'defaults')
+                return jsx(Button, { label: label, kind: kind, disabled: !canSetup || !!app.busy, title: canSetup ? '' : t.hrOnly, onClick: runDefaults });
+            if (s.key === 'industry')
+                return jsx(Button, { label: label, kind: kind, disabled: !canSetup || !status.ready || !!app.busy, title: !canSetup ? t.hrOnly : status.ready ? '' : t.pack.needDefaults, onClick: openPack });
+            if (s.key === 'accounts')
+                return jsx(Button, { label: label, kind: kind, disabled: !status.ready, title: status.ready ? '' : t.pack.needDefaults, onClick: () => go('accounts') });
+            if (s.key === 'periods')
+                return jsx(Button, { label: label, kind: kind, disabled: !status.ready, title: status.ready ? '' : t.pack.needDefaults, onClick: () => go('periods') });
+            return jsx(Button, { label: label, kind: kind, disabled: !status.ready, title: status.ready ? '' : t.pack.needDefaults, onClick: () => app.go('employees') });
+        };
+        const firstRunCard = () => (jsx(Card, { title: t.first.title, sub: t.first.sub, tone: "warn", children: jsx("ol", { class: "s4vp-st-steps", "aria-label": t.first.label, children: list$1(status.steps).map((s, i) => {
+                    const tx = t.first.steps[s.key] || { name: s.key, desc: '' };
+                    const attrs = { class: `s4vp-st-step s4vp-st-step-${s.state}` };
+                    if (s.state === 'current')
+                        attrs['aria-current'] = 'step';
+                    return (jsxs("li", { ...attrs, children: [jsx("span", { class: "s4vp-st-num", children: String(i + 1) }), jsxs("div", { class: "s4vp-st-main", children: [jsxs("div", { class: "s4vp-st-name", children: [jsx("span", { children: tx.name }), s.state === 'done' ? jsx(Badge, { text: t.first.done, tone: "ok" }) : s.optional ? jsx(Badge, { text: t.first.optional }) : null] }), jsx("div", { class: "s4vp-st-desc", children: tx.desc })] }), jsx("div", { class: "s4vp-st-acts", children: stepAction(s) })] }, s.key));
+                }) }) }));
+        const hub = () => {
+            if (!status)
+                return jsx(Card, { children: jsx(Empty, { text: t.loading }) });
+            const words = fold(query).split(/\s+/).filter(Boolean);
+            const match = (it) => {
+                if (filter === 'todo' && TODO_STATES.indexOf(it.state) < 0)
+                    return false;
+                if (filter === 'optional' && it.state !== 'optional')
+                    return false;
+                if (!words.length)
+                    return true;
+                const tx = t.items[it.key] || {};
+                const hay = fold([tx.name, tx.desc, t.state[it.state], list$1(it.issues).map(issueText).join(' ')].join(' '));
+                return words.every((w) => hay.indexOf(w) >= 0);
+            };
+            const all = list$1(status.sections).reduce((acc, s) => acc.concat(list$1(s.items)), []);
+            const todo = all.filter((i) => TODO_STATES.indexOf(i.state) >= 0).length;
+            const groups = list$1(status.sections).map((s) => ({ key: s.key, items: list$1(s.items).filter(match) })).filter((s) => s.items.length);
+            const chips = [
+                { value: 'all', label: t.filter.all, count: all.length },
+                { value: 'todo', label: t.filter.todo, count: todo, tone: todo ? 'warn' : '' },
+                { value: 'optional', label: t.filter.optional, count: all.filter((i) => i.state === 'optional').length },
+            ];
+            return (jsxs("div", { class: "s4vp-st-hub", children: [status.firstRun ? firstRunCard() : null, jsxs("div", { class: "s4vp-st-bar", children: [jsx(SearchBox, { value: query, onInput: setQuery, placeholder: t.search, width: 280 }), jsx(Chips, { items: chips, value: filter, onPick: setFilter, label: t.filter.label })] }), groups.length ? (jsx("div", { class: "s4vp-st-groups", children: groups.map((g) => (jsx(Card, { title: t.sections[g.key] || g.key, flush: true, children: jsx("div", { class: "s4vp-st-rows", children: g.items.map(itemRow) }) }, g.key))) })) : (jsx(Card, { children: jsx(Empty, { text: t.none }) }))] }));
+        };
+        // ------------------------------------------------------------------ thiết lập chung và theo công ty con
+        const earningOptions = list$1(boot.earningTypes).map((e) => ({ value: String(e.id), label: `${e.code || ''} - ${e.name || ''}` }));
+        const policyOptions = list$1(data && data.leavePolicies).map((p) => ({ value: String(p.id), label: `${p.code || ''} - ${p.name || ''}` }));
+        const typeOf = (key, scope) => (scope === 'company' && COMPANY_TYPES[key]) || FIELD_TYPES[key] || 'text';
+        const showValue = (key, v, scope) => {
+            const type = typeOf(key, scope);
+            if (type === 'bool')
+                return v ? t.yes : t.no;
+            if (blank$1(v))
+                return '';
+            if (type === 'inherit')
+                return v === 'Y' ? t.yes : t.no;
+            if (type === 'num')
+                return plainNumber(v);
+            if (type === 'money')
+                return money(v);
+            if (type.indexOf('list:') === 0)
+                return (t.lists[type.slice(5)] || {})[v] || String(v);
+            if (type === 'et' || type === 'policy') {
+                const o = (type === 'et' ? earningOptions : policyOptions).find((x) => x.value === String(v));
+                return o ? o.label : `#${v}`;
+            }
+            return String(v);
+        };
+        const formValue = (key, v, scope) => {
+            const type = typeOf(key, scope);
+            if (type === 'bool')
+                return v === false ? 'F' : v === true ? 'T' : scope === 'company' && key === 'enabled' ? 'T' : 'F';
+            if (blank$1(v))
+                return '';
+            if (type === 'num' || type === 'money')
+                return plainNumber(v);
+            return String(v);
+        };
+        const editGroup = (group, scope) => {
+            const rec = (scope === 'company' ? data.company : data.setup) || {};
+            const values = {};
+            group.fields.forEach((k) => (values[k] = formValue(k, rec[k], scope)));
+            openDialog({ kind: 'group', group, scope }, values);
+        };
+        const saveGroup = () => {
+            const { group, scope } = dialog;
+            const values = {};
+            for (let i = 0; i < group.fields.length; i++) {
+                const k = group.fields[i];
+                const type = typeOf(k, scope);
+                const raw = String(blank$1(formRef.current[k]) ? '' : formRef.current[k]).trim();
+                if (type === 'bool')
+                    values[k] = raw === 'T';
+                else if (type === 'num' || type === 'money') {
+                    const n = toNumber(raw);
+                    if (raw && n === null)
+                        return setError(t.general.errNumber(t.general.fields[k].label));
+                    values[k] = n;
+                }
+                else if (k === 'weekly_off') {
+                    const clean = raw.replace(/\s+/g, '');
+                    if (clean && !/^[0-6](,[0-6])*$/.test(clean))
+                        return setError(t.general.errWeekly);
+                    values[k] = clean;
+                }
+                else
+                    values[k] = raw === '' ? (type === 'text' ? '' : null) : raw;
+            }
+            const body = scope === 'company' ? { action: 'saveCompany', subsidiary, values } : { action: 'saveSetup', values };
+            // Bật / tắt phân hệ cho công ty con đổi danh sách công ty con của khung: nạp lại bootstrap
+            return submit(post(body), t.general.saved, () => (scope === 'company' ? app.reloadBoot() : null));
+        };
+        const fieldControl = (k, scope) => {
+            const type = typeOf(k, scope);
+            const v = form[k];
+            const on = setField(k);
+            const inherit = scope === 'company' && k !== 'enabled' ? t.inherit : '';
+            if (type === 'bool')
+                return jsx(Select, { value: v, onInput: on, options: [{ value: 'T', label: t.yes }, { value: 'F', label: t.no }] });
+            if (type === 'inherit')
+                return jsx(Select, { value: v, onInput: on, options: [{ value: 'Y', label: t.yes }, { value: 'N', label: t.no }], placeholder: t.inherit });
+            if (type === 'num' || type === 'money')
+                return jsx(NumberInput, { value: v, onInput: on, placeholder: inherit });
+            if (type.indexOf('list:') === 0) {
+                const names = t.lists[type.slice(5)] || {};
+                return jsx(Select, { value: v, onInput: on, options: Object.keys(names).map((code) => ({ value: code, label: names[code] })), placeholder: inherit || t.notSet });
+            }
+            if (type === 'et')
+                return jsx(Select, { value: v, onInput: on, options: optionsWith(earningOptions, v), placeholder: t.notSet });
+            if (type === 'policy')
+                return jsx(Select, { value: v, onInput: on, options: optionsWith(policyOptions, v), placeholder: t.notSet });
+            return jsx(TextInput, { value: v, onInput: on, placeholder: inherit });
+        };
+        const groupDialog = () => {
+            const { group, scope } = dialog;
+            const scopeName = scope === 'company' ? subName(subsidiary) : t.general.scopeSetup;
+            return (jsxs(Dialog, { title: t.general.editTitle(t.general.groups[group.key], scopeName), width: 720, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveGroup })], children: [jsx("div", { class: "s4vp-st-form", children: group.fields.map((k) => (jsx(Field, { label: t.general.fields[k].label, hint: t.general.fields[k].hint, children: fieldControl(k, scope) }, k))) }), errorLine()] }));
+        };
+        const generalSection = () => {
+            if (!data)
+                return jsx(Card, { children: jsx(Empty, { text: t.loading }) });
+            if (!data.setup)
+                return jsx(Card, { children: jsx(Empty, { text: t.general.noSetup }) });
+            const scope = tab === 'company' && subsidiary ? 'company' : 'setup';
+            const rec = (scope === 'company' ? data.company : data.setup) || {};
+            const groups = scope === 'company' ? COMPANY_GROUPS : SETUP_GROUPS;
+            const tabs = [{ value: '', label: t.general.tabs.setup }];
+            if (subsidiary)
+                tabs.push({ value: 'company', label: t.general.tabs.company(subName(subsidiary)) });
+            const valueCell = (k) => {
+                const own = showValue(k, rec[k], scope);
+                if (scope === 'company' && k !== 'enabled' && (blank$1(rec[k]) || !data.company))
+                    return jsx("span", { class: "s4vp-muted", children: t.inherited(showValue(k, data.setup[k], 'setup') || t.notSet) });
+                return own === '' ? jsx("span", { class: "s4vp-muted", children: t.notSet }) : jsx("span", { class: "s4vp-st-val", children: own });
+            };
+            const recordId = scope === 'company' ? data.company && data.company.id : data.setup.id;
+            return (jsxs("div", { class: "s4vp-st-hub", children: [jsxs("div", { class: "s4vp-st-bar", children: [jsx(Tabs, { items: tabs, value: scope === 'company' ? 'company' : '', onPick: (v) => go('general', v), label: t.general.tabsLabel }), jsx("span", { class: "s4vp-st-grow" }), jsx("span", { class: "s4vp-small", children: t.general.accountsNote }), jsx(Button, { small: true, kind: "ghost", label: t.general.openAccounts, onClick: () => go('accounts') }), recordId ? jsx(Button, { small: true, kind: "ghost", label: t.general.openRecord, title: t.openListTitle, onClick: () => listId(scope === 'company' ? 'company' : 'setup') && window.open(`/app/common/custom/custrecordentry.nl?rectype=${encodeURIComponent(listId(scope === 'company' ? 'company' : 'setup'))}&id=${encodeURIComponent(recordId)}`, '_blank') }) : null] }), scope === 'company' && !data.company ? note(t.general.noCompany) : null, canSetup ? null : note(t.hrOnly), jsx("div", { class: "s4vp-st-cards", children: groups.map((g) => (jsx(Card, { title: t.general.groups[g.key], actions: [jsx(Button, { small: true, label: t.edit, ariaLabel: `${t.edit} ${t.general.groups[g.key]}`, disabled: !canSetup || !!app.busy, title: canSetup ? '' : t.hrOnly, onClick: () => editGroup(g, scope) })], children: jsx("div", { class: "s4vp-st-kv", children: g.fields.map((k) => (jsxs("div", { class: "s4vp-st-kv-row", title: t.general.fields[k].hint, children: [jsx("span", { class: "s4vp-muted", children: t.general.fields[k].label }), valueCell(k)] }, k))) }) }, g.key))) })] }));
+        };
+        // ------------------------------------------------------------------ tài khoản kế toán
+        const accountOptions = (rows) => list$1(rows).map((a) => ({ value: String(a.id), label: accountLabel(a) }));
+        const vendorOptions = () => list$1(data && data.vendors).map((v) => ({ value: String(v.id), label: `${v.code || ''}${v.name && v.name !== v.code ? ` - ${v.name}` : ''}` }));
+        const locationOptions = () => list$1(lookups && lookups.locations).map((l) => ({ value: String(l.id), label: l.name || `#${l.id}` }));
+        const refLabel = (k, v) => {
+            if (blank$1(v))
+                return '';
+            const options = k === 'pit_vendor' ? vendorOptions() : k === 'location' ? locationOptions() : accountOptions(data && data.accounts);
+            const o = options.find((x) => x.value === String(v));
+            return o ? o.label : `#${v}`;
+        };
+        const editAccounts = (scope) => {
+            const rec = (scope === 'company' ? data.company : data.setup) || {};
+            const values = {};
+            ACCOUNT_KEYS.forEach((k) => (values[k] = blank$1(rec[k]) ? '' : String(rec[k])));
+            openDialog({ kind: 'accounts', scope, before: values }, values);
+        };
+        const saveAccounts = () => {
+            const { scope, before } = dialog;
+            const values = {};
+            ACCOUNT_KEYS.forEach((k) => {
+                if (String(formRef.current[k] || '') !== String(before[k] || ''))
+                    values[k] = formRef.current[k] || '';
+            });
+            if (!Object.keys(values).length)
+                return closeDialog();
+            return submit(post({ action: 'saveSetupAccounts', scope, subsidiary, values }), t.accounts.saved);
+        };
+        const accountsDialog = () => {
+            const { scope } = dialog;
+            const accounts = accountOptions(data.accounts);
+            const placeholder = scope === 'company' ? t.inherit : t.accounts.pickAccount;
+            return (jsxs(Dialog, { title: scope === 'company' ? t.accounts.titleCompany(subName(subsidiary)) : t.accounts.titleSetup, width: 760, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveAccounts })], children: [scope === 'company' ? jsx("div", { class: "s4vp-small", children: t.accounts.companyHint }) : null, jsx("div", { class: "s4vp-st-form", children: ACCOUNT_KEYS.map((k) => {
+                            const options = k === 'pit_vendor' ? vendorOptions() : k === 'location' ? locationOptions() : accounts;
+                            return (jsx(Field, { label: t.accountNames[k], hint: t.accountHints[k], children: jsx(Select, { value: form[k], onInput: setField(k), options: optionsWith(options, form[k]), placeholder: placeholder }) }, k));
+                        }) }), errorLine()] }));
+        };
+        const editIns = (row) => openDialog({ kind: 'ins', code: row.code, before: { account: row.account, vendor: row.vendor } }, { account: row.account, vendor: row.vendor });
+        const saveIns = () => {
+            const { code, before } = dialog;
+            const it = { code };
+            if (String(formRef.current.account || '') !== String(before.account || ''))
+                it.account = formRef.current.account || '';
+            if (String(formRef.current.vendor || '') !== String(before.vendor || ''))
+                it.vendor = formRef.current.vendor || '';
+            if (Object.keys(it).length < 2)
+                return closeDialog();
+            return submit(post({ action: 'saveInsuranceAccounts', items: [it] }), t.accounts.saved);
+        };
+        const insDialog = () => (jsxs(Dialog, { title: t.accounts.ins.editTitle(dialog.code), width: 560, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveIns })], children: [jsx("div", { class: "s4vp-small", children: t.accounts.ins.hint }), jsx(Field, { label: t.accounts.ins.account, children: jsx(Select, { value: form.account, onInput: setField('account'), options: optionsWith(accountOptions(data.accounts), form.account), placeholder: t.accounts.pickAccount }) }), jsx(Field, { label: t.accounts.ins.vendor, hint: t.accounts.ins.vendorHint, children: jsx(Select, { value: form.vendor, onInput: setField('vendor'), options: optionsWith(vendorOptions(), form.vendor), placeholder: t.accounts.pickAccount }) }), errorLine()] }));
+        const accountsSection = () => {
+            if (!data)
+                return jsx(Card, { children: jsx(Empty, { text: t.loading }) });
+            if (!data.setup)
+                return jsx(Card, { children: jsx(Empty, { text: t.general.noSetup }) });
+            const isIns = tab === 'ins';
+            const tabs = [{ value: '', label: t.accounts.tabs.defaults }, { value: 'ins', label: t.accounts.tabs.ins }];
+            const lock = canAccounts ? '' : t.acctOnly;
+            let body;
+            if (!isIns) {
+                const company = data.company || {};
+                const rows = ACCOUNT_KEYS.map((k) => {
+                    const effective = blank$1(company[k]) ? data.setup[k] : company[k];
+                    const required = REQUIRED_ACCOUNTS.indexOf(k) >= 0;
+                    const state = !blank$1(effective) ? 'set' : required ? 'missing' : 'optional';
+                    return { id: k, name: t.accountNames[k], hint: t.accountHints[k], required, common: refLabel(k, data.setup[k]), own: refLabel(k, company[k]), effective: refLabel(k, effective), state, stateText: t.accounts[state] };
+                });
+                const columns = [
+                    { key: 'name', label: t.accounts.cols.item, render: (r) => (jsxs("span", { class: "s4vp-st-cell", children: [jsxs("span", { class: "s4vp-st-name", children: [jsx("span", { children: r.name }), r.required ? jsx(Badge, { text: t.accounts.required, tone: "info" }) : null] }), jsx("span", { class: "s4vp-small", children: r.hint })] })) },
+                    { key: 'common', label: t.accounts.cols.common, render: (r) => r.common || jsx("span", { class: "s4vp-muted", children: t.notSet }) },
+                    subsidiary ? { key: 'own', label: `${t.accounts.cols.company} ${subName(subsidiary)}`, render: (r) => r.own || jsx("span", { class: "s4vp-muted", children: t.inherit }) } : null,
+                    { key: 'stateText', label: t.accounts.cols.state, nowrap: true, render: (r) => jsx(Badge, { text: r.stateText, tone: r.state === 'set' ? 'ok' : r.state === 'missing' ? 'error' : 'muted' }) },
+                ];
+                body = (jsx(Card, { flush: true, label: t.accounts.tabs.defaults, children: jsx(Table, { label: t.accounts.tabs.defaults, columns: columns, rows: rows, search: true, searchPlaceholder: t.accounts.search, maxHeight: TABLE_HEIGHT, toolbar: jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { small: true, label: t.accounts.editSetup, kind: "primary", disabled: !canAccounts || !!app.busy, title: lock, onClick: () => editAccounts('setup') }), subsidiary ? jsx(Button, { small: true, label: t.accounts.editCompany, disabled: !canAccounts || !!app.busy, title: lock, onClick: () => editAccounts('company') }) : null] }) }) }));
+            }
+            else {
+                const today = data.today || '';
+                const byCode = {};
+                list$1(data.components).forEach((c) => {
+                    const code = String(c.name || '');
+                    const live = (blank$1(c.effective) || !today || c.effective <= today) && (blank$1(c.expiration) || !today || c.expiration >= today);
+                    if (!byCode[code] || (live && !byCode[code].live))
+                        byCode[code] = Object.assign({}, c, { live });
+                });
+                const rows = Object.keys(byCode).sort().map((code) => {
+                    const c = byCode[code];
+                    const state = !c.live ? 'expired' : blank$1(c.account) ? 'noAccount' : blank$1(c.vendor) ? 'noVendor' : 'ok';
+                    return {
+                        id: code, code, name: c.description || '', ee: c.ee_rate, er: c.er_rate, account: blank$1(c.account) ? '' : String(c.account), vendor: blank$1(c.vendor) ? '' : String(c.vendor),
+                        accountText: refLabel('acc', c.account), vendorText: refLabel('pit_vendor', c.vendor), state, stateText: t.accounts.ins[state],
+                    };
+                });
+                const columns = [
+                    { key: 'code', label: t.accounts.ins.cols.code, nowrap: true, render: (r) => jsx("span", { class: "s4vp-st-name", children: r.code }) },
+                    { key: 'name', label: t.accounts.ins.cols.name },
+                    { key: 'ee', label: t.accounts.ins.cols.ee, type: 'pct', nowrap: true },
+                    { key: 'er', label: t.accounts.ins.cols.er, type: 'pct', nowrap: true },
+                    { key: 'accountText', label: t.accounts.ins.cols.account, render: (r) => r.accountText || jsx("span", { class: "s4vp-muted", children: t.notSet }) },
+                    { key: 'vendorText', label: t.accounts.ins.cols.vendor, render: (r) => r.vendorText || jsx("span", { class: "s4vp-muted", children: t.notSet }) },
+                    { key: 'stateText', label: t.accounts.ins.cols.state, nowrap: true, render: (r) => jsx(Badge, { text: r.stateText, tone: r.state === 'ok' ? 'ok' : r.state === 'noAccount' ? 'error' : r.state === 'noVendor' ? 'warn' : 'muted' }) },
+                    { key: 'act', label: '', nowrap: true, noRowClick: true, render: (r) => jsx(Button, { small: true, label: t.edit, ariaLabel: `${t.edit} ${r.code}`, disabled: !canAccounts || !!app.busy, title: lock, onClick: () => editIns(r) }) },
+                ];
+                body = (jsx(Card, { flush: true, label: t.accounts.tabs.ins, children: jsx(Table, { label: t.accounts.tabs.ins, columns: columns, rows: rows, search: true, searchPlaceholder: t.accounts.ins.search, empty: t.accounts.ins.empty, maxHeight: TABLE_HEIGHT }) }));
+            }
+            return (jsxs("div", { class: "s4vp-st-hub", children: [jsxs("div", { class: "s4vp-st-bar", children: [jsx(Tabs, { items: tabs, value: isIns ? 'ins' : '', onPick: (v) => go('accounts', v), label: t.accounts.tabsLabel }), jsx("span", { class: "s4vp-st-grow" }), jsx(Button, { small: true, kind: "ghost", label: t.items.costAccounts.name, onClick: () => go('costAccounts') })] }), canAccounts ? null : note(t.acctOnly), body] }));
+        };
+        // ------------------------------------------------------------------ tài khoản chi phí lương theo đích
+        const targetOptions = (type) => list$1(lookups && lookups[TARGET_LIST[type]]).map((x) => ({ value: String(x.id), label: x.name || `#${x.id}` }));
+        const laborOptions = [{ value: 'E', label: t.cost.labor.E }, { value: 'C', label: t.cost.labor.C }];
+        const editCost = (row) => {
+            const r = row || {};
+            openDialog({ kind: 'cost', id: r.id || '', targetName: r.targetName || '', accountName: r.accountName || '' }, { target_type: r.targetType || 'D', target: r.target || '', labor_type: r.laborType || '', account: r.account || '', subsidiary: row ? r.subsidiary || '' : '', effective: r.effective || '', note: r.note || '' });
+        };
+        const saveCost = () => {
+            const f = formRef.current;
+            if (!f.target)
+                return setError(t.cost.form.errTarget);
+            if (!f.account)
+                return setError(t.cost.form.errAccount);
+            if (f.effective && !validIso$1(f.effective))
+                return setError(t.cost.form.errDate);
+            const field = { W: 'work_center', P: 'project', D: 'department' }[f.target_type];
+            const values = { target_type: f.target_type, labor_type: f.labor_type || '', account: f.account, subsidiary: f.subsidiary || '', effective: f.effective || '', note: f.note || '' };
+            values[field] = f.target;
+            return submit(post({ action: 'saveCostAccount', id: dialog.id || null, values }), t.cost.saved);
+        };
+        const costDialog = () => {
+            const subs = list$1(boot.subsidiaries).map((s) => ({ value: String(s.id), label: s.name }));
+            const setType = (v) => {
+                formRef.current = Object.assign({}, formRef.current, { target_type: v, target: '' });
+                setForm(formRef.current);
+            };
+            return (jsxs(Dialog, { title: dialog.id ? t.cost.form.titleEdit : t.cost.form.titleNew, width: 720, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveCost })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.cost.form.type, children: jsx(Select, { value: form.target_type, onInput: setType, options: ['W', 'P', 'D'].map((k) => ({ value: k, label: t.cost.types[k] })) }) }), jsx(Field, { label: `${t.cost.form.target} (${t.cost.types[form.target_type] || ''})`, children: jsx(Select, { value: form.target, onInput: setField('target'), options: optionsWith(targetOptions(form.target_type), form.target, dialog.targetName), placeholder: t.cost.form.targetPick }) }), jsx(Field, { label: t.cost.form.account, children: jsx(Select, { value: form.account, onInput: setField('account'), options: optionsWith(accountOptions(cost && cost.accounts), form.account, dialog.accountName), placeholder: t.cost.form.accountPick }) }), jsx(Field, { label: t.cost.form.labor, hint: t.cost.form.laborHint, children: jsx(Select, { value: form.labor_type, onInput: setField('labor_type'), options: laborOptions, placeholder: t.cost.labor.all }) }), jsx(Field, { label: t.cost.form.subsidiary, hint: t.cost.form.subsidiaryHint, children: jsx(Select, { value: form.subsidiary, onInput: setField('subsidiary'), options: optionsWith(subs, form.subsidiary), placeholder: t.cost.shared }) }), jsx(Field, { label: t.cost.form.effective, hint: t.cost.form.effectiveHint, children: jsx(DateInput, { value: form.effective, onInput: setField('effective') }) })] }), jsx(Field, { label: t.cost.form.note, children: jsx(TextArea, { value: form.note, onInput: setField('note'), rows: 2 }) }), errorLine()] }));
+        };
+        const retireCost = (r) => app.confirm(t.cost.confirmRetire(`${t.cost.types[r.targetType] || ''} ${r.targetName}`.trim(), r.accountName), () => submit(post({ action: 'retireCostAccount', id: r.id }), t.cost.retired));
+        const restoreCost = (r) => submit(post({ action: 'retireCostAccount', id: r.id, restore: true }), t.cost.restored);
+        const setTest = (k) => (v) => {
+            testRef.current = Object.assign({}, testRef.current, { [k]: v });
+            setTestForm(testRef.current);
+        };
+        const runTest = () => {
+            const f = testRef.current;
+            if (f.date && !validIso$1(f.date))
+                return app.notify(t.cost.form.errDate, 'error');
+            return app.run(t.working, call({ action: 'costAccountTest', subsidiary, workCenter: f.workCenter, project: f.project, department: f.department, laborType: f.laborType, date: f.date })).then((r) => r && alive.current && setTestResult(r));
+        };
+        const testCard = () => {
+            const r = testResult;
+            return (jsxs(Card, { title: t.cost.test.title, sub: t.cost.test.sub, children: [jsxs("div", { class: "s4vp-st-form s4vp-st-form-narrow", children: [jsx(Field, { label: t.cost.test.workCenter, children: jsx(Select, { value: testForm.workCenter, onInput: setTest('workCenter'), options: targetOptions('W'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.project, children: jsx(Select, { value: testForm.project, onInput: setTest('project'), options: targetOptions('P'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.department, children: jsx(Select, { value: testForm.department, onInput: setTest('department'), options: targetOptions('D'), placeholder: t.cost.test.any }) }), jsx(Field, { label: t.cost.test.labor, children: jsx(Select, { value: testForm.laborType, onInput: setTest('laborType'), options: laborOptions, placeholder: t.cost.labor.all }) }), jsx(Field, { label: t.cost.test.date, children: jsx(DateInput, { value: testForm.date, onInput: setTest('date'), placeholder: fmtDate((cost && cost.today) || '') }) }), jsx("div", { class: "s4vp-st-test-btn", children: jsx(Button, { label: t.cost.test.run, kind: "primary", disabled: !!app.busy, onClick: runTest }) })] }), r ? (jsxs("div", { class: "s4vp-st-result", role: "status", children: [jsxs("div", { class: "s4vp-st-result-h", children: [jsx("span", { class: "s4vp-muted", children: t.cost.test.result }), r.account ? jsx("span", { class: "s4vp-st-result-v", children: r.accountName || r.account }) : jsx("span", { class: "s4vp-st-issue s4vp-st-issue-err", children: t.cost.test.none }), r.account && t.cost.test.by[r.level] ? jsx(Badge, { text: t.cost.test.by[r.level], tone: "info" }) : null] }), jsx("ol", { class: "s4vp-st-levels", "aria-label": t.cost.test.steps, children: list$1(r.steps).map((s) => (jsxs("li", { class: s.level === r.level ? 's4vp-st-level s4vp-st-level-on' : 's4vp-st-level', children: [jsx("span", { children: t.cost.test.level[s.level] || s.level }), jsx("span", { class: s.account ? '' : 's4vp-muted', children: s.account ? s.accountName || s.account : s.given ? t.cost.test.noMatch : t.cost.test.notGiven })] }, s.level))) }), jsx("div", { class: "s4vp-small", children: r.warning ? t.cost.test.unreadable : t.cost.test.skip })] })) : null] }));
+        };
+        const costSection = () => {
+            if (!cost)
+                return jsx(Card, { children: jsx(Empty, { text: t.loading }) });
+            const lock = canAccounts ? '' : t.acctOnly;
+            const all = list$1(cost.rows).map((r) => Object.assign({}, r, {
+                typeText: t.cost.types[r.targetType] || r.targetType, laborText: r.laborType ? t.cost.labor[r.laborType] || r.laborType : t.cost.labor.all,
+                subsidiaryText: r.subsidiary ? r.subsidiaryName || subName(r.subsidiary) : t.cost.shared, effectiveText: r.effective ? fmtDate(r.effective) : t.cost.always, stateText: t.cost.states[r.state] || r.state,
+            }));
+            const rows = costFilter === 'active' ? all.filter((r) => !r.inactive) : all;
+            const chips = [{ value: 'active', label: t.cost.chips.active, count: all.filter((r) => !r.inactive).length }, { value: 'all', label: t.cost.chips.all, count: all.length }];
+            const columns = [
+                { key: 'typeText', label: t.cost.cols.type, nowrap: true },
+                { key: 'targetName', label: t.cost.cols.target, render: (r) => jsx("span", { class: "s4vp-st-name", children: r.targetName }) },
+                { key: 'laborText', label: t.cost.cols.labor, nowrap: true },
+                { key: 'accountName', label: t.cost.cols.account },
+                { key: 'subsidiaryText', label: t.cost.cols.subsidiary },
+                { key: 'effectiveText', label: t.cost.cols.effective, nowrap: true },
+                { key: 'stateText', label: t.cost.cols.state, nowrap: true, render: (r) => jsx(Badge, { text: r.stateText, tone: COST_TONE[r.state] || 'muted' }) },
+                { key: 'act', label: t.cost.cols.act, nowrap: true, noRowClick: true, render: (r) => {
+                        const name = `${r.typeText} ${r.targetName}`;
+                        return (jsxs("span", { class: "s4vp-st-acts", children: [jsx(Button, { small: true, label: t.edit, ariaLabel: t.cost.editOf(name), disabled: !canAccounts || !!app.busy, title: lock, onClick: () => editCost(r) }), r.inactive
+                                    ? jsx(Button, { small: true, kind: "ghost", label: t.cost.restore, ariaLabel: t.cost.restoreOf(name), disabled: !canAccounts || !!app.busy, title: lock, onClick: () => restoreCost(r) })
+                                    : jsx(Button, { small: true, kind: "ghost", label: t.cost.retire, ariaLabel: t.cost.retireOf(name), disabled: !canAccounts || !!app.busy, title: lock, onClick: () => retireCost(r) })] }));
+                    } },
+            ];
+            return (jsxs("div", { class: "s4vp-cols", children: [jsxs("div", { class: "s4vp-col-main", children: [cost.unavailable ? note(t.cost.unavailable, 'warn') : null, canAccounts ? null : note(t.acctOnly), jsx(Card, { flush: true, label: t.cost.title, children: jsx(Table, { label: t.cost.title, columns: columns, rows: rows, search: true, searchPlaceholder: t.cost.search, empty: all.length ? t.cost.emptyFilter : t.cost.empty, maxHeight: TABLE_HEIGHT, toolbar: jsx(Chips, { items: chips, value: costFilter, onPick: setCostFilter, label: t.cost.chips.label }) }) })] }), jsxs("div", { class: "s4vp-col-side s4vp-st-side", children: [jsxs(Card, { title: t.cost.priority.title, children: [jsx("ol", { class: "s4vp-st-prio", "aria-label": t.cost.priority.label, children: t.cost.priority.levels.map((text, i) => jsx("li", { children: text }, `p${i}`)) }), jsx("div", { class: "s4vp-small", children: t.cost.priority.note })] }), testCard()] })] }));
+        };
+        // ------------------------------------------------------------------ cấp duyệt bảng lương
+        const whoText = (r) => (r.approver ? r.approverName || `#${r.approver}` : t.apv.roles[r.role] || r.role || '');
+        const editApv = (row) => {
+            const r = row || {};
+            const levels = list$1(apv && apv.rows).filter((x) => !x.inactive).map((x) => x.level);
+            openDialog({ kind: 'apv', id: r.id || '', approverName: r.approverName || '' }, { level: row ? String(r.level || '') : String(levels.length ? Math.max.apply(null, levels) + 1 : 1), name: r.name || '', approver: r.approver || '', role: r.role || '', min_net: blank$1(r.minNet) ? '' : plainNumber(r.minNet), subsidiary: row ? r.subsidiary || '' : '' });
+        };
+        const saveApv = () => {
+            const f = formRef.current;
+            const level = String(f.level || '').trim();
+            if (!/^\d{1,3}$/.test(level) || Number(level) < 1)
+                return setError(t.apv.form.errLevel);
+            if (!String(f.name || '').trim())
+                return setError(t.apv.form.errName);
+            if (!f.approver && !f.role)
+                return setError(t.apv.form.errWho);
+            const net = String(f.min_net || '').trim() ? toNumber(f.min_net) : null;
+            if (String(f.min_net || '').trim() && (net === null || net < 0))
+                return setError(t.apv.form.errNet);
+            const values = { level, name: String(f.name).trim(), approver: f.approver || '', role: f.approver ? '' : f.role || '', min_net: net === null ? '' : net, subsidiary: f.subsidiary || '' };
+            return submit(post({ action: 'saveApprovalStep', id: dialog.id || null, values }), t.apv.saved);
+        };
+        const apvDialog = () => {
+            const subs = list$1(boot.subsidiaries).map((x) => ({ value: String(x.id), label: x.name }));
+            const users = list$1(apv && apv.users).map((u) => ({ value: u.id, label: `${u.code}${u.name ? ` - ${u.name}` : ''}` }));
+            return (jsxs(Dialog, { title: dialog.id ? t.apv.form.titleEdit : t.apv.form.titleNew, width: 720, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.save, kind: "primary", disabled: !!app.busy, onClick: saveApv })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.apv.form.level, hint: t.apv.form.levelHint, children: jsx(NumberInput, { value: form.level, onInput: setField('level') }) }), jsx(Field, { label: t.apv.form.name, hint: t.apv.form.nameHint, children: jsx(TextInput, { value: form.name, onInput: setField('name') }) }), jsx(Field, { label: t.apv.form.approver, hint: t.apv.form.approverHint, children: jsx(Select, { value: form.approver, onInput: setField('approver'), options: optionsWith(users, form.approver, dialog.approverName), placeholder: t.apv.form.approverPick }) }), jsx(Field, { label: t.apv.form.role, hint: t.apv.form.roleHint, children: jsx(Select, { value: form.approver ? '' : form.role, onInput: setField('role'), options: ['A', 'H', 'D'].map((k) => ({ value: k, label: t.apv.roles[k] })), placeholder: t.apv.form.rolePick, disabled: !!form.approver }) }), jsx(Field, { label: t.apv.form.minNet, hint: t.apv.form.minNetHint, children: jsx(NumberInput, { value: form.min_net, onInput: setField('min_net'), placeholder: t.apv.always }) }), jsx(Field, { label: t.apv.form.subsidiary, hint: t.apv.form.subsidiaryHint, children: jsx(Select, { value: form.subsidiary, onInput: setField('subsidiary'), options: optionsWith(subs, form.subsidiary), placeholder: t.apv.shared }) })] }), errorLine()] }));
+        };
+        const retireApv = (r) => app.confirm(t.apv.confirmRetire(`${t.apv.levelName(r.level, r.name)}: ${whoText(r)}`), () => submit(post({ action: 'retireApprovalStep', id: r.id }), t.apv.retired));
+        const restoreApv = (r) => submit(post({ action: 'retireApprovalStep', id: r.id, restore: true }), t.apv.restored);
+        const approvalsSection = () => {
+            if (!apv)
+                return jsx(Card, { children: jsx(Empty, { text: t.loading }) });
+            const lock = canAccounts ? '' : t.acctOnly;
+            const all = list$1(apv.rows).map((r) => Object.assign({}, r, {
+                whoText: whoText(r), minNetText: blank$1(r.minNet) || !Number(r.minNet) ? t.apv.always : t.apv.fromAmount(money(r.minNet)),
+                subsidiaryText: r.subsidiary ? r.subsidiaryName || subName(r.subsidiary) : t.apv.shared, stateText: t.apv.states[r.state] || r.state,
+            }));
+            const rows = apvFilter === 'active' ? all.filter((r) => !r.inactive) : all;
+            const chips = [{ value: 'active', label: t.apv.chips.active, count: all.filter((r) => !r.inactive).length }, { value: 'all', label: t.apv.chips.all, count: all.length }];
+            const columns = [
+                { key: 'level', label: t.apv.cols.level, align: 'right', nowrap: true },
+                { key: 'name', label: t.apv.cols.name, render: (r) => jsx("span", { class: "s4vp-st-name", children: r.name }) },
+                { key: 'whoText', label: t.apv.cols.approver },
+                { key: 'minNetText', label: t.apv.cols.minNet, align: 'right', nowrap: true },
+                { key: 'subsidiaryText', label: t.apv.cols.subsidiary },
+                { key: 'stateText', label: t.apv.cols.state, nowrap: true, render: (r) => jsx(Badge, { text: r.stateText, tone: APV_TONE$1[r.state] || 'muted' }) },
+                { key: 'act', label: t.apv.cols.act, nowrap: true, noRowClick: true, render: (r) => {
+                        const name = `${t.apv.levelName(r.level, r.name)} ${r.whoText}`;
+                        return (jsxs("span", { class: "s4vp-st-acts", children: [jsx(Button, { small: true, label: t.edit, ariaLabel: t.apv.editOf(name), disabled: !canAccounts || !!app.busy, title: lock, onClick: () => editApv(r) }), r.inactive
+                                    ? jsx(Button, { small: true, kind: "ghost", label: t.cost.restore, ariaLabel: t.apv.restoreOf(name), disabled: !canAccounts || !!app.busy, title: lock, onClick: () => restoreApv(r) })
+                                    : jsx(Button, { small: true, kind: "ghost", label: t.cost.retire, ariaLabel: t.apv.retireOf(name), disabled: !canAccounts || !!app.busy, title: lock, onClick: () => retireApv(r) })] }));
+                    } },
+            ];
+            const levels = list$1(apv.levels);
+            return (jsxs("div", { class: "s4vp-st-hub", children: [note(t.apv.rule), apv.unavailable ? note(t.apv.unavailable, 'warn') : null, canAccounts ? null : note(t.acctOnly), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.apv.title, children: jsx(Table, { label: t.apv.title, columns: columns, rows: rows, search: true, searchPlaceholder: t.apv.search, empty: all.length ? t.apv.emptyFilter : t.apv.empty, maxHeight: TABLE_HEIGHT, toolbar: jsx(Chips, { items: chips, value: apvFilter, onPick: setApvFilter, label: t.apv.chips.label }) }) }) }), jsx("div", { class: "s4vp-col-side s4vp-st-side", children: jsx(Card, { title: subsidiary ? t.apv.effective(subName(subsidiary)) : t.apv.effectiveShared, children: levels.length ? (jsx("ol", { class: "s4vp-st-prio", children: levels.map((l) => (jsxs("li", { children: [jsx("span", { class: "s4vp-st-name", children: t.apv.levelName(l.level, l.name) }), jsx("div", { class: "s4vp-small", children: list$1(l.approvers).map((a) => `${a.employee ? a.employeeName || `#${a.employee}` : t.apv.roles[a.role] || a.role}${a.minNet ? ` (${t.apv.fromAmount(money(a.minNet))})` : ''}`).join(` ${t.apv.or} `) })] }, `l${l.level}`))) })) : (jsx("div", { class: "s4vp-small", children: t.apv.single })) }) })] })] }));
+        };
+        // ------------------------------------------------------------------ kỳ lương
+        const groupName = (id) => {
+            const g = list$1(boot.paygroups).find((x) => String(x.id) === String(id));
+            return g ? g.code : id ? `#${id}` : '';
+        };
+        const periodAct = (action, p, doneText) => submit(post({ action, id: p.id }), doneText, () => app.reloadBoot());
+        const openGenerate = () => {
+            const groups = list$1(boot.paygroups);
+            const group = periodGroup || (groups[0] ? String(groups[0].id) : '');
+            const thisYear = new Date().getFullYear();
+            const has = (y) => list$1(boot.periods).some((p) => String(p.paygroup) === group && String(p.start || '').slice(0, 4) === String(y));
+            openDialog({ kind: 'generate' }, { year: String(has(thisYear) ? thisYear + 1 : thisYear), paygroup: group });
+        };
+        const saveGenerate = () => {
+            const f = formRef.current;
+            if (!/^\d{4}$/.test(String(f.year || '').trim()))
+                return setError(t.periodsSec.errYear);
+            if (!f.paygroup)
+                return setError(t.periodsSec.errGroup);
+            const year = String(f.year).trim();
+            return submit(post({ action: 'generatePeriods', year: Number(year), paygroup: f.paygroup }), (r) => t.periodsSec.generated(list$1(r.created).length, Number(r.skipped) || 0), () => {
+                if (alive.current) {
+                    setPeriodYear(year);
+                    setPeriodGroup(String(f.paygroup));
+                }
+                return app.reloadBoot();
+            });
+        };
+        const generateDialog = () => (jsxs(Dialog, { title: t.periodsSec.genTitle, width: 520, onClose: closeDialog, actions: [jsx(Button, { label: t.cancel, onClick: closeDialog }), jsx(Button, { label: t.periodsSec.genRun(form.year), kind: "primary", disabled: !!app.busy, onClick: saveGenerate })], children: [jsxs("div", { class: "s4vp-st-form", children: [jsx(Field, { label: t.periodsSec.year, children: jsx(TextInput, { value: form.year, onInput: setField('year'), onEnter: saveGenerate }) }), jsx(Field, { label: t.periodsSec.paygroup, children: jsx(Select, { value: form.paygroup, onInput: setField('paygroup'), options: list$1(boot.paygroups).map((g) => ({ value: String(g.id), label: `${g.code}${g.description ? ` - ${g.description}` : ''}` })) }) })] }), jsx("div", { class: "s4vp-small", children: t.periodsSec.genHint }), errorLine()] }));
+        const periodsSection = () => {
+            const today = new Date();
+            const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const all = list$1(boot.periods).map((p) => Object.assign({}, p, {
+                year: String(p.start || '').slice(0, 4), groupText: groupName(p.paygroup), startText: fmtDate(p.start), endText: fmtDate(p.end), statusText: t.periodsSec.status[p.status] || p.status || '',
+                attText: t.periodsSec.att[p.attStatus] || p.attStatus || '', isCurrent: p.start <= iso && iso <= p.end,
+            }));
+            const years = [...new Set(all.map((p) => p.year).filter(Boolean))].sort().reverse();
+            const year = periodYear === 'all' ? '' : periodYear || (years.indexOf(String(today.getFullYear())) >= 0 ? String(today.getFullYear()) : years[0] || '');
+            const rows = all.filter((p) => (!year || p.year === year) && (!periodGroup || String(p.paygroup) === periodGroup)).sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+            const lock = canSetup ? '' : t.hrOnly;
+            const columns = [
+                { key: 'code', label: t.periodsSec.cols.code, nowrap: true, render: (p) => (jsxs("span", { class: "s4vp-st-name", children: [jsx("span", { children: p.code }), p.isCurrent ? jsx(Badge, { text: t.periodsSec.current, tone: "info" }) : null] })) },
+                { key: 'groupText', label: t.periodsSec.cols.paygroup, nowrap: true },
+                { key: 'startText', label: t.periodsSec.cols.start, nowrap: true },
+                { key: 'endText', label: t.periodsSec.cols.end, nowrap: true },
+                { key: 'stdDays', label: t.periodsSec.cols.stdDays, type: 'num', nowrap: true },
+                { key: 'taxMonth', label: t.periodsSec.cols.taxMonth, nowrap: true },
+                { key: 'statusText', label: t.periodsSec.cols.status, nowrap: true, render: (p) => jsx(Badge, { text: p.statusText, tone: p.status === 'C' ? 'muted' : 'ok' }) },
+                { key: 'attText', label: t.periodsSec.cols.att, nowrap: true, render: (p) => jsx(Badge, { text: p.attText, tone: p.attStatus === 'L' ? 'info' : 'muted' }) },
+                { key: 'act', label: t.periodsSec.cols.act, nowrap: true, noRowClick: true, render: (p) => (jsxs("span", { class: "s4vp-st-acts", children: [p.status === 'C'
+                                ? jsx(Button, { small: true, label: t.periodsSec.reopen, ariaLabel: t.periodsSec.reopenOf(p.code), disabled: !canSetup || !!app.busy, title: lock, onClick: () => app.confirm(t.periodsSec.confirmReopen(p.code), () => periodAct('reopenPeriod', p, t.periodsSec.reopened(p.code))) })
+                                : jsx(Button, { small: true, label: t.periodsSec.close, ariaLabel: t.periodsSec.closeOf(p.code), disabled: !canSetup || !!app.busy, title: lock, onClick: () => app.confirm(t.periodsSec.confirmClose(p.code), () => periodAct('closePeriod', p, t.periodsSec.closed(p.code))) }), jsx(Button, { small: true, kind: "ghost", label: t.periodsSec.attendance, ariaLabel: t.periodsSec.attendanceOf(p.code), onClick: () => app.go('attendance', { period: p.id }) })] })) },
+            ];
+            const toolbar = (jsxs("div", { class: "s4vp-st-filters", children: [jsx(Select, { value: year || 'all', onInput: (v) => setPeriodYear(v || 'all'), options: [{ value: 'all', label: t.periodsSec.allYears }].concat(years.map((y) => ({ value: y, label: y }))), ariaLabel: t.periodsSec.year, width: 130 }), jsx(Select, { value: periodGroup, onInput: setPeriodGroup, options: list$1(boot.paygroups).map((g) => ({ value: String(g.id), label: g.code })), placeholder: t.periodsSec.allGroups, ariaLabel: t.periodsSec.paygroup, width: 190 }), jsx("span", { class: "s4vp-small", children: t.periodsSec.total(rows.length) })] }));
+            return (jsxs("div", { class: "s4vp-st-hub", children: [canSetup ? null : note(t.hrOnly), jsx(Card, { flush: true, label: t.periodsSec.title, children: jsx(Table, { label: t.periodsSec.title, columns: columns, rows: rows, search: true, searchPlaceholder: t.periodsSec.search, empty: all.length ? t.periodsSec.emptyFilter : t.periodsSec.empty, maxHeight: TABLE_HEIGHT, toolbar: toolbar }) })] }));
+        };
+        // ------------------------------------------------------------------ tham số pháp lý
+        const verify = (p) => app.confirm(t.legal.confirmVerify(p), () => 
+        // Dải cảnh báo của Trang chủ đọc boot.unverified: nạp lại bootstrap sau khi đổi cờ
+        submit(post({ action: 'verifyParam', id: p.id }), t.legal.verifiedDone(p.code), () => app.reloadBoot()));
+        const legalSection = () => {
+            if (!legal)
+                return jsx(Card, { children: jsx(Empty, { text: t.loading }) });
+            const which = tab === 'brackets' || tab === 'components' ? tab : 'params';
+            const unverified = list$1(legal.params).filter((p) => !p.verified).length;
+            const tabs = [{ value: '', label: t.legal.tabs.params, count: unverified || null }, { value: 'brackets', label: t.legal.tabs.brackets }, { value: 'components', label: t.legal.tabs.components }];
+            const currentBadge = (r) => jsx(Badge, { text: r.current ? t.legal.current : t.legal.notCurrent, tone: r.current ? 'ok' : 'muted' });
+            let body;
+            if (which === 'params') {
+                const all = list$1(legal.params).map((p) => Object.assign({}, p, {
+                    valueText: plainNumber(p.value), effectiveText: fmtDate(p.effective), expirationText: fmtDate(p.expiration), verifiedText: p.verified ? t.legal.verified : t.legal.unverified,
+                    groupText: t.legal.groups[p.group] || p.group,
+                }));
+                const groups = [...new Set(all.map((p) => p.group))].sort();
+                const rows = all.filter((p) => legalFilter === 'all' || (legalFilter === 'unverified' ? !p.verified : p.group === legalFilter));
+                const chips = [{ value: 'all', label: t.legal.chips.all, count: all.length }, { value: 'unverified', label: t.legal.chips.unverified, count: unverified, tone: unverified ? 'warn' : '' }].concat(groups.map((g) => ({ value: g, label: t.legal.groups[g] || g, count: all.filter((p) => p.group === g).length })));
+                const columns = [
+                    { key: 'code', label: t.legal.cols.code, nowrap: true, render: (p) => jsx("span", { class: "s4vp-st-name", children: p.code }) },
+                    { key: 'description', label: t.legal.cols.description },
+                    { key: 'valueText', label: t.legal.cols.value, align: 'right', nowrap: true },
+                    { key: 'effectiveText', label: t.legal.cols.effective, nowrap: true },
+                    { key: 'expirationText', label: t.legal.cols.expiration, nowrap: true },
+                    { key: 'legalRef', label: t.legal.cols.legalRef, render: (p) => jsx("span", { class: "s4vp-small", children: p.legalRef }) },
+                    { key: 'verifiedText', label: t.legal.cols.verified, nowrap: true, render: (p) => jsx(Badge, { text: p.verifiedText, tone: p.verified ? 'ok' : 'warn' }) },
+                    { key: 'act', label: t.legal.cols.act, nowrap: true, noRowClick: true, render: (p) => (p.verified ? '' : jsx(Button, { small: true, label: t.legal.verify, ariaLabel: t.legal.verifyOf(p.code), disabled: !canSetup || !!app.busy, title: canSetup ? '' : t.hrOnly, onClick: () => verify(p) })) },
+                ];
+                body = (jsx(Card, { flush: true, label: t.legal.tabs.params, children: jsx(Table, { label: t.legal.tabs.params, columns: columns, rows: rows, search: true, searchPlaceholder: t.legal.search, empty: all.length ? t.legal.emptyFilter : t.legal.empty, maxHeight: TABLE_HEIGHT, toolbar: jsx(Chips, { items: chips, value: legalFilter, onPick: setLegalFilter, label: t.legal.chips.label }) }) }));
+            }
+            else if (which === 'brackets') {
+                const rows = list$1(legal.brackets).map((b) => Object.assign({}, b, { effectiveText: fmtDate(b.effective), expirationText: fmtDate(b.expiration), upperText: blank$1(b.upper) ? t.legal.topBracket : money(b.upper), stateText: b.current ? t.legal.current : t.legal.notCurrent }));
+                const columns = [
+                    { key: 'effectiveText', label: t.legal.cols.effective, nowrap: true },
+                    { key: 'expirationText', label: t.legal.cols.expiration, nowrap: true },
+                    { key: 'level', label: t.legal.cols.level, align: 'right', nowrap: true },
+                    { key: 'upperText', label: t.legal.cols.upper, align: 'right', nowrap: true },
+                    { key: 'rate', label: t.legal.cols.rate, type: 'pct', nowrap: true },
+                    { key: 'legalRef', label: t.legal.cols.legalRef, render: (b) => jsx("span", { class: "s4vp-small", children: b.legalRef }) },
+                    { key: 'stateText', label: t.legal.cols.state, nowrap: true, render: currentBadge },
+                ];
+                body = (jsx(Card, { flush: true, label: t.legal.tabs.brackets, children: jsx(Table, { label: t.legal.tabs.brackets, columns: columns, rows: rows, search: true, searchPlaceholder: t.legal.search, empty: t.legal.empty, maxHeight: TABLE_HEIGHT }) }));
+            }
+            else {
+                const rows = list$1(legal.components).map((c) => Object.assign({}, c, { effectiveText: fmtDate(c.effective), expirationText: fmtDate(c.expiration), capText: plainNumber(c.capFactor), stateText: c.current ? t.legal.current : t.legal.notCurrent }));
+                const columns = [
+                    { key: 'code', label: t.legal.cols.code, nowrap: true, render: (c) => jsx("span", { class: "s4vp-st-name", children: c.code }) },
+                    { key: 'description', label: t.legal.cols.name },
+                    { key: 'employeeRate', label: t.legal.cols.ee, type: 'pct', nowrap: true },
+                    { key: 'employerRate', label: t.legal.cols.er, type: 'pct', nowrap: true },
+                    { key: 'capText', label: t.legal.cols.cap, align: 'right', nowrap: true },
+                    { key: 'effectiveText', label: t.legal.cols.effective, nowrap: true },
+                    { key: 'expirationText', label: t.legal.cols.expiration, nowrap: true },
+                    { key: 'legalRef', label: t.legal.cols.legalRef, render: (c) => jsx("span", { class: "s4vp-small", children: c.legalRef }) },
+                    { key: 'stateText', label: t.legal.cols.state, nowrap: true, render: currentBadge },
+                ];
+                body = (jsx(Card, { flush: true, label: t.legal.tabs.components, children: jsx(Table, { label: t.legal.tabs.components, columns: columns, rows: rows, search: true, searchPlaceholder: t.legal.search, empty: t.legal.empty, maxHeight: TABLE_HEIGHT }) }));
+            }
+            return (jsxs("div", { class: "s4vp-st-hub", children: [jsxs("div", { class: "s4vp-st-bar", children: [jsx(Tabs, { items: tabs, value: which === 'params' ? '' : which, onPick: (v) => go('legal', v), label: t.legal.tabsLabel }), jsx("span", { class: "s4vp-st-grow" }), listButton(which === 'brackets' ? 'pit_bracket' : which === 'components' ? 'ins_comp' : 'param', true)] }), which === 'params' && unverified ? note(t.legal.unverifiedNote(unverified), 'warn') : null, body] }));
+        };
+        // ------------------------------------------------------------------ khung trang
+        const SECTIONS = {
+            approvals: { title: t.apv.title, sub: t.apv.sub, render: approvalsSection, actions: () => [listButton('approval_step', true), jsx(Button, { label: t.apv.add, kind: "primary", disabled: !canAccounts || !apv || !!apv.unavailable || !!app.busy, title: canAccounts ? '' : t.acctOnly, onClick: () => editApv(null) })] },
+            general: { title: t.general.title, sub: t.general.sub, render: generalSection },
+            accounts: { title: t.accounts.title, sub: t.accounts.sub, render: accountsSection },
+            costAccounts: { title: t.cost.title, sub: t.cost.sub, render: costSection, actions: () => [jsx(Button, { label: t.cost.add, kind: "primary", disabled: !canAccounts || !cost || !!cost.unavailable || !!app.busy, title: canAccounts ? '' : t.acctOnly, onClick: () => editCost(null) })] },
+            periods: { title: t.periodsSec.title, sub: t.periodsSec.sub, render: periodsSection, actions: () => [listButton('period', true), jsx(Button, { label: t.periodsSec.generate, kind: "primary", disabled: !canSetup || !boot.setupReady || !list$1(boot.paygroups).length || !!app.busy, title: !canSetup ? t.hrOnly : boot.setupReady ? '' : t.periodsSec.genNeedSetup, onClick: openGenerate })] },
+            legal: { title: t.legal.title, sub: t.legal.sub, render: legalSection },
+        };
+        const current = SECTIONS[section] || null;
+        const safeRender = (fn) => {
+            try {
+                return fn();
+            }
+            catch (e) {
+                return jsx(Card, { children: jsx(Empty, { text: `${t.renderError} ${String((e && e.message) || e)}` }) });
+            }
+        };
+        const dialogBody = () => {
+            if (!dialog)
+                return null;
+            if (dialog.kind === 'pack')
+                return packDialog();
+            if (dialog.kind === 'group')
+                return groupDialog();
+            if (dialog.kind === 'accounts')
+                return accountsDialog();
+            if (dialog.kind === 'ins')
+                return insDialog();
+            if (dialog.kind === 'cost')
+                return costDialog();
+            if (dialog.kind === 'generate')
+                return generateDialog();
+            if (dialog.kind === 'apv')
+                return apvDialog();
+            return null;
+        };
+        const summary = (status && status.summary) || null;
+        const headerStatus = !current && summary ? (summary.missing || summary.attention ? { text: t.summary(summary), tone: summary.missing ? 'error' : 'warn' } : { text: t.summaryOk, tone: 'ok' }) : null;
+        const actions = (current && current.actions ? current.actions() : []).concat([jsx(Button, { label: t.refresh, onClick: () => (section === 'periods' ? app.reloadBoot() : load()) })]);
+        if (!current)
+            actions.unshift(jsx(Button, { label: t.legacy, kind: "ghost", onClick: () => app.go('setup') }));
+        return (jsxs(Page, { children: [jsx(PageHeader, { title: current ? current.title : t.title, sub: current ? current.sub : subsidiary ? t.sub : t.noSubsidiary, status: headerStatus, back: current ? { label: t.title, onClick: () => go('') } : null, actions: actions }), safeRender(current ? current.render : hub), dialog ? safeRender(dialogBody) : null] }));
     }
 
     const TEXT$4 = {
-        vi: { title: 'Sản lượng - lương khoán', building: 'Màn hình này đang được dựng lại với giao diện mới.', openOld: 'Mở màn hình hiện tại' },
-        en: { title: 'Output - piecework', building: 'This screen is being rebuilt with the new interface.', openOld: 'Open the current screen' },
+        vi: {
+            title: 'Sản lượng - lương khoán',
+            sub: 'Nhập khối lượng của tổ hoặc cá nhân, xem tiền chia cho từng người, gửi duyệt. Phiếu đã duyệt tự vào bảng lương của kỳ.',
+            noSubsidiary: 'Chưa chọn công ty con.',
+            newEntry: 'Tạo phiếu',
+            refresh: 'Tải lại',
+            legacy: 'Màn hình cũ',
+            loading: 'Đang tải...',
+            working: 'Đang xử lý...',
+            period: 'Kỳ lương',
+            allPeriods: 'Tất cả kỳ',
+            search: 'Tìm số, tổ, dự án, số tiền',
+            empty: 'Chưa có phiếu sản lượng nào trong kỳ. Bấm Tạo phiếu để nhập.',
+            emptyFilter: 'Không có phiếu nào khớp bộ lọc này.',
+            total: (n) => `Tổng ${n} phiếu`,
+            people: (n) => `${n} người`,
+            readOnly: 'Vai trò của bạn chỉ được xem phiếu sản lượng.',
+            status: { H: 'Tạm giữ', P: 'Chờ duyệt', A: 'Đã duyệt', C: 'Đã vào lương' },
+            kind: { T: 'Tổ', I: 'Cá nhân', S: 'Doanh số' },
+            method: { D: 'Ngày công', F: 'Ngày công x hệ số', H: 'Giờ', P: 'Tỷ lệ cố định', E: 'Chia đều' },
+            chips: { all: 'Tất cả', todo: 'Cần xử lý', label: 'Lọc theo trạng thái' },
+            cards: {
+                pending: 'Chờ duyệt',
+                pendingNote: (n) => `${n} phiếu chờ trưởng bộ phận duyệt`,
+                approved: 'Đã duyệt, chưa vào lương',
+                approvedNote: (n) => `${n} phiếu sẽ vào bảng lương khi tính lương`,
+                total: 'Tổng tiền khoán',
+                totalNote: (n, hold) => `${n} phiếu${hold ? ` - ${hold} phiếu còn tạm giữ` : ''}`,
+                included: 'Đã vào bảng lương',
+                includedNote: (n, batches) => `${n} phiếu${batches ? ` - ${batches}` : ''}`,
+            },
+            cols: { number: 'Số', date: 'Ngày', kind: 'Loại', team: 'Tổ', project: 'Dự án', table: 'Bảng đơn giá', total: 'Thành tiền', split: 'Đã chia', status: 'Trạng thái', batch: 'Bảng lương' },
+            todo: {
+                label: 'Cần xử lý',
+                clear: 'Bỏ lọc',
+                PERIOD_POSTED: 'Kỳ đã ghi sổ lương',
+                SPLIT_MISMATCH: 'Tổng chia lệch',
+                NOT_SPLIT: 'Tổ chưa chia',
+                NO_MEMBERS: 'Chưa có thành viên',
+                NO_PROFILE: 'Thiếu hồ sơ lương',
+                RATE_MISSING: 'Thiếu đơn giá',
+                NO_LINES: 'Chưa có sản lượng',
+                NO_PERIOD: 'Chưa có kỳ',
+            },
+            issue: {
+                PERIOD_POSTED: (batch) => `Kỳ của phiếu đã có bảng lương ghi sổ (${batch}) nhưng phiếu chưa vào lương. Chuyển phiếu sang kỳ đang mở để được trả.`,
+                SPLIT_MISMATCH: (split, total) => `Tổng tiền chia ${split} khác thành tiền ${total}.`,
+                NOT_SPLIT: 'Phiếu tổ chưa chia tiền cho thành viên.',
+                NO_MEMBERS: 'Phiếu tổ chưa có thành viên.',
+                NO_PROFILE: (names) => `Chưa có hồ sơ lương ở công ty này: ${names}. Tiền của những người này sẽ không vào bảng lương.`,
+                RATE_MISSING: 'Có dòng có số lượng nhưng chưa có đơn giá.',
+                NO_LINES: 'Phiếu chưa có sản lượng.',
+                NO_PERIOD: 'Phiếu chưa có kỳ lương (không có kỳ nào chứa ngày phiếu).',
+                fix: 'Xử lý',
+            },
+            steps: { label: 'Các bước của phiếu', lines: 'Sản lượng', members: 'Thành viên', split: 'Chia tiền', submit: 'Gửi duyệt', approve: 'Duyệt', payroll: 'Vào lương' },
+            detail: {
+                openRecord: 'Mở bản ghi',
+                edit: 'Sửa phiếu',
+                periodOf: (name) => `Kỳ ${name}`,
+                noPeriod: 'Chưa có kỳ',
+                total: 'Thành tiền',
+                split: 'Đã chia',
+                diff: 'Chênh lệch',
+                peopleCount: 'Số người',
+                method: 'Cách chia',
+                description: 'Diễn giải',
+                next: (step) => `Tiếp: ${step}`,
+                lockedNote: 'Phiếu không còn tạm giữ nên không sửa được. Trả phiếu về tạm giữ nếu cần sửa.',
+            },
+            lines: {
+                save: 'Lưu sản lượng',
+                add: 'Thêm dòng',
+                search: 'Tìm hạng mục, nhân viên, số tiền',
+                employee: 'Nhân viên',
+                item: 'Hạng mục',
+                itemPick: 'Chọn hạng mục',
+                qty: 'Số lượng',
+                sales: 'Doanh số',
+                rate: 'Đơn giá',
+                amount: 'Thành tiền',
+                uom: 'ĐVT',
+                remove: 'Bỏ',
+                removeOf: (name) => `Bỏ dòng ${name}`,
+                itemOf: (n) => `Hạng mục dòng ${n}`,
+                qtyOf: (n) => `Số lượng dòng ${n}`,
+                rateOf: (n) => `Đơn giá dòng ${n}`,
+                sum: 'Tổng thành tiền',
+                none: 'Chưa có dòng sản lượng.',
+                noneTeam: 'Chưa có dòng sản lượng. Bấm Thêm dòng để nhập hạng mục và số lượng.',
+                noneIndividual: 'Chưa có dòng nào. Tìm nhân viên ở ô trên để thêm dòng.',
+                rateFixed: 'Đơn giá lấy từ bảng đơn giá hiệu lực theo ngày phiếu; bảng này không cho sửa trên phiếu.',
+                rateEditable: 'Đơn giá gợi ý từ bảng đơn giá hiệu lực theo ngày phiếu; sửa được trên từng dòng.',
+                rateNone: 'Chưa có đơn giá hiệu lực - nhập đơn giá',
+                ratesLoading: 'Đang lấy đơn giá hiệu lực...',
+                ratesFailed: 'Không lấy được đơn giá gợi ý; máy chủ vẫn định giá theo bảng khi lưu.',
+                salesHint: 'Bảng thang doanh số: nhập doanh số của từng người, tiền thưởng tính theo thang khi chạy lương.',
+                errItem: 'Có dòng chưa chọn hạng mục.',
+                errQty: 'Số lượng phải là số không âm.',
+                errRate: 'Đơn giá phải là số không âm.',
+                saved: (nbr) => `Đã lưu sản lượng phiếu ${nbr}.`,
+                unsaved: 'Có thay đổi chưa lưu.',
+            },
+            find: {
+                label: 'Thêm nhân viên',
+                placeholder: 'Gõ mã hoặc họ tên (có dấu), bấm kết quả để thêm',
+                searching: 'Đang tìm...',
+                noResult: 'Không tìm thấy nhân viên có hồ sơ lương khớp.',
+                more: 'Còn kết quả khác - gõ thêm để thu hẹp.',
+                added: 'đã có trên phiếu',
+                results: 'Kết quả tìm nhân viên',
+            },
+            members: {
+                save: 'Lưu thành viên',
+                load: 'Nạp từ tổ',
+                loadFirst: 'Nạp thành viên từ tổ',
+                loadDirty: 'Lưu thay đổi trước khi nạp thêm từ tổ.',
+                noTeam: 'Phiếu chưa chọn tổ.',
+                search: 'Tìm thành viên',
+                employee: 'Thành viên',
+                workDays: 'Ngày công',
+                hours: 'Giờ',
+                factor: 'Hệ số',
+                percent: 'Tỷ lệ %',
+                daysOf: (name) => `Ngày công của ${name}`,
+                hoursOf: (name) => `Giờ của ${name}`,
+                factorOf: (name) => `Hệ số của ${name}`,
+                percentOf: (name) => `Tỷ lệ của ${name}`,
+                removeOf: (name) => `Bỏ ${name} khỏi phiếu`,
+                none: 'Chưa có thành viên. Nạp từ tổ hoặc tìm nhân viên để thêm.',
+                noProfile: 'Chưa có hồ sơ lương',
+                loaded: (n) => (n ? `Đã nạp thêm ${n} thành viên từ tổ.` : 'Không có thành viên mới: mọi thành viên hiệu lực của tổ đã có trên phiếu.'),
+                saved: (nbr) => `Đã lưu thành viên phiếu ${nbr}. Kiểm tra số chia dự kiến.`,
+                methodHint: 'Ngày công nạp từ bảng công của kỳ (nếu đã có); sửa được trên từng dòng.',
+                errNumber: 'Ngày công, giờ, hệ số, tỷ lệ phải là số không âm.',
+                percentSum: (sum) => `Tổng tỷ lệ ${sum}% (phải bằng 100%)`,
+            },
+            split: {
+                run: 'Chia tiền',
+                rerun: 'Chia lại theo cách chia',
+                saveManual: 'Lưu số sửa tay',
+                search: 'Tìm thành viên, số tiền',
+                basis: 'Căn cứ',
+                preview: 'Dự kiến chia',
+                amount: 'Ghi trên phiếu',
+                amountOf: (name) => `Số tiền của ${name}`,
+                manual: 'sửa tay',
+                sum: 'Tổng',
+                ok: 'Tổng chia bằng thành tiền phiếu.',
+                mismatch: (split, total, diff) => `Tổng chia ${split} khác thành tiền ${total} (lệch ${diff}). Chia lại hoặc sửa số cho khớp trước khi gửi duyệt.`,
+                notYet: 'Chưa ghi số chia lên phiếu. Số dự kiến tính theo cách chia hiện tại; bấm Chia tiền để ghi, hoặc gửi duyệt để hệ thống tự chia.',
+                manualNote: 'Phiếu có số sửa tay: khi gửi duyệt hệ thống không tự chia lại.',
+                stale: 'Thành viên có thay đổi chưa lưu - lưu ở bước Thành viên để tính lại số dự kiến.',
+                cannot: (reason) => `Chưa chia được: ${reason}`,
+                basisDays: (d) => `${d} công`,
+                basisDaysFactor: (d, f) => `${d} công x ${f}`,
+                basisHours: (h) => `${h} giờ`,
+                basisPercent: (p) => `${p}%`,
+                basisEqual: 'Chia đều',
+                done: (nbr) => `Đã chia tiền phiếu ${nbr}.`,
+                savedManual: (nbr) => `Đã lưu số sửa tay phiếu ${nbr}.`,
+                errAmount: 'Số tiền phải là số không âm.',
+                noMembers: 'Phiếu chưa có thành viên để chia.',
+            },
+            submit: {
+                run: 'Gửi duyệt',
+                intro: 'Kiểm tra lần cuối rồi gửi trưởng bộ phận duyệt. Sau khi gửi, phiếu không sửa được trừ khi bị trả lại.',
+                autoSplit: 'Phiếu tổ chưa có số sửa tay: hệ thống chia tiền theo cách chia ngay khi gửi.',
+                sent: 'Phiếu đã được gửi duyệt.',
+                blockNoLines: 'Chưa có dòng sản lượng có thành tiền.',
+                blockNoMembers: 'Phiếu tổ chưa có thành viên.',
+                blockSplit: 'Tổng tiền chia khác thành tiền phiếu.',
+                blockNoPeriod: 'Phiếu chưa có kỳ lương.',
+                blockClosed: 'Kỳ lương đã đóng.',
+                blockLocked: 'Kỳ công đã khóa.',
+                blockUnsaved: 'Còn thay đổi chưa lưu ở bước trước.',
+                confirm: (nbr, total, people) => `Gửi duyệt phiếu ${nbr} (${total}, ${people} người)? Sau khi gửi, phiếu không sửa được trừ khi bị trả lại.`,
+                done: (nbr) => `Đã gửi duyệt phiếu ${nbr}.`,
+            },
+            approve: {
+                run: 'Duyệt',
+                reject: 'Từ chối',
+                waiting: 'Phiếu đang chờ duyệt. Duyệt xong, phiếu tự vào bảng lương của kỳ khi tính lương.',
+                notSent: 'Phiếu chưa được gửi duyệt.',
+                approvedBy: (who, date) => `Đã duyệt${date ? ` ngày ${date}` : ''}${who ? ` - ${who}` : ''}.`,
+                confirm: (nbr, total, people) => `Duyệt phiếu ${nbr} (${total}, ${people} người)? Số tiền này sẽ vào bảng lương của kỳ.`,
+                confirmReject: (nbr) => `Từ chối phiếu ${nbr}? Phiếu trở về Tạm giữ để người lập sửa lại.`,
+                done: (nbr) => `Đã duyệt phiếu ${nbr}.`,
+                rejected: (nbr) => `Đã trả phiếu ${nbr} về Tạm giữ.`,
+            },
+            payroll: {
+                open: (nbr) => `Mở bảng lương ${nbr}`,
+                goList: 'Sang chạy lương',
+                hold: 'Trả về tạm giữ',
+                included: (nbr) => `Phiếu đã vào bảng lương ${nbr}.`,
+                waiting: (period) => `Phiếu đã duyệt, chưa vào lương. Khi tính bảng lương ${period ? `kỳ ${period}` : 'của kỳ'}, tiền khoán của từng người tự vào thu nhập; ghi sổ bảng lương thì phiếu chuyển sang Đã vào lương.`,
+                notYet: 'Phiếu chỉ vào bảng lương sau khi được duyệt.',
+                confirmHold: (nbr) => `Trả phiếu ${nbr} về Tạm giữ? Phiếu sẽ không vào bảng lương cho tới khi gửi duyệt và duyệt lại.`,
+                held: (nbr) => `Đã trả phiếu ${nbr} về Tạm giữ.`,
+            },
+            form: {
+                titleNew: 'Tạo phiếu sản lượng',
+                titleEdit: (nbr) => `Sửa phiếu ${nbr}`,
+                kind: 'Loại phiếu',
+                date: 'Ngày phiếu',
+                table: 'Bảng đơn giá',
+                tablePick: 'Chọn bảng đơn giá',
+                team: 'Tổ',
+                teamPick: 'Chọn tổ',
+                method: 'Cách chia tiền',
+                period: 'Kỳ lương',
+                periodAuto: 'Tự chọn theo ngày phiếu',
+                periodHint: 'Để trống: lấy kỳ chứa ngày phiếu',
+                project: 'Dự án',
+                projectNone: 'Theo tổ / không gắn dự án',
+                projectHint: 'Dự án quyết định đơn giá riêng và đích phân bổ chi phí',
+                projectMore: 'Danh sách chỉ gồm 300 dự án đầu; dự án khác chọn trên bản ghi.',
+                description: 'Diễn giải',
+                create: 'Tạo và nhập sản lượng',
+                save: 'Lưu phiếu',
+                cancel: 'Hủy',
+                errDate: 'Ngày không hợp lệ (dd/mm/yyyy).',
+                errTable: 'Chưa chọn bảng đơn giá.',
+                errTeam: 'Phiếu tổ phải chọn tổ.',
+                noTables: 'Chưa có bảng đơn giá loại này - tạo ở Thiết lập.',
+                repriced: 'Đổi ngày, bảng đơn giá hoặc dự án: đơn giá các dòng được tính lại theo bảng.',
+                moreOnRecord: 'Chi nhánh, work center và các trường khác sửa trên bản ghi.',
+                created: (nbr) => `Đã tạo phiếu${nbr ? ` ${nbr}` : ''}. Nhập sản lượng ở khung bên phải.`,
+                saved: (nbr) => `Đã lưu phiếu ${nbr}.`,
+            },
+        },
+        en: {
+            title: 'Output - piecework pay',
+            sub: 'Enter the output of a team or an employee, check the pay split per person, submit for approval. Approved entries flow into the payroll of the period.',
+            noSubsidiary: 'No subsidiary selected.',
+            newEntry: 'New entry',
+            refresh: 'Refresh',
+            legacy: 'Previous screen',
+            loading: 'Loading...',
+            working: 'Working...',
+            period: 'Pay period',
+            allPeriods: 'All periods',
+            search: 'Search number, team, project, amount',
+            empty: 'No output entries in this period yet. Click New entry to start.',
+            emptyFilter: 'No entries match this filter.',
+            total: (n) => `Total of ${n} entries`,
+            people: (n) => `${n} people`,
+            readOnly: 'Your role can only view output entries.',
+            status: { H: 'On hold', P: 'Pending approval', A: 'Approved', C: 'In payroll' },
+            kind: { T: 'Team', I: 'Individual', S: 'Sales' },
+            method: { D: 'Work days', F: 'Work days x factor', H: 'Hours', P: 'Fixed percent', E: 'Equal' },
+            chips: { all: 'All', todo: 'To do', label: 'Filter by status' },
+            cards: {
+                pending: 'Pending approval',
+                pendingNote: (n) => `${n} entries waiting for the manager`,
+                approved: 'Approved, not in payroll',
+                approvedNote: (n) => `${n} entries will be picked up when payroll is calculated`,
+                total: 'Total piecework pay',
+                totalNote: (n, hold) => `${n} entries${hold ? ` - ${hold} still on hold` : ''}`,
+                included: 'Included in payroll',
+                includedNote: (n, batches) => `${n} entries${batches ? ` - ${batches}` : ''}`,
+            },
+            cols: { number: 'Number', date: 'Date', kind: 'Type', team: 'Team', project: 'Project', table: 'Rate table', total: 'Amount', split: 'Split', status: 'Status', batch: 'Payroll batch' },
+            todo: {
+                label: 'To do',
+                clear: 'Clear filter',
+                PERIOD_POSTED: 'Period already posted',
+                SPLIT_MISMATCH: 'Split total differs',
+                NOT_SPLIT: 'Team not split',
+                NO_MEMBERS: 'No members',
+                NO_PROFILE: 'Missing payroll profile',
+                RATE_MISSING: 'Missing rate',
+                NO_LINES: 'No output lines',
+                NO_PERIOD: 'No period',
+            },
+            issue: {
+                PERIOD_POSTED: (batch) => `The period of this entry already has a released payroll batch (${batch}) but the entry is not in payroll. Move it to an open period so it gets paid.`,
+                SPLIT_MISMATCH: (split, total) => `The split total ${split} differs from the entry amount ${total}.`,
+                NOT_SPLIT: 'The team entry has not been split to its members.',
+                NO_MEMBERS: 'The team entry has no members.',
+                NO_PROFILE: (names) => `No payroll profile in this company: ${names}. Their amounts will not reach payroll.`,
+                RATE_MISSING: 'Some lines have a quantity but no rate.',
+                NO_LINES: 'The entry has no output lines.',
+                NO_PERIOD: 'The entry has no pay period (no period contains its date).',
+                fix: 'Fix',
+            },
+            steps: { label: 'Entry steps', lines: 'Output', members: 'Members', split: 'Split', submit: 'Submit', approve: 'Approve', payroll: 'Payroll' },
+            detail: {
+                openRecord: 'Open record',
+                edit: 'Edit entry',
+                periodOf: (name) => `Period ${name}`,
+                noPeriod: 'No period',
+                total: 'Amount',
+                split: 'Split',
+                diff: 'Difference',
+                peopleCount: 'People',
+                method: 'Split method',
+                description: 'Description',
+                next: (step) => `Next: ${step}`,
+                lockedNote: 'The entry is no longer on hold, so it cannot be changed. Put it back on hold to edit.',
+            },
+            lines: {
+                save: 'Save output',
+                add: 'Add line',
+                search: 'Search item, employee, amount',
+                employee: 'Employee',
+                item: 'Item',
+                itemPick: 'Select an item',
+                qty: 'Quantity',
+                sales: 'Sales',
+                rate: 'Rate',
+                amount: 'Amount',
+                uom: 'UoM',
+                remove: 'Remove',
+                removeOf: (name) => `Remove line ${name}`,
+                itemOf: (n) => `Item of line ${n}`,
+                qtyOf: (n) => `Quantity of line ${n}`,
+                rateOf: (n) => `Rate of line ${n}`,
+                sum: 'Total amount',
+                none: 'No output lines.',
+                noneTeam: 'No output lines yet. Click Add line to enter an item and a quantity.',
+                noneIndividual: 'No lines yet. Search for an employee above to add a line.',
+                rateFixed: 'Rates come from the rate table effective on the entry date; this table does not allow changes on the entry.',
+                rateEditable: 'Rates are suggested from the rate table effective on the entry date; you can change them per line.',
+                rateNone: 'No effective rate - enter a rate',
+                ratesLoading: 'Fetching effective rates...',
+                ratesFailed: 'Rate suggestions could not be loaded; the server still prices by the table on save.',
+                salesHint: 'Sales tier table: enter each person\'s sales; the commission is computed by tier when payroll runs.',
+                errItem: 'Some lines have no item.',
+                errQty: 'The quantity must be a non-negative number.',
+                errRate: 'The rate must be a non-negative number.',
+                saved: (nbr) => `Output of entry ${nbr} saved.`,
+                unsaved: 'There are unsaved changes.',
+            },
+            find: {
+                label: 'Add employees',
+                placeholder: 'Type an ID or a name, click a result to add it',
+                searching: 'Searching...',
+                noResult: 'No employee with a payroll profile matches.',
+                more: 'More results exist - type more to narrow down.',
+                added: 'already on the entry',
+                results: 'Employee search results',
+            },
+            members: {
+                save: 'Save members',
+                load: 'Load from team',
+                loadFirst: 'Load members from the team',
+                loadDirty: 'Save your changes before loading more members from the team.',
+                noTeam: 'The entry has no team.',
+                search: 'Search members',
+                employee: 'Member',
+                workDays: 'Work days',
+                hours: 'Hours',
+                factor: 'Factor',
+                percent: 'Percent',
+                daysOf: (name) => `Work days of ${name}`,
+                hoursOf: (name) => `Hours of ${name}`,
+                factorOf: (name) => `Factor of ${name}`,
+                percentOf: (name) => `Percent of ${name}`,
+                removeOf: (name) => `Remove ${name} from the entry`,
+                none: 'No members yet. Load them from the team or search for employees to add.',
+                noProfile: 'No payroll profile',
+                loaded: (n) => (n ? `${n} members loaded from the team.` : 'No new members: every effective team member is already on the entry.'),
+                saved: (nbr) => `Members of entry ${nbr} saved. Check the split preview.`,
+                methodHint: 'Work days come from the attendance sheet of the period (when available); you can change them per row.',
+                errNumber: 'Work days, hours, factor and percent must be non-negative numbers.',
+                percentSum: (sum) => `Percent total ${sum}% (must be 100%)`,
+            },
+            split: {
+                run: 'Split pay',
+                rerun: 'Split again by method',
+                saveManual: 'Save manual amounts',
+                search: 'Search members, amounts',
+                basis: 'Basis',
+                preview: 'Split preview',
+                amount: 'On the entry',
+                amountOf: (name) => `Amount of ${name}`,
+                manual: 'manual',
+                sum: 'Total',
+                ok: 'The split total equals the entry amount.',
+                mismatch: (split, total, diff) => `The split total ${split} differs from the entry amount ${total} (difference ${diff}). Split again or fix the amounts before submitting.`,
+                notYet: 'No split is saved on the entry yet. The preview uses the current method; click Split pay to save it, or submit and the system splits automatically.',
+                manualNote: 'The entry has manual amounts: the system will not split again on submit.',
+                stale: 'Members have unsaved changes - save them in the Members step to refresh the preview.',
+                cannot: (reason) => `Cannot split yet: ${reason}`,
+                basisDays: (d) => `${d} days`,
+                basisDaysFactor: (d, f) => `${d} days x ${f}`,
+                basisHours: (h) => `${h} hours`,
+                basisPercent: (p) => `${p}%`,
+                basisEqual: 'Equal share',
+                done: (nbr) => `Entry ${nbr} split.`,
+                savedManual: (nbr) => `Manual amounts of entry ${nbr} saved.`,
+                errAmount: 'The amount must be a non-negative number.',
+                noMembers: 'The entry has no members to split to.',
+            },
+            submit: {
+                run: 'Submit for approval',
+                intro: 'Do a last check, then send the entry to the manager. Once submitted it cannot be changed unless it is sent back.',
+                autoSplit: 'The team entry has no manual amounts: the system splits by the method on submit.',
+                sent: 'The entry has been submitted for approval.',
+                blockNoLines: 'No output line with an amount.',
+                blockNoMembers: 'The team entry has no members.',
+                blockSplit: 'The split total differs from the entry amount.',
+                blockNoPeriod: 'The entry has no pay period.',
+                blockClosed: 'The pay period is closed.',
+                blockLocked: 'Attendance of the period is locked.',
+                blockUnsaved: 'An earlier step has unsaved changes.',
+                confirm: (nbr, total, people) => `Submit entry ${nbr} (${total}, ${people} people) for approval? Once submitted it cannot be changed unless it is sent back.`,
+                done: (nbr) => `Entry ${nbr} submitted for approval.`,
+            },
+            approve: {
+                run: 'Approve',
+                reject: 'Reject',
+                waiting: 'The entry is waiting for approval. Once approved it flows into the payroll of the period when payroll is calculated.',
+                notSent: 'The entry has not been submitted yet.',
+                approvedBy: (who, date) => `Approved${date ? ` on ${date}` : ''}${who ? ` - ${who}` : ''}.`,
+                confirm: (nbr, total, people) => `Approve entry ${nbr} (${total}, ${people} people)? This amount will go into the payroll of the period.`,
+                confirmReject: (nbr) => `Reject entry ${nbr}? It goes back to On hold so its author can fix it.`,
+                done: (nbr) => `Entry ${nbr} approved.`,
+                rejected: (nbr) => `Entry ${nbr} sent back to On hold.`,
+            },
+            payroll: {
+                open: (nbr) => `Open payroll batch ${nbr}`,
+                goList: 'Go to payroll',
+                hold: 'Put back on hold',
+                included: (nbr) => `The entry is included in payroll batch ${nbr}.`,
+                waiting: (period) => `The entry is approved and not in payroll yet. When the payroll ${period ? `of period ${period}` : 'of the period'} is calculated, each person's piecework pay is added to earnings; releasing the batch marks the entry as In payroll.`,
+                notYet: 'The entry reaches payroll only after it is approved.',
+                confirmHold: (nbr) => `Put entry ${nbr} back on hold? It will not reach payroll until it is submitted and approved again.`,
+                held: (nbr) => `Entry ${nbr} is back on hold.`,
+            },
+            form: {
+                titleNew: 'New output entry',
+                titleEdit: (nbr) => `Edit entry ${nbr}`,
+                kind: 'Entry type',
+                date: 'Entry date',
+                table: 'Rate table',
+                tablePick: 'Select a rate table',
+                team: 'Team',
+                teamPick: 'Select a team',
+                method: 'Split method',
+                period: 'Pay period',
+                periodAuto: 'Chosen by the entry date',
+                periodHint: 'Leave empty to use the period containing the date',
+                project: 'Project',
+                projectNone: 'From the team / no project',
+                projectHint: 'The project drives project rates and the cost allocation target',
+                projectMore: 'Only the first 300 projects are listed; select another project on the record.',
+                description: 'Description',
+                create: 'Create and enter output',
+                save: 'Save entry',
+                cancel: 'Cancel',
+                errDate: 'Invalid date (dd/mm/yyyy).',
+                errTable: 'Select a rate table.',
+                errTeam: 'A team entry needs a team.',
+                noTables: 'No rate table of this type yet - create one in Setup.',
+                repriced: 'Changing the date, rate table or project reprices the lines from the table.',
+                moreOnRecord: 'Location, work center and other fields are edited on the record.',
+                created: (nbr) => `Entry${nbr ? ` ${nbr}` : ''} created. Enter the output in the panel on the right.`,
+                saved: (nbr) => `Entry ${nbr} saved.`,
+            },
+        },
     };
+    const TONE$1 = { H: 'muted', P: 'warn', A: 'info', C: 'ok' };
+    const STATUSES = ['H', 'P', 'A', 'C'];
+    const METHODS = ['D', 'F', 'H', 'P', 'E'];
+    const KINDS = ['T', 'I', 'S'];
+    const STEPS = { T: ['lines', 'members', 'split', 'submit', 'approve', 'payroll'], I: ['lines', 'submit', 'approve', 'payroll'] };
+    const RECORD_TYPE = 'customrecord_s4vp_output';
+    const SEARCH_DELAY$1 = 300;
+    const list = (v) => (Array.isArray(v) ? v : []);
+    const upper = (v) => String(v === null || v === undefined ? '' : v).trim().toUpperCase();
+    // Số đưa vào ô nhập viết theo kiểu Việt (dấu phẩy thập phân) để toNumber đọc lại đúng (1.234 sẽ bị hiểu là 1234)
+    const numText = (n) => (n === null || n === undefined || n === '' ? '' : String(n).replace('.', ','));
+    const isBlank = (v) => String(v === null || v === undefined ? '' : v).trim() === '';
+    // Ô số: trống -> 0; không đọc được hoặc âm -> null (báo lỗi)
+    const readNumber = (v) => {
+        if (isBlank(v))
+            return 0;
+        const n = toNumber(v);
+        return n === null || n < 0 ? null : n;
+    };
+    const validIso = (v) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v || ''));
+        if (!m)
+            return false;
+        const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return d.getFullYear() === Number(m[1]) && d.getMonth() === Number(m[2]) - 1 && d.getDate() === Number(m[3]);
+    };
+    const who$1 = (x) => `${x.code || ''} ${x.name || ''}`.trim() || String(x.employee || '');
+    /** Bước đang chờ làm của một phiếu. */
+    function stepOf(r) {
+        if (r.status === 'C' || r.status === 'A')
+            return 'payroll';
+        if (r.status === 'P')
+            return 'approve';
+        if (!(r.total > 0))
+            return 'lines';
+        if (r.type === 'T') {
+            if (!list(r.members).length || (r.splitError && !r.hasManual))
+                return 'members';
+            if (r.splitTotal !== r.total)
+                return 'split';
+        }
+        return 'submit';
+    }
+    /** Kỳ mặc định: kỳ chưa đóng chứa hôm nay (ưu tiên nhóm lương DEFAULT); không có thì mọi kỳ. */
+    function defaultPeriod(boot) {
+        const today = localToday();
+        const groups = list(boot.paygroups);
+        const def = groups.find((g) => upper(g.code) === 'DEFAULT');
+        const hits = list(boot.periods).filter((p) => p.status !== 'C' && p.start && p.end && p.start <= today && p.end >= today);
+        const hit = (def && hits.find((p) => String(p.paygroup) === String(def.id))) || hits[0];
+        return hit ? String(hit.id) : '';
+    }
     function OutputsView({ app }) {
         const t = pick(TEXT$4);
-        return (jsxs(Page, { children: [jsx(PageHeader, { title: t.title }), jsxs(Card, { children: [jsx(Empty, { text: t.building }), jsx(Button, { label: t.openOld, onClick: () => app.go('outputs') })] })] }));
+        const boot = app.boot || {};
+        const user = boot.user || {};
+        const subsidiary = app.subsidiary || '';
+        const params = (app.route && app.route.params) || {};
+        // Ma trận quyền của RESTlet: saveOutput, loadTeamMembers, splitOutput, outputAction chỉ cho administrator và HR
+        const canWrite = user.role === 'administrator' || !!user.isHr || user.role === 'customrole_s4vp_hr';
+        const periods = list(boot.periods);
+        const [data, setData] = core.useState(null);
+        const [period, setPeriod] = core.useState(params.period === 'all' ? '' : String(params.period || defaultPeriod(boot)));
+        const [filter, setFilter] = core.useState('');
+        const [selected, setSelected] = core.useState(String(params.id || ''));
+        const [tab, setTab] = core.useState('');
+        const [lookups, setLookups] = core.useState(null);
+        const [form, setForm] = core.useState(null);
+        const [, setDraft] = core.useState(null);
+        const [rates, setRates] = core.useState({});
+        const [query, setQuery] = core.useState('');
+        const [found, setFound] = core.useState({ items: [], more: false, state: '' });
+        const [gridQuery, setGridQuery] = core.useState('');
+        const formRef = core.useRef(null);
+        const draftRef = core.useRef(null);
+        const ratesRef = core.useRef({});
+        const alive = core.useRef(true);
+        const request = core.useRef(0);
+        const stamp = core.useRef(0);
+        const searchSeq = core.useRef(0);
+        const timer = core.useRef(null);
+        const lineSeq = core.useRef(0);
+        const load = (per) => {
+            if (!subsidiary)
+                return Promise.resolve(null);
+            request.current += 1;
+            const mine = request.current;
+            const p = period ;
+            return app.run(t.loading, call({ action: 'outputsView', subsidiary, period: p || null })).then((r) => {
+                if (!alive.current || mine !== request.current || !r)
+                    return null;
+                stamp.current += 1;
+                draftRef.current = null;
+                setData(r);
+                return r;
+            });
+        };
+        core.useEffect(() => {
+            alive.current = true;
+            load();
+            return () => {
+                alive.current = false;
+                if (timer.current)
+                    clearTimeout(timer.current);
+            };
+        }, [subsidiary, period]);
+        const view = data || {};
+        const counts = view.counts || {};
+        const cards = view.cards || {};
+        const all = list(view.rows);
+        const current = selected ? all.find((r) => String(r.id) === String(selected)) || null : null;
+        // Đơn giá hiệu lực của bảng đơn giá tại ngày phiếu (và dự án): lấy một lần cho mỗi bộ (bảng, ngày, dự án) khi mở phiếu tạm giữ
+        const rateKey = current && current.status === 'H' && current.rateTable && current.date ? `${current.rateTable}|${current.date}|${current.project || ''}` : '';
+        core.useEffect(() => {
+            if (!rateKey || ratesRef.current[rateKey])
+                return;
+            const [rateTable, date, project] = rateKey.split('|');
+            const put = (v) => {
+                ratesRef.current = Object.assign({}, ratesRef.current, { [rateKey]: v });
+                if (alive.current)
+                    setRates(ratesRef.current);
+            };
+            put({ state: 'loading', items: [] });
+            call({ action: 'outputRate', rateTable, date, project: project || null }).then((r) => put({ state: 'ok', items: list(r && r.items) }), () => put({ state: 'error', items: [] }));
+        }, [rateKey]);
+        // ------------------------------------------------------------------ gọi máy chủ
+        const send = (body) => post(body).then((r) => {
+            // Lỗi phân quyền của action cũ có thể trả ở khóa error / errorVi (không ném)
+            if (r && r.error)
+                throw { message: serverText(r.error, r.errorVi) };
+            return r || { ok: true };
+        });
+        /** Chạy một action ghi, nạp lại dữ liệu rồi báo kết quả; after(r, dữ liệu mới) chạy trước thông báo. */
+        const act = (body, doneText, after) => app.run(t.working, send(body)).then((r) => {
+            if (!r || !alive.current)
+                return;
+            load().then((fresh) => {
+                if (!alive.current)
+                    return;
+                if (after)
+                    after(r, fresh);
+                const warnings = list(r.warnings).map((w) => serverText(w.message, w.messageVi)).filter(Boolean);
+                if (warnings.length)
+                    app.notify(warnings.join(' '), 'warn');
+                else if (doneText)
+                    app.notify(typeof doneText === 'function' ? doneText(r) : doneText, 'ok');
+            });
+        });
+        const ensureLookups = () => {
+            if (lookups && lookups.subsidiary === subsidiary)
+                return Promise.resolve(lookups);
+            return app.run(t.loading, call({ action: 'outputLookups', subsidiary })).then((r) => {
+                if (!r || !alive.current)
+                    return null;
+                const v = Object.assign({}, r, { subsidiary });
+                setLookups(v);
+                return v;
+            });
+        };
+        const pickEntry = (id, step) => {
+            setSelected(String(id || ''));
+            setTab(step || '');
+            setQuery('');
+            setGridQuery('');
+            setFound({ items: [], more: false, state: '' });
+        };
+        const pickTab = (step) => {
+            setTab(step);
+            setQuery('');
+            setGridQuery('');
+            setFound({ items: [], more: false, state: '' });
+        };
+        // ------------------------------------------------------------------ bản nháp đang sửa của phiếu đang mở
+        const seed = (r) => ({
+            id: r.id,
+            stamp: stamp.current,
+            method: r.splitMethod || 'F',
+            lines: list(r.lines).map((l) => ({ key: `l${l.id}`, employee: l.employee || '', code: l.code || '', name: l.name || '', item: l.item || '', description: l.description || '', uom: l.uom || '', qty: numText(l.qty), rate: numText(l.rate), noProfile: !!l.noProfile })),
+            members: list(r.members).map((m) => ({ employee: String(m.employee), code: m.code || '', name: m.name || '', workDays: numText(m.workDays), hours: numText(m.hours), factor: numText(m.factor), percent: numText(m.percent), amount: Number(m.amount) || 0, amountText: numText(Number(m.amount) || 0), manual: !!m.manual, edited: false, noProfile: !!m.noProfile, preview: m.preview })),
+            linesDirty: false,
+            membersDirty: false,
+            amountsDirty: false,
+            error: '',
+        });
+        const draftOf = (r) => (draftRef.current && draftRef.current.id === r.id && draftRef.current.stamp === stamp.current ? draftRef.current : seed(r));
+        const putDraft = (r, patch) => {
+            draftRef.current = Object.assign({}, draftOf(r), { error: '' }, patch);
+            setDraft(draftRef.current);
+        };
+        // ------------------------------------------------------------------ tìm nhân viên phía máy chủ
+        const search = (text) => {
+            setQuery(text);
+            if (timer.current)
+                clearTimeout(timer.current);
+            searchSeq.current += 1;
+            const mine = searchSeq.current;
+            const q = String(text || '').trim();
+            if (!q) {
+                setFound({ items: [], more: false, state: '' });
+                return;
+            }
+            setFound({ items: found.items, more: false, state: 'searching' });
+            timer.current = setTimeout(() => {
+                call({ action: 'employeeSearch', subsidiary, q }).then((r) => {
+                    if (!alive.current || mine !== searchSeq.current)
+                        return;
+                    const items = list(r && r.items);
+                    setFound({ items, more: !!(r && r.more), state: items.length ? '' : 'none' });
+                }, (e) => {
+                    if (!alive.current || mine !== searchSeq.current)
+                        return;
+                    setFound({ items: [], more: false, state: 'error', error: errorText(e) });
+                });
+            }, SEARCH_DELAY$1);
+        };
+        const finder = (onAdd, addedIds) => (jsxs("div", { class: "s4vp-out-find", children: [jsx(TextInput, { type: "search", value: query, onInput: search, placeholder: t.find.placeholder, ariaLabel: t.find.label, onEnter: () => found.items[0] && onAdd(found.items[0]) }), query.trim() ? (jsxs("div", { class: "s4vp-out-results", role: "group", "aria-label": t.find.results, children: [found.items.map((e) => {
+                            const added = addedIds.indexOf(String(e.id)) >= 0;
+                            const a = { type: 'button', class: 's4vp-out-result' };
+                            if (added)
+                                a.disabled = 'disabled';
+                            else
+                                a.onClick = () => onAdd(e);
+                            return (jsxs("button", { ...a, children: [jsx("span", { class: "s4vp-out-who-n", children: `${e.code || ''} ${e.name || ''}`.trim() }), jsx("span", { class: "s4vp-small", children: [e.department, added ? t.find.added : ''].filter(Boolean).join(' · ') })] }, `e${e.id}`));
+                        }), found.state === 'searching' && !found.items.length ? jsx("div", { class: "s4vp-out-hint", children: t.find.searching }) : null, found.state === 'none' ? jsx("div", { class: "s4vp-out-hint", children: t.find.noResult }) : null, found.state === 'error' ? jsx("div", { class: "s4vp-out-hint s4vp-out-err", children: found.error || t.find.noResult }) : null, found.more ? jsx("div", { class: "s4vp-out-hint", children: t.find.more }) : null] })) : null] }));
+        const matches = (texts) => {
+            const words = fold(gridQuery).split(/\s+/).filter(Boolean);
+            if (!words.length)
+                return true;
+            const hay = fold(texts.filter((x) => x !== null && x !== undefined).join(' '));
+            return words.every((w) => hay.indexOf(w) >= 0);
+        };
+        // ------------------------------------------------------------------ bước 1: sản lượng
+        const rateState = (r) => rates[`${r.rateTable}|${r.date}|${r.project || ''}`] || { state: 'loading', items: [] };
+        const linesModel = (r) => {
+            const d = draftOf(r);
+            const rs = rateState(r);
+            const byItem = {};
+            rs.items.forEach((it) => (byItem[upper(it.item)] = it));
+            const sales = r.kind === 'S';
+            const rows = d.lines.map((l) => {
+                const hit = byItem[upper(l.item)] || null;
+                const suggested = hit && hit.rate !== null && hit.rate !== undefined ? Number(hit.rate) : null;
+                // Sửa đơn giá khi bảng cho sửa hoặc chưa có đơn giá hiệu lực (đúng quy tắc định giá của máy chủ); chưa lấy được gợi ý thì cho nhập
+                const editable = !sales && (r.allowOverride || suggested === null || rs.state !== 'ok');
+                const typed = isBlank(l.rate) ? null : toNumber(l.rate);
+                const rate = sales ? 1 : editable && typed !== null ? typed : suggested === null ? typed || 0 : suggested;
+                const qty = toNumber(l.qty) || 0;
+                return Object.assign({}, l, { suggested, editable, effRate: rate, amount: Math.round(qty * rate) });
+            });
+            return { d, rs, sales, rows, items: rs.items, total: rows.reduce((s, l) => s + l.amount, 0) };
+        };
+        const setLine = (r, key, patch) => putDraft(r, { lines: draftOf(r).lines.map((l) => (l.key === key ? Object.assign({}, l, patch) : l)), linesDirty: true });
+        const addLine = (r, e) => {
+            lineSeq.current += 1;
+            const base = { key: `n${lineSeq.current}`, employee: '', code: '', name: '', item: '', description: '', uom: '', qty: '', rate: '', noProfile: false };
+            putDraft(r, { lines: draftOf(r).lines.concat([e ? Object.assign(base, { employee: String(e.id), code: e.code || '', name: e.name || '' }) : base]), linesDirty: true });
+        };
+        const removeLine = (r, key) => putDraft(r, { lines: draftOf(r).lines.filter((l) => l.key !== key), linesDirty: true });
+        const pickItem = (r, key, code) => {
+            const hit = rateState(r).items.find((it) => upper(it.item) === upper(code));
+            setLine(r, key, { item: code, description: hit ? hit.description || '' : '', uom: hit ? hit.uom || '' : '', rate: hit && hit.rate !== null && hit.rate !== undefined ? numText(hit.rate) : '' });
+        };
+        const saveLines = (r) => {
+            const m = linesModel(r);
+            const used = m.rows.filter((l) => l.employee || l.item || !isBlank(l.qty));
+            let error = '';
+            if (!m.sales && used.some((l) => !l.item))
+                error = t.lines.errItem;
+            else if (used.some((l) => readNumber(l.qty) === null))
+                error = t.lines.errQty;
+            else if (used.some((l) => l.editable && readNumber(l.rate) === null))
+                error = t.lines.errRate;
+            if (error) {
+                putDraft(r, { error });
+                return;
+            }
+            const lines = used.map((l) => ({ employee: l.employee || null, item: l.item || '', description: l.description || '', uom: l.uom || '', qty: readNumber(l.qty), rate: l.editable && !isBlank(l.rate) ? readNumber(l.rate) : '' }));
+            act({ action: 'saveOutput', values: { id: r.id }, lines }, t.lines.saved(r.name), () => setTab(''));
+        };
+        const nextOf = (r, step) => {
+            const keys = STEPS[r.type] || STEPS.I;
+            return keys[keys.indexOf(step) + 1] || '';
+        };
+        const nextButton = (r, step) => {
+            const next = nextOf(r, step);
+            return jsx(Button, { label: t.detail.next(t.steps[next]), kind: "primary", onClick: () => pickTab(next) });
+        };
+        const linesStep = (r, editable) => {
+            if (!editable) {
+                const rows = list(r.lines).map((l) => Object.assign({}, l, { itemText: [l.item, l.description].filter(Boolean).join(' - '), whoText: who$1(l) }));
+                return (jsx("div", { class: "s4vp-out-box", children: rows.length ? (jsx(Table, { label: t.steps.lines, columns: [
+                            r.type === 'I' ? { key: 'whoText', label: t.lines.employee } : null,
+                            r.kind === 'S' ? null : { key: 'itemText', label: t.lines.item },
+                            { key: 'qty', label: r.kind === 'S' ? t.lines.sales : t.lines.qty, type: 'num', nowrap: true },
+                            r.kind === 'S' ? null : { key: 'rate', label: t.lines.rate, type: 'num', nowrap: true },
+                            { key: 'amount', label: t.lines.amount, type: 'money', nowrap: true },
+                        ].filter(Boolean), rows: rows, keyOf: (l) => l.id, total: rows.length > 1 ? { whoText: t.lines.sum, itemText: r.type === 'I' ? '' : t.lines.sum, amount: r.total } : null, search: true, searchPlaceholder: t.lines.search })) : (jsx(Empty, { text: t.lines.none })) }));
+            }
+            const m = linesModel(r);
+            const shown = m.rows.filter((l) => matches([l.code, l.name, l.item, l.description, l.amount, money(l.amount)]));
+            const itemOptions = (l) => {
+                const options = m.items.map((it) => ({ value: it.item, label: [it.item, it.description].filter(Boolean).join(' - ') }));
+                if (l.item && !options.some((o) => upper(o.value) === upper(l.item)))
+                    options.push({ value: l.item, label: [l.item, l.description].filter(Boolean).join(' - ') });
+                return options;
+            };
+            const individual = r.type === 'I';
+            const hint = m.sales ? t.lines.salesHint : m.rs.state === 'loading' ? t.lines.ratesLoading : m.rs.state === 'error' ? t.lines.ratesFailed : r.allowOverride ? t.lines.rateEditable : t.lines.rateFixed;
+            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [m.d.linesDirty || !(r.total > 0) ? (jsx(Button, { label: t.lines.save, kind: "primary", disabled: !m.d.linesDirty || m.rs.state === 'loading' || !!app.busy, onClick: () => saveLines(r) })) : (nextButton(r, 'lines')), individual ? null : jsx(Button, { label: t.lines.add, onClick: () => addLine(r, null) }), m.d.linesDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null, jsx("span", { class: "s4vp-out-sum", children: `${t.lines.sum}: ${money(m.total) === '-' ? '0' : money(m.total)}` })] }), m.d.error ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: m.d.error }) : null, individual ? finder((e) => addLine(r, e), []) : null, jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: hint }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.lines.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.lines, children: [jsx("thead", { children: jsxs("tr", { children: [individual ? jsx("th", { children: t.lines.employee }) : null, m.sales ? null : jsx("th", { children: t.lines.item }), jsx("th", { class: "s4vp-r", children: m.sales ? t.lines.sales : t.lines.qty }), m.sales ? null : jsx("th", { class: "s4vp-r", children: t.lines.rate }), jsx("th", { class: "s4vp-r", children: t.lines.amount }), jsx("th", { children: '' })] }) }), jsxs("tbody", { children: [shown.map((l) => {
+                                            const n = m.rows.indexOf(l) + 1;
+                                            const label = individual ? who$1(l) : l.item || String(n);
+                                            return (jsxs("tr", { children: [individual ? (jsx("td", { children: jsxs("span", { class: "s4vp-out-who", children: [jsx("span", { class: "s4vp-out-who-n", children: l.name || l.code }), jsx("span", { class: "s4vp-small", children: l.noProfile ? `${l.code} · ${t.members.noProfile}` : l.code })] }) })) : null, m.sales ? null : (jsxs("td", { children: [jsx(Select, { value: l.item, onInput: (v) => pickItem(r, l.key, v), options: itemOptions(l), placeholder: t.lines.itemPick, ariaLabel: t.lines.itemOf(n), width: individual ? 130 : 190 }), l.uom ? jsx("span", { class: "s4vp-small s4vp-out-uom", children: `${t.lines.uom}: ${l.uom}` }) : null] })), jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: l.qty, onInput: (v) => setLine(r, l.key, { qty: v }), ariaLabel: t.lines.qtyOf(n), width: m.sales ? 140 : 84 }) }), m.sales ? null : (jsx("td", { class: "s4vp-r", children: l.editable ? (jsx(NumberInput, { value: l.rate, onInput: (v) => setLine(r, l.key, { rate: v }), ariaLabel: t.lines.rateOf(n), width: 100, placeholder: l.suggested === null ? '' : num(l.suggested), title: l.item && l.suggested === null && m.rs.state === 'ok' ? t.lines.rateNone : '' })) : (jsx("span", { class: "s4vp-out-fixed", children: num(l.effRate) })) })), jsx("td", { class: "s4vp-r s4vp-nw", children: money(l.amount) }), jsx("td", { class: "s4vp-r", children: jsx(Button, { small: true, kind: "ghost", label: t.lines.remove, ariaLabel: t.lines.removeOf(label), onClick: () => removeLine(r, l.key) }) })] }, l.key));
+                                        }), m.rows.length ? null : (jsx("tr", { children: jsx("td", { colSpan: "6", children: jsx("div", { class: "s4vp-empty", children: individual ? t.lines.noneIndividual : t.lines.noneTeam }) }) }, "none"))] })] }) })] }));
+        };
+        // ------------------------------------------------------------------ bước 2: thành viên
+        const setMember = (r, emp, patch, dirty) => putDraft(r, Object.assign({ members: draftOf(r).members.map((m) => (m.employee === emp ? Object.assign({}, m, patch) : m)) }, dirty));
+        const addMember = (r, e) => {
+            const d = draftOf(r);
+            if (!e || d.members.some((m) => m.employee === String(e.id)))
+                return;
+            putDraft(r, { members: d.members.concat([{ employee: String(e.id), code: e.code || '', name: e.name || '', workDays: '', hours: '', factor: '1', percent: '', amount: 0, amountText: '0', manual: false, edited: false, noProfile: false, preview: null }]), membersDirty: true });
+        };
+        const removeMember = (r, emp) => putDraft(r, { members: draftOf(r).members.filter((m) => m.employee !== emp), membersDirty: true });
+        /** Dòng thành viên gửi cho saveOutput (thay toàn bộ); resetAuto: số chia tự động đặt về 0 để tính lại sau khi đổi căn cứ. */
+        const memberPayload = (d, resetAuto) => {
+            const out = [];
+            for (const m of d.members) {
+                const v = { employee: m.employee, work_days: readNumber(m.workDays), hours: readNumber(m.hours), factor: isBlank(m.factor) ? 1 : readNumber(m.factor), percent: readNumber(m.percent) };
+                if (v.work_days === null || v.hours === null || v.factor === null || v.percent === null)
+                    return { error: t.members.errNumber };
+                const typed = readNumber(m.amountText);
+                if (typed === null)
+                    return { error: t.split.errAmount };
+                const manual = m.manual || m.edited;
+                out.push(Object.assign(v, { amount: manual ? Math.round(typed) : resetAuto ? 0 : m.amount, manual }));
+            }
+            return { members: out };
+        };
+        const saveMembers = (r) => {
+            const d = draftOf(r);
+            const p = memberPayload(d, true);
+            if (p.error) {
+                putDraft(r, { error: p.error });
+                return;
+            }
+            act({ action: 'saveOutput', values: { id: r.id, split_method: d.method }, members: p.members }, t.members.saved(r.name), () => setTab('split'));
+        };
+        const loadTeam = (r) => act({ action: 'loadTeamMembers', id: r.id }, (res) => t.members.loaded(list(res.added).length), () => setTab('members'));
+        const methodColumns = (method) => ({ days: method === 'D' || method === 'F', factor: method === 'F', hours: method === 'H', percent: method === 'P' });
+        const basisText = (m, method) => {
+            if (method === 'D')
+                return t.split.basisDays(num(toNumber(m.workDays) || 0));
+            if (method === 'H')
+                return t.split.basisHours(num(toNumber(m.hours) || 0));
+            if (method === 'P')
+                return t.split.basisPercent(num(toNumber(m.percent) || 0));
+            if (method === 'E')
+                return t.split.basisEqual;
+            return t.split.basisDaysFactor(num(toNumber(m.workDays) || 0), num(isBlank(m.factor) ? 1 : toNumber(m.factor) || 0));
+        };
+        const personCell = (m) => (jsxs("span", { class: "s4vp-out-who", children: [jsx("span", { class: "s4vp-out-who-n", children: m.name || m.code }), jsx("span", { class: "s4vp-small", children: m.code }), m.noProfile ? jsx(Badge, { text: t.members.noProfile, tone: "warn" }) : null] }));
+        const membersStep = (r, editable) => {
+            const d = draftOf(r);
+            const method = editable ? d.method : r.splitMethod || 'F';
+            const cols = methodColumns(method);
+            if (!editable) {
+                const rows = list(r.members).map((m) => Object.assign({}, m, { whoText: who$1(m), flag: m.noProfile ? t.members.noProfile : '' }));
+                return (jsx("div", { class: "s4vp-out-box", children: rows.length ? (jsx(Table, { label: t.steps.members, columns: [
+                            { key: 'whoText', label: t.members.employee, render: (m) => personCell(m) },
+                            cols.days ? { key: 'workDays', label: t.members.workDays, type: 'num', nowrap: true } : null,
+                            cols.hours ? { key: 'hours', label: t.members.hours, type: 'num', nowrap: true } : null,
+                            cols.factor ? { key: 'factor', label: t.members.factor, type: 'num', nowrap: true } : null,
+                            cols.percent ? { key: 'percent', label: t.members.percent, type: 'num', nowrap: true } : null,
+                            { key: 'amount', label: t.split.amount, type: 'money', nowrap: true },
+                        ].filter(Boolean), rows: rows, keyOf: (m) => m.employee, total: rows.length > 1 ? { whoText: t.split.sum, amount: r.splitTotal } : null, search: true, searchPlaceholder: t.members.search })) : (jsx(Empty, { text: t.split.noMembers })) }));
+            }
+            const shown = d.members.filter((m) => matches([m.code, m.name]));
+            const percentSum = d.members.reduce((s, m) => s + (toNumber(m.percent) || 0), 0);
+            const canLoad = !!r.team && !d.membersDirty;
+            let primary;
+            if (d.membersDirty)
+                primary = jsx(Button, { label: t.members.save, kind: "primary", disabled: !!app.busy, onClick: () => saveMembers(r) });
+            else if (!d.members.length)
+                primary = jsx(Button, { label: t.members.loadFirst, kind: "primary", disabled: !r.team || !!app.busy, title: r.team ? '' : t.members.noTeam, onClick: () => loadTeam(r) });
+            else
+                primary = nextButton(r, 'members');
+            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [primary, d.members.length ? jsx(Button, { label: t.members.load, disabled: !canLoad || !!app.busy, title: !r.team ? t.members.noTeam : d.membersDirty ? t.members.loadDirty : '', onClick: () => loadTeam(r) }) : null, jsx("span", { class: "s4vp-out-method", children: jsx(Select, { value: d.method, onInput: (v) => putDraft(r, { method: v || 'F', membersDirty: true }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })), ariaLabel: t.detail.method, width: 178 }) }), d.membersDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null] }), d.error ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: d.error }) : null, r.splitError && !d.membersDirty ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.split.cannot(serverText(r.splitError.en, r.splitError.vi)) }) : null, method === 'P' && d.members.length && Math.abs(percentSum - 100) > 0.000001 ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.members.percentSum(num(percentSum)) }) : null, finder((e) => addMember(r, e), d.members.map((m) => m.employee)), jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: cols.days ? t.members.methodHint : '' }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.members.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.members, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t.members.employee }), cols.days ? jsx("th", { class: "s4vp-r", children: t.members.workDays }) : null, cols.hours ? jsx("th", { class: "s4vp-r", children: t.members.hours }) : null, cols.factor ? jsx("th", { class: "s4vp-r", children: t.members.factor }) : null, cols.percent ? jsx("th", { class: "s4vp-r", children: t.members.percent }) : null, jsx("th", { children: '' })] }) }), jsxs("tbody", { children: [shown.map((m) => {
+                                            const label = who$1(m);
+                                            const dirty = { membersDirty: true };
+                                            return (jsxs("tr", { children: [jsx("td", { children: personCell(m) }), cols.days ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.workDays, onInput: (v) => setMember(r, m.employee, { workDays: v }, dirty), ariaLabel: t.members.daysOf(label), width: 84 }) }) : null, cols.hours ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.hours, onInput: (v) => setMember(r, m.employee, { hours: v }, dirty), ariaLabel: t.members.hoursOf(label), width: 84 }) }) : null, cols.factor ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.factor, onInput: (v) => setMember(r, m.employee, { factor: v }, dirty), ariaLabel: t.members.factorOf(label), width: 76 }) }) : null, cols.percent ? jsx("td", { class: "s4vp-r", children: jsx(NumberInput, { value: m.percent, onInput: (v) => setMember(r, m.employee, { percent: v }, dirty), ariaLabel: t.members.percentOf(label), width: 84 }) }) : null, jsx("td", { class: "s4vp-r", children: jsx(Button, { small: true, kind: "ghost", label: t.lines.remove, ariaLabel: t.members.removeOf(label), onClick: () => removeMember(r, m.employee) }) })] }, `m${m.employee}`));
+                                        }), d.members.length ? null : (jsx("tr", { children: jsx("td", { colSpan: "6", children: jsx("div", { class: "s4vp-empty", children: t.members.none }) }) }, "none"))] })] }) })] }));
+        };
+        // ------------------------------------------------------------------ bước 3: chia tiền
+        const saveManual = (r) => {
+            const p = memberPayload(draftOf(r), false);
+            if (p.error) {
+                putDraft(r, { error: p.error });
+                return;
+            }
+            act({ action: 'saveOutput', values: { id: r.id }, members: p.members }, t.split.savedManual(r.name), () => setTab('split'));
+        };
+        const runSplit = (r) => act({ action: 'splitOutput', id: r.id }, t.split.done(r.name), () => setTab(''));
+        const splitStep = (r, editable) => {
+            const d = draftOf(r);
+            const method = r.splitMethod || 'F';
+            const members = editable ? d.members : list(r.members).map((m) => Object.assign({}, m, { employee: String(m.employee), workDays: numText(m.workDays), hours: numText(m.hours), factor: numText(m.factor), percent: numText(m.percent), amountText: numText(m.amount), edited: false }));
+            if (!members.length)
+                return jsx(Empty, { text: t.split.noMembers });
+            const amountOf = (m) => (editable ? Math.round(toNumber(m.amountText) || 0) : Number(m.amount) || 0);
+            const saved = members.reduce((s, m) => s + amountOf(m), 0);
+            const hasPreview = members.some((m) => m.preview !== null && m.preview !== undefined);
+            const previewSum = members.reduce((s, m) => s + (Number(m.preview) || 0), 0);
+            const anyManual = members.some((m) => m.manual || m.edited);
+            const diff = saved - r.total;
+            const shown = members.filter((m) => matches([m.code, m.name, amountOf(m), money(amountOf(m)), m.preview]));
+            let primary = null;
+            if (editable) {
+                if (d.amountsDirty)
+                    primary = jsx(Button, { label: t.split.saveManual, kind: "primary", disabled: !!app.busy, onClick: () => saveManual(r) });
+                else if (diff !== 0 || !(r.total > 0))
+                    primary = jsx(Button, { label: t.split.run, kind: "primary", disabled: d.membersDirty || !!r.splitError || !(r.total > 0) || !!app.busy, title: d.membersDirty ? t.split.stale : '', onClick: () => runSplit(r) });
+                else
+                    primary = nextButton(r, 'split');
+            }
+            let note;
+            if (editable && d.membersDirty)
+                note = jsx("div", { class: "s4vp-out-warn", role: "note", children: t.split.stale });
+            else if (r.splitError && editable)
+                note = jsx("div", { class: "s4vp-out-warn", role: "note", children: t.split.cannot(serverText(r.splitError.en, r.splitError.vi)) });
+            else if (diff === 0)
+                note = jsx("div", { class: "s4vp-out-okay", role: "note", children: anyManual ? `${t.split.ok} ${t.split.manualNote}` : t.split.ok });
+            else if (saved === 0 && !anyManual)
+                note = jsx("div", { class: "s4vp-out-warn", role: "note", children: t.split.notYet });
+            else
+                note = jsx("div", { class: "s4vp-out-warn", role: "alert", children: `${t.split.mismatch(money(saved), money(r.total), money(Math.abs(diff)))}${anyManual ? ` ${t.split.manualNote}` : ''}` });
+            return (jsxs("div", { class: "s4vp-out-body", children: [editable ? (jsxs("div", { class: "s4vp-out-acts", children: [primary, !d.amountsDirty && diff === 0 && r.total > 0 ? jsx(Button, { label: t.split.rerun, disabled: d.membersDirty || !!r.splitError || !!app.busy, onClick: () => runSplit(r) }) : null, d.amountsDirty ? jsx("span", { class: "s4vp-out-dirty", children: t.lines.unsaved }) : null] })) : null, d.error && editable ? jsx("div", { class: "s4vp-out-warn s4vp-out-err", role: "alert", children: d.error }) : null, note, jsxs("div", { class: "s4vp-out-bar", children: [jsx("span", { class: "s4vp-small", children: `${t.detail.method}: ${t.method[method] || method}` }), jsx(SearchBox, { value: gridQuery, onInput: setGridQuery, placeholder: t.split.search, width: 200 })] }), jsx("div", { class: "s4vp-out-grid", children: jsxs("table", { class: "s4vp-tbl", "aria-label": t.steps.split, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { children: t.members.employee }), jsx("th", { children: t.split.basis }), hasPreview ? jsx("th", { class: "s4vp-r", children: t.split.preview }) : null, jsx("th", { class: "s4vp-r", children: t.split.amount })] }) }), jsxs("tbody", { children: [shown.map((m) => (jsxs("tr", { children: [jsx("td", { children: personCell(m) }), jsx("td", { class: "s4vp-nw s4vp-small", children: basisText(m, method) }), hasPreview ? jsx("td", { class: "s4vp-r s4vp-nw", children: m.preview === null || m.preview === undefined ? '' : money(m.preview) }) : null, jsxs("td", { class: "s4vp-r s4vp-nw", children: [editable ? (jsx(NumberInput, { value: m.amountText, onInput: (v) => setMember(r, m.employee, { amountText: v, edited: true }, { amountsDirty: true }), ariaLabel: t.split.amountOf(who$1(m)), width: 124 })) : (money(m.amount)), m.manual || m.edited ? jsx("span", { class: "s4vp-small s4vp-out-uom", children: t.split.manual }) : null] })] }, `s${m.employee}`))), jsxs("tr", { class: "s4vp-total", children: [jsx("td", { children: t.split.sum }), jsx("td", { children: '' }), hasPreview ? jsx("td", { class: "s4vp-r s4vp-nw", children: money(previewSum) }) : null, jsx("td", { class: diff === 0 ? 's4vp-r s4vp-nw' : 's4vp-r s4vp-nw s4vp-out-diff', children: saved === 0 ? '0' : money(saved) })] }, "sum")] })] }) })] }));
+        };
+        // ------------------------------------------------------------------ bước 4 - 6: gửi duyệt, duyệt, vào bảng lương
+        const fact = (label, value, strong) => (jsxs("div", { class: "s4vp-line", style: strong ? { fontWeight: '700' } : {}, children: [jsx("span", { class: "s4vp-muted", children: label }), jsx("span", { class: "s4vp-out-val", children: value })] }));
+        const summary = (r) => (jsxs("div", { class: "s4vp-out-info", children: [fact(t.detail.total, r.total ? money(r.total) : '0', true), r.type === 'T' ? fact(t.detail.split, r.splitTotal ? money(r.splitTotal) : '0') : null, r.type === 'T' && r.splitTotal && r.splitTotal !== r.total ? fact(t.detail.diff, jsx("span", { class: "s4vp-out-diff", children: money(Math.abs(r.splitTotal - r.total)) })) : null, fact(t.detail.peopleCount, t.people(r.people || 0)), r.type === 'T' ? fact(t.detail.method, t.method[r.splitMethod] || r.splitMethod || '') : null, r.description ? fact(t.detail.description, r.description) : null] }));
+        const doAction = (r, op, confirmText, doneText) => app.confirm(confirmText, () => act({ action: 'outputAction', id: r.id, op }, doneText, () => setTab('')));
+        const blockers = (r) => {
+            const d = draftOf(r);
+            const out = [];
+            if (d.linesDirty || d.membersDirty || d.amountsDirty)
+                out.push(t.submit.blockUnsaved);
+            if (!(r.total > 0))
+                out.push(t.submit.blockNoLines);
+            if (r.type === 'T' && !list(r.members).length)
+                out.push(t.submit.blockNoMembers);
+            if (r.type === 'T' && list(r.members).length && r.total > 0) {
+                if (r.hasManual && r.splitTotal !== r.total)
+                    out.push(t.submit.blockSplit);
+                else if (!r.hasManual && r.splitError)
+                    out.push(t.split.cannot(serverText(r.splitError.en, r.splitError.vi)));
+            }
+            if (!r.period)
+                out.push(t.submit.blockNoPeriod);
+            else if (r.periodStatus === 'C')
+                out.push(t.submit.blockClosed);
+            else if (r.periodAtt === 'L')
+                out.push(t.submit.blockLocked);
+            return out;
+        };
+        const submitStep = (r) => {
+            if (r.status !== 'H')
+                return jsxs("div", { class: "s4vp-out-body", children: [jsx("div", { class: "s4vp-out-okay", role: "note", children: t.submit.sent }), summary(r)] });
+            const blocks = blockers(r);
+            const reason = !canWrite ? t.readOnly : blocks[0] || '';
+            return (jsxs("div", { class: "s4vp-out-body", children: [jsx("div", { class: "s4vp-out-acts", children: jsx(Button, { label: t.submit.run, kind: "primary", disabled: !!reason || !!app.busy, title: reason, onClick: () => doAction(r, 'submit', t.submit.confirm(r.name, money(r.total), r.people || 0), t.submit.done(r.name)) }) }), blocks.map((b, i) => jsx("div", { class: "s4vp-out-warn", role: "note", children: b }, `b${i}`)), blocks.length ? null : jsx("span", { class: "s4vp-small", children: r.type === 'T' && !r.hasManual ? `${t.submit.intro} ${t.submit.autoSplit}` : t.submit.intro }), summary(r)] }));
+        };
+        const approveStep = (r) => {
+            if (r.status === 'H')
+                return jsxs("div", { class: "s4vp-out-body", children: [jsx("span", { class: "s4vp-small", children: t.approve.notSent }), summary(r)] });
+            if (r.status !== 'P')
+                return jsxs("div", { class: "s4vp-out-body", children: [jsx("div", { class: "s4vp-out-okay", role: "note", children: t.approve.approvedBy(r.approvedBy || '', fmtDate(r.approvedDate)) }), summary(r)] });
+            const reason = canWrite ? '' : t.readOnly;
+            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [jsx(Button, { label: t.approve.run, kind: "primary", disabled: !!reason || !!app.busy, title: reason, onClick: () => doAction(r, 'approve', t.approve.confirm(r.name, money(r.total), r.people || 0), t.approve.done(r.name)) }), jsx(Button, { label: t.approve.reject, disabled: !!reason || !!app.busy, title: reason, onClick: () => doAction(r, 'hold', t.approve.confirmReject(r.name), t.approve.rejected(r.name)) })] }), jsx("span", { class: "s4vp-small", children: t.approve.waiting }), summary(r)] }));
+        };
+        const payrollStep = (r) => {
+            if (r.status === 'C') {
+                return (jsxs("div", { class: "s4vp-out-body", children: [jsx("div", { class: "s4vp-out-acts", children: r.batch ? jsx(Button, { label: t.payroll.open(r.batchName || r.batch), kind: "primary", onClick: () => app.go('payrollRun', { id: r.batch }) }) : null }), jsx("div", { class: "s4vp-out-okay", role: "note", children: t.payroll.included(r.batchName || r.batch || '') }), summary(r)] }));
+            }
+            if (r.status !== 'A')
+                return jsxs("div", { class: "s4vp-out-body", children: [jsx("span", { class: "s4vp-small", children: t.payroll.notYet }), summary(r)] });
+            // Bảng lương đang mở của đúng kỳ của phiếu (chưa ghi sổ, chưa hủy): mở thẳng để tính lương
+            const open = list(view.batches).find((b) => r.period && String(b.period) === String(r.period) && b.status !== 'R' && b.status !== 'V');
+            const reason = canWrite ? '' : t.readOnly;
+            return (jsxs("div", { class: "s4vp-out-body", children: [jsxs("div", { class: "s4vp-out-acts", children: [open ? jsx(Button, { label: t.payroll.open(open.name || open.id), kind: "primary", onClick: () => app.go('payrollRun', { id: open.id }) }) : jsx(Button, { label: t.payroll.goList, kind: "primary", onClick: () => app.go('payrollList') }), jsx(Button, { label: t.payroll.hold, disabled: !!reason || !!app.busy, title: reason, onClick: () => doAction(r, 'hold', t.payroll.confirmHold(r.name), t.payroll.held(r.name)) })] }), jsx("div", { class: "s4vp-out-okay", role: "note", children: t.approve.approvedBy(r.approvedBy || '', fmtDate(r.approvedDate)) }), jsx("span", { class: "s4vp-small", children: t.payroll.waiting(r.periodName || '') }), summary(r)] }));
+        };
+        // ------------------------------------------------------------------ khung chi tiết
+        const noProfileNames = (r) => (r.type === 'T' ? list(r.members) : list(r.lines)).filter((x) => x.noProfile).map(who$1).filter((x, i, a) => a.indexOf(x) === i).join(', ');
+        const issueText = (r, code) => {
+            if (code === 'PERIOD_POSTED')
+                return t.issue.PERIOD_POSTED((r.postedBatch && r.postedBatch.name) || '');
+            if (code === 'SPLIT_MISMATCH')
+                return t.issue.SPLIT_MISMATCH(money(r.splitTotal), money(r.total));
+            if (code === 'NO_PROFILE')
+                return t.issue.NO_PROFILE(noProfileNames(r));
+            return t.issue[code] || code;
+        };
+        const issueStep = (r, code) => {
+            if (code === 'NO_LINES' || code === 'RATE_MISSING')
+                return 'lines';
+            if (code === 'NO_MEMBERS')
+                return 'members';
+            if (code === 'NO_PROFILE')
+                return r.type === 'T' ? 'members' : 'lines';
+            if (code === 'NOT_SPLIT' || code === 'SPLIT_MISMATCH')
+                return 'split';
+            return '';
+        };
+        const detailPanel = (r) => {
+            const keys = STEPS[r.type] || STEPS.I;
+            const cur = stepOf(r);
+            const shown = keys.indexOf(tab) >= 0 ? tab : cur;
+            const curIdx = keys.indexOf(cur);
+            const editable = r.status === 'H' && canWrite;
+            const sub = [t.status[r.status] || r.status, fmtDate(r.date), t.kind[r.kind] || r.kind, r.teamName, r.rateTableName, r.projectName, r.periodName ? t.detail.periodOf(r.periodName) : t.detail.noPeriod].filter(Boolean).join(' · ');
+            const actions = [];
+            if (editable)
+                actions.push(jsx(Button, { small: true, label: t.detail.edit, disabled: !!app.busy, onClick: () => openForm(r) }));
+            actions.push(jsx(Button, { small: true, kind: "ghost", label: t.detail.openRecord, onClick: () => openRecord(RECORD_TYPE, r.id) }));
+            let body;
+            if (shown === 'lines')
+                body = linesStep(r, editable);
+            else if (shown === 'members')
+                body = membersStep(r, editable);
+            else if (shown === 'split')
+                body = splitStep(r, editable);
+            else if (shown === 'submit')
+                body = submitStep(r);
+            else if (shown === 'approve')
+                body = approveStep(r);
+            else
+                body = payrollStep(r);
+            const locked = !editable && (shown === 'lines' || shown === 'members' || shown === 'split');
+            return (jsxs(SidePanel, { title: r.name || String(r.id), sub: sub, onClose: () => pickEntry(''), actions: actions, children: [jsx("div", { class: "s4vp-out-steps", role: "group", "aria-label": t.steps.label, children: keys.map((k, i) => {
+                            const state = r.status === 'C' || i < curIdx ? 'done' : i === curIdx ? 'cur' : 'todo';
+                            return (jsxs("button", { type: "button", class: `s4vp-out-step s4vp-out-step-${state}${k === shown ? ' s4vp-out-step-on' : ''}`, "aria-pressed": k === shown ? 'true' : 'false', onClick: () => pickTab(k), children: [jsx("span", { class: "s4vp-out-step-n", children: String(i + 1) }), jsx("span", { children: t.steps[k] })] }, k));
+                        }) }), list(r.issues).length ? (jsx("div", { class: "s4vp-out-issues", children: list(r.issues).map((code) => {
+                            const step = issueStep(r, code);
+                            const canFix = step ? step !== shown : editable;
+                            return (jsxs("div", { class: "s4vp-out-issue", role: "note", children: [jsx("span", { children: issueText(r, code) }), canFix ? jsx(Button, { small: true, label: t.issue.fix, onClick: () => (step ? pickTab(step) : openForm(r)) }) : null] }, code));
+                        }) })) : null, locked ? jsx("span", { class: "s4vp-small", children: canWrite ? t.detail.lockedNote : t.readOnly }) : null, body] }));
+        };
+        // ------------------------------------------------------------------ hộp thoại tạo / sửa phiếu
+        const putForm = (patch) => {
+            formRef.current = Object.assign({}, formRef.current, patch);
+            setForm(formRef.current);
+        };
+        const openForm = (r) => {
+            ensureLookups().then((lk) => {
+                if (!lk || !alive.current)
+                    return;
+                const inPeriod = period && periods.find((p) => String(p.id) === String(period) && p.start <= localToday() && p.end >= localToday());
+                formRef.current = r
+                    ? { id: r.id, name: r.name, kind: r.kind, date: r.date || '', rateTable: String(r.rateTable || ''), team: String(r.team || ''), method: r.splitMethod || 'F', period: String(r.period || ''), project: String(r.project || ''), description: r.description || '', errors: {}, was: { date: r.date || '', rateTable: String(r.rateTable || ''), project: String(r.project || '') } }
+                    : { id: '', name: '', kind: 'T', date: localToday(), rateTable: '', team: '', method: 'F', period: inPeriod ? String(period) : '', project: '', description: '', errors: {}, was: null };
+                setForm(formRef.current);
+            });
+        };
+        const submitForm = () => {
+            const f = formRef.current;
+            const errors = {};
+            if (!validIso(f.date))
+                errors.date = t.form.errDate;
+            if (!f.rateTable)
+                errors.rateTable = t.form.errTable;
+            if (f.kind === 'T' && !f.team)
+                errors.team = t.form.errTeam;
+            if (Object.keys(errors).length) {
+                putForm({ errors });
+                return;
+            }
+            const team = f.kind === 'T' ? f.team : null;
+            const values = { doc_date: f.date, type: f.kind === 'T' ? 'T' : 'I', rate_table: f.rateTable, team, split_method: f.kind === 'T' ? f.method || 'F' : null, period: f.period || null, project: f.project || null, description: String(f.description || '').trim() };
+            const body = { action: 'saveOutput', values };
+            if (f.id) {
+                values.id = f.id;
+                // Đổi ngày, bảng đơn giá hoặc dự án: gửi lại dòng với đơn giá trống để máy chủ định giá lại theo bảng
+                const row = all.find((x) => String(x.id) === String(f.id));
+                const changed = f.was && (f.was.date !== f.date || f.was.rateTable !== f.rateTable || f.was.project !== f.project);
+                if (row && changed && list(row.lines).length)
+                    body.lines = row.lines.map((l) => ({ employee: l.employee || null, item: l.item, description: l.description, uom: l.uom, qty: l.qty, rate: '' }));
+            }
+            else
+                values.subsidiary = subsidiary;
+            app.run(t.working, send(body)).then((res) => {
+                if (!res || !alive.current)
+                    return;
+                setForm(null);
+                const id = String(res.id || f.id || '');
+                load().then((fresh) => {
+                    if (!alive.current)
+                        return;
+                    const row = fresh ? list(fresh.rows).find((x) => String(x.id) === id) : null;
+                    setFilter('');
+                    pickEntry(id, '');
+                    // Phiếu mới thuộc kỳ khác kỳ đang lọc: chuyển sang xem mọi kỳ để thấy phiếu
+                    if (!row && period)
+                        setPeriod('');
+                    const warnings = list(res.warnings).map((w) => serverText(w.message, w.messageVi)).filter(Boolean);
+                    if (warnings.length)
+                        app.notify(warnings.join(' '), 'warn');
+                    else
+                        app.notify(f.id ? t.form.saved(f.name) : t.form.created(row ? row.name : ''), 'ok');
+                });
+            });
+        };
+        const formDialog = () => {
+            const f = form;
+            const lk = lookups || {};
+            const isNew = !f.id;
+            const tables = list(lk.rateTables).filter((x) => (f.kind === 'S' ? x.type === 'S' : x.type !== 'S'));
+            const tableOptions = tables.map((x) => ({ value: x.id, label: [x.code, x.description].filter(Boolean).join(' - ') }));
+            const teamOptions = list(lk.teams).map((x) => ({ value: x.id, label: [x.code, x.description].filter(Boolean).join(' - ') }));
+            const projectOptions = list(lk.projects).map((x) => ({ value: x.id, label: x.name }));
+            if (f.project && !projectOptions.some((o) => o.value === f.project))
+                projectOptions.push({ value: f.project, label: f.project });
+            const periodOptions = periods.filter((p) => p.status !== 'C' || String(p.id) === f.period).map((p) => ({ value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})` }));
+            const err = (k) => (f.errors && f.errors[k] ? jsx("span", { class: "s4vp-out-err", children: f.errors[k] }) : null);
+            const pickKind = (k) => {
+                const keep = list(lk.rateTables).some((x) => x.id === f.rateTable && (k === 'S' ? x.type === 'S' : x.type !== 'S'));
+                putForm({ kind: k || 'T', rateTable: keep ? f.rateTable : '', team: k === 'T' ? f.team : '' });
+            };
+            const pickTeam = (id) => {
+                const team = list(lk.teams).find((x) => x.id === id);
+                putForm(team && isNew ? { team: id, method: team.splitMethod || 'F', project: team.project && projectOptions.some((o) => o.value === String(team.project)) ? String(team.project) : f.project } : { team: id });
+            };
+            const changed = f.was && (f.was.date !== f.date || f.was.rateTable !== f.rateTable || f.was.project !== f.project);
+            return (jsxs(Dialog, { title: isNew ? t.form.titleNew : t.form.titleEdit(f.name), width: 760, onClose: () => setForm(null), actions: [jsx(Button, { label: t.form.cancel, onClick: () => setForm(null) }), jsx(Button, { label: isNew ? t.form.create : t.form.save, kind: "primary", disabled: !!app.busy, onClick: submitForm })], children: [jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: t.form.kind, children: jsx(Select, { value: f.kind, onInput: pickKind, options: KINDS.map((k) => ({ value: k, label: t.kind[k] })), disabled: !isNew }) }), jsx(Field, { label: t.form.date, hint: err('date'), children: jsx(DateInput, { value: f.date, onInput: (v) => putForm({ date: v }) }) }), jsx(Field, { label: t.form.table, hint: err('rateTable') || (tables.length ? null : t.form.noTables), children: jsx(Select, { value: f.rateTable, onInput: (v) => putForm({ rateTable: v }), options: tableOptions, placeholder: t.form.tablePick }) }), f.kind === 'T' ? (jsx(Field, { label: t.form.team, hint: err('team'), children: jsx(Select, { value: f.team, onInput: pickTeam, options: teamOptions, placeholder: t.form.teamPick }) })) : null, f.kind === 'T' ? (jsx(Field, { label: t.form.method, children: jsx(Select, { value: f.method, onInput: (v) => putForm({ method: v || 'F' }), options: METHODS.map((k) => ({ value: k, label: t.method[k] })) }) })) : null, jsx(Field, { label: t.form.period, hint: t.form.periodHint, children: jsx(Select, { value: f.period, onInput: (v) => putForm({ period: v }), options: periodOptions, placeholder: t.form.periodAuto }) }), jsx(Field, { label: t.form.project, hint: lk.projectsMore ? t.form.projectMore : t.form.projectHint, children: jsx(Select, { value: f.project, onInput: (v) => putForm({ project: v }), options: projectOptions, placeholder: t.form.projectNone }) }), jsx(Field, { label: t.form.description, children: jsx(TextInput, { value: f.description, onInput: (v) => putForm({ description: v }) }) })] }), changed ? jsx("div", { class: "s4vp-out-warn", role: "note", children: t.form.repriced }) : null, jsx("span", { class: "s4vp-small", children: t.form.moreOnRecord })] }));
+        };
+        // ------------------------------------------------------------------ bảng phiếu
+        const issueCode = filter.indexOf('i:') === 0 ? filter.slice(2) : '';
+        const rows = all
+            .filter((r) => (!filter ? true : filter === 'todo' ? list(r.issues).length > 0 : issueCode ? list(r.issues).indexOf(issueCode) >= 0 : r.status === filter))
+            // Chữ hiển thị (trạng thái, loại, ngày dd/mm/yyyy, việc cần xử lý) đưa vào dòng để ô tìm khớp được
+            .map((r) => Object.assign({}, r, {
+            statusText: t.status[r.status] || r.status || '',
+            kindText: t.kind[r.kind] || r.kind || '',
+            dateText: fmtDate(r.date),
+            splitText: r.type === 'T' ? (r.splitTotal ? money(r.splitTotal) : '-') : t.people(r.people || 0),
+            issueText: list(r.issues).map((c) => t.todo[c] || c).join(', '),
+            lines: null,
+            members: null,
+        }));
+        const shownCurrent = current ? rows.find((r) => String(r.id) === String(current.id)) || null : null;
+        const total = rows.length > 1 ? { name: t.total(rows.length), total: rows.reduce((s, r) => s + (Number(r.total) || 0), 0), splitText: money(rows.reduce((s, r) => s + (r.type === 'T' ? Number(r.splitTotal) || 0 : 0), 0)) } : null;
+        const wide = !current;
+        const columns = [
+            { key: 'name', label: t.cols.number, nowrap: true, render: (r) => jsx("span", { class: "s4vp-link", children: r.name || r.id }) },
+            { key: 'date', label: t.cols.date, type: 'date', nowrap: true },
+            { key: 'kindText', label: t.cols.kind, nowrap: true },
+            { key: 'teamName', label: t.cols.team, render: (r) => jsx("span", { class: "s4vp-out-clip", title: [r.teamName, r.teamDescription].filter(Boolean).join(' - '), children: r.teamName || '' }) },
+            wide ? { key: 'projectName', label: t.cols.project, render: (r) => jsx("span", { class: "s4vp-out-clip", title: r.projectName || '', children: r.projectName || '' }) } : null,
+            wide ? { key: 'rateTableName', label: t.cols.table, render: (r) => jsx("span", { class: "s4vp-out-clip", title: [r.rateTableName, r.rateTableDescription].filter(Boolean).join(' - '), children: r.rateTableName || '' }) } : null,
+            { key: 'total', label: t.cols.total, type: 'money', nowrap: true },
+            { key: 'splitText', label: t.cols.split, align: 'right', nowrap: true, render: (r) => jsx("span", { class: r.type === 'T' && r.total > 0 && r.splitTotal !== r.total ? 's4vp-out-diff' : 's4vp-out-plain', children: r.splitText }) },
+            { key: 'status', label: t.cols.status, nowrap: true, render: (r) => (jsxs("span", { class: "s4vp-out-status", children: [jsx(Badge, { text: r.statusText, tone: TONE$1[r.status] || 'muted' }), r.issueText ? jsx("span", { class: "s4vp-out-flag", title: r.issueText, children: '!' }) : null] })) },
+            wide ? { key: 'batchName', label: t.cols.batch, nowrap: true, noRowClick: true, render: (r) => (r.batch ? jsx(Button, { kind: "link", label: r.batchName || String(r.batch), onClick: () => app.go('payrollRun', { id: r.batch }) }) : '') } : null,
+        ];
+        const chipItems = [{ value: '', label: t.chips.all, count: counts.all || 0 }]
+            .concat(counts.attention ? [{ value: 'todo', label: t.chips.todo, count: counts.attention, tone: 'warn' }] : [])
+            .concat(STATUSES.map((s) => ({ value: s, label: t.status[s], count: counts[s] || 0, tone: s === 'P' && counts.P ? 'warn' : '' })));
+        const pending = cards.pending || {};
+        const approved = cards.approved || {};
+        const sumCard = cards.total || {};
+        const included = cards.included || {};
+        const zero = (v) => (v ? money(v) : '0');
+        const statCards = [
+            { key: 'pending', label: t.cards.pending, value: zero(pending.amount), note: t.cards.pendingNote(pending.count || 0), tone: pending.count ? 'warn' : '' },
+            { key: 'approved', label: t.cards.approved, value: zero(approved.amount), note: t.cards.approvedNote(approved.count || 0), tone: approved.count ? 'info' : '' },
+            { key: 'total', label: t.cards.total, value: zero(sumCard.amount), note: t.cards.totalNote(sumCard.count || 0, sumCard.holdCount || 0) },
+            { key: 'included', label: t.cards.included, value: zero(included.amount), note: t.cards.includedNote(included.count || 0, list(included.batches).map((b) => b.name).filter(Boolean).slice(0, 3).join(', ')), tone: included.count ? 'ok' : '' },
+        ];
+        const todo = list(view.issues);
+        const periodOptions = periods.map((p) => ({ value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})` }));
+        return (jsxs(Page, { children: [jsx(PageHeader, { title: t.title, sub: !subsidiary ? t.noSubsidiary : canWrite ? t.sub : t.readOnly, actions: [
+                        jsx("span", { class: "s4vp-out-period", children: jsx(Select, { value: period, onInput: (v) => (setPeriod(v || ''), pickEntry('')), options: periodOptions, placeholder: t.allPeriods, ariaLabel: t.period, width: 250 }) }),
+                        jsx(Button, { label: t.legacy, kind: "ghost", onClick: () => app.go('outputs') }),
+                        jsx(Button, { label: t.refresh, onClick: () => load() }),
+                        jsx(Button, { label: t.newEntry, kind: "primary", disabled: !subsidiary || !canWrite || !!app.busy, title: canWrite ? '' : t.readOnly, onClick: () => openForm(null) }),
+                    ] }), jsx(StatCards, { cards: statCards }), todo.length ? (jsxs("div", { class: "s4vp-out-todo", role: "group", "aria-label": t.todo.label, children: [jsx("span", { class: "s4vp-out-todo-l", children: t.todo.label }), todo.map((g) => {
+                            const on = filter === `i:${g.code}`;
+                            return (jsx("button", { type: "button", class: on ? 's4vp-out-todo-btn s4vp-on' : 's4vp-out-todo-btn', "aria-pressed": on ? 'true' : 'false', onClick: () => setFilter(on ? '' : `i:${g.code}`), children: `${t.todo[g.code] || g.code} ${g.count}` }, g.code));
+                        }), issueCode ? jsx(Button, { small: true, kind: "ghost", label: t.todo.clear, onClick: () => setFilter('') }) : null] })) : null, jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => pickEntry(String(r.id) === String(selected) ? '' : r.id), selectedKey: shownCurrent ? shownCurrent.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: todo.length ? 'max(240px, calc(100vh - 432px))' : 'max(260px, calc(100vh - 384px))', toolbar: jsx(Chips, { items: chipItems, value: issueCode ? 'todo' : filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: todo.length ? 's4vp-col-side s4vp-out-side s4vp-out-side-low' : 's4vp-col-side s4vp-out-side', children: detailPanel(current) }) : null] }), form ? formDialog() : null] }));
     }
 
     const TEXT$3 = {
@@ -6188,6 +9103,30 @@ select.s4vp-in{padding-right:28px}
                 payslips: 'Phiếu lương', paymentSheet: 'Bảng thanh toán lương', contractor: 'Quyết toán cộng tác viên', bankFile: 'File chi lương ngân hàng', journal: 'Xem bút toán',
             },
             hrNoRelease: 'Vai trò nhân sự không ghi sổ; kế toán thực hiện bước này.',
+            // Duyệt nhiều cấp (api/Approvals): chỉ hiện khi công ty có khai cấp duyệt
+            apv: {
+                title: 'Các cấp duyệt',
+                level: (n) => `Cấp ${n}`,
+                approveLevel: (n) => `Duyệt cấp ${n}`,
+                state: { done: 'Đã duyệt', current: 'Đang chờ', todo: 'Chưa tới', rejected: 'Từ chối' },
+                approver: 'Người duyệt',
+                by: (who, at) => `${who || '-'}${at ? `, ${at}` : ''}`,
+                waived: 'cùng người duyệt cấp liền trước (cấp chỉ có một người duyệt)',
+                cannot: 'Bạn chưa duyệt được:',
+                approveTitle: (n, name) => `Duyệt cấp ${n}${name ? ` - ${name}` : ''}`,
+                approveText: (last) => (last ? 'Đây là cấp cuối: sau khi duyệt, bảng lương chuyển sang Đã duyệt và số liệu bị khóa cho đến khi mở lại.' : 'Bảng lương chuyển sang cấp duyệt kế tiếp.'),
+                approveOpen: (n) => `Còn ${n} điểm kiểm tra chưa xử lý.`,
+                rejectTitle: 'Từ chối bảng lương',
+                rejectText: 'Bảng lương về trạng thái Bị từ chối; người lập mở lại để sửa rồi gửi duyệt lại từ cấp 1.',
+                note: 'Ghi chú',
+                noteOptional: 'Không bắt buộc',
+                noteRequired: 'Bắt buộc: nêu lý do từ chối',
+                cancel: 'Hủy',
+                confirmApprove: 'Duyệt',
+                confirmReject: 'Từ chối',
+                approved: (r) => (r && r.final ? 'Đã duyệt cấp cuối, bảng lương đã duyệt' : `Đã duyệt cấp ${(r && r.level) || ''}`),
+                rejected: 'Đã từ chối bảng lương',
+            },
             confirm: {
                 submit: 'Gửi bảng lương này đi duyệt? Sau khi gửi không sửa, không tính lại được cho đến khi mở lại.',
                 submitOpen: (n) => `Còn ${n} điểm kiểm tra chưa xử lý. Vẫn gửi bảng lương này đi duyệt?`,
@@ -6382,6 +9321,29 @@ select.s4vp-in{padding-right:28px}
                 payslips: 'Payslips', paymentSheet: 'Payment sheet', contractor: 'Contractor settlement', bankFile: 'Bank payment file', journal: 'View journal',
             },
             hrNoRelease: 'The HR role cannot release; an accountant performs this step.',
+            apv: {
+                title: 'Approval levels',
+                level: (n) => `Level ${n}`,
+                approveLevel: (n) => `Approve level ${n}`,
+                state: { done: 'Approved', current: 'Pending', todo: 'Not yet', rejected: 'Rejected' },
+                approver: 'Approver',
+                by: (who, at) => `${who || '-'}${at ? `, ${at}` : ''}`,
+                waived: 'same approver as the previous level (single approver for this level)',
+                cannot: 'You cannot approve yet:',
+                approveTitle: (n, name) => `Approve level ${n}${name ? ` - ${name}` : ''}`,
+                approveText: (last) => (last ? 'This is the final level: once approved, the batch becomes Approved and its figures are locked until it is reopened.' : 'The batch moves on to the next approval level.'),
+                approveOpen: (n) => `${n} review items are still open.`,
+                rejectTitle: 'Reject the batch',
+                rejectText: 'The batch becomes Rejected; the preparer reopens it, makes changes and submits it again from level 1.',
+                note: 'Note',
+                noteOptional: 'Optional',
+                noteRequired: 'Required: give the reason for rejecting',
+                cancel: 'Cancel',
+                confirmApprove: 'Approve',
+                confirmReject: 'Reject',
+                approved: (r) => (r && r.final ? 'Final level approved; the batch is approved' : `Level ${(r && r.level) || ''} approved`),
+                rejected: 'Batch rejected',
+            },
             confirm: {
                 submit: 'Submit this batch for approval? It cannot be edited or recalculated until it is reopened.',
                 submitOpen: (n) => `${n} review items are still open. Submit this batch for approval anyway?`,
@@ -6620,6 +9582,14 @@ select.s4vp-in{padding-right:28px}
         });
         return { openRows: own.concat(items.filter(isOpenCheck).map(checkRow)), doneRows: items.filter((c) => !isOpenCheck(c)).map(checkRow) };
     }
+    // Thời điểm ISO UTC của nhật ký duyệt -> giờ máy người dùng
+    const fmtAt$1 = (iso) => {
+        const d = new Date(String(iso || ''));
+        return isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN', { hour12: false });
+    };
+    // Trạng thái có thể đang qua các cấp duyệt (hỏi approvalState); trạng thái khác không cần hỏi
+    const APV_STATUSES = ['C', 'P', 'J', 'A', 'R', 'V'];
+    const APV_TONE = { done: 'ok', current: 'warn', todo: 'muted', rejected: 'error' };
     const jobKind = (job) => (!job ? '' : /^release:/.test(job) ? 'release' : /^reverse:/.test(job) ? 'reverse' : job === 'queued' ? 'queued' : 'calc');
     function PayrollRunView({ app }) {
         const t = pick(TEXT$3);
@@ -6631,6 +9601,10 @@ select.s4vp-in{padding-right:28px}
         const [checks, setChecks] = core.useState(NO_CHECKS);
         const [failed, setFailed] = core.useState(false);
         const [version, setVersion] = core.useState(0);
+        // Duyệt nhiều cấp: null = công ty không khai cấp duyệt (màn hình như cũ) hoặc chưa tải
+        const [apv, setApv] = core.useState(null);
+        const [apvNote, setApvNote] = core.useState('');
+        const apvRequest = core.useRef(0);
         const [filter, setFilter] = core.useState(FILTERS.indexOf(params.tab) >= 0 ? params.tab : 'all');
         const [query, setQuery] = core.useState('');
         const [limit, setLimit] = core.useState(PAGE_SIZE);
@@ -6786,6 +9760,18 @@ select.s4vp-in{padding-right:28px}
                     clearTimeout(timer);
             };
         }, [id, job]);
+        // Trạng thái duyệt nhiều cấp: tải lại sau mỗi lần nạp bảng lương; lỗi hoặc máy chủ chưa có route thì coi như không khai cấp
+        const batchStatus = data && data.batch ? String(data.batch.status || '') : '';
+        core.useEffect(() => {
+            apvRequest.current += 1;
+            const mine = apvRequest.current;
+            if (!id || APV_STATUSES.indexOf(batchStatus) < 0) {
+                setApv(null);
+                return undefined;
+            }
+            call({ action: 'approvalState', batch: id }).then((r) => alive.current && mine === apvRequest.current && setApv(r && r.enabled && Array.isArray(r.steps) ? r : null), () => alive.current && mine === apvRequest.current && setApv(null));
+            return undefined;
+        }, [id, version, batchStatus]);
         if (!id) {
             return (jsxs(Page, { children: [jsx(PageHeader, { title: t.crumb }), jsxs(Card, { children: [jsx(Empty, { text: t.noBatch }), jsx("div", { class: "s4vp-actions", children: jsx(Button, { kind: "primary", label: t.backToList, onClick: () => app.go('payrollList') }) })] })] }));
         }
@@ -6846,6 +9832,17 @@ select.s4vp-in{padding-right:28px}
         const doRelease = () => app.confirm(t.confirm.release, () => act('release', null, (r) => (r.resumed ? t.done.resumed : t.done.released)));
         const doReverse = () => app.confirm(t.confirm.reverse, () => act('reverse', null, (r) => (r.resumed ? t.done.resumed : t.done.reversed)));
         const goAttendance = () => app.go('attendance', { period: period.id });
+        // Duyệt nhiều cấp: hộp xác nhận có ô ghi chú (từ chối bắt buộc ghi chú)
+        const multi = !!(apv && apv.enabled);
+        const openApvDialog = (kind) => {
+            setApvNote('');
+            setDialog({ kind });
+        };
+        const sendApv = (action) => act(action, { batch: id, note: apvNote.trim() }, (r) => (action === 'rejectStep' ? t.apv.rejected : t.apv.approved(r))).then((r) => {
+            if (r && alive.current)
+                setDialog(null);
+            return r;
+        });
         const openJournalPreview = () => setTab('journal');
         const bankFile = () => app.run(t.working, call({ action: 'bankfile', id })).then((r) => {
             if (r && r.fileName)
@@ -6875,6 +9872,9 @@ select.s4vp-in{padding-right:28px}
             primary = { label: t.act.submit, onClick: doSubmit };
             secondary = { label: t.act.recalculate, onClick: doCalculate };
         }
+        else if (s === 'P' && multi) {
+            primary = apv.current ? { label: t.apv.approveLevel(apv.current), onClick: () => openApvDialog('apvApprove'), disabled: !apv.canApprove, title: apv.canApprove ? '' : apv.reason } : null;
+        }
         else if (s === 'P')
             primary = { label: t.act.approve, onClick: doApprove };
         else if (s === 'J')
@@ -6900,8 +9900,9 @@ select.s4vp-in{padding-right:28px}
             item(editable && notShown(t.act.calculate) && notShown(t.act.recalculate), calculated ? t.act.recalculate : t.act.calculate, doCalculate, working),
             item(s === 'H' && notShown(t.act.removeHold), t.act.removeHold, () => act('removeHold'), working),
             item(s === 'B' || s === 'C', t.act.hold, () => act('hold'), working),
-            item(s === 'C' && calculated, t.act.approveNow, doApprove, working),
-            item(s === 'C' || s === 'P', t.act.reject, () => app.confirm(t.confirm.reject, () => act('reject', null, () => t.done.rejected)), working),
+            item(s === 'C' && calculated && !multi, t.act.approveNow, doApprove, working),
+            item(s === 'C' || (s === 'P' && !multi), t.act.reject, () => app.confirm(t.confirm.reject, () => act('reject', null, () => t.done.rejected)), working),
+            item(s === 'P' && multi, t.act.reject, () => openApvDialog('apvReject'), working || !(apv && apv.canReject)),
             item(['A', 'P', 'C', 'B'].indexOf(s) >= 0, t.act.reopen, () => app.confirm(t.confirm.reopen, () => act('reopen', null, () => t.done.reopened)), working),
             item(!isHr && s === 'R', t.act.agencyBills, () => app.confirm(t.confirm.agencyBills, () => act('agencyBills', null, t.done.bills)), working),
             item(!isHr && s === 'R', t.act.completeRelease, () => act('release', null, (r) => (r.resumed ? t.done.resumed : t.done.released)), working),
@@ -7411,10 +10412,26 @@ select.s4vp-in{padding-right:28px}
                 msgAttrs.title = message;
             return (jsxs("section", { class: "s4vp-pane", "aria-label": t.panel.tabsLabel, children: [jsxs("div", { class: "s4vp-pane-h", children: [jsxs("div", { class: "s4vp-pane-t", children: [title, sub ? jsx("span", { class: "s4vp-pane-s", children: ` · ${sub}` }) : null] }), side ? jsx("div", { style: { fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }, children: side }) : null] }), message ? jsx("div", { ...msgAttrs, children: message }) : null, jsxs("div", { class: "s4vp-tabs2", role: "tablist", "aria-label": t.panel.tabsLabel, children: [jsx("div", { class: "s4vp-tabs2-g", children: LINE_TABS.map((k) => tabButton(k)) }), jsxs("div", { class: "s4vp-tabs2-g s4vp-tabs2-batch", children: [jsx("span", { class: "s4vp-tabs2-cap", children: t.panel.groupBatch }), tabButton('checks', openTotal, hasErrors ? 'error' : 'warn'), tabButton('journal'), tabButton('bills', bills.length)] })] }), jsx("div", { class: "s4vp-pane-b", children: jsx("div", { class: "s4vp-pane-pad", children: body }) })] }));
         };
+        // ------------------------------------------------------------------ các cấp duyệt (chỉ khi công ty khai cấp duyệt)
+        const renderApproval = () => {
+            if (!multi || !apv.steps.length)
+                return null;
+            return (jsxs(Card, { title: t.apv.title, label: t.apv.title, children: [jsx("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '16px' }, children: apv.steps.map((st) => (jsxs("div", { style: { minWidth: '200px', flex: '1 1 200px' }, children: [jsxs("div", { style: { display: 'flex', gap: '8px', alignItems: 'center' }, children: [jsx("span", { style: { fontWeight: '600' }, children: `${t.apv.level(st.level)}${st.name ? ` - ${st.name}` : ''}` }), jsx(Badge, { text: t.apv.state[st.state] || st.state, tone: APV_TONE[st.state] || 'muted' })] }), jsx("div", { class: "s4vp-small", children: `${t.apv.approver}: ${st.approverName || '-'}` }), st.state === 'done' || st.state === 'rejected' ? jsx("div", { class: "s4vp-small", children: t.apv.by(st.by, fmtAt$1(st.at)) }) : null, st.note ? jsx("div", { class: "s4vp-small", style: { overflowWrap: 'anywhere' }, children: st.note }) : null, st.waived ? jsx("div", { class: "s4vp-small s4vp-muted", children: t.apv.waived }) : null] }, `apv${st.level}`))) }), s === 'P' && apv.current && !apv.canApprove && apv.reason ? (jsx("div", { class: "s4vp-small", role: "status", style: { marginTop: '8px' }, children: `${t.apv.cannot} ${apv.reason}` })) : null] }));
+        };
         // ------------------------------------------------------------------ hộp thoại
         const renderDialog = () => {
             if (!dialog)
                 return null;
+            if (dialog.kind === 'apvApprove' || dialog.kind === 'apvReject') {
+                const isReject = dialog.kind === 'apvReject';
+                if (!apv)
+                    return null;
+                const ready = !isReject || !!apvNote.trim();
+                return (jsxs(Dialog, { title: isReject ? t.apv.rejectTitle : t.apv.approveTitle(apv.current, apv.currentName), onClose: () => setDialog(null), actions: [
+                        jsx(Button, { label: t.apv.cancel, onClick: () => setDialog(null) }),
+                        jsx(Button, { kind: "primary", label: isReject ? t.apv.confirmReject : t.apv.confirmApprove, disabled: !ready || working, onClick: () => sendApv(isReject ? 'rejectStep' : 'approveStep') }),
+                    ], children: [jsx("div", { style: { whiteSpace: 'pre-wrap' }, children: isReject ? t.apv.rejectText : [t.apv.approveText(!!apv.final)].concat(openCount > 0 ? [t.apv.approveOpen(openCount)] : []).join(' ') }), jsx("div", { class: "s4vp-form", children: jsx(Field, { label: t.apv.note, hint: isReject ? t.apv.noteRequired : t.apv.noteOptional, children: jsx(TextArea, { value: apvNote, onInput: setApvNote, rows: 3, ariaLabel: t.apv.note }) }) })] }));
+            }
             if (dialog.kind === 'time') {
                 const tm = t.panel.time;
                 return (jsxs(Dialog, { title: tm.editTitle(timeForm.label || ''), onClose: () => setDialog(null), actions: [jsx(Button, { label: t.input.cancel, onClick: () => setDialog(null) }), jsx(Button, { kind: "primary", label: tm.save, disabled: blank(toNumber(timeForm.hours)) || working, onClick: saveTime })], children: [jsx("div", { class: "s4vp-small", children: tm.editHint }), jsxs("div", { class: "s4vp-form", children: [jsx(Field, { label: pc.hours, children: jsx(NumberInput, { value: timeForm.hours, onInput: setTimeField('hours') }) }), jsx(Field, { label: pc.reason, children: jsx(TextInput, { value: timeForm.reason, onInput: setTimeField('reason'), onEnter: saveTime }) })] })] }));
@@ -7435,7 +10452,7 @@ select.s4vp-in{padding-right:28px}
         const kindOfJob = jobKind(job);
         // Tóm tắt so sánh với kỳ trước (số người mới, không còn, lệch đã có trên các chip lọc): hiện khi rê chuột vào thanh lọc
         const headAttrs = { class: 's4vp-pane-h', title: empSub };
-        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('payrollList') }, { label: b.name || id }], title: b.description || t.batchOf(b.periodName || ''), status: { text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted' }, sub: docLinks.length || bills.length ? (jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '0 12px', alignItems: 'center' }, children: [jsx("span", { children: subParts.join(' · ') }), docLinks.map((x, i) => (jsx("span", { children: x }, `d${i}`))), bills.length ? jsx("span", { children: t.docs.bills(bills.length) }) : null] })) : (subParts.join(' · ')), actions: headerActions }), job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job[kindOfJob] || t.job.calc }), kindOfJob === 'calc' && jobInfo ? jsx("span", { children: t.job.stage(jobInfo.stage, jobInfo.status) }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols s4vp-cols-half", children: [jsx("div", { class: "s4vp-col-half", children: jsxs("section", { class: "s4vp-pane", "aria-label": t.emp.title, children: [jsxs("div", { ...headAttrs, children: [jsx(Chips, { items: filterItems, value: filter, onPick: pickFilter, label: t.emp.filterLabel }), jsxs("div", { style: { display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }, children: [found.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.emp.matches(found.count) }), jsx(SearchBox, { value: query, onInput: (v) => (setQuery(v), setLimit(PAGE_SIZE)), placeholder: t.emp.search, label: t.emp.searchLabel, width: 170 })] })] }), jsx("div", { class: "s4vp-pane-b", children: jsx(Table, { columns: empColumns, rows: shown, onRowClick: (r) => selectLine(r.id), selectedKey: sel, total: totalRow, empty: rows.length || filter === 'left' ? t.emp.emptyFilter : t.emp.empty, label: t.emp.title }) }), found.rows.length > shown.length ? (jsxs("div", { class: "s4vp-pane-f", children: [jsx("span", { children: t.emp.showing(shown.length, found.rows.length) }), jsx(Button, { small: true, label: t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length)), onClick: () => setLimit(limit + PAGE_SIZE) })] })) : null] }) }), jsx("div", { class: "s4vp-col-half", children: renderPanel() })] }), renderDialog()] }));
+        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('payrollList') }, { label: b.name || id }], title: b.description || t.batchOf(b.periodName || ''), status: { text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted' }, sub: docLinks.length || bills.length ? (jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '0 12px', alignItems: 'center' }, children: [jsx("span", { children: subParts.join(' · ') }), docLinks.map((x, i) => (jsx("span", { children: x }, `d${i}`))), bills.length ? jsx("span", { children: t.docs.bills(bills.length) }) : null] })) : (subParts.join(' · ')), actions: headerActions }), job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job[kindOfJob] || t.job.calc }), kindOfJob === 'calc' && jobInfo ? jsx("span", { children: t.job.stage(jobInfo.stage, jobInfo.status) }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null, jsx(Stepper, { steps: steps, label: t.stepsLabel }), renderApproval(), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols s4vp-cols-half", children: [jsx("div", { class: "s4vp-col-half", children: jsxs("section", { class: "s4vp-pane", "aria-label": t.emp.title, children: [jsxs("div", { ...headAttrs, children: [jsx(Chips, { items: filterItems, value: filter, onPick: pickFilter, label: t.emp.filterLabel }), jsxs("div", { style: { display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }, children: [found.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.emp.matches(found.count) }), jsx(SearchBox, { value: query, onInput: (v) => (setQuery(v), setLimit(PAGE_SIZE)), placeholder: t.emp.search, label: t.emp.searchLabel, width: 170 })] })] }), jsx("div", { class: "s4vp-pane-b", children: jsx(Table, { columns: empColumns, rows: shown, onRowClick: (r) => selectLine(r.id), selectedKey: sel, total: totalRow, empty: rows.length || filter === 'left' ? t.emp.emptyFilter : t.emp.empty, label: t.emp.title }) }), found.rows.length > shown.length ? (jsxs("div", { class: "s4vp-pane-f", children: [jsx("span", { children: t.emp.showing(shown.length, found.rows.length) }), jsx(Button, { small: true, label: t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length)), onClick: () => setLimit(limit + PAGE_SIZE) })] })) : null] }) }), jsx("div", { class: "s4vp-col-half", children: renderPanel() })] }), renderDialog()] }));
     }
 
     const TEXT$2 = {
@@ -7839,7 +10856,8 @@ select.s4vp-in{padding-right:28px}
         const counts = (list && list.counts) || EMPTY_COUNTS;
         // Máy chủ đã lọc và cắt trang: items là các mục đã tải, total là số mục khớp bộ lọc, bySeverity đếm theo mức độ trong phạm
         // vi các bộ lọc còn lại, groups là số lượng theo quy tắc trên toàn bộ bảng lương
-        const bySeverity = Object.assign({ error: 0, warn: 0, info: 0 }, (list && list.bySeverity) || {});
+        const sev = (list && list.bySeverity) || {};
+        const bySeverity = { error: sev.err || sev.error || 0, warn: sev.warn || 0, info: sev.info || 0 };
         const total = list ? Number(list.total) || 0 : 0;
         const groups = (list && Array.isArray(list.groups) ? list.groups : []).filter(Boolean);
         const group = rule ? groups.find((g) => g.rule === rule) || null : null;
@@ -9442,7 +12460,7 @@ select.s4vp-in{padding-right:28px}
         profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
     };
     // View mở khi bấm tab
-    const VIEW_OF_TAB = { home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setup' };
+    const VIEW_OF_TAB = { home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setupHub' };
     const DEFAULT_VIEW = 'home';
     const known = (view) => !!VIEWS[view] || LEGACY.indexOf(view) >= 0;
     // Hash dạng #/view?k=v; hash lạ (hoặc trống) về Trang chủ
@@ -9611,7 +12629,7 @@ select.s4vp-in{padding-right:28px}
                     setSubsidiary(String((subs.find((s) => s.enabled) || subs[0]).id));
                 // Chưa có thiết lập lương: vào thẳng Thiết lập
                 if (!b.setupReady)
-                    go('setup');
+                    go('setupHub');
             });
             const onHash = () => {
                 const next = parseHash(window.location.hash);
@@ -9658,7 +12676,7 @@ select.s4vp-in{padding-right:28px}
                 content = jsx(LegacyView, { app: app, view: current.view }, "legacy");
             }
         }
-        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.outputs, onClick: () => go('outputs') }, { label: t.permits, onClick: () => go('permits') }] }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view === 'home' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setup') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot(true) })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
+        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.outputs, onClick: () => go('outputsV2') }, { label: t.permits, onClick: () => go('permits') }] }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view === 'home' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setupHub') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot(true) })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
                         jsx(Button, { label: t.cancel, onClick: () => setConfirm(null) }),
                         jsx(Button, { kind: "primary", label: t.yes, onClick: () => {
                                 const c = confirm;

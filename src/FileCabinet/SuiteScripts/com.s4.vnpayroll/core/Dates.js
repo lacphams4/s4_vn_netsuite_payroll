@@ -21,7 +21,9 @@ define([], () => {
 		if (m) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
 		const v = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s); // dd/MM/yyyy
 		if (v) return `${v[3]}-${pad(+v[2])}-${pad(+v[1])}`;
-		throw new Error(`Invalid date: ${s}`);
+		const e = new Error(`Invalid date: ${s}`);
+		e.userMessage = { en: `Invalid date: ${s}`, vi: `Ngày không hợp lệ: ${s}` };
+		throw e;
 	}
 
 	function pad(n, w = 2) {

@@ -1,0 +1,16 @@
+<customlist scriptid="customlist_s4vp_apv_decision">
+  <name>S4VP apv_decision</name>
+  <description>S4 VN Payroll code list apv_decision; values keep the Acumatica codes (A, R).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_apv_decision_a">
+      <value>A - Duyệt</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_apv_decision_r">
+      <value>R - Từ chối</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

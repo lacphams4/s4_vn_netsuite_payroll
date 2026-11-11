@@ -126,10 +126,16 @@ define([], () => {
 	 */
 	function planLoad(code, existing) {
 		const pack = PACKS[String(code || "").toUpperCase()];
-		if (!pack) throw new Error(`Unknown industry pack: ${code}`);
+		if (!pack) {
+			const e = new Error(`Unknown industry pack: ${code}`);
+			e.userMessage = { en: `Unknown industry pack: ${code}`, vi: `Gói ngành không hợp lệ: ${code}` };
+			throw e;
+		}
 		const ex = existing || {};
 		if (!(ex.rules || []).length) {
-			throw new Error("Load VN Defaults first: the earning rule table is empty and the pack has no base salary rule.");
+			const e = new Error("Load VN Defaults first: the earning rule table is empty and the pack has no base salary rule.");
+			e.userMessage = { en: "Load VN Defaults first: the earning rule table is empty and the pack has no base salary rule.", vi: "Hãy nạp mặc định VN trước: bảng quy tắc thu nhập đang trống và gói ngành không có quy tắc lương cơ bản." };
+			throw e;
 		}
 		const missing = (list, have) => {
 			const s = new Set((have || []).map((x) => String(x).trim().toUpperCase()));

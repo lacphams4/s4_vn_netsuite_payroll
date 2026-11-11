@@ -1,7 +1,7 @@
 <mapreducescript scriptid="customscript_s4vp_mr_calculate">
   <name>S4VP Payroll Calculation (Map/Reduce)</name>
   <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_mr_calculate.js]</scriptfile>
-  <description>Calculates large payroll batches in chunks of 50 employee lines, then totals the batch.</description>
+  <description>Calculates large payroll batches in chunks of 100 employee lines (chunks run in parallel), then totals the batch.</description>
   <isinactive>F</isinactive>
   <notifyadmins>F</notifyadmins>
   <notifyowner>T</notifyowner>
@@ -21,6 +21,7 @@
       <loglevel>AUDIT</loglevel>
       <status>NOTSCHEDULED</status>
       <title>S4VP Payroll Calculation</title>
+      <concurrencylimit>2</concurrencylimit>
     </scriptdeployment>
   </scriptdeployments>
 </mapreducescript>

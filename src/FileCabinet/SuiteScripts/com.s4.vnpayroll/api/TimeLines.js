@@ -10,6 +10,13 @@
  */
 define(["./Store", "../core/TimesheetSync", "../core/Dates"], (Store, Sync, Dates) => {
 	const blank = (v) => v === null || v === undefined || v === "";
+	/** Lỗi nghiệp vụ hai ngôn ngữ: RESTlet trả userMessage.en / userMessage.vi, giao diện hiện đúng một ngôn ngữ. */
+	function fail(en, vi) {
+		const e = new Error(`${en} / ${vi}`);
+		e.userMessage = { en, vi };
+		return e;
+	}
+
 
 	/** Trạng thái duyệt của dòng Time: A đã duyệt, R từ chối, P chờ duyệt / mở, N không dùng duyệt. */
 	function approvalOf(row) {
@@ -103,11 +110,9 @@ define(["./Store", "../core/TimesheetSync", "../core/Dates"], (Store, Sync, Date
 	/** Sửa giờ tính lương; giờ khác giờ timesheet thì bắt buộc lý do (TimesheetSync.requiresReason). */
 	function save(line, hours, reason) {
 		const h = Sync.parseHours(hours);
-		if (!(h >= 0)) throw new Error("Hours cannot be negative / Số giờ không được âm");
+		if (!(h >= 0)) throw fail("Hours cannot be negative", "Số giờ không được âm");
 		if (Sync.requiresReason({ hours: h, sourceHours: line.source_hours || 0 }) && blank(String(reason || "").trim())) {
-			const e = new Error("A reason is required when payroll hours differ from the timesheet / Cần ghi lý do khi giờ tính lương khác giờ timesheet");
-			e.userMessage = { en: "A reason is required when payroll hours differ from the timesheet", vi: "Cần ghi lý do khi giờ tính lương khác giờ timesheet" };
-			throw e;
+			throw fail("A reason is required when payroll hours differ from the timesheet", "Cần ghi lý do khi giờ tính lương khác giờ timesheet");
 		}
 		Store.submit("batch_time", line.id, { hours: h, reason: String(reason || "").trim().slice(0, 300) });
 	}

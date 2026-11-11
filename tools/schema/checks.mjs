@@ -51,6 +51,7 @@ export default ({ ROLE_HR, ROLE_ACCT }) => ({
 				["action", "Thao tác", "text", { req: true, display: "LOCKED" }],
 				["batch", "Bảng lương", "select:rec:batch", { display: "LOCKED" }],
 				["period", "Kỳ lương", "select:rec:period", { display: "LOCKED" }],
+				["employee", "Nhân viên", "select:employee", { display: "LOCKED", help: "Employee the action is about (HR actions: contract, decision, dependent, profile, allocation, work permit, advance)." }],
 				["line", "Dòng", "text", { display: "LOCKED", help: "Line or object reference of the action (line id, check key)." }],
 				["text_vi", "Diễn giải", "text", { display: "LOCKED" }],
 				["text_en", "Diễn giải (tiếng Anh)", "text", { display: "LOCKED" }],

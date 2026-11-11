@@ -1,97 +1,139 @@
 /**
- * Tự phục vụ: Phiếu lương của tôi (VP601000) và In phiếu lương của tôi (VP641100), đặc tả 1.4.3.
- * Nhân viên xác định từ người dùng đăng nhập; chỉ bảng lương đã ghi sổ (R) có dòng của chính người đó; lọc năm theo
- * tháng tính thuế (không theo đầu mã kỳ - sửa điểm 6.1 #8 của bản Acumatica). Deployment chạy với role có quyền đọc
- * dữ liệu lương nhưng mọi truy vấn lọc phía máy chủ theo nhân viên đăng nhập; người dùng chưa gắn nhân viên thì báo rõ.
- * GET ?year=yyyy -> danh sách; GET ?batch=<id>&lang=vi|en|bi -> PDF phiếu lương của chính mình.
+ * Cổng tự phục vụ của nhân viên (VP601000 Phiếu lương của tôi, VP602000 Công và phép của tôi, VP603000 Đơn của tôi,
+ * VP641100 In phiếu lương của tôi; đặc tả 1.4.3). Một trang HTML + JS thuần (core/SelfServicePage), dùng được trên điện thoại.
+ *
+ * Nhân viên xác định từ người dùng đăng nhập ở MỖI lượt gọi; trang không gửi và máy chủ không nhận mã nhân viên từ trình
+ * duyệt (yêu cầu kèm employee của người khác bị từ chối). Deployment chạy với role có quyền đọc dữ liệu lương nhưng mọi
+ * truy vấn lọc phía máy chủ theo nhân viên đăng nhập (core/SelfServiceOps). Chỉ bảng lương đã ghi sổ (R); lọc năm theo
+ * tháng tính thuế (không theo đầu mã kỳ - sửa điểm 6.1 #8 của bản Acumatica). Số định danh chỉ trả dạng che. Không ghi số
+ * tiền vào log.
+ *
+ * GET  (không có op)                 -> trang
+ * GET  ?op=payslips|payslip|leave|requests|me|boot -> JSON { ok, data } | { ok: false, code, message }
+ * GET  ?op=pdf&batch=<id>&lang=vi|en|bi (hoặc ?batch=<id> như bản cũ) -> PDF phiếu lương của chính mình
+ * POST thân JSON { op: saveRequest | requestAction, token, ... } -> JSON; cần mã phiên (token của trang) hoặc tiêu đề
+ *      X-S4VP-Request (trang khác nguồn không gửi được cả hai) để chống gửi chéo trang.
  *
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  * @NModuleScope SameAccount
  */
-define(["N/file", "N/render", "N/runtime", "N/url", "N/log", "../api/Store", "../api/Payroll", "../api/Settings", "../core/PrintModel"], (
-	file,
-	render,
-	runtime,
-	url,
-	log,
-	Store,
-	Payroll,
-	Settings,
-	PrintModel
-) => {
-	const esc = (s) => String(s === null || s === undefined ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-	const money = (n) => (Math.round(Number(n) || 0) === 0 ? "-" : Math.round(Number(n)).toLocaleString("vi-VN"));
+define([
+	"N/file", "N/render", "N/runtime", "N/url", "N/log", "../api/Store", "../api/Attendance", "../api/Settings", "../api/Clock",
+	"../core/PrintModel", "../core/SelfServiceOps", "../core/SelfServicePage",
+], (file, render, runtime, url, log, Store, Attendance, Settings, Clock, PrintModel, Ops, Page) => {
+	const TOKEN_KEY = "s4vp_ss_token";
 
-	function page(response, title, body) {
-		response.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title>
-<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;margin:16px;color:#222}table{border-collapse:collapse;width:100%;max-width:900px}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}td.n{text-align:right}a{color:#0b5fa5}</style></head>
-<body><h2>${esc(title)}</h2>${body}</body></html>`);
-	}
-
-	/** Nhân viên của người dùng đăng nhập (Employee Center đăng nhập bằng bản ghi Employee). */
-	function me() {
+	function userId() {
 		const u = runtime.getCurrentUser();
-		const id = u && Number(u.id) > 0 ? String(u.id) : null;
-		if (!id) return null;
-		const rows = Store.run("SELECT id FROM employee WHERE id = ?", [id], "s4vp_my_employee");
-		return rows.length ? id : null;
+		return u && Number(u.id) > 0 ? String(u.id) : null;
 	}
 
-	/** Các dòng của tôi trên bảng lương đã ghi sổ. */
-	function myLines(employee) {
-		const lines = Store.find("batch_emp", { where: "{employee} = ?", params: [employee] });
-		const batches = {};
-		for (const b of Store.findIn("batch", "id", lines.map((l) => l.batch))) batches[b.id] = b;
-		const periods = {};
-		for (const p of Store.find("period", { includeInactive: true })) periods[p.id] = p;
-		return lines
-			.filter((l) => batches[l.batch] && batches[l.batch].status === "R")
-			.map((l) => ({ line: l, batch: batches[l.batch], period: periods[batches[l.batch].period] || {} }))
-			.sort((a, b) => String(b.period.end || "").localeCompare(String(a.period.end || "")));
+	function language() {
+		try {
+			return /^en/i.test(String(runtime.getCurrentUser().getPreference({ name: "LANGUAGE" }) || "")) ? "en" : "vi";
+		} catch (e) {
+			return "vi";
+		}
+	}
+
+	const ops = Ops.create({
+		userId,
+		today: () => Clock.today(),
+		Store,
+		Attendance,
+		Settings,
+		log: (text) => log.error({ title: "s4vp_sl_my_payroll", details: text }),
+	});
+
+	/** Mã phiên của trang: lưu trong phiên đăng nhập NetSuite; không dùng được phiên thì trả chuỗi rỗng. */
+	function sessionToken(create) {
+		try {
+			const session = runtime.getCurrentSession();
+			let t = session.get({ name: TOKEN_KEY });
+			if (!t && create) {
+				t = `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+				session.set({ name: TOKEN_KEY, value: t });
+			}
+			return t ? String(t) : "";
+		} catch (e) {
+			return "";
+		}
+	}
+
+	function header(request, name) {
+		const hs = request.headers || {};
+		for (const k of Object.keys(hs)) if (k.toLowerCase() === name.toLowerCase()) return hs[k];
+		return null;
+	}
+
+	function noStore(response) {
+		try {
+			response.setHeader({ name: "Cache-Control", value: "no-store" });
+		} catch (e) {
+			// tiêu đề không đặt được: bỏ qua
+		}
+	}
+
+	function json(response, payload) {
+		response.setHeader({ name: "Content-Type", value: "application/json; charset=utf-8" });
+		noStore(response);
+		response.write(JSON.stringify(payload));
+	}
+
+	function page(response, boot) {
+		noStore(response);
+		response.write(Page.html(Object.assign({ lang: language() }, boot)));
+	}
+
+	function pdf(context, batchId, lang) {
+		let detail = null;
+		try {
+			detail = ops.printDetail(batchId);
+		} catch (e) {
+			if (!e.userMessage) log.error({ title: "s4vp_sl_my_payroll", details: `pdf: ${String(e.message || e).slice(0, 300)}` });
+			return page(context.response, { blocked: e.userMessage || { en: "The payslip could not be printed.", vi: "Không in được phiếu lương." } });
+		}
+		if (!detail) return page(context.response, { blocked: { en: "No released payslip of yours in this batch.", vi: "Không tìm thấy phiếu lương đã ghi sổ của bạn trong bảng lương này." } });
+		const settings = Settings.resolve(detail.batch.subsidiary, null);
+		const model = PrintModel.payslips(detail, { lang: ["vi", "en", "bi"].includes(lang) ? lang : language(), company: { name: "", address: "", taxId: "" }, signers: settings.signers, profiles: {}, employee: detail.employee });
+		const renderer = render.create();
+		renderer.templateContent = file.load({ id: "../templates/payslip.xml" }).getContents();
+		renderer.addCustomDataSource({ format: render.DataSource.OBJECT, alias: "data", data: model });
+		const out = renderer.renderAsPdf();
+		out.name = `PhieuLuong_${detail.batch.name || batchId}.pdf`;
+		context.response.writeFile({ file: out, isInline: true });
 	}
 
 	function onRequest(context) {
-		const p = context.request.parameters;
-		const vi = !/^en/i.test(String(runtime.getCurrentUser().getPreference({ name: "LANGUAGE" }) || ""));
-		const title = vi ? "Phiếu lương của tôi" : "My Payslips";
-		const employee = me();
-		if (!employee) return page(context.response, title, `<p>${vi ? "Tài khoản đăng nhập chưa gắn với nhân viên." : "Your user account is not linked to an employee."}</p>`);
-		let mine;
-		try {
-			mine = myLines(employee);
-		} catch (e) {
-			log.error({ title: "s4vp_sl_my_payroll", details: String(e.message || e).slice(0, 300) });
-			return page(context.response, title, `<p>${esc(e.message || e)}</p>`);
+		const request = context.request;
+		const p = request.parameters || {};
+		if (String(request.method).toUpperCase() === "POST") {
+			let body = null;
+			try {
+				body = JSON.parse(request.body || "{}");
+			} catch (e) {
+				body = null;
+			}
+			if (!body || typeof body !== "object") return json(context.response, { ok: false, code: "INVALID", message: { en: "Invalid request.", vi: "Yêu cầu không hợp lệ." } });
+			const token = sessionToken(false);
+			const trusted = (!!token && String(body.token || "") === token) || String(header(request, "X-S4VP-Request") || "") === "1";
+			if (!trusted) return json(context.response, { ok: false, code: "FORBIDDEN", message: { en: "The page has expired. Please reload it.", vi: "Trang đã hết hạn. Hãy tải lại trang." } });
+			// op chỉ lấy từ thân JSON; tham số URL của POST không được dùng
+			return json(context.response, ops.handle("POST", {}, body));
 		}
-		if (p.batch) {
-			const hit = mine.find((m) => m.batch.id === String(p.batch));
-			if (!hit) return page(context.response, title, `<p>${vi ? "Không tìm thấy phiếu lương đã ghi sổ của bạn trong bảng lương này." : "No released payslip of yours in this batch."}</p>`);
-			const detail = Payroll.detail(hit.batch.id);
-			// Chỉ giữ dòng của chính mình trước khi dựng mô hình in
-			detail.lines = detail.lines.filter((l) => l.employee === employee);
-			const settings = Settings.resolve(detail.batch.subsidiary, null);
-			const lang = ["vi", "en", "bi"].includes(p.lang) ? p.lang : vi ? "vi" : "en";
-			const model = PrintModel.payslips(detail, { lang, company: { name: "", address: "", taxId: "" }, signers: settings.signers, profiles: {}, employee });
-			const renderer = render.create();
-			renderer.templateContent = file.load({ id: "../templates/payslip.xml" }).getContents();
-			renderer.addCustomDataSource({ format: render.DataSource.OBJECT, alias: "data", data: model });
-			const pdf = renderer.renderAsPdf();
-			pdf.name = `PhieuLuong_${hit.batch.name}.pdf`;
-			context.response.writeFile({ file: pdf, isInline: true });
-			return;
-		}
-		const year = /^\d{4}$/.test(String(p.year || "")) ? String(p.year) : String(new Date().getFullYear());
-		const rows = mine.filter((m) => String(m.batch.tax_month || m.period.tax_month || "").slice(0, 4) === year);
-		const self = url.resolveScript({ scriptId: "customscript_s4vp_sl_my_payroll", deploymentId: "customdeploy_s4vp_sl_my_payroll" });
-		const years = [...new Set(mine.map((m) => String(m.batch.tax_month || m.period.tax_month || "").slice(0, 4)).filter(Boolean))];
-		if (!years.includes(year)) years.push(year);
-		const head = vi ? ["Kỳ lương", "Bảng lương", "Tổng thu nhập", "Thuế TNCN", "Thực lĩnh", ""] : ["Pay period", "Batch", "Gross pay", "PIT", "Net pay", ""];
-		const body = `<p>${years.sort().reverse().map((y) => (y === year ? `<b>${y}</b>` : `<a href="${self}&year=${y}">${y}</a>`)).join(" · ")}</p>
-<table><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr>
-${rows.map((m) => `<tr><td>${esc(m.period.name)}</td><td>${esc(m.batch.name)}</td><td class="n">${money(m.line.gross)}</td><td class="n">${money(m.line.pit)}</td><td class="n"><b>${money(m.line.net)}</b></td><td><a href="${self}&batch=${encodeURIComponent(m.batch.id)}" target="_blank">${vi ? "In phiếu lương" : "Print payslip"}</a></td></tr>`).join("") || `<tr><td colspan="6">${vi ? "Chưa có phiếu lương đã ghi sổ trong năm." : "No released payslip in this year."}</td></tr>`}
-</table><p style="color:#666;font-size:12px">${vi ? "Thông tin lương là bảo mật, không chia sẻ." : "Payroll information is confidential."}</p>`;
-		page(context.response, title, body);
+		if (p.op === "pdf" || (!p.op && p.batch)) return pdf(context, p.batch, p.lang);
+		if (p.op) return json(context.response, ops.handle("GET", p, null));
+
+		const boot = ops.handle("GET", { op: "boot" }, null);
+		if (!boot.ok) return page(context.response, { blocked: boot.message });
+		page(context.response, {
+			url: url.resolveScript({ scriptId: "customscript_s4vp_sl_my_payroll", deploymentId: "customdeploy_s4vp_sl_my_payroll" }),
+			token: sessionToken(true),
+			employee: boot.data.employee,
+			hasProfile: boot.data.hasProfile,
+			today: boot.data.today,
+		});
 	}
 
 	return { onRequest };

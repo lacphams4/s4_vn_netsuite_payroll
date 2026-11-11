@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<!-- VP642000 Bảng chấm công tháng, A4 ngang. Dữ liệu: alias data, dựng bằng core/PrintModelExtra.timesheet. Mỗi phần tử của data.pages là một trang (bảng riêng, lặp tiêu đề cột); dòng tổng (p.totals) chỉ có ở trang cuối. -->
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<macrolist>
+		<macro id="pagefooter">
+			<table width="100%"><tr>
+				<td style="font-size: 7pt; color: #666666;">${data.title?html} - ${data.periodLine?html}</td>
+				<td align="right" style="font-size: 7pt; color: #666666;"><pagenumber/> / <totalpages/></td>
+			</tr></table>
+		</macro>
+	</macrolist>
+	<style type="text/css">
+		body { font-family: NotoSans, sans-serif; font-size: 6pt; }
+		td { padding: 1px 1px; vertical-align: middle; }
+		table.grid { border-collapse: collapse; }
+		table.grid th { border: 0.5pt solid #000000; font-weight: bold; vertical-align: middle; padding: 1px; }
+		p.h { margin: 0; text-align: center; }
+		table.grid td { border: 0.5pt solid #000000; }
+		.b { font-weight: bold; }
+		.i { font-style: italic; }
+		.title { font-size: 12pt; font-weight: bold; }
+		.small { font-size: 7pt; }
+	</style>
+</head>
+<body size="A4-landscape" padding="0.6cm 0.5cm 0.6cm 0.6cm" footer="pagefooter" footer-height="0.6cm">
+	<table width="100%"><tr>
+		<#list data.logos as l><td width="8%" style="vertical-align: middle;"><img src="${l.url?html}" style="height: 28px;" /></td></#list>
+		<td style="vertical-align: middle; font-size: 8pt;"><span class="b">${data.companyName?html}</span><#list data.companyLines as c><br/>${c?html}</#list></td>
+	</tr></table>
+	<p class="title" align="center">${data.title?html}</p>
+	<p align="center" style="font-size: 8pt;">${data.periodLine?html}<#list data.scopeLines as s> - ${s?html}</#list></p>
+	<p align="right" class="small i">${data.unitLine?html}</p>
+	<#list data.pages as p>
+	<table class="grid" width="100%" table-layout="fixed">
+		<thead><tr>
+			<th width="${data.widths.stt}%" align="center"><p class="h" align="center">${data.heads.stt?html}</p></th>
+			<th width="${data.widths.code}%" align="center"><p class="h" align="center">${data.heads.code?html}</p></th>
+			<th width="${data.widths.name}%" align="center"><p class="h" align="center">${data.heads.name?html}</p></th>
+			<th width="${data.widths.department}%" align="center"><p class="h" align="center">${data.heads.department?html}</p></th>
+			<#list data.days as d><th width="${d.w}%" align="center" background-color="${d.bg}"><p class="h" align="center">${d.day}<br/>${d.dow?html}</p></th></#list>
+			<th width="${data.widths.total}%" align="center"><p class="h" align="center">${data.heads.std?html}</p></th>
+			<th width="${data.widths.total}%" align="center"><p class="h" align="center">${data.heads.work?html}</p></th>
+			<th width="${data.widths.total}%" align="center"><p class="h" align="center">${data.heads.paid?html}</p></th>
+			<th width="${data.widths.total}%" align="center"><p class="h" align="center">${data.heads.unpaid?html}</p></th>
+			<th width="${data.widths.total}%" align="center"><p class="h" align="center">${data.heads.si?html}</p></th>
+			<th width="${data.widths.total}%" align="center"><p class="h" align="center">${data.heads.ot?html}</p></th>
+		</tr></thead>
+		<#list p.rows as r>
+		<tr>
+			<td align="center">${r.stt}</td><td>${r.code?html}</td><td>${r.name?html}</td><td>${r.department?html}</td>
+			<#list r.cells as c><td align="center" background-color="${c.bg}">${c.s?html}</td></#list>
+			<td align="right">${r.std}</td><td align="right" class="b">${r.work}</td><td align="right">${r.paid}</td><td align="right">${r.unpaid}</td><td align="right">${r.si}</td><td align="right">${r.ot}</td>
+		</tr>
+		</#list>
+		<#list p.totals as g>
+		<tr>
+			<td colspan="${data.span}" class="b" align="center">${g.label?html}</td>
+			<td align="right" class="b">${g.std}</td><td align="right" class="b">${g.work}</td><td align="right" class="b">${g.paid}</td>
+			<td align="right" class="b">${g.unpaid}</td><td align="right" class="b">${g.si}</td><td align="right" class="b">${g.ot}</td>
+		</tr>
+		</#list>
+	</table>
+	<#list p.breaks as b><pbr/></#list>
+	</#list>
+	<p class="small" style="margin-top: 4px;"><span class="b">${data.legendTitle?html}:</span> <#list data.legend as l><span class="b">${l.symbol?html}</span> ${l.text?html}; </#list></p>
+	<#list data.notes as n><p class="small i" style="margin-top: 2px;">${n?html}</p></#list>
+	<table width="100%" table-layout="fixed" style="margin-top: 8px; page-break-inside: avoid; font-size: 8pt;">
+		<tr><#list data.signers as s><td width="33%" align="center"><span class="b">${s.title?html}</span><br/><span class="small i">${data.signNote?html}</span><br/><br/><br/><br/>${s.name?html}</td></#list></tr>
+	</table>
+</body>
+</pdf>

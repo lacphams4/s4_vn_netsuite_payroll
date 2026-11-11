@@ -235,6 +235,14 @@
       <permlevel>VIEW</permlevel>
     </permission>
     <permission>
+      <permkey>[customrecord_s4vp_approval_step]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_approval_log]</permkey>
+      <permlevel>CREATE</permlevel>
+    </permission>
+    <permission>
       <permkey>[customrecord_s4vp_check_result]</permkey>
       <permlevel>EDIT</permlevel>
     </permission>

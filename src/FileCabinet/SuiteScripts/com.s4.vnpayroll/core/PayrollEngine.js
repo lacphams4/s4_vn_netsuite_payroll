@@ -196,6 +196,9 @@ define([
 			insurance: insurance.map((l) => ({ code: l.code, description: l.description, wageBase: l.wageBase, employeeRate: l.employeeRate, employerRate: l.employerRate, employeeAmount: l.employeeAmount, employerAmount: l.employerAmount })),
 			dependentCount: pay.dependentCount,
 			familyDeduction: pay.pit ? pay.pit.familyDeduction : 0,
+			// Tách tổng giảm trừ gia cảnh theo đúng số bộ tính thuế đã dùng (không tính lại). Khóa `pit` bên dưới là số thuế nên
+			// khối này mang tên pitDetail; không tính thuế (không có pay.pit) thì null.
+			pitDetail: pay.pit ? { method: pay.pit.method, selfDeduction: pay.pit.selfDeduction, dependentDeduction: pay.pit.dependentDeduction } : null,
 			assessableIncome: pay.pit ? pay.pit.assessableIncome : 0,
 			pit: pay.pit ? pay.pit.tax : 0,
 			otherDeductions: pay.otherDeductions,

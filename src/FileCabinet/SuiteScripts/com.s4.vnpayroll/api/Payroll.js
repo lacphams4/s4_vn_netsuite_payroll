@@ -16,11 +16,11 @@
  * @NModuleScope SameAccount
  */
 define([
-	"N/query", "N/record", "N/runtime", "./Store", "./Settings",
+	"N/query", "N/record", "N/runtime", "./Store", "./Settings", "./Lean", "../core/StatutoryParameterProvider",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
 	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines", "./Checks", "./LaborAnalytics", "./CostAccounts",
-	"../core/PitCalculator",
-], (query, record, runtime, Store, Settings, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts, Pit) => {
+	"../core/PitCalculator", "../core/ApprovalFlow",
+], (query, record, runtime, Store, Settings, Lean, Provider, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts, Pit, ApprovalFlow) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -146,6 +146,121 @@ define([
 		};
 	}
 
+	// ------------------------------------------------------------------ ngữ cảnh tĩnh của một lượt tính (Map/Reduce nhớ N/cache)
+
+	const STATIC_VERSION = 1;
+
+	/**
+	 * Ngữ cảnh tĩnh của một lượt tính dưới dạng dữ liệu thuần (JSON): kỳ, nhóm lương, thiết lập hiệu lực, tham số pháp lý / biểu
+	 * thuế / khoản trích (dữ liệu thô của provider), loại thu nhập, quy tắc, gói phúc lợi, ngày lễ, tài khoản chi phí theo đích.
+	 * Không chứa dòng lương hay số liệu của nhân viên. Map/Reduce dựng một lần ở getInputData, nhớ N/cache, mỗi lô reduce đọc lại
+	 * (bớt khoảng 15 truy vấn mỗi lô). Provider không có dữ liệu thô (bản giả, bản khác) thì trả null: lượt tính tự nạp như cũ.
+	 */
+	function staticData(batch) {
+		const c = context(batch);
+		const raw = c.provider && c.provider.data;
+		if (!raw || !Array.isArray(raw.params) || !Array.isArray(raw.brackets) || !Array.isArray(raw.components)) return null;
+		return {
+			v: STATIC_VERSION, batch: String(batch.id), period: c.period, group: c.group, settings: c.settings,
+			provider: { params: raw.params, brackets: raw.brackets, components: raw.components, unverified: c.provider.unverified || [] },
+			earningTypes: c.earningTypes.byId, rules: c.rules, benefitPackages: c.benefitPackages, packageNames: c.packageNames, holidays: c.holidays,
+			// Tài khoản chi phí theo đích: không đọc được thì bảng rỗng kèm error, tính như chưa khai (CostAccounts.forPayroll)
+			costAccounts: CostAccounts.forPayroll(batch.subsidiary, c.period.end),
+		};
+	}
+
+	/** Chuỗi JSON của ngữ cảnh tĩnh (để nhớ N/cache); null khi không dựng được dạng dữ liệu thuần. */
+	function staticContext(batchId) {
+		const data = staticData(getBatch(batchId));
+		return data ? JSON.stringify(data) : null;
+	}
+
+	/** Chuỗi JSON -> ngữ cảnh như context(batch) kèm costAccounts; chuỗi hỏng / của bảng khác / kỳ khác thì trả null. */
+	function hydrateStatic(json, batch) {
+		let d;
+		try {
+			d = JSON.parse(json);
+		} catch (e) {
+			return null;
+		}
+		if (!d || d.v !== STATIC_VERSION || String(d.batch) !== String(batch.id) || !d.period || String(d.period.id) !== String(batch.period)) return null;
+		if (!d.settings || !d.provider || !d.earningTypes || !d.costAccounts) return null;
+		// byCode, list dựng lại theo đúng thứ tự của Settings.earningTypes (duyệt theo id tăng dần; mã trùng thì bản sau thắng)
+		const byId = d.earningTypes;
+		const byCode = {};
+		for (const o of Object.values(byId)) byCode[o.code] = o;
+		return {
+			batch, period: d.period, group: d.group, settings: d.settings,
+			provider: Object.assign(Provider.create({ params: d.provider.params, brackets: d.provider.brackets, components: d.provider.components }), { unverified: d.provider.unverified || [] }),
+			earningTypes: { byId, byCode, list: Object.values(byCode) }, rules: d.rules || [], benefitPackages: d.benefitPackages || {}, packageNames: d.packageNames || {},
+			holidays: d.holidays || [], costAccounts: d.costAccounts, engineCtx: null,
+		};
+	}
+
+	/**
+	 * Ngữ cảnh cho calculate. Luôn đi qua cùng một dạng JSON dù lấy từ bộ nhớ đệm (cached) hay vừa dựng: kết quả tính không phụ
+	 * thuộc việc trúng hay trượt cache. cached không dùng được thì dựng lại từ cơ sở dữ liệu.
+	 */
+	function calcContext(batch, cached) {
+		const hit = cached ? hydrateStatic(cached, batch) : null;
+		if (hit) return hit;
+		const data = staticData(batch);
+		const fresh = data ? hydrateStatic(JSON.stringify(data), batch) : null;
+		if (fresh) return fresh;
+		const c = context(batch);
+		c.costAccounts = CostAccounts.forPayroll(c.batch.subsidiary, c.period.end);
+		return c;
+	}
+
+	// ------------------------------------------------------------------ bộ đọc gọn cho tính lương
+
+	// Cột của dòng nhân viên mà bộ tính cần (không đọc JSON chi tiết và các cột kết quả)
+	const CALC_LINE_KEYS = ["employee", "accrue13", "std_days", "work_days", "absence_days", "unpaid_leave", "other_tax_ded"];
+	const TOTAL_LINE_KEYS = ["employment_type", "gross", "ee_ins", "er_ins", "pit", "other_ded", "advance", "net", "accrued13", "error"];
+	// Oracle giới hạn 1.000 phần tử trong IN (...): quá 900 nhân viên thì đọc không lọc theo nhân viên (như trước)
+	const IN_MAX = 900;
+
+	/** Id dòng nhân viên của bảng lương (Map/Reduce chia lô): chỉ cột id. */
+	function lineIds(batchId) {
+		return Lean.select("batch_emp", [], { where: "{batch} = ?", params: [batchId], tag: "s4vp_calc_line_ids" }).map((l) => l.id);
+	}
+
+	/** Dòng cần tính: cả bảng, hoặc chỉ các dòng của lô (id IN ...) thuộc bảng lương này; thứ tự theo id như lines(). */
+	function calcLines(batchId, ids) {
+		if (!ids) return Lean.select("batch_emp", CALC_LINE_KEYS, { where: "{batch} = ?", params: [batchId], tag: "s4vp_calc_lines" });
+		const out = [];
+		const list = Lean.idList(ids).split(",");
+		for (let i = 0; i < list.length; i += IN_MAX) {
+			out.push(...Lean.select("batch_emp", CALC_LINE_KEYS, { where: `{batch} = ? AND t.id IN (${list.slice(i, i + IN_MAX).join(",")})`, params: [batchId], tag: "s4vp_calc_lines" }));
+		}
+		return out.sort((a, b) => Number(a.id) - Number(b.id));
+	}
+
+	/** " AND {employee} IN (...)" cho 1 - 900 nhân viên; nhiều hơn thì "" (không lọc). */
+	function employeeFilter(employeeIds) {
+		const list = Lean.idList(employeeIds);
+		return list === "0" || list.split(",").length > IN_MAX ? "" : ` AND {employee} IN (${list})`;
+	}
+
+	/**
+	 * Dòng nhân viên của nhiều bảng lương, chỉ các cột `keys`, lọc theo nhân viên; nhóm theo bảng lương, trong mỗi bảng theo id
+	 * (cùng thứ tự cộng dồn với linesOf).
+	 */
+	function linesByBatch(batchIds, keys, employeeIds, tag) {
+		const out = {};
+		const list = Lean.idList(batchIds).split(",").filter((x) => x !== "0");
+		const emp = employeeFilter(employeeIds);
+		for (let i = 0; i < list.length; i += IN_MAX) {
+			for (const l of Lean.select("batch_emp", ["batch"].concat(keys), { where: `{batch} IN (${list.slice(i, i + IN_MAX).join(",")})${emp}`, tag })) (out[l.batch] = out[l.batch] || []).push(l);
+		}
+		return out;
+	}
+
+	/** Bảng lương (chưa vô hiệu) cùng công ty con: một truy vấn gọn dùng chung cho tạm ứng đang cấn, kỳ trước, lũy kế OT. */
+	function batchesOfSubsidiary(subsidiary) {
+		return Lean.select("batch", ["status", "calculated", "tax_month", "period"], { where: "{subsidiary} = ?", params: [subsidiary], tag: "s4vp_calc_batches" });
+	}
+
 	// ------------------------------------------------------------------ tạo, nạp nhân viên
 
 	function create(input) {
@@ -264,12 +379,14 @@ define([
 	}
 
 	/** Số dư tạm ứng còn mở, trừ phần đang cấn ở bảng lương khác chưa ghi sổ (2.9). */
-	function openAdvances(c, employeeIds) {
+	function openAdvances(c, employeeIds, near) {
 		const end = c.period.end;
 		const adv = Store.findIn("advance", "employee", employeeIds).filter((a) => a.status === "O" && (a.balance || 0) > 0 && Dates.cmp(a.doc_date, end) <= 0 && a.subsidiary === c.batch.subsidiary);
 		const pending = {};
-		const open = Store.find("batch", { where: "{id} <> ? AND {subsidiary} = ?", params: [c.batch.id, c.batch.subsidiary] }).filter((b) => !["R", "V"].includes(b.status) && b.calculated);
-		const byBatch = linesOf(open.map((b) => b.id));
+		// Phần đang cấn ở bảng khác: chỉ cần khi có phiếu còn mở, và chỉ dòng của chính các nhân viên có phiếu (số phiếu tự đánh,
+		// không trùng giữa nhân viên; bộ tính chỉ cấn phiếu của chính nhân viên) - không đọc JSON chi tiết của cả các bảng khác
+		const open = adv.length ? near().filter((b) => b.id !== String(c.batch.id) && !["R", "V"].includes(b.status) && b.calculated) : [];
+		const byBatch = open.length ? linesByBatch(open.map((b) => b.id), ["detail"], adv.map((a) => a.employee), "s4vp_calc_pending") : {};
 		for (const b of open) for (const l of byBatch[b.id] || []) for (const o of parseDetail(l).advanceOffsets || []) pending[o.refNbr] = (pending[o.refNbr] || 0) + o.amount;
 		const out = {};
 		for (const a of adv) {
@@ -280,15 +397,16 @@ define([
 	}
 
 	/** Kỳ trước cùng tháng thuế (2.7.1) cho kỳ tuần / nửa tháng. */
-	function priorEarnings(c) {
+	function priorEarnings(c, near, employeeIds) {
 		const p = c.period;
 		if (!p.frequency || p.frequency === "M") return {};
 		const out = {};
-		const cands = Store.find("batch", { where: "{tax_month} = ? AND {id} <> ? AND {subsidiary} = ?", params: [c.batch.tax_month, c.batch.id, c.batch.subsidiary] }).filter((b) => b.status !== "V" && b.calculated);
+		const month = c.batch.tax_month;
+		const cands = blank(month) ? [] : near().filter((b) => String(b.tax_month) === String(month) && b.id !== String(c.batch.id) && b.status !== "V" && b.calculated);
 		const periods = {};
 		for (const x of Store.findIn("period", "id", cands.map((b) => b.period))) periods[x.id] = x;
 		const prior = cands.filter((b) => periods[b.period] && Dates.cmp(periods[b.period].end, p.start) < 0);
-		const byBatch = linesOf(prior.map((b) => b.id));
+		const byBatch = linesByBatch(prior.map((b) => b.id), ["employee", "detail", "absence_days", "other_tax_ded"], employeeIds, "s4vp_calc_prior");
 		for (const b of prior) {
 			for (const l of byBatch[b.id] || []) {
 				const d = parseDetail(l);
@@ -304,12 +422,12 @@ define([
 		return out;
 	}
 
-	function ytdOvertime(c) {
+	function ytdOvertime(c, near, employeeIds) {
 		const year = String(c.batch.tax_month || "").slice(0, 4);
 		const out = {};
 		if (!year) return out;
-		const released = Store.find("batch", { where: "{tax_month} LIKE ? AND {subsidiary} = ?", params: [`${year}%`, c.batch.subsidiary] }).filter((b) => b.status === "R" && b.id !== c.batch.id);
-		const byBatch = linesOf(released.map((b) => b.id));
+		const released = near().filter((b) => String(b.tax_month || "").indexOf(year) === 0 && b.status === "R" && b.id !== String(c.batch.id));
+		const byBatch = linesByBatch(released.map((b) => b.id), ["employee", "ot_hours"], employeeIds, "s4vp_calc_ytd");
 		for (const b of released) for (const l of byBatch[b.id] || []) out[l.employee] = (out[l.employee] || 0) + (l.ot_hours || 0);
 		return out;
 	}
@@ -340,6 +458,16 @@ define([
 			if (!t || !t.uses_balance || !t.is_paid || Number(b.year) !== Number(year)) continue;
 			const avail = Ledger.available({ entitled: b.entitled, carriedOver: b.carried, adjusted: b.adjusted, used: b.used, pending: b.pending });
 			out[b.employee] = (out[b.employee] || 0) + Number(avail);
+		}
+		return out;
+	}
+
+	/** Như TimeLines.forPayroll nhưng chỉ đọc dòng giờ công của nhân viên trong lô (scope = " AND {employee} IN (...)"). */
+	function timeLinesOf(batchId, periodEnd, scope) {
+		const out = {};
+		for (const l of Store.find("batch_time", { where: `{batch} = ?${scope}`, params: [batchId] })) {
+			if (!(Number(l.hours) > 0)) continue;
+			(out[l.employee] = out[l.employee] || []).push({ date: periodEnd, isOvertime: false, dayType: "N", hours: Number(l.hours), project: l.project || "", task: l.task || "", sourceId: l.source_key || l.id });
 		}
 		return out;
 	}
@@ -390,23 +518,34 @@ define([
 	/**
 	 * Tính bảng lương. Lỗi một nhân viên không dừng cả bảng: dòng đó về 0 và ghi lỗi (4.6.9).
 	 * @param {string} batchId
-	 * @param {{lineIds?: string[], skipFinish?: boolean, fromJob?: boolean}} [opt] lineIds: chỉ tính một phần (Map/Reduce chia
-	 *   lô); skipFinish: chỉ ghi dòng, không cộng tổng / đặt trạng thái (summarize của Map/Reduce làm); fromJob: gọi từ tác vụ nền
+	 * @param {{lineIds?: string[], skipFinish?: boolean, fromJob?: boolean, staticContext?: string}} [opt] lineIds: chỉ tính một
+	 *   phần (Map/Reduce chia lô) - chỉ đọc dòng của lô và dữ liệu của nhân viên trong lô, số truy vấn không tăng theo cỡ bảng
+	 *   lương; skipFinish: chỉ ghi dòng, không cộng tổng / đặt trạng thái (summarize của Map/Reduce làm); fromJob: gọi từ tác vụ
+	 *   nền; staticContext: chuỗi JSON của staticContext() đã nhớ N/cache (thiếu / hỏng thì tự nạp, kết quả như nhau)
 	 */
 	function calculate(batchId, opt = {}) {
 		const batch = getBatch(batchId);
 		assertEditable(batch);
 		if (!opt.fromJob) assertNoJob(batch);
 		if (LOCK_AFTER.includes(batch.status) || batch.status === "P" || batch.status === "J") throw fail("Reopen the batch before recalculating", "Mở lại bảng lương trước khi tính lại");
-		const c = context(batch);
+		const c = calcContext(batch, opt.staticContext);
 		if (c.period.status === "C") throw fail("The pay period is closed", "Kỳ lương đã đóng");
 		if (c.settings.requireAttendanceLock && c.period.att_status !== "L") throw fail("Attendance of the period must be locked first", "Kỳ công chưa khóa");
 		const ectx = engineContext(c);
-		let all = lines(batchId);
-		const target = opt.lineIds ? all.filter((l) => opt.lineIds.includes(l.id)) : all;
+		const target = calcLines(batchId, opt.lineIds);
 		const empIds = target.map((l) => l.employee);
+		// Tính theo lô: bảng con của bảng lương (dòng nhập tay, giờ công) chỉ đọc phần của nhân viên trong lô
+		const scope = opt.lineIds ? employeeFilter(empIds) : "";
+		// Bảng lương cùng công ty con: đọc khi cần, một lần cho cả ba phần (tạm ứng đang cấn, kỳ trước, lũy kế OT)
+		let nearRows = null;
+		const near = () => nearRows || (nearRows = batchesOfSubsidiary(c.batch.subsidiary));
 		const profiles = {};
-		for (const pr of Store.findIn("employee", "employee", empIds)) profiles[pr.employee] = pr;
+		// Người có hồ sơ đánh dấu nước ngoài (đúng tập WorkPermits.forPayroll tự lọc từ cùng truy vấn hồ sơ)
+		const foreign = new Set();
+		for (const pr of Store.findIn("employee", "employee", empIds)) {
+			profiles[pr.employee] = pr;
+			if (pr.foreign) foreign.add(pr.employee);
+		}
 		const profIds = Object.values(profiles).map((p) => p.id);
 		const comps = {};
 		for (const r of Store.findIn("compensation", "profile", profIds)) (comps[r.profile] = comps[r.profile] || []).push(r);
@@ -414,22 +553,26 @@ define([
 		for (const r of Store.findIn("dependent", "profile", profIds)) (deps[r.profile] = deps[r.profile] || []).push({ deductFrom: r.from, deductTo: r.to });
 		const info = employeesInfo(empIds);
 		const ins = {};
-		for (const i of inputs(batchId)) (ins[i.employee] = ins[i.employee] || []).push(i);
-		const advances = openAdvances(c, empIds);
-		const prior = priorEarnings(c);
-		const ytd = ytdOvertime(c);
+		const myInputRows = !empIds.length ? [] : scope ? Store.find("batch_input", { where: `{batch} = ?${scope}`, params: [batchId] }) : inputs(batchId);
+		for (const i of myInputRows) (ins[i.employee] = ins[i.employee] || []).push(i);
+		const advances = openAdvances(c, empIds, near);
+		const prior = empIds.length ? priorEarnings(c, near, empIds) : {};
+		const ytd = empIds.length ? ytdOvertime(c, near, empIds) : {};
 		const otLines = overtimeLines(c, empIds);
-		const regular = TimeLines.forPayroll(batchId, c.period.end);
+		const regular = !empIds.length ? {} : scope ? timeLinesOf(batchId, c.period.end, scope) : TimeLines.forPayroll(batchId, c.period.end);
 		// Sản lượng / doanh số (4.3.5), giấy phép lao động (3.9), bảng tỷ lệ phân bổ (4.5.3): đọc một lần cho cả lô
 		const outputs = Output.forPayroll(c.period.id, batchId, empIds, c.batch.subsidiary);
 		ectx.rateTables = outputs.rateTables || {};
-		const permits = WorkPermits.forPayroll(empIds, c.period.start, c.period.end);
+		// Giấy phép lao động chỉ xét hồ sơ người nước ngoài (WorkPermits.forPayroll tự lọc như vậy): lô không có ai thì không truy vấn
+		const permits = WorkPermits.forPayroll(empIds.filter((id) => foreign.has(id)), c.period.start, c.period.end);
 		const plans = AllocationPlans.forPayroll(empIds);
-		// Tài khoản chi phí theo đích (class / dự án / phòng ban): đọc một lần cho cả lô; không đọc được thì bảng rỗng, tính như cũ
-		const costAccounts = CostAccounts.forPayroll(c.batch.subsidiary, c.period.end);
-		const leaveLeft = paidLeaveRemaining(empIds.filter((id) => profiles[id] && EmploymentDays.terminatesIn(profiles[id].termination_date, c.period.start, c.period.end)), Dates.year(c.period.end));
+		// Tài khoản chi phí theo đích (class / dự án / phòng ban): thuộc ngữ cảnh tĩnh; không đọc được thì bảng rỗng, tính như cũ
+		const costAccounts = c.costAccounts;
+		const leaving = empIds.filter((id) => profiles[id] && EmploymentDays.terminatesIn(profiles[id].termination_date, c.period.start, c.period.end));
+		const leaveLeft = leaving.length ? paidLeaveRemaining(leaving, Dates.year(c.period.end)) : {};
 		const etById = c.earningTypes.byId;
 		const errors = [];
+		const vi = lang() === "vi";
 
 		for (const line of target) {
 			const prof = profiles[line.employee];
@@ -473,10 +616,10 @@ define([
 						defaultSub: prof.department || e.department || "", workCenters: costAccounts.workCenters, projects: costAccounts.projects, departments: costAccounts.departments,
 					},
 				};
-				const tap = pitTap(ectx.provider);
-				const r = Engine.calculateEmployee(Object.assign({}, ectx, { provider: tap.provider }), emp);
+				const r = Engine.calculateEmployee(ectx, emp);
 				const ded = emp.deductions.filter((d) => d.amount);
-				const pit = pitBlock(emp.pitMethod, r.familyDeduction, tap.seen);
+				// Bộ tính thuế trả sẵn phương pháp và hai khoản giảm trừ (PayrollEngine.pitDetail), không tính lại
+				const pit = r.pitDetail || null;
 				// Trích tháng 13 đi theo cơ cấu phân bổ GROSS của chính nhân viên (đủ tài khoản, phòng ban, dự án, địa điểm, class);
 				// không có dòng phân bổ dương thì mảng rỗng và bút toán ghi như trước. Tắt bằng settings.accrual13ByAllocation = false
 				// (chưa có trường thiết lập: mặc định bật).
@@ -489,7 +632,7 @@ define([
 					exempt: r.taxExemptIncome, taxable: r.taxableIncome, ee_ins: r.employeeInsurance, er_ins: r.employerInsurance, dependents: r.dependentCount,
 					family_ded: r.familyDeduction, assessable: r.assessableIncome, pit: r.pit, other_ded: r.otherDeductions, net_before: r.netBeforeAdvance,
 					advance: r.advanceOffset, net: r.netPay, accrued13: r.accrued13th, ot_hours: r.overtimeHours,
-					warnings: r.warnings.map((w) => (lang() === "vi" ? w.messageVi : w.message)).join(" | ").slice(0, 1000), error: "",
+					warnings: r.warnings.map((w) => (vi ? w.messageVi : w.message)).join(" | ").slice(0, 1000), error: "",
 					detail: JSON.stringify(Object.assign({
 						earnings: r.earnings.map((x) => ({ earningType: x.earningType, quantity: x.quantity, rate: x.rate, multiplier: x.multiplier, amount: x.amount, taxExemptAmount: x.taxExemptAmount || 0, source: x.source, ruleCode: x.ruleCode || "", project: x.project || "" })),
 						insurance: r.insurance, advanceOffsets: r.advanceOffsets.map((o) => Object.assign({}, o, { id: ((advances[line.employee] || []).find((a) => a.refNbr === o.refNbr) || {}).id })),
@@ -500,7 +643,7 @@ define([
 					}, extra)),
 				});
 			} catch (err) {
-				const msg = err.userMessage ? (lang() === "vi" ? err.userMessage.vi : err.userMessage.en) : lang() === "vi" && err.messageVi ? err.messageVi : String(err.message || err);
+				const msg = err.userMessage ? (vi ? err.userMessage.vi : err.userMessage.en) : vi && err.messageVi ? err.messageVi : String(err.message || err);
 				errors.push(`${e.code || line.employee}: ${msg}`);
 				const zero = {};
 				for (const k of ["base_salary", "benefit", "gross", "exempt", "taxable", "ee_ins", "er_ins", "dependents", "family_ded", "assessable", "pit", "other_ded", "net_before", "advance", "net", "accrued13"]) zero[k] = 0;
@@ -517,7 +660,8 @@ define([
 	 */
 	function finishCalculation(batchId, errors, partial, failedChunks) {
 		const batch = getBatch(batchId);
-		const all = lines(batchId);
+		// Chỉ các cột cộng tổng (không đọc JSON chi tiết của mọi dòng)
+		const all = Lean.select("batch_emp", TOTAL_LINE_KEYS, { where: "{batch} = ?", params: [batchId], tag: "s4vp_calc_totals" });
 		const sum = (k, f) => all.filter(f || (() => true)).reduce((s, l) => s + (l[k] || 0), 0);
 		const anyError = all.some((l) => !blank(l.error));
 		const totals = {
@@ -779,7 +923,31 @@ define([
 		return u && u.id > 0 ? String(u.id) : null;
 	}
 
-	function approve(batchId) {
+	/**
+	 * Dữ liệu cho core/ApprovalFlow của một bảng lương: cấu hình cấp duyệt, nhật ký duyệt, mốc nhật ký thao tác và người đang
+	 * thao tác. Chưa khai cấp duyệt (hoặc record chưa deploy) thì cấu hình rỗng: gói duyệt một cấp như cũ.
+	 */
+	function approvalInput(b) {
+		let role = "";
+		try {
+			role = String(runtime.getCurrentUser().roleId || "");
+		} catch (e) {
+			role = "";
+		}
+		return Object.assign(ApprovalFlow.load(Store, b), { batch: b, user: { id: currentEmployee(), role } });
+	}
+
+	/**
+	 * Duyệt nhiều cấp (api/Approvals): bảng lương có được chuyển sang "đã duyệt" không. Không khai cấp duyệt -> luôn được.
+	 * opt.step = cấp cuối mà api/Approvals.approveStep đang duyệt (khi đó xét quyền của người thao tác với cấp đó).
+	 * @returns {{ok: true, waived?: boolean} | {ok: false, code, en, vi}}
+	 */
+	function canFinalApprove(b, opt) {
+		return ApprovalFlow.finalGate(approvalInput(b), opt);
+	}
+
+	/** Mọi kiểm tra trước khi duyệt (trạng thái, tác vụ nền, kỳ, dấu số liệu, cảnh báo mức lỗi), không ghi gì. Trả bảng lương. */
+	function assertCanApprove(batchId) {
 		const b = getBatch(batchId);
 		assertNoJob(b);
 		if (!["C", "P"].includes(b.status) || !b.calculated) throw fail("Only calculated batches can be approved", "Chỉ duyệt bảng lương đã tính");
@@ -787,6 +955,17 @@ define([
 		if (b.calc_stamp && b.calc_stamp !== stamp(batchId)) throw fail("Data changed after calculation; recalculate first", "Dữ liệu đã đổi sau khi tính, cần tính lại");
 		// Còn cảnh báo mức lỗi (thực lĩnh âm, lỗi tính, thiếu hồ sơ...) thì không cho duyệt
 		if (Checks && typeof Checks.assertApprovable === "function") Checks.assertApprovable(batchId);
+		return b;
+	}
+
+	/**
+	 * Duyệt bảng lương (C / P -> A). Khi công ty có khai cấp duyệt, action cũ `approve` không vượt cấp được: chỉ chạy khi mọi
+	 * cấp đã duyệt, hoặc khi api/Approvals.approveStep gọi với opt.step = cấp cuối đang chờ.
+	 */
+	function approve(batchId, opt) {
+		const b = assertCanApprove(batchId);
+		const gate = canFinalApprove(b, opt);
+		if (!gate.ok) throw fail(gate.en, gate.vi);
 		Store.submit("batch", batchId, { status: "A", approved_by: currentEmployee(), approved_date: Clock.today() });
 	}
 
@@ -794,6 +973,9 @@ define([
 		const b = getBatch(batchId);
 		assertNoJob(b);
 		if (!["C", "P"].includes(b.status)) throw fail("Only batches pending approval", "Chỉ từ chối bảng lương chờ duyệt");
+		// Đang qua các cấp duyệt: chỉ người duyệt của cấp đang chờ được từ chối
+		const gate = ApprovalFlow.rejectGate(approvalInput(b));
+		if (!gate.ok) throw fail(gate.en, gate.vi);
 		Store.submit("batch", batchId, { status: "J" });
 	}
 
@@ -1248,6 +1430,6 @@ define([
 		create, loadEmployees, calculate, finishCalculation, removeHold, hold, approve, reject, reopen, release, reverse, agencyBills, bankFile,
 		journalPreview, detail, list, lines, context, markUncalculated, getBatch, createJournal, saveInput, deleteInput, updateLine, removeLine, transactionsInfo,
 		markQueued, setJobId, assertQueueable, clearJob, finishRelease, finishReverse, employeesInfo, syncTime, saveTime, timesheet,
-		pitTap, pitBlock, releaseModel,
+		pitTap, pitBlock, releaseModel, staticContext, lineIds, assertCanApprove, canFinalApprove, approvalInput,
 	};
 });

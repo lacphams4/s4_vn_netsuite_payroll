@@ -100,6 +100,18 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_blg_employee">
+      <label>Nhân viên</label>
+      <fieldtype>SELECT</fieldtype>
+      <selectrecordtype>-4</selectrecordtype>
+      <description>Employee the action is about (HR actions: contract, decision, dependent, profile, allocation, work permit, advance).</description>
+      <help>Employee the action is about (HR actions: contract, decision, dependent, profile, allocation, work permit, advance).</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>LOCKED</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
     <customrecordcustomfield scriptid="custrecord_s4vp_blg_line">
       <label>Dòng</label>
       <fieldtype>TEXT</fieldtype>

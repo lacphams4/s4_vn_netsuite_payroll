@@ -3254,6 +3254,100 @@ define([], () => {
 				}
 			}
 		},
+		"approval_step": {
+			"type": "customrecord_s4vp_approval_step",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_apv_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"level": {
+					"id": "custrecord_s4vp_apv_level",
+					"type": "int",
+					"target": null
+				},
+				"approver": {
+					"id": "custrecord_s4vp_apv_approver",
+					"type": "select",
+					"target": "employee"
+				},
+				"role": {
+					"id": "custrecord_s4vp_apv_role",
+					"type": "select",
+					"target": "list:apv_role"
+				},
+				"min_net": {
+					"id": "custrecord_s4vp_apv_min_net",
+					"type": "currency",
+					"target": null
+				}
+			}
+		},
+		"approval_log": {
+			"type": "customrecord_s4vp_approval_log",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"batch": {
+					"id": "custrecord_s4vp_apl_batch",
+					"type": "select",
+					"target": "rec:batch"
+				},
+				"round": {
+					"id": "custrecord_s4vp_apl_round",
+					"type": "int",
+					"target": null
+				},
+				"level": {
+					"id": "custrecord_s4vp_apl_level",
+					"type": "int",
+					"target": null
+				},
+				"step_name": {
+					"id": "custrecord_s4vp_apl_step_name",
+					"type": "text",
+					"target": null
+				},
+				"approver": {
+					"id": "custrecord_s4vp_apl_approver",
+					"type": "select",
+					"target": "employee"
+				},
+				"approver_name": {
+					"id": "custrecord_s4vp_apl_approver_name",
+					"type": "text",
+					"target": null
+				},
+				"decision": {
+					"id": "custrecord_s4vp_apl_decision",
+					"type": "select",
+					"target": "list:apv_decision"
+				},
+				"at": {
+					"id": "custrecord_s4vp_apl_at",
+					"type": "text",
+					"target": null
+				},
+				"date": {
+					"id": "custrecord_s4vp_apl_date",
+					"type": "date",
+					"target": null
+				},
+				"note": {
+					"id": "custrecord_s4vp_apl_note",
+					"type": "textarea",
+					"target": null
+				},
+				"waived": {
+					"id": "custrecord_s4vp_apl_waived",
+					"type": "check",
+					"target": null
+				}
+			}
+		},
 		"check_result": {
 			"type": "customrecord_s4vp_check_result",
 			"includeName": false,
@@ -3355,6 +3449,11 @@ define([], () => {
 					"id": "custrecord_s4vp_blg_period",
 					"type": "select",
 					"target": "rec:period"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_blg_employee",
+					"type": "select",
+					"target": "employee"
 				},
 				"line": {
 					"id": "custrecord_s4vp_blg_line",
@@ -3998,6 +4097,21 @@ define([], () => {
 				"employerIns": "val_s4vp_lcf_component_employerins",
 				"accrued13": "val_s4vp_lcf_component_accrued13",
 				"contractor": "val_s4vp_lcf_component_contractor"
+			}
+		},
+		"apv_role": {
+			"type": "customlist_s4vp_apv_role",
+			"values": {
+				"H": "val_s4vp_apv_role_h",
+				"A": "val_s4vp_apv_role_a",
+				"D": "val_s4vp_apv_role_d"
+			}
+		},
+		"apv_decision": {
+			"type": "customlist_s4vp_apv_decision",
+			"values": {
+				"A": "val_s4vp_apv_decision_a",
+				"R": "val_s4vp_apv_decision_r"
 			}
 		},
 		"bck_status": {

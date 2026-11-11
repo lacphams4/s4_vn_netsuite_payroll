@@ -7,6 +7,13 @@
  * @NModuleScope SameAccount
  */
 define(["N/record", "N/runtime", "./Store", "./Profiles"], (record, runtime, Store, Profiles) => {
+	/** Lỗi nghiệp vụ hai ngôn ngữ: RESTlet trả userMessage.en / userMessage.vi, giao diện hiện đúng một ngôn ngữ. */
+	function fail(en, vi) {
+		const e = new Error(`${en} / ${vi}`);
+		e.userMessage = { en, vi };
+		return e;
+	}
+
 	const TAG = "S4VP TEST";
 
 	// Ca vàng tháng 10/2026 (kỳ 202610, công chuẩn 22 với nghỉ T7 + CN)
@@ -54,7 +61,7 @@ define(["N/record", "N/runtime", "./Store", "./Profiles"], (record, runtime, Sto
 	}
 
 	function generate(subsidiary) {
-		if (runtime.getCurrentUser().roleId !== "administrator") throw new Error("Administrator only / Chỉ Administrator");
+		if (runtime.getCurrentUser().roleId !== "administrator") throw fail("Administrator only", "Chỉ Administrator");
 		const out = { employees: [], vendors: {} };
 		out.vendors.insurance = vendor(`${TAG} - Co quan BHXH`, subsidiary);
 		out.vendors.tax = vendor(`${TAG} - Co quan thue`, subsidiary);
@@ -82,7 +89,7 @@ define(["N/record", "N/runtime", "./Store", "./Profiles"], (record, runtime, Sto
 	 */
 	function timeEntries(subsidiary, from, to) {
 		const emp = findEmployee("CTV03 Theo gio", subsidiary);
-		if (!emp) throw new Error("Test employee CTV03 not found; run generateTestData first / Chưa có nhân viên thử CTV03");
+		if (!emp) throw fail("Test employee CTV03 not found; run generateTestData first", "Chưa có nhân viên thử CTV03, hãy chạy generateTestData trước");
 		const days = [];
 		for (let d = new Date(`${from}T12:00:00Z`); d <= new Date(`${to}T12:00:00Z`) && days.length < 11; d.setUTCDate(d.getUTCDate() + 1)) {
 			if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) days.push(d.toISOString().slice(0, 10));
@@ -122,7 +129,7 @@ define(["N/record", "N/runtime", "./Store", "./Profiles"], (record, runtime, Sto
 	 * @returns {{created: number, skipped: number, next: number, done: boolean}}
 	 */
 	function bulk(subsidiary, from, to) {
-		if (runtime.getCurrentUser().roleId !== "administrator") throw new Error("Administrator only / Chỉ Administrator");
+		if (runtime.getCurrentUser().roleId !== "administrator") throw fail("Administrator only", "Chỉ Administrator");
 		const first = Math.max(1, Math.floor(Number(from) || 1));
 		const last = Math.min(2000, Math.floor(Number(to) || first));
 		const script = runtime.getCurrentScript();

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<!-- VP647000 - VP647020 Phiếu thông tin hợp đồng lao động / phụ lục / quyết định nhân sự, A4 dọc. KHÔNG phải mẫu văn bản pháp lý: chỉ in các trường của bản ghi. Dữ liệu: alias data, dựng bằng core/PrintModelExtra.contractSheet / decisionSheet. -->
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<macrolist>
+		<macro id="pagefooter">
+			<table width="100%"><tr>
+				<td style="font-size: 7pt; color: #666666;">${data.printedLine?html}</td>
+				<td align="right" style="font-size: 7pt; color: #666666;"><pagenumber/> / <totalpages/></td>
+			</tr></table>
+		</macro>
+	</macrolist>
+	<style type="text/css">
+		body { font-family: NotoSans, sans-serif; font-size: 9.5pt; }
+		td { padding: 3px 4px; vertical-align: top; }
+		table.grid { border-collapse: collapse; }
+		table.grid th { border: 0.5pt solid #000000; font-weight: bold; vertical-align: middle; padding: 3px; }
+		p.h { margin: 0; text-align: center; }
+		table.grid td { border: 0.5pt solid #000000; }
+		.b { font-weight: bold; }
+		.i { font-style: italic; }
+		.title { font-size: 13pt; font-weight: bold; }
+		.small { font-size: 7.5pt; }
+		p.sec { font-weight: bold; margin-top: 10px; margin-bottom: 3px; }
+		p.note { border: 0.5pt solid #000000; padding: 5px; margin-top: 8px; font-style: italic; }
+	</style>
+</head>
+<body size="A4" padding="1.5cm 1.5cm 1.2cm 2.0cm" footer="pagefooter" footer-height="0.6cm">
+	<table width="100%"><tr>
+		<#list data.logos as l><td width="10%" style="vertical-align: middle;"><img src="${l.url?html}" style="height: 28px;" /></td></#list>
+		<td style="vertical-align: middle;"><span class="b">${data.companyName?html}</span><#list data.companyLines as c><br/>${c?html}</#list></td>
+	</tr></table>
+	<p class="title" align="center" style="margin-top: 10px;">${data.title?html}</p>
+	<p align="center">${data.numberLine?html}</p>
+	<p class="note">${data.disclaimer?html}</p>
+	<#list data.sections as s>
+	<p class="sec">${s.title?html}</p>
+	<#list s.rowBlocks as rb>
+	<table class="grid" width="100%" table-layout="fixed">
+		<#list rb.rows as r><tr><td width="36%">${r.label?html}</td><td class="b">${r.value?html}</td></tr></#list>
+	</table>
+	</#list>
+	<#list s.changeBlocks as cb>
+	<table class="grid" width="100%" table-layout="fixed">
+		<thead><tr>
+			<th width="36%" align="center"><p class="h" align="center">${cb.heads.label?html}</p></th>
+			<th width="32%" align="center"><p class="h" align="center">${cb.heads.before?html}</p></th>
+			<th width="32%" align="center"><p class="h" align="center">${cb.heads.after?html}</p></th>
+		</tr></thead>
+		<#list cb.rows as r><tr><td>${r.label?html}</td><td>${r.before?html}</td><td class="b">${r.after?html}</td></tr></#list>
+	</table>
+	</#list>
+	</#list>
+	<table width="100%" table-layout="fixed" style="margin-top: 18px; page-break-inside: avoid;">
+		<tr><#list data.signers as s><td width="33%" align="center"><span class="b">${s.title?html}</span><br/><span class="small i">${data.signNote?html}</span><br/><br/><br/><br/>${s.name?html}</td></#list></tr>
+	</table>
+</body>
+</pdf>

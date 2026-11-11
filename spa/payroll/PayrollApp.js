@@ -73,7 +73,7 @@ const TAB_OF = {
 	profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
 };
 // View mở khi bấm tab
-const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setup'};
+const VIEW_OF_TAB = {home: 'home', attendance: 'attendance', payroll: 'payrollList', profiles: 'employees', advances: 'advancesV2', analytics: 'laborAnalytics', reports: 'reportsHub', setup: 'setupHub'};
 const DEFAULT_VIEW = 'home';
 const known = (view) => !!VIEWS[view] || LEGACY.indexOf(view) >= 0;
 
@@ -238,7 +238,7 @@ export default function PayrollApp() {
 			const subs = b.subsidiaries || [];
 			if (subs.length) setSubsidiary(String((subs.find((s) => s.enabled) || subs[0]).id));
 			// Chưa có thiết lập lương: vào thẳng Thiết lập
-			if (!b.setupReady) go('setup');
+			if (!b.setupReady) go('setupHub');
 		});
 		const onHash = () => {
 			const next = parseHash(window.location.hash);
@@ -295,7 +295,7 @@ export default function PayrollApp() {
 			<nav class="s4vp-nav" aria-label={t.nav}>
 				<div class="s4vp-brand">{t.title}</div>
 				{tabs}
-				<Menu key="more" kind="tab" active={activeTab === 'more'} label={t.more} items={[{label: t.outputs, onClick: () => go('outputs')}, {label: t.permits, onClick: () => go('permits')}]} />
+				<Menu key="more" kind="tab" active={activeTab === 'more'} label={t.more} items={[{label: t.outputs, onClick: () => go('outputsV2')}, {label: t.permits, onClick: () => go('permits')}]} />
 				<div class="s4vp-navright">
 					{busy ? (
 						<span class="s4vp-busy" role="status" aria-live="polite">
@@ -311,7 +311,7 @@ export default function PayrollApp() {
 			{boot && unverified && current.view === 'home' ? (
 				<div class="s4vp-strip s4vp-strip-warn" role="status">
 					<span class="s4vp-strip-text">{t.unverifiedShort(unverified)}</span>
-					<Button kind="link" label={t.openSetup} onClick={() => go('setup')} />
+					<Button kind="link" label={t.openSetup} onClick={() => go('setupHub')} />
 				</div>
 			) : null}
 			{bootError ? (

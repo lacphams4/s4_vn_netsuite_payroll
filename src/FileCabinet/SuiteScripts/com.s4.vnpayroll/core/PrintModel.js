@@ -227,5 +227,5 @@ define(["./Money", "./VietnameseNumberReader"], (Money, Words) => {
 		});
 	}
 
-	return { payslips, paymentSheet, contractorSettlement, money, qty, vnDate };
+	return { payslips, paymentSheet, contractorSettlement, money, qty, vnDate, T, periodLine, contract };
 });

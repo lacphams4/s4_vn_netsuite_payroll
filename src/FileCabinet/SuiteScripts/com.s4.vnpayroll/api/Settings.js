@@ -7,6 +7,13 @@
  * @NModuleScope SameAccount
  */
 define(["./Store", "../core/StatutoryParameterProvider"], (Store, Provider) => {
+	/** Lỗi nghiệp vụ hai ngôn ngữ: RESTlet trả userMessage.en / userMessage.vi, giao diện hiện đúng một ngôn ngữ. */
+	function fail(en, vi) {
+		const e = new Error(`${en} / ${vi}`);
+		e.userMessage = { en, vi };
+		return e;
+	}
+
 	const ACCOUNT_KEYS = ["acc_payable", "acc_pit", "acc_advance", "acc_expense", "acc_other_ded", "acc_13th", "acc_contractor"];
 	const empty = (v) => v === null || v === undefined || v === "";
 	const pick = (...vals) => {
@@ -17,7 +24,7 @@ define(["./Store", "../core/StatutoryParameterProvider"], (Store, Provider) => {
 
 	function tenant() {
 		const rows = Store.find("setup");
-		if (!rows.length) throw new Error("VN Payroll preferences are missing. Run Load VN Defaults first. / Chưa có thiết lập lương VN, hãy chạy Nạp mặc định VN.");
+		if (!rows.length) throw fail("VN Payroll preferences are missing. Run Load VN Defaults first.", "Chưa có thiết lập lương VN, hãy chạy Nạp mặc định VN.");
 		return rows[0];
 	}
 
