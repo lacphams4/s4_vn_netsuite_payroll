@@ -3,16 +3,19 @@
  * bảng công ký hiệu (VP311000) - đặc tả 3.2, 3.3. Logic khớp ca nằm ở core/ShiftMatcher, core/RosterPlan; ở đây chỉ
  * đọc ghi record theo lô (findIn) có điều kiện khoảng ngày trong SQL (không đọc toàn bộ lịch sử của nhân viên).
  *
+ * Kỳ công khóa chặn phân ca, lượt chấm theo nhóm lương của từng nhân viên (api/PayGroupPeriods): kỳ khóa của nhóm lương
+ * công ty khác trùng ngày không chặn.
+ *
  * Hệ thống chỉ đề xuất (Điều 127 BLLĐ cấm phạt tiền): chứng từ sinh từ chấm công luôn ở trạng thái Tạm giữ, chờ duyệt.
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
 define([
-	"./Store", "./Settings", "./Clock",
+	"./Store", "./Settings", "./Clock", "./PayGroupPeriods",
 	"../core/Dates", "../core/Money", "../core/RosterPlan", "../core/ShiftMatcher", "../core/AttendanceSheetCalculator", "../core/AttendanceSummaryCalculator",
 	"../core/AttendanceRuleEvaluator", "../core/WorkingDayCounter", "../core/TimeImport", "../core/EmploymentDays",
-], (Store, Settings, Clock, Dates, Money, Plan, Matcher, Sheet, Summary, RuleEval, WorkingDays, TimeImport, EmploymentDays) => {
+], (Store, Settings, Clock, PG, Dates, Money, Plan, Matcher, Sheet, Summary, RuleEval, WorkingDays, TimeImport, EmploymentDays) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	// Ngưỡng xử lý chấm công máy (docs/PUNCH_IMPORT.md mục 5) - chỉ khai báo ở đây: RESTlet chạy đồng bộ khi kỳ có tối đa
@@ -55,12 +58,27 @@ define([
 		}));
 	}
 
+	/** Kỳ theo cấu trúc lõi kèm mã nhóm lương (group) - ngữ cảnh PayGroupPeriods: {periods, multi, names, byEmployee}. */
 	function periodsCore() {
-		return Store.find("period", { includeInactive: true }).map((p) => ({ id: p.id, code: p.name, startDate: p.start, endDate: p.end, attendanceStatus: p.att_status || "O", status: p.status, paygroup: p.paygroup, standardWorkDays: p.std_days }));
+		return PG.load((p) => ({ id: p.id, code: p.name, startDate: p.start, endDate: p.end, attendanceStatus: p.att_status || "O", status: p.status, paygroup: p.paygroup, standardWorkDays: p.std_days }));
 	}
 
-	function lockedIn(from, to, periods) {
-		return Summary.lockedPeriodOverlap(from, to, periods || periodsCore());
+	/**
+	 * Kỳ công đã khóa giao [from, to] của nhóm lương của từng nhân viên: trả kỳ khóa đầu tiên gặp hoặc null. Nhóm lương của
+	 * cả danh sách tra một lần (một truy vấn hồ sơ lương); mỗi nhóm kiểm một lần.
+	 * @param {string[]} employeeIds
+	 * @param {object} [ctx] ngữ cảnh periodsCore() dựng sẵn
+	 */
+	function lockedIn(from, to, employeeIds, ctx) {
+		const c = ctx || periodsCore();
+		const ids = (employeeIds || []).filter((e) => !blank(e));
+		if (!c.multi || !ids.length) return Summary.lockedPeriodOverlap(from, to, c.periods);
+		const groups = PG.loadGroups(c, ids);
+		for (const g of [...new Set(ids.map((e) => groups[String(e)] || PG.DEFAULT))].sort()) {
+			const hit = Summary.lockedPeriodOverlap(from, to, c.periods, g);
+			if (hit) return hit;
+		}
+		return null;
 	}
 
 	function getPeriod(id) {
@@ -88,8 +106,6 @@ define([
 		const to = Dates.iso(input.to);
 		if (!from || !to || Dates.cmp(to, from) < 0) throw fail("Invalid date range", "Khoảng ngày không hợp lệ");
 		if (blank(input.team) || blank(input.pattern)) throw fail("Team and shift pattern are required", "Phải chọn tổ và mẫu xoay ca");
-		const locked = lockedIn(from, to);
-		if (locked) throw fail(`Attendance of period ${locked.code} is locked`, `Kỳ công ${locked.code} đã khóa`);
 		const team = Store.get("team", input.team);
 		if (!team) throw fail("Team not found", "Không tìm thấy tổ");
 		const pattern = patterns().find((p) => p.id === String(input.pattern));
@@ -100,6 +116,9 @@ define([
 		const members = Store.find("team_member", { where: "{team} = ?", params: [team.id] }).map((m) => ({ employee: m.employee, effectiveDate: m.effective, expirationDate: m.expiration }));
 		if (!Plan.anyMember(members, from, to)) throw fail("The team has no member in the date range", "Tổ không có thành viên hiệu lực trong khoảng ngày");
 		const generated = Plan.generate({ cycle: pattern.cycle, anchor: Dates.iso(input.anchor || from), from, to, members, location: team.location || "", workCenter: team.work_center || "", patternId: pattern.id });
+		// Kỳ công khóa theo nhóm lương của từng thành viên có ô sinh ra: nhóm nào có kỳ khóa giao khoảng ngày thì không sinh
+		const locked = lockedIn(from, to, [...new Set(generated.map((g) => g.employee))]);
+		if (locked) throw fail(`Attendance of period ${locked.code} is locked`, `Kỳ công ${locked.code} đã khóa`);
 		const shiftCodeById = {};
 		for (const s of Object.values(shiftByCode)) shiftCodeById[s.id] = s.code;
 		const existing = Store.findIn("roster", "employee", [...new Set(generated.map((g) => g.employee))], between("work_date"), [from, to])
@@ -118,7 +137,7 @@ define([
 	/** Sửa tay một ô phân ca: ô chuyển nguồn M (giữ khi sinh lại). */
 	function setRosterCell(employee, workDate, shiftId, location, workCenter) {
 		const d = Dates.iso(workDate);
-		const locked = lockedIn(d, d);
+		const locked = lockedIn(d, d, [employee]);
 		if (locked) throw fail(`Attendance of period ${locked.code} is locked`, `Kỳ công ${locked.code} đã khóa`);
 		const key = Plan.key(employee, d);
 		const cur = Store.find("roster", { where: "{key} = ?", params: [key] })[0];
@@ -160,6 +179,8 @@ define([
 		const periods = periodsCore();
 		// Chống trùng: lượt chấm đã có của cùng nhân viên, cùng thời điểm
 		const empIds = [...new Set(parsed.filter((p) => !p.error).map((p) => resolve(p.employee)).filter(Boolean))];
+		// Nhóm lương của mọi nhân viên trong file: một truy vấn
+		PG.loadGroups(periods, empIds);
 		const dates = parsed.filter((p) => !p.error && p.date).map((p) => p.date).sort();
 		const seen = new Set(
 			dates.length ? Store.findIn("punch", "employee", empIds, between("punch_date"), [dates[0], dates[dates.length - 1]]).map((x) => `${x.employee}|${x.punch_time}`) : []
@@ -177,7 +198,7 @@ define([
 				errors.push(`#${p.line}: Employee ${p.employee} not found / Không tìm thấy nhân viên ${p.employee}`);
 				continue;
 			}
-			const locked = lockedIn(p.date, p.date, periods);
+			const locked = lockedIn(p.date, p.date, [emp], periods);
 			if (locked) {
 				errors.push(`#${p.line}: attendance of period ${locked.code} is locked / Kỳ công ${locked.code} đã khóa`);
 				continue;

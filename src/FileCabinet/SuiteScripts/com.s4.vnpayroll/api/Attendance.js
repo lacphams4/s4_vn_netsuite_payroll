@@ -4,17 +4,18 @@
  * chuyển phép, hết hạn, điều chỉnh, số dư).
  *
  * Lịch nghỉ tuần dùng thiết lập chung (VP101000) như bản Acumatica (3.11 #1). Kỳ công khóa chặn Submit / Approve /
- * Cancel chứng từ giao kỳ; Reject không kiểm tra. Đính kèm của đơn nghỉ (RequiresAttachment) chưa kiểm được trên
+ * Cancel chứng từ giao kỳ; Reject không kiểm tra. Kỳ khóa và kỳ của chứng từ chỉ xét kỳ thuộc nhóm lương của nhân viên
+ * (api/PayGroupPeriods): kỳ khóa của nhóm lương công ty khác trùng ngày không chặn. Đính kèm của đơn nghỉ (RequiresAttachment) chưa kiểm được trên
  * custom record: chỉ cảnh báo (ghi trong danh sách khác biệt đã chấp nhận).
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
 define([
-	"N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Shifts", "./Settings", "./Advances", "./Clock",
+	"N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Shifts", "./Settings", "./Advances", "./Clock", "./PayGroupPeriods",
 	"../core/Dates", "../core/Money", "../core/AttendanceDocRules", "../core/AttendanceSummaryCalculator", "../core/EmploymentDays",
 	"../core/LeaveLedger", "../core/LeaveAccrualCalculator", "../core/LeaveReconcile",
-], (runtime, log, task, cache, Store, Shifts, Settings, Advances, Clock, Dates, Money, Rules, Summary, EmploymentDays, Ledger, Accrual, LeaveReconcile) => {
+], (runtime, log, task, cache, Store, Shifts, Settings, Advances, Clock, PG, Dates, Money, Rules, Summary, EmploymentDays, Ledger, Accrual, LeaveReconcile) => {
 	const RECORD = { leave: "leave_request", ot: "ot_request", trip: "business_trip", exception: "att_exception" };
 	// Trường người dùng được nhập (QC #4): trạng thái, người duyệt, khóa, số ngày, kỳ... chỉ do gói tính / đặt
 	const INPUT = {
@@ -56,8 +57,11 @@ define([
 				requiresAttachment: l.requires_attachment, allowHalfDay: l.allow_half !== false, maxDaysPerRequest: l.max_days || 0,
 			};
 		}
-		const periods = Store.find("period", { includeInactive: true }).map((p) => ({ id: p.id, code: p.name, paygroup: p.paygroup, startDate: p.start, endDate: p.end, standardWorkDays: p.std_days, attendanceStatus: p.att_status || "O", status: p.status || "O" }));
+		// Kỳ kèm mã nhóm lương (group); pg nhớ nhóm lương của nhân viên đã tra trong lần gọi này
+		const pg = PG.load((p) => ({ id: p.id, code: p.name, paygroup: p.paygroup, startDate: p.start, endDate: p.end, standardWorkDays: p.std_days, attendanceStatus: p.att_status || "O", status: p.status || "O" }));
+		const periods = pg.periods;
 		return {
+			pg,
 			tenant,
 			weeklyOff: tenant.weekly_off,
 			holidays: Settings.holidays().map((h) => h.date),
@@ -74,8 +78,9 @@ define([
 		return { workDate: d.work_date };
 	}
 
-	function lockedOverlap(ref, range) {
-		return Summary.lockedPeriodOverlap(range.from, range.to, ref.periods);
+	/** Kỳ công đã khóa của nhóm lương của nhân viên giao khoảng ngày của chứng từ. */
+	function lockedOverlap(ref, range, employee) {
+		return PG.lockedFor(ref.pg, employee, range.from, range.to);
 	}
 
 	function currentEmployee() {
@@ -117,7 +122,8 @@ define([
 			Object.assign(out, { minutes: prep.minutes, deduct_days: prep.deductDays, adjust_days: prep.adjustDays });
 		}
 		const range = Rules.range(type, Object.assign(docToCore(type, values), out.to ? { to: out.to } : {}));
-		const p = Rules.periodOf(range.from, r.periods);
+		// Kỳ của chứng từ: kỳ chứa ngày đầu trong các kỳ của nhóm lương của nhân viên
+		const p = Rules.periodOf(range.from, PG.periodsOf(r.pg, values.employee));
 		out.period = p ? p.id : null;
 		if (!p) warnings.push({ code: "PERIOD", message: "No pay period contains the document date.", messageVi: "Chưa có kỳ lương chứa ngày của chứng từ." });
 		return { values: out, warnings };
@@ -172,7 +178,7 @@ define([
 		const ref = reference();
 		const range = Rules.range(type, docToCore(type, doc));
 		if (action !== "reject") {
-			const locked = lockedOverlap(ref, range);
+			const locked = lockedOverlap(ref, range, doc.employee);
 			if (locked) throw fail(`Attendance of period ${locked.code || locked.id} is locked`, `Kỳ công ${locked.code || locked.id} đã khóa`);
 		}
 		if (action === "cancel" && doc.summary_locked) throw fail("The document is locked by an attendance summary", "Chứng từ đã khóa theo kỳ công");
@@ -213,7 +219,7 @@ define([
 		} else if (type === "exception") {
 			const prep = Rules.prepareException({ exceptionType: doc.exception_type, minutes: doc.minutes, adjustDays: doc.adjust_days, reason: doc.reason }, ref.rules, true);
 			if (prep.errors.length) throw failList(prep.errors);
-			if (!Rules.periodOf(doc.work_date, ref.periods)) throw fail("No pay period contains the work date", "Chưa có kỳ lương chứa ngày của phiếu");
+			if (!Rules.periodOf(doc.work_date, PG.periodsOf(ref.pg, doc.employee))) throw fail("No pay period contains the work date", "Chưa có kỳ lương chứa ngày của phiếu");
 		}
 		warnings.push(...d.warnings.filter((w) => w.code !== "BALANCE"));
 		return v;
@@ -495,13 +501,28 @@ define([
 		return { period: ctx.period.code, employees: r.employees };
 	}
 
-	/** Đặt / gỡ cờ SummaryLocked cho chứng từ đã duyệt giao kỳ của các nhân viên (3.4). */
-	function setSummaryLocked(period, value, otherLocked, employeeIds) {
+	/**
+	 * Đặt / gỡ cờ SummaryLocked cho chứng từ đã duyệt giao kỳ của các nhân viên (3.4). otherLocked: kỳ công khóa khác cùng
+	 * nhóm lương với kỳ (unlockContext). employeeIds trống (gỡ khóa mọi chứng từ giao kỳ) thì bỏ qua chứng từ của nhân viên
+	 * thuộc nhóm lương khác - nhóm tra một lần cho cả danh sách (pg: ngữ cảnh PayGroupPeriods, không có thì tự đọc).
+	 */
+	function setSummaryLocked(period, value, otherLocked, employeeIds, pg) {
 		const ps = period.startDate;
 		const pe = period.endDate;
-		for (const [name, where, params, ranged] of [["leave_request", OVERLAP, [pe, ps], true], ["business_trip", OVERLAP, [pe, ps], true], ["att_exception", IN_PERIOD, [ps, pe], false], ["ot_request", IN_PERIOD, [ps, pe], false]]) {
-			const docs = employeeIds ? Store.findIn(name, "employee", employeeIds, where, params) : Store.find(name, { where, params });
+		const lists = [["leave_request", OVERLAP, [pe, ps], true], ["business_trip", OVERLAP, [pe, ps], true], ["att_exception", IN_PERIOD, [ps, pe], false], ["ot_request", IN_PERIOD, [ps, pe], false]]
+			.map(([name, where, params, ranged]) => [name, ranged, employeeIds ? Store.findIn(name, "employee", employeeIds, where, params) : Store.find(name, { where, params })]);
+		let foreign = () => false;
+		if (!employeeIds) {
+			const ctx = pg || PG.load();
+			if (ctx.multi) {
+				const groups = PG.loadGroups(ctx, lists.flatMap(([, , docs]) => docs.map((d) => d.employee)));
+				const own = period.group || PG.codeOf(period.paygroup, ctx.names);
+				foreign = (d) => !blank(d.employee) && (groups[String(d.employee)] || PG.DEFAULT) !== own;
+			}
+		}
+		for (const [name, ranged, docs] of lists) {
 			for (const d of docs) {
+				if (foreign(d)) continue;
 				if (value && d.status !== "A") continue;
 				if (!!d.summary_locked === value) continue;
 				// Mở khóa: đơn nghỉ, công tác chỉ gỡ khi không còn giao kỳ công khóa khác
@@ -543,7 +564,8 @@ define([
 		if (!period) throw fail("Pay period not found", "Không tìm thấy kỳ lương");
 		const released = Store.find("batch", { where: "{period} = ?", params: [period.id] }).filter((b) => b.status === "R" || b.status === "V");
 		if (released.length) throw fail("The period has a released payroll batch; attendance cannot be unlocked", "Kỳ đã có bảng lương ghi sổ, không mở khóa công được");
-		return { ref, period, otherLocked: ref.periods.filter((p) => p.id !== period.id && p.attendanceStatus === "L") };
+		// Kỳ khóa khác chỉ tính kỳ cùng nhóm lương: kỳ khóa của nhóm khác trùng ngày không giữ khóa chứng từ của nhóm này
+		return { ref, period, otherLocked: ref.periods.filter((p) => p.id !== period.id && p.attendanceStatus === "L" && p.group === period.group) };
 	}
 
 	/** Nhân viên cần mở khóa: có dòng tổng hợp công của kỳ. */
@@ -572,7 +594,7 @@ define([
 		if (ids.length > SYNC_LIMIT) throw fail(`The period has ${ids.length} employees; run it in the background`, `Kỳ có ${ids.length} nhân viên, hãy chạy nền (Map/Reduce)`);
 		unlockChunk(periodId, ids, c);
 		// Chứng từ của nhân viên không còn dòng tổng hợp (ví dụ đã nghỉ) vẫn được gỡ khóa
-		setSummaryLocked(c.period, false, c.otherLocked, null);
+		setSummaryLocked(c.period, false, c.otherLocked, null, c.ref.pg);
 		Store.submit("period", c.period.id, { att_status: "O" });
 		return { locked: false };
 	}

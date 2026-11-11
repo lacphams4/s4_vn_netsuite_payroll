@@ -266,6 +266,55 @@ describe("punchPreview", () => {
   });
 });
 
+describe("kỳ công khóa theo nhóm lương của nhân viên (nhiều công ty)", () => {
+  // DEFAULT khóa 202610; SAOMAI có kỳ SAOMAI-202610 trùng ngày đang mở, SAOMAI-202611 khóa. 102 thuộc SAOMAI, 101 và 103 DEFAULT
+  function twoGroups() {
+    mockDb.t.paygroup = [{ id: "1", name: "DEFAULT" }, { id: "2", name: "SAOMAI" }];
+    for (const p of mockDb.t.period) p.paygroup = "1";
+    mockDb.t.period.push(
+      { id: "17", name: "SAOMAI-202610", paygroup: "2", start: "2026-10-01", end: "2026-10-31", att_status: "O" },
+      { id: "18", name: "SAOMAI-202611", paygroup: "2", start: "2026-11-01", end: "2026-11-30", att_status: "L" },
+    );
+    mockDb.t.employee = [
+      { id: "e1", employee: "101", paygroup: null },
+      { id: "e2", employee: "102", paygroup: "2" },
+      { id: "e3", employee: "103", paygroup: "1" },
+    ];
+  }
+  const TEXT = [
+    "     2\t2026-10-30 08:00:00\t1\t0\t1\t0", // 102 (SAOMAI): kỳ DEFAULT 202610 khóa không chặn
+    "     1\t2026-10-29 08:00:00\t1\t0\t1\t0", // 101 (DEFAULT): 202610 khóa
+    "     2\t2026-11-03 08:02:00\t1\t0\t1\t0", // 103 (DEFAULT): 202611 mở
+    "     1\t2026-11-04 07:58:00\t1\t0\t1\t0", // 101 (DEFAULT): 202611 mở
+  ].join("\n");
+
+  test("preview: trạng thái locked theo nhóm lương của từng nhân viên; một truy vấn hồ sơ lương", () => {
+    twoGroups();
+    const out = PI.punchPreview({ source: "1", text: TEXT });
+    expect(out.rows.map((r) => [r.line, r.employee, r.status])).toEqual([[1, "102", "new"], [2, "101", "locked"], [3, "103", "new"], [4, "101", "new"]]);
+    expect(out.rows[1]).toMatchObject({ vi: "Kỳ công 202610 đã khóa" });
+    expect(mockDb.sql.filter((t) => t === "find:employee")).toHaveLength(1);
+  });
+
+  test("commit: ghi lượt chấm Sao Mai trong kỳ DEFAULT đã khóa; nhân viên chuyển sang nhóm SAOMAI thì kỳ SAOMAI-202611 khóa chặn", () => {
+    twoGroups();
+    const out = PI.punchCommit({ source: "1", text: TEXT });
+    expect(out).toMatchObject({ created: 3, locked: 1 });
+    expect(mockDb.writes.map((w) => [w.values.employee, w.values.punch_time])).toEqual([
+      ["102", "2026-10-30 08:00"], ["103", "2026-11-03 08:02"], ["101", "2026-11-04 07:58"],
+    ]);
+    mockDb.t.employee.find((e) => e.employee === "103").paygroup = "2";
+    const again = PI.punchPreview({ source: "1", text: "     2\t2026-11-05 08:00:00\t1\t0\t1\t0" });
+    expect(again.rows.map((r) => [r.employee, r.status, r.vi])).toEqual([["103", "locked", "Kỳ công SAOMAI-202611 đã khóa"]]);
+  });
+
+  test("một nhóm lương: không đọc hồ sơ lương, kết quả như trước", () => {
+    mockDb.t.paygroup = [{ id: "1", name: "DEFAULT" }];
+    PI.punchPreview({ source: "1", text: ZK });
+    expect(mockDb.sql.filter((t) => t === "find:employee")).toHaveLength(0);
+  });
+});
+
 describe("punchCommit", () => {
   test("ghi dòng mới với nguồn I, đếm bỏ qua / lỗi / chưa đối chiếu / kỳ khóa; chạy lại không ghi trùng", () => {
     const out = PI.punchCommit({ source: "1", text: ZK });

@@ -130,7 +130,7 @@ define(["N/runtime", "N/log", "../api/Attendance", "../api/Store", "../api/Shift
 		if (op === "unlock") {
 			const c = Attendance.unlockContext(period);
 			// Chứng từ của nhân viên không còn dòng tổng hợp vẫn được gỡ khóa
-			Attendance.setSummaryLocked(c.period, false, c.otherLocked, null);
+			Attendance.setSummaryLocked(c.period, false, c.otherLocked, null, c.ref.pg);
 			Store.submit("period", period, { att_status: "O" });
 		}
 		log.audit({ title: `s4vp_mr_attendance ${op} ${period}`, details: punches ? `${count} employee(s), ${punches.exceptions} exception(s), ${punches.overtime} overtime request(s), ${punches.deleted} replaced` : `${count} employee(s)` });

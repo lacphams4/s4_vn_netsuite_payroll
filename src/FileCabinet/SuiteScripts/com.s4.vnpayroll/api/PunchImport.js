@@ -9,14 +9,16 @@
  *
  * Số truy vấn của một lượt preview / commit cố định theo kích thước file: hồ sơ nguồn, dòng đối chiếu của nguồn (JOIN nhân viên),
  * nhân viên theo mã (mỗi 900 mã một truy vấn, mã đi bằng tham số ràng buộc), lượt chấm đã có của các nhân viên đã nhận trong
- * khoảng ngày của file (mỗi 900 nhân viên một truy vấn), kỳ lương (kiểm kỳ công đã khóa như api/Shifts).
+ * khoảng ngày của file (mỗi 900 nhân viên một truy vấn), nhóm lương và kỳ lương, hồ sơ lương của các nhân viên đã nhận (mỗi 900
+ * nhân viên một truy vấn, chỉ khi tài khoản có nhiều nhóm lương). Kỳ công đã khóa xét theo nhóm lương của từng nhân viên
+ * (api/PayGroupPeriods, như api/Shifts): kỳ khóa của nhóm lương công ty khác trùng ngày không chặn.
  * Tương thích action cũ importPunches: id_kind N nhận mã nhân viên NetSuite hoặc id nội bộ (id thắng khi trùng; B chỉ mã), khóa chống trùng
  * nhân viên|thời điểm theo phút, lượt chấm ghi với nguồn I (tải file). Mọi kết quả qua safe(): không có khóa tên "error".
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "./Lean", "../core/PunchImport", "../core/AttendanceSummaryCalculator", "../core/Dates"], (runtime, Store, Lean, Core, Summary, Dates) => {
+define(["N/runtime", "./Store", "./Lean", "./PayGroupPeriods", "../core/PunchImport", "../core/AttendanceSummaryCalculator", "../core/Dates"], (runtime, Store, Lean, PG, Core, Summary, Dates) => {
 	const blank = (v) => v === null || v === undefined || String(v).trim() === "";
 	const str = (v) => (v === null || v === undefined ? "" : String(v)).trim();
 	const isId = (v) => /^\d+$/.test(str(v));
@@ -140,9 +142,9 @@ define(["N/runtime", "./Store", "./Lean", "../core/PunchImport", "../core/Attend
 		return keys;
 	}
 
-	/** Kỳ lương theo cấu trúc lõi (như periodsCore của api/Shifts) để kiểm kỳ công đã khóa. */
+	/** Kỳ lương theo cấu trúc lõi kèm mã nhóm lương (như periodsCore của api/Shifts) để kiểm kỳ công đã khóa. */
 	function periods() {
-		return Store.find("period", { includeInactive: true }).map((p) => ({ id: p.id, code: p.name, startDate: p.start, endDate: p.end, attendanceStatus: p.att_status || "O" }));
+		return PG.load((p) => ({ id: p.id, code: p.name, startDate: p.start, endDate: p.end, attendanceStatus: p.att_status || "O" }));
 	}
 
 	function textOf(body) {
@@ -166,16 +168,20 @@ define(["N/runtime", "./Store", "./Lean", "../core/PunchImport", "../core/Attend
 		for (const m of maps) if (m.employee && !info[m.employee]) info[m.employee] = { code: m.code, name: m.name };
 		const resolved = Core.resolveEmployees(parsed.rows, { mappings: maps, employeesByCode: emp.byCode, employeeIds: emp.ids, idKind });
 
-		const ps = periods();
-		const lockCache = {};
-		const lockOf = (d) => {
-			if (!(d in lockCache)) lockCache[d] = Summary.lockedPeriodOverlap(d, d, ps);
-			return lockCache[d];
-		};
 		const matched = resolved.filter((r) => r.employee);
+		// Kỳ khóa theo nhóm lương của nhân viên: nhóm của mọi nhân viên đã nhận tra một lần, nhớ theo nhóm|ngày
+		const ps = periods();
+		const groups = PG.loadGroups(ps, matched.map((r) => r.employee));
+		const lockCache = {};
+		const lockOf = (emp, d) => {
+			const g = ps.multi ? groups[String(emp)] || PG.DEFAULT : null;
+			const k = `${g || ""}|${d}`;
+			if (!(k in lockCache)) lockCache[k] = Summary.lockedPeriodOverlap(d, d, ps.periods, g);
+			return lockCache[k];
+		};
 		const dates = matched.map((r) => r.time.slice(0, 10)).sort();
 		const keys = existingKeys([...new Set(matched.map((r) => r.employee))], dates[0], dates[dates.length - 1]);
-		const candidates = resolved.map((r, i) => Object.assign({ index: i }, r)).filter((r) => r.employee && !lockOf(r.time.slice(0, 10)));
+		const candidates = resolved.map((r, i) => Object.assign({ index: i }, r)).filter((r) => r.employee && !lockOf(r.employee, r.time.slice(0, 10)));
 		const status = {};
 		for (const d of Core.dedupe(candidates, keys)) status[d.index] = d;
 
@@ -183,7 +189,7 @@ define(["N/runtime", "./Store", "./Lean", "../core/PunchImport", "../core/Attend
 		resolved.forEach((r, i) => {
 			const who = r.employee ? info[r.employee] || { code: "", name: "" } : { code: "", name: "" };
 			const item = { line: r.line, machineId: r.machineId, device: r.device, time: r.time, kind: r.kind, employee: r.employee, code: who.code, name: who.name, how: r.how, status: "new", vi: "", en: "" };
-			const lock = r.employee ? lockOf(r.time.slice(0, 10)) : null;
+			const lock = r.employee ? lockOf(r.employee, r.time.slice(0, 10)) : null;
 			if (!r.employee) Object.assign(item, { status: "unmatched", vi: `Mã chấm công ${r.machineId} chưa đối chiếu với nhân viên`, en: `Attendance ID ${r.machineId} is not mapped to an employee` });
 			else if (lock) Object.assign(item, { status: "locked", vi: `Kỳ công ${lock.code} đã khóa`, en: `Attendance of period ${lock.code} is locked` });
 			else if (status[i].status === "duplicate") {

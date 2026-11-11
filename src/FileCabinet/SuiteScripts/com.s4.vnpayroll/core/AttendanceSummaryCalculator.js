@@ -168,13 +168,25 @@ define(["./Money", "./Dates", "./WorkingDayCounter", "./EmploymentDays"], (Money
 		};
 	}
 
-	/** Khoảng [from, to] giao kỳ công đã khóa nào (LockedPeriod: start <= to và end >= from). Trả kỳ đầu tiên hoặc null. */
-	function lockedPeriodOverlap(from, to, periods) {
-		for (const p of periods || []) {
+	/**
+	 * Kỳ của một nhóm lương: group là mã nhóm của nhân viên, kỳ mang mã nhóm ở p.group. group trống (tài khoản một nhóm
+	 * lương, chứng từ chưa có nhân viên) thì giữ mọi kỳ như trước.
+	 */
+	function periodsOfGroup(periods, group) {
+		if (group === null || group === undefined || group === "") return periods || [];
+		return (periods || []).filter((p) => p.group === group);
+	}
+
+	/**
+	 * Khoảng [from, to] giao kỳ công đã khóa nào (LockedPeriod: start <= to và end >= from). Trả kỳ đầu tiên hoặc null.
+	 * group (tùy chọn): chỉ xét kỳ của nhóm lương này (periodsOfGroup) - kỳ khóa của nhóm khác không chặn.
+	 */
+	function lockedPeriodOverlap(from, to, periods, group) {
+		for (const p of periodsOfGroup(periods, group)) {
 			if (p.attendanceStatus === "L" && Dates.cmp(p.startDate, to) <= 0 && Dates.cmp(p.endDate, from) >= 0) return p;
 		}
 		return null;
 	}
 
-	return { computeWorkDays, buildExceptions, buildSheet, applyLeave, lockedPeriodOverlap };
+	return { computeWorkDays, buildExceptions, buildSheet, applyLeave, lockedPeriodOverlap, periodsOfGroup };
 });

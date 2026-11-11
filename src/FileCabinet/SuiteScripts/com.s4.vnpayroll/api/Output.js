@@ -35,9 +35,13 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 		return { id: t.id, code: String(t.name).trim().toUpperCase(), type: t.type || "W", allowOverride: !!t.allow_override, lines };
 	}
 
-	/** Kỳ của nhóm DEFAULT chứa ngày phiếu. */
-	function defaultPeriod(date) {
-		const g = Settings.paygroupByName("DEFAULT");
+	/**
+	 * Kỳ chứa ngày phiếu, của nhóm lương thuộc công ty con của phiếu (đúng một nhóm gắn công ty con đó), không có thì nhóm
+	 * DEFAULT. Account nhiều công ty con với nhóm lương riêng: phiếu của công ty nào lấy kỳ của nhóm công ty đó.
+	 */
+	function defaultPeriod(date, subsidiary) {
+		const own = blank(subsidiary) ? [] : Store.find("paygroup").filter((x) => String(x.subsidiary || "") === String(subsidiary));
+		const g = own.length === 1 ? own[0] : Settings.paygroupByName("DEFAULT");
 		if (!g) return null;
 		const p = Store.find("period", { where: "{paygroup} = ?", params: [g.id], includeInactive: true }).find((x) => Dates.within(date, x.start, x.end));
 		return p ? p.id : null;
@@ -89,7 +93,7 @@ define(["N/runtime", "./Store", "./Settings", "./Clock", "../core/Dates", "../co
 		if (blank(e.doc_date)) throw fail("Document date is required", "Chưa nhập ngày phiếu");
 		if (blank(e.rate_table)) throw fail("Rate table is required", "Chưa chọn bảng đơn giá");
 		if (blank(e.type)) e.type = blank(e.team) ? "I" : "T";
-		if (blank(e.period)) e.period = defaultPeriod(e.doc_date);
+		if (blank(e.period)) e.period = defaultPeriod(e.doc_date, e.subsidiary);
 		// Chọn tổ: nhận cách chia, dự án, chi nhánh, work center, phòng ban của tổ khi phiếu đang trống
 		if (!blank(e.team)) {
 			const t = Store.get("team", e.team);
