@@ -2472,13 +2472,15 @@ export default function CommissionView({app}) {
 				{FILTER_KEYS.map((fk) => (
 					<div key={fk.key}>{multiPick(c[fk.label], lookups[fk.lookup], r[fk.key], (v) => setRule(r.key, {[fk.key]: v}))}</div>
 				))}
+				{/* Lọc mặt hàng theo id nội bộ: chỉ hiện khi có danh mục để chọn, hoặc thành phần cũ đã khai id; người dùng
+				    mới lọc theo Mã hàng (ô chip bên dưới) - dễ nhập hơn và khớp cả doanh số ngoài */}
 				{lookups.items.length ? (
 					multiPick(c.items, lookups.items, r.fItems, (v) => setRule(r.key, {fItems: v}))
-				) : (
+				) : idList(r.fItems).length ? (
 					<Field label={c.items} hint={c.itemsHint}>
 						<TextInput value={idList(r.fItems).join(',')} onInput={(v) => setRule(r.key, {fItems: v})} />
 					</Field>
-				)}
+				) : null}
 				{multiPick(c.itemTypes, typeOptions, r.fItemTypes, (v) => setRule(r.key, {fItemTypes: v}))}
 				{tokenInput('s4vp-cm-tok-codes', c.itemCodes, c.itemCodesHint, r.fItemCodes, (v) => setRule(r.key, {fItemCodes: v}))}
 				{tokenInput('s4vp-cm-tok-groups', c.itemGroups, ruleErrCode === 'noGroupField' ? err : c.itemGroupsHint(str(d.itemGroupField).trim()), r.fItemGroups, (v) => setRule(r.key, {fItemGroups: v}))}
