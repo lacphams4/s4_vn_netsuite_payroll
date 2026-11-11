@@ -638,7 +638,8 @@ define(["./Money", "./Dates"], (Money, Dates) => {
 			}
 			// 12-13. Draw và số âm
 			const prev = D(Money.round(drawBal[e] || 0));
-			const floor = plan.drawType === "R" || plan.drawType === "G" ? D(Money.round(plan.drawAmount)) : ZERO;
+			// Ứng trước chỉ cho người có phân công hiệu lực trong kỳ; quản lý chỉ nhận override (không phân công) thì không bù
+			const floor = (plan.drawType === "R" || plan.drawType === "G") && assigned.has(e) ? D(Money.round(plan.drawAmount)) : ZERO;
 			const neg = total.lt(0) ? total.neg() : ZERO;
 			const pos = Money.max(total, 0);
 			let payable;

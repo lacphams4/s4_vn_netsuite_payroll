@@ -440,3 +440,19 @@ describe("uncredited (doanh số chưa ai được ghi nhận)", () => {
 		expect(by[""]).toEqual({ employee: "", base: 1 * M, docs: 1 });
 	});
 });
+
+describe("draw chỉ áp cho người có phân công", () => {
+	test("quản lý chỉ nhận override (không phân công) không được bù ứng trước", () => {
+		const out = run({
+			plan: { overridePct: 1, overrideBasis: "B", drawType: "R", drawAmount: 2 * M },
+			rows: [row({ revenue: 10 * M, salesRep: "101" })],
+			assignments: [asg("101", { manager: "900" })],
+		});
+		const mgr = out.results.find((r) => r.employee === "900");
+		expect(mgr.override).toBe(100000);
+		expect(mgr.drawPaid).toBe(0);
+		expect(mgr.payable).toBe(100000);
+		const rep = out.results.find((r) => r.employee === "101");
+		expect(rep.drawPaid).toBe(2 * M - 200000);
+	});
+});
