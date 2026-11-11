@@ -137,6 +137,34 @@ define(["./Store", "./Lean", "./Settings", "./Clock", "./Commission", "../core/D
 		}
 	}
 
+	/** Tên phòng ban (D), class (C), địa điểm (L), dự án (J) theo id có trong phân bổ và credit; đọc lỗi thì để trống (hiện id). */
+	function segmentNames(shares, credits) {
+		const ids = { D: new Set(), C: new Set(), L: new Set(), J: new Set() };
+		const put = (k, v) => {
+			if (isId(v)) ids[k].add(String(v));
+		};
+		for (const s of shares) {
+			put("D", s.sub);
+			put("C", s.workCenter);
+			put("L", s.branch);
+			put("J", s.project);
+		}
+		for (const c of credits) {
+			put("D", c.department);
+			put("C", c.classId);
+			put("L", c.location);
+			put("J", c.project);
+		}
+		const table = { D: "department x", C: "classification x", L: "location x", J: "job x" };
+		const label = { D: "x.fullname", C: "x.fullname", L: "x.fullname", J: "NVL(x.companyname, x.entityid)" };
+		const parts = Object.keys(ids).filter((k) => ids[k].size).map((k) => `SELECT '${k}' AS k, x.id AS id, ${label[k]} AS name FROM ${table[k]} WHERE x.id IN (${[...ids[k]].slice(0, 900).join(",")})`);
+		const out = { D: {}, C: {}, L: {}, J: {} };
+		if (!parts.length) return out;
+		const rows = attempt(() => Store.run(parts.join(" UNION ALL "), [], "s4vp_cm_result_segs"), []);
+		for (const r of rows) if (out[r.k]) out[r.k][String(r.id)] = r.name || "";
+		return out;
+	}
+
 	/** Một kết quả đầy đủ: số liệu, diễn giải, credit (có số chứng từ, ngày, khách, mặt hàng, nguồn), phân đoạn, điều chỉnh tháng. */
 	function commissionResult(params) {
 		const id = String((params && params.id) || "");
@@ -152,6 +180,11 @@ define(["./Store", "./Lean", "./Settings", "./Clock", "./Commission", "../core/D
 				.filter((a) => blank(a.plan) || String(a.plan) === String(r.plan))
 				.map((a) => ({ id: a.id, plan: a.plan || null, planName: blank(a.plan) ? "" : plan ? plan.name || "" : "", month: num(a.month), amount: num(a.amount), reason: a.reason || "" }))
 			: [];
+		// Tên phân đoạn của phân bổ và credit (một truy vấn cho cả kết quả): màn hình hiện tên thay vì id nội bộ
+		const nm = segmentNames(d.shares || [], d.credits || []);
+		const named = (map, id) => (blank(id) ? "" : map[String(id)] || String(id));
+		for (const s of d.shares || []) Object.assign(s, { subName: named(nm.D, s.sub), workCenterName: named(nm.C, s.workCenter), branchName: named(nm.L, s.branch), projectName: named(nm.J, s.project) });
+		for (const c of d.credits || []) Object.assign(c, { departmentName: named(nm.D, c.department), className: named(nm.C, c.classId), locationName: named(nm.L, c.location), projectName: named(nm.J, c.project) });
 		return safe({
 			id: r.id, isInactive: !!r.isInactive, run: runView(run), employee: r.employee || null, code: who.code, name: who.name, departmentId: who.department,
 			plan: r.plan || null, planName: plan ? plan.name || "" : "", planDescription: plan ? plan.description || "" : "", basis: plan ? plan.basis || "R" : "R", window: plan ? plan.window || "M" : "M", trigger: plan ? plan.trigger || "I" : "I",
