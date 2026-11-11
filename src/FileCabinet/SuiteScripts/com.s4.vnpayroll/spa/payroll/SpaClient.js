@@ -194,15 +194,15 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
         return body;
     }
     // Địa chỉ RESTlet chỉ hỏi máy chủ một lần (mỗi lần url.resolveScript là một lượt gọi đồng bộ khoảng 0,3 giây), tham số tự ghép
-    let restletBase = '';
+    let restletBase$1 = '';
     function restletUrl(params) {
-        if (!restletBase)
-            restletBase = url.resolveScript(Object.assign({}, RESTLET));
+        if (!restletBase$1)
+            restletBase$1 = url.resolveScript(Object.assign({}, RESTLET));
         const query = Object.keys(params || {})
             .filter((k) => params[k] !== undefined && params[k] !== null)
             .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
             .join('&');
-        return query ? `${restletBase}${restletBase.indexOf('?') >= 0 ? '&' : '?'}${query}` : restletBase;
+        return query ? `${restletBase$1}${restletBase$1.indexOf('?') >= 0 ? '&' : '?'}${query}` : restletBase$1;
     }
     const get = (params) => https.get.promise({ url: restletUrl(params), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
     // Gọi trước: khung gửi lượt đọc của màn đang mở song song với bootstrap; view gọi call() cùng tham số sẽ nhận đúng kết quả đó
@@ -898,6 +898,35 @@ input[type="number"].s4vp-in{padding-right:4px}
 .s4vp-cm-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 10px}
 .s4vp-cm-map .s4vp-in{min-height:32px}
 @media (max-width:812px){.s4vp-cm-adj,.s4vp-cm-imp-top,.s4vp-cm-pair{grid-template-columns:1fr}.s4vp-cm-method{grid-template-columns:1fr}}
+.s4vp-pi-top{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:8px 14px;align-items:start}
+.s4vp-pi-sum{display:flex;flex-direction:column;gap:4px;padding-top:22px;min-width:0;font-size:13px}
+.s4vp-pi-sum-t{color:var(--s4vp-sub);overflow-wrap:anywhere}
+.s4vp-pi-links{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.s4vp-pi-data{display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,2fr);gap:8px 14px;align-items:start}
+.s4vp-pi-file{padding:5px 8px}
+.s4vp-pi-sec{display:flex;flex-direction:column;gap:6px;min-width:0}
+.s4vp-pi-sub{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;font-size:14px;font-weight:700}
+.s4vp-pi-sub .s4vp-small{font-weight:400}
+.s4vp-pi-box{border:1px solid var(--s4vp-line);border-radius:10px;overflow:hidden}
+.s4vp-pi-box .s4vp-tbl-bar{padding:6px 8px}
+.s4vp-pi-box .s4vp-chip{min-height:30px}
+.s4vp-pi-box.s4vp-pi-edit{overflow:visible}
+.s4vp-pi-edit .s4vp-tbl-wrap{overflow:visible}
+.s4vp-pi-edit .s4vp-tbl td{padding:4px 6px}
+.s4vp-pi-edit .s4vp-tbl .s4vp-in{min-height:32px;padding:0 8px}
+.s4vp-pi-unm{padding:10px 12px;border:1px solid #F0D3A6;border-radius:10px;background:#FFFBF4}
+.s4vp-pi-find{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.s4vp-pi-note{font-size:13px;padding:6px 10px;border-radius:8px;background:var(--s4vp-accent-soft);color:var(--s4vp-accent-dark)}
+.s4vp-pi-warn{font-size:13px;padding:6px 10px;border-radius:8px;background:var(--s4vp-warn-bg);color:var(--s4vp-warn)}
+.s4vp-pi-err{color:var(--s4vp-err);font-size:13px;overflow-wrap:anywhere}
+div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)}
+.s4vp-pi-result{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--s4vp-line);border-radius:10px;font-size:13px;font-variant-numeric:tabular-nums}
+.s4vp-pi-result.s4vp-pi-ok{border-color:#A9D8B8;background:#F4FBF6}
+.s4vp-pi-result.s4vp-pi-bad{border-color:#F0B8B0;background:#FFF7F6}
+.s4vp-pi-track{height:8px;border-radius:999px;background:#E6E9EC;overflow:hidden}
+.s4vp-pi-fill{height:100%;background:var(--s4vp-accent);border-radius:999px;transition:width .3s}
+.s4vp-pi-next{display:flex;flex-direction:column;gap:6px;padding-top:6px;border-top:1px solid var(--s4vp-line-soft)}
+@media (max-width:812px){.s4vp-pi-top,.s4vp-pi-data{grid-template-columns:1fr}.s4vp-pi-sum{padding-top:0}}
 `;
     let done = false;
     // Chèn CSS một lần; gọi ở đầu mỗi lần vẽ khung cũng không sao (đã có thẻ thì bỏ qua)
@@ -982,7 +1011,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return { rows: out, count: out.length };
     }
 
-    const TEXT$e = {
+    const TEXT$f = {
         vi: {
             search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}`,
             choose: 'Chọn...', filter: 'Gõ để lọc', noMatch: 'Không có mục nào khớp', more: (n) => `Còn ${n} mục, gõ thêm để lọc`, required: 'Bắt buộc', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
@@ -992,7 +1021,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             choose: 'Select...', filter: 'Type to filter', noMatch: 'No matching items', more: (n) => `${n} more, type to narrow the list`, required: 'Required', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
         },
     };
-    const cx$1 = (...names) => names.filter(Boolean).join(' ');
+    const cx$2 = (...names) => names.filter(Boolean).join(' ');
     const px = (v) => (typeof v === 'number' ? `${v}px` : v);
     const blank$4 = (v) => v === null || v === undefined || v === false;
     const text = (v) => (blank$4(v) ? '' : String(v));
@@ -1032,7 +1061,7 @@ input[type="number"].s4vp-in{padding-right:4px}
      * làm nút quay lại; hoặc truyền thẳng `back` {label, onClick}. Tiêu đề dài bị cắt bằng dấu ba chấm, có title đầy đủ.
      */
     function PageHeader({ crumbs, back, title, status, sub, actions }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         const parents = (crumbs || []).filter((c) => c && c.onClick);
         const up = back && back.onClick ? back : parents.length ? parents[parents.length - 1] : null;
         const upLabel = up ? (blank$4(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
@@ -1042,7 +1071,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     // ------------------------------------------------------------------ nút, menu
     /** kind: 'primary' | 'default' | 'ghost' | 'link' | 'danger' | 'dashed'; small, block: tùy chọn kích thước. */
     function Button({ label, onClick, kind, disabled, title, small, block, ariaLabel, pressed }) {
-        const attrs = { type: 'button', class: cx$1('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : '', small ? 's4vp-btn-sm' : '', block ? 's4vp-btn-block' : '') };
+        const attrs = { type: 'button', class: cx$2('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : '', small ? 's4vp-btn-sm' : '', block ? 's4vp-btn-block' : '') };
         if (disabled)
             attrs.disabled = 'disabled';
         else if (onClick)
@@ -1071,14 +1100,14 @@ input[type="number"].s4vp-in{padding-right:4px}
             };
         }, [open]);
         const list = (items || []).filter(Boolean);
-        const attrs = { type: 'button', class: kind === 'tab' ? cx$1('s4vp-navtab', active ? 's4vp-on' : '') : cx$1('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : ''), 'aria-haspopup': 'true', 'aria-expanded': open ? 'true' : 'false' };
+        const attrs = { type: 'button', class: kind === 'tab' ? cx$2('s4vp-navtab', active ? 's4vp-on' : '') : cx$2('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : ''), 'aria-haspopup': 'true', 'aria-expanded': open ? 'true' : 'false' };
         if (disabled || !list.length)
             attrs.disabled = 'disabled';
         else
             attrs.onClick = () => setOpen(!open);
         if (title)
             attrs.title = title;
-        return (jsxs("div", { class: cx$1('s4vp-menu', align === 'right' ? 's4vp-menu-right' : ''), onKeyUp: (m) => keyOfMessage(m) === 'Escape' && open && setOpen(false), children: [jsx("button", { ...attrs, children: `${text(label)} ▾` }), open ? (jsx("div", { class: "s4vp-menu-list", role: "menu", children: list.map((it, i) => {
+        return (jsxs("div", { class: cx$2('s4vp-menu', align === 'right' ? 's4vp-menu-right' : ''), onKeyUp: (m) => keyOfMessage(m) === 'Escape' && open && setOpen(false), children: [jsx("button", { ...attrs, children: `${text(label)} ▾` }), open ? (jsx("div", { class: "s4vp-menu-list", role: "menu", children: list.map((it, i) => {
                         const a = { type: 'button', class: 's4vp-menu-item', role: 'menuitem' };
                         if (it.disabled)
                             a.disabled = 'disabled';
@@ -1100,22 +1129,22 @@ input[type="number"].s4vp-in{padding-right:4px}
     // ------------------------------------------------------------------ thanh bước, thẻ số, bộ lọc nhanh, tab
     /** steps: [{label, note, state, noteTone, onClick}]; state: 'done' | 'current' | 'todo'. */
     function Stepper({ steps, label }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         return (jsx("ol", { class: "s4vp-steps", "aria-label": label || t.steps, children: (steps || []).filter(Boolean).map((s, i) => {
                 const state = s.state === 'done' || s.state === 'current' ? s.state : 'todo';
-                const attrs = { class: cx$1('s4vp-step', `s4vp-step-${state}`) };
+                const attrs = { class: cx$2('s4vp-step', `s4vp-step-${state}`) };
                 if (state === 'current')
                     attrs['aria-current'] = 'step';
                 const tone = s.noteTone || (state === 'current' ? 'warn' : '');
                 const body = [jsx("span", { class: "s4vp-step-n", children: String(i + 1) }, "n"), jsx("span", { children: text(s.label) }, "l")];
                 if (!blank$4(s.note) && s.note !== '')
-                    body.push(jsx("span", { class: cx$1('s4vp-step-note', tone ? `s4vp-t-${tone}` : ''), children: text(s.note) }, "t"));
+                    body.push(jsx("span", { class: cx$2('s4vp-step-note', tone ? `s4vp-t-${tone}` : ''), children: text(s.note) }, "t"));
                 return (jsx("li", { ...attrs, children: s.onClick ? jsx("button", { type: "button", class: "s4vp-step-btn", onClick: () => s.onClick(), children: body }) : body }, s.key || `s${i}`));
             }) }));
     }
     /** cards: [{label, value, note, tone, onClick}]. */
     function StatCards({ cards }) {
-        return (jsx("div", { class: "s4vp-stats", children: (cards || []).filter(Boolean).map((c, i) => (jsxs("div", { class: cx$1('s4vp-stat', c.tone ? `s4vp-t-${c.tone}` : ''), children: [jsx("div", { class: "s4vp-stat-l", children: text(c.label) }), jsx("div", { class: "s4vp-stat-v", children: text(c.value) }), blank$4(c.note) || c.note === '' ? null : jsx("div", { class: "s4vp-stat-n", children: c.note })] }, c.key || `c${i}`))) }));
+        return (jsx("div", { class: "s4vp-stats", children: (cards || []).filter(Boolean).map((c, i) => (jsxs("div", { class: cx$2('s4vp-stat', c.tone ? `s4vp-t-${c.tone}` : ''), children: [jsx("div", { class: "s4vp-stat-l", children: text(c.label) }), jsx("div", { class: "s4vp-stat-v", children: text(c.value) }), blank$4(c.note) || c.note === '' ? null : jsx("div", { class: "s4vp-stat-n", children: c.note })] }, c.key || `c${i}`))) }));
     }
     /** Bộ lọc nhanh dạng viên: items [{value, label, count, tone}], value đang chọn, onPick(value). */
     function Chips({ items, value, onPick, label }) {
@@ -1124,7 +1153,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             attrs['aria-label'] = label;
         return (jsx("div", { ...attrs, children: (items || []).filter(Boolean).map((it) => {
                 const on = it.value === value;
-                return (jsx("button", { type: "button", class: cx$1('s4vp-chip', on ? 's4vp-on' : '', it.tone ? `s4vp-t-${it.tone}` : ''), "aria-pressed": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
+                return (jsx("button", { type: "button", class: cx$2('s4vp-chip', on ? 's4vp-on' : '', it.tone ? `s4vp-t-${it.tone}` : ''), "aria-pressed": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
             }) }));
     }
     /** items [{value, label, count}], value đang chọn, onPick(value). */
@@ -1134,22 +1163,22 @@ input[type="number"].s4vp-in{padding-right:4px}
             attrs['aria-label'] = label;
         return (jsx("div", { ...attrs, children: (items || []).filter(Boolean).map((it) => {
                 const on = it.value === value;
-                return (jsx("button", { type: "button", role: "tab", class: cx$1('s4vp-tab', on ? 's4vp-on' : ''), "aria-selected": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
+                return (jsx("button", { type: "button", role: "tab", class: cx$2('s4vp-tab', on ? 's4vp-on' : ''), "aria-selected": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
             }) }));
     }
     /** tone: 'ok' | 'warn' | 'error' | 'info' | 'muted'. */
     function Badge({ text: label, tone, large }) {
-        return jsx("span", { class: cx$1('s4vp-badge', tone && tone !== 'muted' ? `s4vp-t-${tone}` : '', large ? 's4vp-badge-lg' : ''), children: text(label) });
+        return jsx("span", { class: cx$2('s4vp-badge', tone && tone !== 'muted' ? `s4vp-t-${tone}` : '', large ? 's4vp-badge-lg' : ''), children: text(label) });
     }
     /** Thẻ nội dung; flush: phần thân không có lề (cho bảng sát mép thẻ); tone: 'warn' | 'error' | 'ok' đổi màu viền. */
     function Card({ title, sub, actions, children, tone, flush, label }) {
-        const attrs = { class: cx$1('s4vp-card', tone ? `s4vp-t-${tone}` : '') };
+        const attrs = { class: cx$2('s4vp-card', tone ? `s4vp-t-${tone}` : '') };
         if (label || title)
             attrs['aria-label'] = label || text(title);
-        return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$1('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
+        return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$2('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
     }
     function Empty({ text: label }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         return jsx("div", { class: "s4vp-empty", children: text(label) || t.empty });
     }
     // ------------------------------------------------------------------ ô nhập
@@ -1176,7 +1205,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return id;
     }
     function controlAttrs(p, id, extraClass) {
-        const attrs = { id, class: cx$1('s4vp-in', extraClass, p.align === 'right' ? 's4vp-r' : '') };
+        const attrs = { id, class: cx$2('s4vp-in', extraClass, p.align === 'right' ? 's4vp-r' : '') };
         if (p.onInput)
             attrs.onInput = (m) => p.onInput(p.read ? p.read(valueOf(m)) : valueOf(m));
         if (p.onEnter)
@@ -1308,7 +1337,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         return text(spec.show(v));
     }
     function TypedImpl(p) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         const kind = TYPED[p.kind] ? p.kind : 'date';
         const spec = TYPED[kind];
         const [, redraw] = core.useState(0);
@@ -1451,7 +1480,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     const SEARCH_LIMIT = 200;
     function SearchSelectImpl(p) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         const [open, setOpen] = core.useState(false);
         const [query, setQuery] = core.useState('');
         const [active, setActive] = core.useState(0);
@@ -1566,7 +1595,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             }
         });
         const label = current ? current.label : want ? want : t.choose;
-        const btn = { id: `${base}-b`, type: 'button', class: cx$1('s4vp-in', 's4vp-ss-btn', current && current.value !== '' ? '' : 's4vp-ss-ph'), 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false' };
+        const btn = { id: `${base}-b`, type: 'button', class: cx$2('s4vp-in', 's4vp-ss-btn', current && current.value !== '' ? '' : 's4vp-ss-ph'), 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false' };
         if (p.disabled)
             btn.disabled = 'disabled';
         else
@@ -1574,7 +1603,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         if (p.ariaLabel)
             btn['aria-label'] = `${p.ariaLabel}: ${label}`;
         btn.title = p.title || label;
-        const wrap = { id: base, class: cx$1('s4vp-ss', open ? 's4vp-ss-open' : '') };
+        const wrap = { id: base, class: cx$2('s4vp-ss', open ? 's4vp-ss-open' : '') };
         if (p.width)
             wrap.style = { width: px(p.width) };
         const q = { id: `${base}-q`, type: 'search', class: 's4vp-in', value: query, placeholder: t.filter, 'aria-label': p.ariaLabel ? `${p.ariaLabel} - ${t.filter}` : t.filter, autocomplete: 'off', role: 'combobox', 'aria-controls': `${base}-l`, 'aria-expanded': 'true' };
@@ -1584,7 +1613,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         };
         if (shown.items.length)
             q['aria-activedescendant'] = `${base}-o${Math.min(active, shown.items.length - 1)}`;
-        return (jsxs("div", { ...wrap, children: [jsxs("button", { ...btn, children: [jsx("span", { class: "s4vp-ss-val", children: label }), jsx("span", { class: "s4vp-ss-caret", "aria-hidden": "true", children: '▾' })] }), open ? (jsxs("div", { class: "s4vp-ss-pop", children: [jsx("input", { ...q }), jsxs("div", { id: `${base}-l`, class: "s4vp-ss-list", role: "listbox", children: [shown.items.map((o, i) => (jsx("button", { id: `${base}-o${i}`, type: "button", role: "option", tabindex: "-1", class: cx$1('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : ''), "aria-selected": o.value === want ? 'true' : 'false', onClick: () => choose(o), children: o.label || o.value || t.choose }, `o${o.value}`))), shown.total ? null : jsx("div", { class: "s4vp-ss-note", children: t.noMatch }), shown.total > shown.items.length ? jsx("div", { class: "s4vp-ss-note", children: t.more(shown.total - shown.items.length) }) : null] })] })) : null] }));
+        return (jsxs("div", { ...wrap, children: [jsxs("button", { ...btn, children: [jsx("span", { class: "s4vp-ss-val", children: label }), jsx("span", { class: "s4vp-ss-caret", "aria-hidden": "true", children: '▾' })] }), open ? (jsxs("div", { class: "s4vp-ss-pop", children: [jsx("input", { ...q }), jsxs("div", { id: `${base}-l`, class: "s4vp-ss-list", role: "listbox", children: [shown.items.map((o, i) => (jsx("button", { id: `${base}-o${i}`, type: "button", role: "option", tabindex: "-1", class: cx$2('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : ''), "aria-selected": o.value === want ? 'true' : 'false', onClick: () => choose(o), children: o.label || o.value || t.choose }, `o${o.value}`))), shown.total ? null : jsx("div", { class: "s4vp-ss-note", children: t.noMatch }), shown.total > shown.items.length ? jsx("div", { class: "s4vp-ss-note", children: t.more(shown.total - shown.items.length) }) : null] })] })) : null] }));
     }
     function SelectImpl(p) {
         const want = text(p.value);
@@ -1661,19 +1690,19 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     /** Ô tìm kiếm: {value, onInput(chuỗi), placeholder, width, label}. */
     function SearchBox({ value, onInput, placeholder, width, label }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         return jsx(InputImpl, { type: "search", value: value, onInput: onInput, placeholder: placeholder || t.search, ariaLabel: label || placeholder || t.search, width: width || 260 });
     }
     /** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. required: thêm dấu * đỏ sau nhãn. */
     function Field({ label, children, hint, required }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         return (jsxs("label", { class: "s4vp-field", children: [jsxs("span", { children: [text(label), required ? jsx("span", { class: "s4vp-req", title: t.required, children: ' *' }) : null] }), children, blank$4(hint) || hint === '' ? null : jsx("span", { class: "s4vp-field-hint", children: hint })] }));
     }
     // ------------------------------------------------------------------ bảng
     const TYPE_FORMAT = { money, num, pct, date: fmtDate };
     const formatCell$1 = (col, v) => (TYPE_FORMAT[col.type] ? TYPE_FORMAT[col.type](v) : text(v));
     const alignOf = (col) => col.align || (col.type === 'money' || col.type === 'num' || col.type === 'pct' ? 'right' : 'left');
-    const cellClass$1 = (col) => cx$1(alignOf(col) === 'right' ? 's4vp-r' : alignOf(col) === 'center' ? 's4vp-c' : '', col.nowrap ? 's4vp-nw' : '');
+    const cellClass$1 = (col) => cx$2(alignOf(col) === 'right' ? 's4vp-r' : alignOf(col) === 'center' ? 's4vp-c' : '', col.nowrap ? 's4vp-nw' : '');
     function cellOf(col, row) {
         try {
             if (col.render) {
@@ -1690,7 +1719,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     // nên ô ghi lại thời điểm bấm và dòng bỏ qua lượt bấm vừa được ô nhận.
     let cellClickAt = 0;
     function TableImpl({ columns, rows, keyOf, onRowClick, selectedKey, total, empty, search, maxHeight, toolbar, searchPlaceholder, label }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         const [query, setQuery] = core.useState('');
         const cols = (columns || []).filter(Boolean);
         const all = Array.isArray(rows) ? rows : [];
@@ -1715,7 +1744,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         const wrap = { class: 's4vp-tbl-wrap' };
         if (maxHeight)
             wrap.style = { maxHeight: px(maxHeight), overflowY: 'auto' };
-        const tableAttrs = { class: cx$1('s4vp-tbl', onRowClick ? 's4vp-tbl-click' : '', maxHeight ? 's4vp-tbl-sticky' : '') };
+        const tableAttrs = { class: cx$2('s4vp-tbl', onRowClick ? 's4vp-tbl-click' : '', maxHeight ? 's4vp-tbl-sticky' : '') };
         if (label)
             tableAttrs['aria-label'] = label;
         return (jsxs("div", { children: [search || toolbar ? (jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: toolbar || null }), search ? (jsxs("div", { class: "s4vp-tbl-bar-r", children: [shown.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.matches(shown.count) }), jsx(InputImpl, { type: "search", value: query, onInput: setQuery, placeholder: searchPlaceholder || t.search, ariaLabel: searchPlaceholder || t.search, width: 260 })] })) : null] })) : null, jsx("div", { ...wrap, children: jsxs("table", { ...tableAttrs, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => {
@@ -1725,7 +1754,7 @@ input[type="number"].s4vp-in{padding-right:4px}
                                         return (jsx("th", { ...a, children: text(c.label) }, `h${c.key || i}`));
                                     }) }) }), jsxs("tbody", { children: [shown.rows.map((row, i) => {
                                         const k = keyFor(row, i);
-                                        const a = { class: cx$1('s4vp-row', !blank$4(selectedKey) && String(selectedKey) === k ? 's4vp-sel' : '') };
+                                        const a = { class: cx$2('s4vp-row', !blank$4(selectedKey) && String(selectedKey) === k ? 's4vp-sel' : '') };
                                         if (onRowClick)
                                             a.onClick = () => Date.now() - cellClickAt > 80 && onRowClick(row);
                                         return (jsx("tr", { ...a, children: cols.map((c, j) => {
@@ -1756,7 +1785,7 @@ input[type="number"].s4vp-in{padding-right:4px}
     // ------------------------------------------------------------------ hộp thoại, khung bên phải
     /** Hộp thoại giữa màn hình; actions: mảng nút ở chân; onClose: nút đóng góc phải và phím Esc. */
     function Dialog({ title, children, actions, onClose, width }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         const panel = { class: 's4vp-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': text(title) };
         if (width)
             panel.style = { width: px(width) };
@@ -1764,11 +1793,11 @@ input[type="number"].s4vp-in{padding-right:4px}
     }
     /** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols"> (tỷ lệ 6:4), hoặc trong <div class="s4vp-col-side"> khi cột phải có nhiều khối. */
     function SidePanel({ title, sub, onClose, children, actions }) {
-        const t = pick(TEXT$e);
+        const t = pick(TEXT$f);
         return (jsxs("aside", { class: "s4vp-side", "aria-label": text(title), children: [jsxs("div", { class: "s4vp-side-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-side-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-side-s", children: sub })] }), jsxs("div", { class: "s4vp-actions", children: [keyed(actions), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] })] }), children] }));
     }
 
-    const TEXT$d = {
+    const TEXT$e = {
         vi: {
             title: 'Việc hôm nay',
             weekdays: ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
@@ -2157,7 +2186,7 @@ input[type="number"].s4vp-in{padding-right:4px}
         };
     }
     function HomeView({ app }) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const role = roleKey(boot.user);
@@ -2306,6 +2335,843 @@ input[type="number"].s4vp-in{padding-right:4px}
                                     ], children: [shownRuns.length ? (jsx("div", { style: S.runList, children: shownRuns.slice(0, RUN_LIMIT).map((r, i) => (jsxs("div", { style: S.run, children: [jsxs("div", { style: S.runHead, children: [jsx("div", { style: S.runTitle, children: r.title }), jsx("div", { class: "s4vp-muted", style: S.small, children: r.sub })] }), r.step ? (jsxs("div", { style: S.runProgress, children: [jsx("div", { style: S.small, children: r.step }), jsx("div", { role: "img", "aria-label": t.progressLabel(r.done, r.total), style: S.track, children: jsx("div", { style: S.bar(r.percent) }) })] })) : null, jsxs("div", { style: S.runEnd, children: [r.badge ? jsx(Badge, { text: r.badge.text, tone: r.badge.tone }) : null, jsx(Button, { kind: i === 0 && r.group === 'running' ? 'primary' : 'default', label: r.group === 'running' ? t.resume : t.open, ariaLabel: `${r.group === 'running' ? t.resume : t.open}: ${r.title}`, onClick: () => go(r.go) })] })] }, r.key))) })) : (jsx(Empty, { text: inGroup.length ? t.runNoMatch : t.runEmpty[activeGroup] })), shownRuns.length > RUN_LIMIT || (activeGroup !== 'upcoming' && count(runCounts[activeGroup]) > shownRuns.length && !query) ? (jsxs("div", { style: S.runBar, children: [jsx("span", { class: "s4vp-small", children: t.runMore(Math.min(shownRuns.length, RUN_LIMIT), Math.max(count(runCounts[activeGroup]), shownRuns.length)) }), jsx(Button, { kind: "link", label: t.seeAll, onClick: () => app.go('payrollList') })] })) : null] }), jsx(Card, { title: t.todos(todos.length), sub: t.todoSub, flush: true, children: jsx(Table, { columns: todoColumns, rows: todos, keyOf: (r) => r.id, onRowClick: (r) => go(r), empty: t.todoEmpty, search: true, searchPlaceholder: t.todoSearch, label: t.todos(todos.length) }) })] }), jsxs(SidePanel, { title: t.deadlines, sub: period ? t.deadlinesSub(period.code) : '', children: [sideItems.length ? (sideItems.map((d, i) => (jsxs("div", { style: S.deadline(i === sideItems.length - 1 && data.statutoryDeadlines !== false), children: [jsxs("div", { style: S.deadlineTitle(d.tone), children: [jsx("span", { children: d.title }), d.badge ? jsx(Badge, { text: d.badge, tone: d.tone }) : null] }), jsx("div", { class: "s4vp-muted", style: S.small, children: d.text }), d.link ? (jsx("div", { style: S.linkRow, children: jsx(Button, { kind: "link", label: d.link.label, ariaLabel: `${d.link.label}: ${d.title}`, onClick: () => go(d.link.go) }) })) : null] }, d.key)))) : (jsx("div", { class: "s4vp-muted", style: S.small, children: t.deadlineEmpty })), data.statutoryDeadlines === false ? jsx("div", { class: "s4vp-small", children: t.noStatutory }) : null] })] })] }));
     }
 
+    // ------------------------------------------------------------------ hợp đồng API (sửa ở đây khi api/PunchImport.js chốt tên)
+    const ACTIONS$1 = {
+        sources: 'punchSourcesView', // GET {subsidiary} -> {sources, mapCounts, recordTypes: {source, map}, employees?}
+        mappings: 'punchMappings', // GET {source} -> {rows: [{id, device, machineId, employee, code, name, effective, expiration}]}
+        preview: 'punchPreview', // POST {source, text} -> {counts, rows, unmatched, range, employees}
+        commit: 'punchCommit', // POST {source, text, cursor?} -> {created, skipped, invalid, unmatched, locked, more?, cursor}
+        mapSave: 'punchMapSave', // POST {source, rows: [{id?, device, machineId, employee, effective?, expiration?}]} -> {saved, rows}
+        employees: 'employeeSearch', // GET {subsidiary, q} -> {items: [{id, code, name, department}], more} (api/AdvancesV2.js)
+    };
+    // Khóa đọc ở phản hồi: khóa đầu theo tài liệu, các khóa sau là tên dự phòng (snake_case, tên cũ)
+    const FIELDS = {
+        view: { sources: ['sources'], mapCounts: ['mapCounts', 'map_counts'], recordTypes: ['recordTypes', 'record_types'], employees: ['employees'] },
+        recordTypes: { source: ['source', 'punch_source', 'punchSource'], map: ['map', 'punch_map', 'punchMap'] },
+        source: {
+            id: ['id'], code: ['code', 'name'], description: ['description'], subsidiary: ['subsidiary'], layout: ['layout'], idKind: ['idKind', 'id_kind'],
+            delimiter: ['delimiter'], hasHeader: ['hasHeader', 'has_header'], skipLines: ['skipLines', 'skip_lines'], dateFormat: ['dateFormat', 'date_format'],
+            deviceDefault: ['deviceDefault', 'device_default'], minuteOffset: ['minuteOffset', 'minute_offset'], inactive: ['inactive', 'isinactive'],
+        },
+        preview: { counts: ['counts'], rows: ['rows'], unmatched: ['unmatched'], range: ['range'], employees: ['employees'], truncated: ['truncated'] },
+        counts: { total: ['total'], new: ['new', 'created'], duplicate: ['duplicate', 'duplicates'], invalid: ['invalid', 'errors'], unmatched: ['unmatched'], locked: ['locked'] },
+        row: { line: ['line'], machineId: ['machineId', 'machine_id'], device: ['device'], time: ['time'], kind: ['kind'], employee: ['employee'], code: ['code', 'employeeCode'], name: ['name', 'employeeName'], status: ['status'], vi: ['vi', 'messageVi'], en: ['en', 'message'] },
+        unmatched: { machineId: ['machineId', 'machine_id'], device: ['device'], lines: ['lines', 'count'], firstTime: ['firstTime', 'first_time', 'first'] },
+        mapping: { id: ['id'], device: ['device'], machineId: ['machineId', 'machine_id'], employee: ['employee'], code: ['code', 'employeeCode'], name: ['name', 'employeeName'], effective: ['effective'], expiration: ['expiration'] },
+        commit: { created: ['created'], skipped: ['skipped', 'duplicate'], invalid: ['invalid'], unmatched: ['unmatched'], locked: ['locked'], failed: ['failed'], failures: ['failures'], more: ['more'], cursor: ['cursor'] },
+        employee: { id: ['id', 'value'], code: ['code', 'entityId', 'entityid'], name: ['name'] },
+    };
+    // Kết quả ghi qua nhiều lượt: api/PunchImport.punchCommit chỉ đếm các dòng đã xử lý trong lượt đó nên mọi số đều cộng dồn
+    // ('max' dùng khi máy chủ đổi sang trả số đếm của cả file ở mỗi lượt). failed: số lượt chấm máy chủ không ghi được (lỗi
+    // từng dòng, không chặn dòng khác), kèm failures [{line, vi, en}].
+    const COMMIT_MERGE = { created: 'sum', skipped: 'sum', invalid: 'sum', unmatched: 'sum', locked: 'sum', failed: 'sum' };
+    const MAX_FAILURES = 100;
+    // Một dòng gửi punchMapSave. withDates: gửi cả hiệu lực (trống = null để xóa); khung mã chưa đối chiếu không gửi ngày.
+    // inactive: thôi dùng dòng đã lưu (chỉ gửi id).
+    function mapSaveRow(r, withDates) {
+        if (r.inactive && has$1(r.id))
+            return { id: str$2(r.id), inactive: true };
+        const out = { device: str$2(r.device).trim(), machineId: str$2(r.machineId).trim(), employee: str$2(r.employee) };
+        if (has$1(r.id))
+            out.id = str$2(r.id);
+        if (withDates) {
+            out.effective = str$2(r.effective) || null;
+            out.expiration = str$2(r.expiration) || null;
+        }
+        return out;
+    }
+    // Máy chủ nhận text tối đa 5 MB mỗi lượt gọi (api/PunchImport.textOf so text.length, tức số ký tự). File lớn hơn hai lần
+    // mức này không đọc (tránh treo trình duyệt); còn lại đọc rồi so số ký tự như máy chủ.
+    const MAX_TEXT = 5 * 1024 * 1024;
+    const MAX_BYTES = 2 * MAX_TEXT;
+    const COMMIT_MAX_ROUNDS = 300; // chặn vòng ghi chạy mãi khi máy chủ trả more mà không tiến
+    const STATUSES$2 = ['new', 'duplicate', 'invalid', 'unmatched', 'locked'];
+    const FILE_ID = 's4vp-pi-file';
+    const STORE_KEY = 's4vp-pi-source';
+    // ------------------------------------------------------------------ hàm thuần
+    const has$1 = (v) => v !== undefined && v !== null && v !== '';
+    const str$2 = (v) => (has$1(v) && typeof v !== 'object' ? String(v) : '');
+    const int = (v) => {
+        const n = Number(v);
+        return isFinite(n) ? n : 0;
+    };
+    const arr$1 = (v) => (Array.isArray(v) ? v : []);
+    const cx$1 = (...names) => names.filter(Boolean).join(' ');
+    /** Giá trị đầu tiên có mặt theo danh sách khóa. */
+    function rd$1(o, keys) {
+        if (!o || typeof o !== 'object')
+            return undefined;
+        for (const k of keys)
+            if (o[k] !== undefined && o[k] !== null)
+                return o[k];
+        return undefined;
+    }
+    const bool$1 = (v) => v === true || v === 'T' || v === 't' || v === 1 || v === '1' || v === 'true';
+    function mapSource(s) {
+        const F = FIELDS.source;
+        const hdr = rd$1(s, F.hasHeader);
+        return {
+            id: str$2(rd$1(s, F.id)), code: str$2(rd$1(s, F.code)), description: str$2(rd$1(s, F.description)), subsidiary: str$2(rd$1(s, F.subsidiary)),
+            layout: str$2(rd$1(s, F.layout)).toUpperCase(), idKind: str$2(rd$1(s, F.idKind)).toUpperCase(), delimiter: str$2(rd$1(s, F.delimiter)).toUpperCase(),
+            hasHeader: hdr === undefined ? true : bool$1(hdr), skipLines: int(rd$1(s, F.skipLines)), dateFormat: str$2(rd$1(s, F.dateFormat)).toUpperCase(),
+            deviceDefault: str$2(rd$1(s, F.deviceDefault)), minuteOffset: int(rd$1(s, F.minuteOffset)), inactive: bool$1(rd$1(s, F.inactive)),
+        };
+    }
+    function mapEmployee(e) {
+        const F = FIELDS.employee;
+        return { id: str$2(rd$1(e, F.id)), code: str$2(rd$1(e, F.code)), name: str$2(rd$1(e, F.name)) };
+    }
+    function mapSourcesView(raw) {
+        const F = FIELDS.view;
+        const counts = rd$1(raw, F.mapCounts) || {};
+        const types = rd$1(raw, F.recordTypes) || {};
+        const mapCounts = {};
+        Object.keys(counts).forEach((k) => (mapCounts[String(k)] = int(counts[k])));
+        return {
+            sources: arr$1(rd$1(raw, F.sources)).map(mapSource).filter((s) => s.id && !s.inactive),
+            mapCounts,
+            recordTypes: { source: str$2(rd$1(types, FIELDS.recordTypes.source)), map: str$2(rd$1(types, FIELDS.recordTypes.map)) },
+            employees: arr$1(rd$1(raw, F.employees)).map(mapEmployee).filter((e) => e.id),
+        };
+    }
+    const statusOf = (v) => {
+        const s = str$2(v).toLowerCase();
+        return STATUSES$2.indexOf(s) >= 0 ? s : 'invalid';
+    };
+    function mapPreviewRow(r, i) {
+        const F = FIELDS.row;
+        const line = int(rd$1(r, F.line));
+        return {
+            id: `r${line}-${i}`, line, machineId: str$2(rd$1(r, F.machineId)), device: str$2(rd$1(r, F.device)), time: str$2(rd$1(r, F.time)), kind: str$2(rd$1(r, F.kind)).toLowerCase(),
+            employee: str$2(rd$1(r, F.employee)), code: str$2(rd$1(r, F.code)), name: str$2(rd$1(r, F.name)), status: statusOf(rd$1(r, F.status)), vi: str$2(rd$1(r, F.vi)), en: str$2(rd$1(r, F.en)),
+        };
+    }
+    const unmatchedKey = (machineId, device) => `${machineId}\u0001${device || ''}`;
+    function mapPreview(raw) {
+        const F = FIELDS.preview;
+        const c = rd$1(raw, F.counts) || {};
+        const counts = {};
+        Object.keys(FIELDS.counts).forEach((k) => (counts[k] = int(rd$1(c, FIELDS.counts[k]))));
+        const rows = arr$1(rd$1(raw, F.rows)).map(mapPreviewRow);
+        if (!counts.total)
+            counts.total = STATUSES$2.reduce((a, k) => a + counts[k], 0) || rows.length;
+        const U = FIELDS.unmatched;
+        const unmatched = arr$1(rd$1(raw, F.unmatched)).map((u) => {
+            const machineId = str$2(rd$1(u, U.machineId));
+            const device = str$2(rd$1(u, U.device));
+            return { id: unmatchedKey(machineId, device), machineId, device, lines: int(rd$1(u, U.lines)), firstTime: str$2(rd$1(u, U.firstTime)) };
+        }).filter((u) => u.machineId);
+        const range = rd$1(raw, F.range) || {};
+        const emp = rd$1(raw, F.employees);
+        return {
+            counts, rows, unmatched,
+            range: { from: str$2(range.from).slice(0, 10), to: str$2(range.to).slice(0, 10) },
+            employees: typeof emp === 'number' ? emp : Array.isArray(emp) ? emp.length : int(emp),
+            employeeList: Array.isArray(emp) ? emp.map(mapEmployee).filter((e) => e.id) : [],
+            truncated: bool$1(rd$1(raw, F.truncated)) || rows.length < counts.total,
+        };
+    }
+    function mapMappings(raw) {
+        const F = FIELDS.mapping;
+        return arr$1(raw && raw.rows).map((r, i) => {
+            const id = str$2(rd$1(r, F.id));
+            return {
+                key: id ? `m${id}` : `x${i}`, id, device: str$2(rd$1(r, F.device)), machineId: str$2(rd$1(r, F.machineId)), employee: str$2(rd$1(r, F.employee)),
+                code: str$2(rd$1(r, F.code)), name: str$2(rd$1(r, F.name)), effective: str$2(rd$1(r, F.effective)).slice(0, 10), expiration: str$2(rd$1(r, F.expiration)).slice(0, 10),
+            };
+        });
+    }
+    function mapCommitStep(raw) {
+        const F = FIELDS.commit;
+        const out = {};
+        Object.keys(COMMIT_MERGE).forEach((k) => (out[k] = int(rd$1(raw, F[k]))));
+        out.failures = arr$1(rd$1(raw, F.failures)).map((f) => ({ line: int(f && f.line), vi: str$2(f && f.vi), en: str$2(f && f.en) }));
+        out.more = rd$1(raw, F.more) === true;
+        const cursor = rd$1(raw, F.cursor);
+        out.cursor = cursor === undefined ? null : cursor;
+        return out;
+    }
+    /** Cộng kết quả một lượt ghi vào tổng (theo COMMIT_MERGE). */
+    function addCommit(acc, step) {
+        const out = Object.assign({}, acc || {});
+        Object.keys(COMMIT_MERGE).forEach((k) => {
+            const a = int(out[k]);
+            const b = int(step[k]);
+            out[k] = acc ? (COMMIT_MERGE[k] === 'sum' ? a + b : Math.max(a, b)) : b;
+        });
+        out.failures = arr$1(acc && acc.failures).concat(arr$1(step.failures)).slice(0, MAX_FAILURES);
+        out.more = !!step.more;
+        out.cursor = step.cursor;
+        return out;
+    }
+    const sameCursor = (a, b) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
+    /**
+     * Ghi theo lượt: gửi {..body, cursor} cho đến khi máy chủ hết more. Lượt sau mang cursor lượt trước trả về. Dừng (stalled) khi
+     * máy chủ trả more mà cursor không đổi và không ghi thêm dòng nào; dừng (more còn true) khi quá maxRounds. Luôn resolve: lỗi
+     * của cả lượt gọi (governance, mạng) nằm ở `stopped` (chuỗi) cùng các số đã ghi được. onStep(tổng tạm) gọi sau mỗi lượt.
+     */
+    function runCommit(send, body, opts) {
+        const o = opts || {};
+        const limit = o.maxRounds || COMMIT_MAX_ROUNDS;
+        const errText = o.errorText || ((e) => String((e && e.message) || e));
+        let total = null;
+        const step = (cursor, round) => {
+            const payload = Object.assign({}, body);
+            if (cursor !== null && cursor !== undefined && cursor !== '')
+                payload.cursor = cursor;
+            return Promise.resolve()
+                .then(() => send(payload))
+                .then((raw) => {
+                const r = mapCommitStep(raw);
+                total = addCommit(total, r);
+                total.rounds = round;
+                if (o.onStep)
+                    o.onStep(Object.assign({}, total));
+                if (!r.more)
+                    return Object.assign(total, { more: false, done: true });
+                if (sameCursor(r.cursor, cursor) && !r.created)
+                    return Object.assign(total, { done: true, stalled: true });
+                if (round >= limit)
+                    return Object.assign(total, { done: true });
+                return step(r.cursor, round + 1);
+            });
+        };
+        return step(null, 1).catch((e) => Object.assign(total || addCommit(null, mapCommitStep({})), { rounds: (total && total.rounds) || 0, done: true, stopped: errText(e) || '?' }));
+    }
+    /** Số byte UTF-8 của chuỗi (giới hạn 5 MB của máy chủ tính theo byte). */
+    function utf8Bytes(s) {
+        const text = String(s || '');
+        let n = 0;
+        for (let i = 0; i < text.length; i += 1) {
+            const c = text.charCodeAt(i);
+            if (c < 0x80)
+                n += 1;
+            else if (c < 0x800)
+                n += 2;
+            else if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length) {
+                n += 4;
+                i += 1;
+            }
+            else
+                n += 3;
+        }
+        return n;
+    }
+    /** Số dòng có dữ liệu (bỏ dòng trống). */
+    function lineCount(text) {
+        const s = String(text || '');
+        if (!s.trim())
+            return 0;
+        return s.split(/\r\n|\r|\n/).filter((l) => l.trim()).length;
+    }
+    const mb = (bytes) => Math.round((bytes / 1048576) * 10) / 10;
+    /** 'YYYY-MM-DD HH:mm[:ss]' -> 'dd/mm/yyyy HH:mm'. */
+    function fmtTime(v) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(str$2(v));
+        if (!m)
+            return str$2(v);
+        return `${m[3]}/${m[2]}/${m[1]}${m[4] ? ` ${m[4]}:${m[5]}` : ''}`;
+    }
+    /** Danh sách chọn nhân viên: gộp nhiều nguồn, bỏ trùng theo id, sắp theo mã. */
+    function employeeOptions(...lists) {
+        const seen = {};
+        const out = [];
+        lists.forEach((list) => arr$1(list).forEach((e) => {
+            const id = str$2(e && (e.id || e.employee));
+            if (!id || seen[id])
+                return;
+            seen[id] = true;
+            out.push({ value: id, label: `${str$2(e.code)} ${str$2(e.name)}`.trim() || id, code: str$2(e.code) });
+        }));
+        out.sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
+        return out.map((o) => ({ value: o.value, label: o.label }));
+    }
+    /**
+     * Đường dẫn form NetSuite của hồ sơ nguồn / dòng đối chiếu: recordType là số (id nội bộ của loại record) thì
+     * custrecordentry.nl?rectype=; là script id (customrecord_...) thì N/url.resolveRecord (resolve truyền vào để kiểm thử).
+     */
+    function recordHref(recordType, id, resolve) {
+        const rt = str$2(recordType);
+        if (!rt)
+            return '';
+        if (/^\d+$/.test(rt))
+            return `/app/common/custom/custrecordentry.nl?rectype=${encodeURIComponent(rt)}${has$1(id) ? `&id=${encodeURIComponent(id)}&e=T` : ''}`;
+        try {
+            const opts = { recordType: rt, isEditMode: true };
+            if (has$1(id))
+                opts.recordId = String(id);
+            return (resolve && resolve(opts)) || '';
+        }
+        catch (e) {
+            return '';
+        }
+    }
+    /** Kỳ lương giao với khoảng ngày của file (để gợi ý Xử lý chấm công máy). */
+    function periodsInRange(periods, range) {
+        const from = str$2(range && range.from).slice(0, 10);
+        const to = str$2(range && range.to).slice(0, 10);
+        if (!from || !to)
+            return [];
+        return arr$1(periods).filter((p) => str$2(p.start) && str$2(p.end) && str$2(p.start) <= to && str$2(p.end) >= from);
+    }
+    /** Dòng gửi lưu từ khung "Mã chưa đối chiếu": chỉ mã đã chọn nhân viên; allDevices thì bỏ trống thiết bị và gộp mã trùng. */
+    function unmatchedPayload(unmatched, assign, allDevices) {
+        const out = [];
+        const seen = {};
+        arr$1(unmatched).forEach((u) => {
+            const employee = str$2((assign || {})[u.id]);
+            if (!employee)
+                return;
+            const device = allDevices ? '' : u.device;
+            const k = unmatchedKey(u.machineId, device);
+            if (seen[k])
+                return;
+            seen[k] = true;
+            out.push(mapSaveRow({ device, machineId: u.machineId, employee }, false));
+        });
+        return out;
+    }
+    /** Lỗi của một dòng đối chiếu đang sửa: mã trên máy, nhân viên bắt buộc; hết hiệu lực không trước ngày hiệu lực. */
+    function mappingError(r) {
+        if (r.inactive)
+            return '';
+        if (!str$2(r.machineId).trim())
+            return 'machineId';
+        if (!str$2(r.employee))
+            return 'employee';
+        if (str$2(r.effective) && str$2(r.expiration) && str$2(r.expiration) < str$2(r.effective))
+            return 'dates';
+        return '';
+    }
+    /** Dòng đối chiếu sau khi áp phần sửa; changed: có khác bản máy chủ. */
+    function mergeMappings(rows, edits, added) {
+        const base = arr$1(rows).map((r) => {
+            const e = (edits || {})[r.key];
+            const m = e ? Object.assign({}, r, e) : r;
+            const changed = !!e && (!!m.inactive || ['device', 'machineId', 'employee', 'effective', 'expiration'].some((k) => str$2(m[k]) !== str$2(r[k])));
+            return Object.assign({}, m, { isNew: false, changed });
+        });
+        return base.concat(arr$1(added).map((r) => Object.assign({}, r, { isNew: true, changed: true })));
+    }
+    function canImport(user, data) {
+        if (data && typeof data.canEdit === 'boolean')
+            return data.canEdit;
+        const role = str$2(user && user.role);
+        return !!(user && user.isHr) || role === 'administrator' || role === 'customrole_s4vp_hr';
+    }
+    function initialState(source) {
+        return {
+            tab: 'import', sources: null, mapCounts: {}, recordTypes: {}, srcEmployees: [], source: source || '',
+            text: '', fileText: '', fileName: '', fileBytes: 0, fileError: '', lines: 0,
+            preview: null, filter: 'all', assign: {}, allDevices: false, extraEmployees: [], findQ: '', findNote: '',
+            commit: null, mappings: null, mapFor: '', mapEdits: {}, mapNew: [], error: '',
+        };
+    }
+    // ------------------------------------------------------------------ chữ
+    const TEXT$d = {
+        vi: {
+            button: 'Nạp chấm công',
+            title: 'Nạp chấm công từ máy chấm công',
+            tabs: { import: 'Nạp dữ liệu', map: 'Đối chiếu mã chấm công', label: 'Nạp chấm công' },
+            steps: { pick: 'Chọn nguồn và dữ liệu', preview: 'Xem trước, đối chiếu mã', commit: 'Ghi lượt chấm', label: 'Các bước nạp chấm công' },
+            source: 'Hồ sơ nguồn', sourcePh: 'Chọn hồ sơ nguồn...', loadingSources: 'Đang tải hồ sơ nguồn...',
+            noSources: 'Chưa có hồ sơ nguồn nào. Bấm Tạo hồ sơ nguồn, lưu trên form NetSuite rồi bấm Tải lại danh sách.',
+            createSource: 'Tạo hồ sơ nguồn', editSource: 'Sửa hồ sơ', reloadSources: 'Tải lại danh sách', noRecordType: 'Máy chủ chưa trả loại record của hồ sơ nguồn',
+            layouts: { E: 'Mỗi dòng một lượt chấm', P: 'Mỗi dòng có giờ vào và giờ ra', Z: 'ZKTeco attlog' },
+            idKinds: { N: 'Nhận diện theo mã nhân viên NetSuite', M: 'Nhận diện chỉ theo bảng đối chiếu', B: 'Bảng đối chiếu trước, không có thì mã nhân viên NetSuite' },
+            dateFormats: { YMD: 'Ngày năm-tháng-ngày', DMY: 'Ngày ngày/tháng/năm', MDY: 'Ngày tháng/ngày/năm' },
+            summary: { device: (d) => `thiết bị mặc định ${d}`, offset: (m) => `lệch đồng hồ ${m} phút`, maps: (n) => `${n} mã đã đối chiếu`, noHeader: 'không có dòng tiêu đề', skip: (n) => `bỏ ${n} dòng đầu` },
+            file: 'File chấm công (.csv, .txt, .dat)', fileHint: 'Đọc dạng UTF-8, tối đa 5 MB mỗi lần nạp.', fileRead: (name, n, size) => `${name}: ${n} dòng, ${size} MB`,
+            fileFailed: 'Không đọc được file. Kiểm tra file rồi chọn lại, hoặc dán dữ liệu từ Excel.',
+            tooBig: (size) => `Dữ liệu ${size} MB vượt giới hạn 5 MB mỗi lần nạp. Tách file theo tháng hoặc theo máy rồi nạp từng phần.`,
+            paste: 'Hoặc dán từ Excel', pastePh: 'Chọn vùng trong Excel (kể cả dòng tiêu đề nếu hồ sơ nguồn có tiêu đề), Ctrl+C rồi dán vào đây',
+            pasteRead: (n) => `${n} dòng đã dán`, usingFile: (name) => `Đang dùng file ${name}. Dán vào ô này để thay bằng dữ liệu dán.`, noData: 'Chưa có dữ liệu.',
+            preview: 'Xem trước', previewAgain: 'Xem trước lại', previewing: 'Đang đọc và kiểm dữ liệu chấm công...',
+            needSource: 'Chọn hồ sơ nguồn', needData: 'Chọn file hoặc dán dữ liệu', needPreview: 'Bấm Xem trước trước khi ghi', nothingNew: 'Không có lượt chấm mới để ghi',
+            commit: (n) => `Ghi ${num(n)} lượt chấm mới`, close: 'Đóng', running: 'Đang ghi, chờ xong rồi đóng',
+            status: { all: 'Tất cả', new: 'Mới', duplicate: 'Trùng', invalid: 'Lỗi', unmatched: 'Chưa đối chiếu', locked: 'Kỳ đã khóa' },
+            kind: { in: 'vào', out: 'ra' },
+            previewTitle: 'Kết quả xem trước', range: (a, b, n) => `Từ ${a} đến ${b} · ${n} nhân viên`,
+            truncated: (shown, total) => `Chỉ hiện ${num(shown)} / ${num(total)} dòng chi tiết đầu (ưu tiên dòng lỗi và chưa đối chiếu); số đếm và danh sách mã chưa đối chiếu là của toàn bộ dữ liệu.`,
+            search: 'Tìm dòng, mã trên máy, nhân viên, thời điểm, thiết bị, trạng thái, lý do', noRows: 'Không có dòng nào.',
+            cols: { line: 'Dòng', machineId: 'Mã trên máy', employee: 'Nhân viên', time: 'Thời điểm', device: 'Thiết bị', status: 'Trạng thái', reason: 'Lý do', lines: 'Số dòng', first: 'Lượt đầu', effective: 'Hiệu lực từ', expiration: 'Hết hiệu lực', state: 'Ghi chú' },
+            unm: {
+                title: (n) => `Mã chưa đối chiếu (${num(n)})`, hint: 'Chọn nhân viên cho từng mã trên máy rồi bấm Lưu đối chiếu; hệ thống tự xem trước lại.',
+                save: (n) => `Lưu đối chiếu (${n})`, saving: 'Đang lưu bảng đối chiếu...', saved: (n) => `Đã lưu ${n} dòng đối chiếu.`, allDevices: 'Áp dụng cho mọi máy của nguồn (bỏ trống thiết bị)',
+                pick: 'Chọn nhân viên...', search: 'Tìm mã trên máy, thiết bị', find: 'Tìm thêm', findPh: 'Nhân viên chưa có trong danh sách: gõ mã hoặc họ tên', finding: 'Đang tìm nhân viên...',
+                found: (n) => `Đã thêm ${n} nhân viên vào danh sách chọn.`, notFound: 'Không tìm thấy nhân viên nào khớp.', none: 'Không có mã nào khớp.',
+            },
+            progress: {
+                running: (r) => `Đang ghi lượt ${r}...`, done: 'Đã ghi xong', writing: 'Đang ghi lượt chấm...', of: (a, b) => `${num(a)} / ${num(b)} lượt chấm mới`,
+                counts: (c) => `Đã ghi ${num(c.created)} lượt chấm · bỏ qua ${num(c.skipped)} (trùng) · ${num(c.invalid)} lỗi · ${num(c.unmatched)} chưa đối chiếu · ${num(c.locked)} thuộc kỳ đã khóa`,
+                stopped: (m) => `Lượt ghi bị dừng vì lỗi: ${m}. Các lượt chấm đã ghi được giữ lại; bấm Ghi lại để tiếp tục (dòng đã ghi được bỏ qua là trùng).`,
+                failedLines: (n) => `${num(n)} lượt chấm không ghi được (các dòng khác vẫn ghi):`, line: (n) => `Dòng ${n}`,
+                stalled: 'Máy chủ báo còn dữ liệu nhưng không ghi thêm được. Bấm Xem trước lại để kiểm tra.',
+                incomplete: 'Đã đạt số lượt ghi tối đa của một lần bấm. Bấm Ghi lại để ghi tiếp phần còn lại.',
+                next: 'Bước tiếp theo: bấm Xử lý chấm công máy để lập phiếu ngoại lệ (trễ, sớm, thiếu lượt chấm) và đơn làm thêm đề xuất từ lượt chấm mới.',
+                process: (code) => `Xử lý chấm công máy kỳ ${code}`, openPeriod: (code) => `Mở kỳ ${code}`, otherPeriods: 'Dữ liệu còn thuộc kỳ khác:',
+                noProcess: 'Mở kỳ tương ứng rồi bấm Thao tác khác > Xử lý chấm công máy.', writtenNotice: (n) => `Đã ghi ${num(n)} lượt chấm từ file.`,
+            },
+            map: {
+                title: (code) => `Bảng đối chiếu của nguồn ${code}`, hint: 'Mỗi dòng gán một mã trên máy (thiết bị trống = mọi máy của nguồn) cho một nhân viên trong khoảng hiệu lực. Sửa tại chỗ rồi bấm Lưu thay đổi.',
+                noSource: 'Chọn hồ sơ nguồn ở tab Nạp dữ liệu để xem bảng đối chiếu.', loading: 'Đang tải bảng đối chiếu...', empty: 'Nguồn này chưa có dòng đối chiếu nào.',
+                search: 'Tìm mã trên máy, thiết bị, nhân viên, ngày', add: 'Thêm mã', reload: 'Tải lại', save: (n) => `Lưu thay đổi (${n})`, saving: 'Đang lưu bảng đối chiếu...',
+                saved: (n) => `Đã lưu ${n} dòng đối chiếu.`, isNew: 'mới', changed: 'đã sửa', remove: 'Bỏ', open: 'Mở', anyDevice: 'mọi máy',
+                deactivate: 'Thôi dùng', undo: 'Hoàn tác', inactive: 'thôi dùng khi lưu',
+                errors: { machineId: 'Thiếu mã trên máy', employee: 'Chưa chọn nhân viên', dates: 'Hết hiệu lực trước ngày hiệu lực' }, fixFirst: 'Sửa các dòng báo lỗi trước khi lưu',
+            },
+            loadFailed: 'Không tải được dữ liệu. Xem thông báo phía trên rồi thử lại.',
+        },
+        en: {
+            button: 'Import time clock',
+            title: 'Import time clock punches',
+            tabs: { import: 'Import data', map: 'Punch ID mapping', label: 'Import time clock' },
+            steps: { pick: 'Choose source and data', preview: 'Preview, map IDs', commit: 'Write punches', label: 'Import steps' },
+            source: 'Punch source', sourcePh: 'Select a punch source...', loadingSources: 'Loading punch sources...',
+            noSources: 'No punch source yet. Click Create punch source, save it on the NetSuite form, then click Reload list.',
+            createSource: 'Create punch source', editSource: 'Edit source', reloadSources: 'Reload list', noRecordType: 'The server did not return the punch source record type',
+            layouts: { E: 'One punch per line', P: 'Time in and time out per line', Z: 'ZKTeco attlog' },
+            idKinds: { N: 'Identified by NetSuite employee ID', M: 'Identified by the mapping table only', B: 'Mapping table first, then NetSuite employee ID' },
+            dateFormats: { YMD: 'Dates year-month-day', DMY: 'Dates day/month/year', MDY: 'Dates month/day/year' },
+            summary: { device: (d) => `default device ${d}`, offset: (m) => `clock offset ${m} min`, maps: (n) => `mapped IDs: ${n}`, noHeader: 'no header row', skip: (n) => `skip first ${n} lines` },
+            file: 'Time clock file (.csv, .txt, .dat)', fileHint: 'Read as UTF-8, at most 5 MB per import.', fileRead: (name, n, size) => `${name}: ${n} lines, ${size} MB`,
+            fileFailed: 'The file could not be read. Check the file and choose it again, or paste the data from Excel.',
+            tooBig: (size) => `The data is ${size} MB, over the 5 MB limit per import. Split the file by month or by device and import each part.`,
+            paste: 'Or paste from Excel', pastePh: 'Select the range in Excel (including the header row if the source has one), press Ctrl+C and paste here',
+            pasteRead: (n) => `Pasted lines: ${n}`, usingFile: (name) => `Using file ${name}. Paste here to replace it with pasted data.`, noData: 'No data yet.',
+            preview: 'Preview', previewAgain: 'Preview again', previewing: 'Reading and checking punches...',
+            needSource: 'Select a punch source', needData: 'Choose a file or paste data', needPreview: 'Click Preview before writing', nothingNew: 'No new punches to write',
+            commit: (n) => `Write ${num(n)} new punches`, close: 'Close', running: 'Writing, wait until it finishes',
+            status: { all: 'All', new: 'New', duplicate: 'Duplicate', invalid: 'Error', unmatched: 'Unmapped', locked: 'Locked period' },
+            kind: { in: 'in', out: 'out' },
+            previewTitle: 'Preview result', range: (a, b, n) => `From ${a} to ${b} · employees: ${n}`,
+            truncated: (shown, total) => `Showing the first ${num(shown)} / ${num(total)} detail lines (errors and unmapped first); counts and the unmapped ID list cover all data.`,
+            search: 'Search line, device ID, employee, time, device, status, reason', noRows: 'No lines.',
+            cols: { line: 'Line', machineId: 'Device ID', employee: 'Employee', time: 'Time', device: 'Device', status: 'Status', reason: 'Reason', lines: 'Lines', first: 'First punch', effective: 'Effective', expiration: 'Expires', state: 'Note' },
+            unm: {
+                title: (n) => `Unmapped IDs (${num(n)})`, hint: 'Select an employee for each device ID, then click Save mapping; the preview runs again automatically.',
+                save: (n) => `Save mapping (${n})`, saving: 'Saving the mapping table...', saved: (n) => `Mapping lines saved: ${n}.`, allDevices: 'Apply to every device of the source (blank device)',
+                pick: 'Select an employee...', search: 'Search device ID, device', find: 'Find more', findPh: 'Employee not in the list: type a code or name', finding: 'Searching employees...',
+                found: (n) => `Employees added to the list: ${n}.`, notFound: 'No matching employee.', none: 'No matching ID.',
+            },
+            progress: {
+                running: (r) => `Writing round ${r}...`, done: 'Writing finished', writing: 'Writing punches...', of: (a, b) => `${num(a)} / ${num(b)} new punches`,
+                counts: (c) => `Written: ${num(c.created)} · skipped (duplicate): ${num(c.skipped)} · errors: ${num(c.invalid)} · unmapped: ${num(c.unmatched)} · in locked periods: ${num(c.locked)}`,
+                stopped: (m) => `Writing stopped on an error: ${m}. Punches already written are kept; click Write again to continue (written lines are skipped as duplicates).`,
+                failedLines: (n) => `Punches that could not be saved (other lines were saved): ${num(n)}`, line: (n) => `Line ${n}`,
+                stalled: 'The server reported more data but wrote nothing further. Click Preview again to check.',
+                incomplete: 'The maximum number of rounds for one click was reached. Click Write again to continue.',
+                next: 'Next step: click Process punches to create exceptions (late, early, missing punches) and proposed overtime requests from the new punches.',
+                process: (code) => `Process punches for period ${code}`, openPeriod: (code) => `Open period ${code}`, otherPeriods: 'The data also covers other periods:',
+                noProcess: 'Open the matching period, then click More actions > Process punches.', writtenNotice: (n) => `Punches imported from the file: ${num(n)}.`,
+            },
+            map: {
+                title: (code) => `Mapping table of source ${code}`, hint: 'Each line assigns a device ID (blank device = every device of the source) to an employee within the effective dates. Edit in place, then click Save changes.',
+                noSource: 'Select a punch source on the Import data tab to see its mapping table.', loading: 'Loading the mapping table...', empty: 'This source has no mapping lines yet.',
+                search: 'Search device ID, device, employee, date', add: 'Add ID', reload: 'Reload', save: (n) => `Save changes (${n})`, saving: 'Saving the mapping table...',
+                saved: (n) => `Mapping lines saved: ${n}.`, isNew: 'new', changed: 'edited', remove: 'Remove', open: 'Open', anyDevice: 'every device',
+                deactivate: 'Deactivate', undo: 'Undo', inactive: 'deactivated on save',
+                errors: { machineId: 'Device ID is missing', employee: 'No employee selected', dates: 'Expiry is before the effective date' }, fixFirst: 'Fix the lines with errors before saving',
+            },
+            loadFailed: 'The data could not be loaded. See the message above and try again.',
+        },
+    };
+    const TONES = { new: 'ok', duplicate: 'muted', invalid: 'error', unmatched: 'warn', locked: 'info' };
+    // Lượt gọi POST một lần (không lặp như post() của lib/api.js): vòng ghi tự gửi cursor
+    let restletBase = '';
+    function sendOnce(body) {
+        if (!restletBase)
+            restletBase = url.resolveScript(Object.assign({}, RESTLET));
+        return https.post.promise({ url: restletBase, body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } }).then(unwrap);
+    }
+    const remembered = () => {
+        try {
+            return String(window.localStorage.getItem(STORE_KEY) || '');
+        }
+        catch (e) {
+            return '';
+        }
+    };
+    const remember = (id) => {
+        try {
+            window.localStorage.setItem(STORE_KEY, String(id || ''));
+        }
+        catch (e) {
+            // bỏ qua: chỉ là tiện ích
+        }
+    };
+    // ------------------------------------------------------------------ hộp thoại
+    /**
+     * props: app; subsidiary; period ({id, code, start, end} kỳ đang mở trên màn, có thể null); periods (kỳ của công ty con);
+     * employees ([{id, code, name}] nhân viên của kỳ, làm sẵn danh sách chọn); onClose(); onProcess (chạy Xử lý chấm công máy cho
+     * kỳ đang mở, null khi không được); onOpenPeriod(id).
+     */
+    function PunchImportDialog(props) {
+        const t = pick(TEXT$d);
+        const app = props.app;
+        const subsidiary = String(props.subsidiary || '');
+        const [st, setSt] = core.useState(initialState(remembered()));
+        const ref = core.useRef(st);
+        ref.current = st;
+        const alive = core.useRef(true);
+        const fileFn = core.useRef(null);
+        const busy = !!(app && app.busy);
+        const put = (patch) => {
+            if (!alive.current)
+                return;
+            ref.current = Object.assign({}, ref.current, typeof patch === 'function' ? patch(ref.current) : patch);
+            setSt(ref.current);
+        };
+        // Lỗi: báo trên dải thông báo (app.run) và giữ một dòng trong hộp thoại (dải thông báo nằm sau lớp phủ)
+        const run = (label, promise) => app.run(label, Promise.resolve(promise).catch((e) => {
+            put({ error: errorText(e) });
+            throw e;
+        }));
+        const loadMappings = (source) => {
+            const id = String(source || ref.current.source || '');
+            if (!id)
+                return Promise.resolve();
+            put({ mappings: null, mapFor: id, mapEdits: {}, mapNew: [], error: '' });
+            return run(t.map.loading, call({ action: ACTIONS$1.mappings, source: id })).then((r) => {
+                if (!alive.current || ref.current.mapFor !== id)
+                    return;
+                put({ mappings: r ? mapMappings(r) : [] });
+            });
+        };
+        const loadSources = () => {
+            put({ error: '' });
+            return run(t.loadingSources, call({ action: ACTIONS$1.sources, subsidiary })).then((r) => {
+                if (!alive.current)
+                    return;
+                if (!r) {
+                    put({ sources: ref.current.sources || [] });
+                    return;
+                }
+                const v = mapSourcesView(r);
+                const keep = v.sources.some((s) => s.id === ref.current.source) ? ref.current.source : v.sources.length === 1 ? v.sources[0].id : '';
+                put({ sources: v.sources, mapCounts: v.mapCounts, recordTypes: v.recordTypes, srcEmployees: v.employees, source: keep });
+                if (keep && ref.current.tab === 'map' && ref.current.mapFor !== keep)
+                    loadMappings(keep);
+            });
+        };
+        core.useEffect(() => {
+            alive.current = true;
+            loadSources();
+            return () => {
+                alive.current = false;
+            };
+        }, [subsidiary]);
+        // File: đọc bằng FileReader (UTF-8) qua trình nghe "change" gốc (UIF không bắn onChange)
+        fileFn.current = (file) => {
+            if (!file)
+                return;
+            const size = Number(file.size) || 0;
+            if (size > MAX_BYTES) {
+                put({ fileText: '', fileName: file.name, fileBytes: size, lines: 0, fileError: t.tooBig(mb(size)), preview: null, commit: null });
+                return;
+            }
+            try {
+                const fr = new FileReader();
+                fr.onload = () => {
+                    const text = String(fr.result || '');
+                    put({ text: '', fileText: text, fileName: file.name, fileBytes: size || utf8Bytes(text), lines: lineCount(text), fileError: '', preview: null, commit: null, assign: {}, error: '' });
+                };
+                fr.onerror = () => put({ fileError: t.fileFailed });
+                fr.readAsText(file, 'UTF-8');
+            }
+            catch (e) {
+                put({ fileError: t.fileFailed });
+            }
+        };
+        core.useEffect(() => {
+            try {
+                const el = document.getElementById(FILE_ID);
+                if (el && !el.__s4vpFile) {
+                    el.__s4vpFile = true;
+                    el.addEventListener('change', () => {
+                        fileFn.current && fileFn.current(el.files && el.files[0]);
+                        // chọn lại cùng file vẫn đọc lại
+                        try {
+                            el.value = '';
+                        }
+                        catch (x) {
+                            // bỏ qua
+                        }
+                    });
+                }
+            }
+            catch (e) {
+                // bỏ qua: vẫn dán được từ Excel
+            }
+        });
+        // ------------------------------------------------------------------ thao tác
+        const src = (st.sources || []).find((s) => s.id === st.source) || null;
+        const dataText = st.text ? st.text : st.fileText;
+        const size = dataText.length;
+        const tooBig = size > MAX_TEXT;
+        const committing = !!(st.commit && !st.commit.done);
+        const pickSource = (id) => {
+            remember(id);
+            put({ source: id, preview: null, commit: null, assign: {}, error: '' });
+            if (ref.current.tab === 'map')
+                loadMappings(id);
+        };
+        const setPaste = (text) => put({ text, fileText: text ? '' : ref.current.fileText, fileName: text ? '' : ref.current.fileName, fileError: '', lines: lineCount(text || ref.current.fileText), preview: null, commit: null, assign: {} });
+        const preview = () => {
+            const cur = ref.current;
+            const text = cur.text ? cur.text : cur.fileText;
+            if (!cur.source || !text)
+                return Promise.resolve();
+            put({ error: '' });
+            return run(t.previewing, post({ action: ACTIONS$1.preview, source: cur.source, text })).then((r) => {
+                if (!r || !alive.current)
+                    return;
+                // Bỏ kết quả của dữ liệu cũ (người dùng đã đổi nguồn hoặc dữ liệu trong lúc chờ)
+                const now = ref.current;
+                if (now.source !== cur.source || (now.text ? now.text : now.fileText) !== text)
+                    return;
+                const v = mapPreview(r);
+                const keepAssign = {};
+                v.unmatched.forEach((u) => now.assign[u.id] && (keepAssign[u.id] = now.assign[u.id]));
+                put({ preview: v, commit: null, assign: keepAssign, filter: 'all' });
+            });
+        };
+        const saveUnmatched = () => {
+            const cur = ref.current;
+            const rows = unmatchedPayload(cur.preview ? cur.preview.unmatched : [], cur.assign, cur.allDevices);
+            if (!rows.length)
+                return;
+            run(t.unm.saving, post({ action: ACTIONS$1.mapSave, source: cur.source, rows })).then((r) => {
+                if (!r || !alive.current)
+                    return;
+                app.notify(t.unm.saved(Number(r.saved) || rows.length), 'ok');
+                const counts = Object.assign({}, ref.current.mapCounts);
+                counts[cur.source] = (counts[cur.source] || 0) + (Number(r.saved) || rows.length);
+                put({ assign: {}, mapCounts: counts, mapFor: '' });
+                preview();
+            });
+        };
+        const findEmployees = () => {
+            const q = String(ref.current.findQ || '').trim();
+            if (!q || !subsidiary)
+                return;
+            put({ findNote: t.unm.finding });
+            call({ action: ACTIONS$1.employees, subsidiary, q }).then((r) => {
+                const items = arr$1(r && r.items).map(mapEmployee).filter((e) => e.id);
+                put((s) => ({ extraEmployees: s.extraEmployees.concat(items), findNote: items.length ? t.unm.found(items.length) : t.unm.notFound }));
+            }, (e) => put({ findNote: errorText(e) }));
+        };
+        const commit = () => {
+            const cur = ref.current;
+            const text = cur.text ? cur.text : cur.fileText;
+            if (!cur.preview || !cur.preview.counts.new || !text)
+                return;
+            put({ commit: { created: 0, skipped: 0, invalid: 0, unmatched: 0, locked: 0, rounds: 0, done: false }, error: '' });
+            const body = { action: ACTIONS$1.commit, source: cur.source, text };
+            app.run(t.progress.writing, runCommit(sendOnce, body, { errorText, onStep: (s) => put({ commit: Object.assign(s, { done: false }) }) })).then((res) => {
+                if (!alive.current)
+                    return;
+                const out = res || Object.assign({}, ref.current.commit, { done: true, stopped: '?' });
+                put({ commit: out });
+                if (out.created && !out.stopped)
+                    app.notify(t.progress.writtenNotice(out.created), 'ok');
+            });
+        };
+        const switchTab = (v) => {
+            put({ tab: v });
+            if (v === 'map' && ref.current.source && ref.current.mapFor !== ref.current.source)
+                loadMappings(ref.current.source);
+        };
+        // Bảng đối chiếu: sửa tại chỗ
+        const editMap = (key, field) => (v) => {
+            const cur = ref.current;
+            if (String(key).indexOf('n') === 0 && cur.mapNew.some((r) => r.key === key)) {
+                put({ mapNew: cur.mapNew.map((r) => (r.key === key ? Object.assign({}, r, { [field]: v }) : r)) });
+                return;
+            }
+            put({ mapEdits: Object.assign({}, cur.mapEdits, { [key]: Object.assign({}, cur.mapEdits[key] || {}, { [field]: v }) }) });
+        };
+        const addMap = () => {
+            const cur = ref.current;
+            put({ mapNew: cur.mapNew.concat([{ key: `n${Date.now()}${cur.mapNew.length}`, id: '', device: '', machineId: '', employee: '', code: '', name: '', effective: '', expiration: '' }]) });
+        };
+        const removeNew = (key) => put({ mapNew: ref.current.mapNew.filter((r) => r.key !== key) });
+        const saveMappings = () => {
+            const cur = ref.current;
+            const list = mergeMappings(cur.mappings, cur.mapEdits, cur.mapNew).filter((r) => r.changed);
+            if (!list.length || list.some((r) => mappingError(r)))
+                return;
+            const rows = list.map((r) => mapSaveRow(r, true));
+            run(t.map.saving, post({ action: ACTIONS$1.mapSave, source: cur.source, rows })).then((r) => {
+                if (!r || !alive.current)
+                    return;
+                app.notify(t.map.saved(Number(r.saved) || rows.length), 'ok');
+                const delta = list.filter((x) => x.isNew).length - list.filter((x) => x.inactive && !x.isNew).length;
+                if (delta) {
+                    const counts = Object.assign({}, ref.current.mapCounts);
+                    counts[cur.source] = Math.max(0, (counts[cur.source] || 0) + delta);
+                    put({ mapCounts: counts });
+                }
+                loadMappings(cur.source).then(() => {
+                    if (alive.current && ref.current.preview)
+                        preview();
+                });
+            });
+        };
+        const openSource = (id) => {
+            const href = recordHref(st.recordTypes.source, id, (o) => url.resolveRecord(o));
+            if (href)
+                window.open(href, '_blank');
+        };
+        // ------------------------------------------------------------------ vẽ
+        const pool = employeeOptions(st.srcEmployees, props.employees, st.preview ? st.preview.employeeList : [], st.preview ? st.preview.rows.filter((r) => r.employee).map((r) => ({ id: r.employee, code: r.code, name: r.name })) : [], (st.mappings || []).map((r) => ({ id: r.employee, code: r.code, name: r.name })), st.extraEmployees);
+        const empLabel = {};
+        pool.forEach((o) => (empLabel[o.value] = o.label));
+        const sourceOptions = (st.sources || []).map((s) => ({ value: s.id, label: s.description ? `${s.code} - ${s.description}` : s.code }));
+        let sourceInfo = null;
+        if (st.sources === null)
+            sourceInfo = jsx("span", { class: "s4vp-small", children: t.loadingSources });
+        else if (!st.sources.length)
+            sourceInfo = jsx("span", { class: "s4vp-pi-warn", children: t.noSources });
+        else if (src) {
+            const parts = [
+                t.layouts[src.layout] || src.layout,
+                t.idKinds[src.idKind] || src.idKind,
+                t.dateFormats[src.dateFormat] || '',
+                src.hasHeader ? '' : t.summary.noHeader,
+                src.skipLines ? t.summary.skip(src.skipLines) : '',
+                src.deviceDefault ? t.summary.device(src.deviceDefault) : '',
+                src.minuteOffset ? t.summary.offset(src.minuteOffset) : '',
+                t.summary.maps(st.mapCounts[src.id] || 0),
+            ].filter(Boolean);
+            sourceInfo = jsx("span", { class: "s4vp-pi-sum-t", children: parts.join(' · ') });
+        }
+        const noType = st.recordTypes.source ? '' : t.noRecordType;
+        const tabs = (jsx(Tabs, { items: [{ value: 'import', label: t.tabs.import }, { value: 'map', label: t.tabs.map, count: src ? st.mapCounts[src.id] || 0 : null }], value: st.tab, onPick: (v) => !committing && switchTab(v), label: t.tabs.label }));
+        const sourceRow = (jsxs("div", { class: "s4vp-pi-top", children: [jsx(Field, { label: t.source, required: true, children: jsx(SearchSelect, { value: st.source, options: sourceOptions, placeholder: t.sourcePh, onInput: pickSource, ariaLabel: t.source, disabled: committing }) }), jsxs("div", { class: "s4vp-pi-sum", children: [sourceInfo, jsxs("div", { class: "s4vp-pi-links", children: [jsx(Button, { kind: "link", label: t.createSource, disabled: !!noType, title: noType, onClick: () => openSource('') }), src ? jsx(Button, { kind: "link", label: t.editSource, disabled: !!noType, title: noType, onClick: () => openSource(src.id) }) : null, jsx(Button, { kind: "link", label: t.reloadSources, disabled: busy || committing, onClick: () => loadSources() })] })] })] }));
+        // ---- tab Nạp dữ liệu
+        const v = st.preview;
+        const c = st.commit;
+        let importBody;
+        {
+            const fileHint = st.fileError ? jsx("span", { class: "s4vp-pi-err", children: st.fileError }) : st.fileName && st.fileText ? t.fileRead(st.fileName, st.lines, mb(st.fileBytes)) : t.fileHint;
+            const pasteHint = st.text ? t.pasteRead(st.lines) : st.fileName && st.fileText ? t.usingFile(st.fileName) : t.noData;
+            const dataRow = (jsxs("div", { class: "s4vp-pi-data", children: [jsx(Field, { label: t.file, hint: fileHint, children: jsx("input", { id: FILE_ID, type: "file", accept: ".csv,.txt,.dat,text/csv,text/plain", class: "s4vp-in s4vp-pi-file" }) }), jsx(Field, { label: t.paste, hint: pasteHint, children: jsx(TextArea, { value: st.text, rows: 3, placeholder: t.pastePh, onInput: setPaste, ariaLabel: t.paste, disabled: committing }) })] }));
+            const big = tooBig ? jsx("div", { class: "s4vp-pi-warn", role: "alert", children: t.tooBig(mb(size)) }) : null;
+            let previewBlock = null;
+            let unmatchedBlock = null;
+            if (v) {
+                const reasonOf = (r) => (r.vi || r.en ? serverText(r.en || r.vi, r.vi || r.en) : '');
+                const rows = v.rows
+                    .filter((r) => st.filter === 'all' || r.status === st.filter)
+                    .map((r) => Object.assign({}, r, { employeeText: r.employee ? `${r.code || ''} ${r.name || empLabel[r.employee] || ''}`.trim() : '', timeText: `${fmtTime(r.time)}${t.kind[r.kind] ? ` (${t.kind[r.kind]})` : ''}`, statusText: t.status[r.status] || r.status, reason: reasonOf(r) }));
+                const chips = [{ value: 'all', label: t.status.all, count: num(v.counts.total) }].concat(STATUSES$2.map((k) => ({ value: k, label: t.status[k], count: num(v.counts[k]), tone: k === 'invalid' ? 'error' : k === 'unmatched' || k === 'locked' ? 'warn' : k === 'new' ? 'ok' : '' })));
+                previewBlock = (jsxs("div", { class: "s4vp-pi-sec", children: [jsxs("div", { class: "s4vp-pi-sub", children: [jsx("span", { children: t.previewTitle }), v.range.from ? jsx("span", { class: "s4vp-small", children: t.range(fmtDate(v.range.from), fmtDate(v.range.to), num(v.employees)) }) : null] }), v.truncated ? jsx("div", { class: "s4vp-pi-note", children: t.truncated(v.rows.length, v.counts.total) }) : null, jsx("div", { class: "s4vp-pi-box", children: jsx(Table, { label: t.previewTitle, toolbar: jsx(Chips, { items: chips, value: st.filter, onPick: (x) => put({ filter: x }), label: t.cols.status }), columns: [
+                                    { key: 'line', label: t.cols.line, type: 'num', nowrap: true },
+                                    { key: 'machineId', label: t.cols.machineId, nowrap: true },
+                                    { key: 'employeeText', label: t.cols.employee },
+                                    { key: 'timeText', label: t.cols.time, nowrap: true },
+                                    { key: 'device', label: t.cols.device, nowrap: true },
+                                    { key: 'statusText', label: t.cols.status, nowrap: true, render: (r) => jsx(Badge, { text: r.statusText, tone: TONES[r.status] || 'muted' }) },
+                                    { key: 'reason', label: t.cols.reason, render: (r) => (r.reason ? jsx("span", { class: r.status === 'invalid' ? 's4vp-pi-err' : 's4vp-small', children: r.reason }) : '') },
+                                ], rows: rows, search: true, searchPlaceholder: t.search, empty: t.noRows, maxHeight: 260 }) })] }));
+                if (v.unmatched.length) {
+                    const chosen = unmatchedPayload(v.unmatched, st.assign, st.allDevices).length;
+                    const urows = v.unmatched.map((u) => Object.assign({}, u, { firstText: fmtTime(u.firstTime), employeeText: empLabel[st.assign[u.id]] || '' }));
+                    unmatchedBlock = (jsxs("div", { class: "s4vp-pi-sec s4vp-pi-unm", children: [jsxs("div", { class: "s4vp-pi-sub", children: [jsx("span", { children: t.unm.title(v.unmatched.length) }), jsxs("span", { class: "s4vp-actions", children: [jsx(Checkbox, { checked: !!st.allDevices, label: t.unm.allDevices, onInput: (x) => put({ allDevices: !!x }) }), jsx(Button, { small: true, kind: "primary", label: t.unm.save(chosen), disabled: !chosen || busy || committing, onClick: saveUnmatched })] })] }), jsx("div", { class: "s4vp-small", children: t.unm.hint }), jsxs("div", { class: "s4vp-pi-find", children: [jsx(TextInput, { value: st.findQ, onInput: (x) => put({ findQ: x }), onEnter: findEmployees, placeholder: t.unm.findPh, ariaLabel: t.unm.findPh, width: 320 }), jsx(Button, { small: true, label: t.unm.find, disabled: !String(st.findQ || '').trim() || !subsidiary, onClick: findEmployees }), st.findNote ? jsx("span", { class: "s4vp-small", children: st.findNote }) : null] }), jsx("div", { class: "s4vp-pi-box s4vp-pi-edit", children: jsx(Table, { label: t.unm.title(v.unmatched.length), columns: [
+                                        { key: 'machineId', label: t.cols.machineId, nowrap: true },
+                                        { key: 'device', label: t.cols.device, nowrap: true },
+                                        { key: 'lines', label: t.cols.lines, type: 'num', nowrap: true },
+                                        { key: 'firstText', label: t.cols.first, nowrap: true },
+                                        { key: 'employeeText', label: t.cols.employee, width: 280, render: (u) => jsx(SearchSelect, { value: st.assign[u.id] || '', options: pool, placeholder: t.unm.pick, onInput: (x) => put({ assign: Object.assign({}, ref.current.assign, { [u.id]: x }) }), ariaLabel: `${t.cols.employee} ${u.machineId}`, width: 270 }) },
+                                    ], rows: urows, search: true, searchPlaceholder: t.unm.search, empty: t.unm.none }) })] }));
+                }
+            }
+            let commitBlock = null;
+            if (c) {
+                const target = v ? v.counts.new : 0;
+                const pct = c.done && !c.stopped && !c.more && !c.stalled ? 100 : target ? Math.min(100, Math.round((c.created / target) * 100)) : 0;
+                const periodList = Array.isArray(props.periods) ? props.periods : [];
+                const inRange = v ? periodsInRange(periodList, v.range) : [];
+                const cur = props.period || null;
+                const curIn = cur && (!inRange.length || inRange.some((p) => String(p.id) === String(cur.id)));
+                const others = inRange.filter((p) => !cur || String(p.id) !== String(cur.id));
+                commitBlock = (jsxs("div", { class: cx$1('s4vp-pi-result', c.stopped ? 's4vp-pi-bad' : c.done ? 's4vp-pi-ok' : ''), role: "status", "aria-live": "polite", children: [jsxs("div", { class: "s4vp-pi-sub", children: [jsx("span", { children: c.done ? t.progress.done : t.progress.running(c.rounds + 1) }), target ? jsx("span", { class: "s4vp-small", children: t.progress.of(c.created, target) }) : null] }), jsx("div", { class: "s4vp-pi-track", children: jsx("div", { class: "s4vp-pi-fill", style: { width: `${pct}%` } }) }), jsx("div", { children: t.progress.counts(c) }), c.stopped ? jsx("div", { class: "s4vp-pi-err", children: t.progress.stopped(c.stopped) }) : null, c.failed ? (jsxs("div", { class: "s4vp-pi-err", children: [jsx("div", { children: t.progress.failedLines(c.failed) }), (c.failures || []).slice(0, 10).map((f, i) => (jsx("div", { children: `${t.progress.line(f.line)}: ${serverText(f.en || f.vi, f.vi || f.en)}` }, `f${i}`)))] })) : null, c.stalled ? jsx("div", { class: "s4vp-pi-warn", children: t.progress.stalled }) : null, c.done && !c.stopped && !c.stalled && c.more ? jsx("div", { class: "s4vp-pi-warn", children: t.progress.incomplete }) : null, c.done && !c.stopped && c.created ? (jsxs("div", { class: "s4vp-pi-next", children: [jsx("div", { children: t.progress.next }), jsxs("div", { class: "s4vp-pi-links", children: [curIn && props.onProcess ? jsx(Button, { kind: "primary", small: true, label: t.progress.process(cur.code), disabled: busy, onClick: () => props.onProcess() }) : null, others.length ? jsx("span", { class: "s4vp-small", children: t.progress.otherPeriods }) : null, others.map((p) => (props.onOpenPeriod ? jsx(Button, { small: true, label: t.progress.openPeriod(p.code), onClick: () => props.onOpenPeriod(String(p.id)) }, `p${p.id}`) : null))] }), curIn && props.onProcess ? null : jsx("div", { class: "s4vp-small", children: t.progress.noProcess })] })) : null] }));
+            }
+            importBody = [sourceRow, dataRow, big, previewBlock, unmatchedBlock, commitBlock];
+        }
+        // ---- tab Đối chiếu mã chấm công
+        let mapBody;
+        const merged = st.mappings ? mergeMappings(st.mappings, st.mapEdits, st.mapNew) : [];
+        const changed = merged.filter((r) => r.changed);
+        const badCount = changed.filter((r) => mappingError(r)).length;
+        if (!st.source || !src)
+            mapBody = [sourceRow, jsx(Empty, { text: t.map.noSource })];
+        else if (st.mappings === null)
+            mapBody = [sourceRow, jsx(Empty, { text: t.map.loading })];
+        else {
+            const rows = merged.map((r) => Object.assign({}, r, { employeeText: empLabel[r.employee] || `${r.code} ${r.name}`.trim(), deviceText: r.device || t.map.anyDevice, effectiveText: fmtDate(r.effective), expirationText: fmtDate(r.expiration) }));
+            mapBody = [
+                sourceRow,
+                jsxs("div", { class: "s4vp-pi-sec", children: [jsxs("div", { class: "s4vp-pi-sub", children: [jsx("span", { children: t.map.title(src.code) }), jsxs("span", { class: "s4vp-actions", children: [jsx(Button, { small: true, label: t.map.add, disabled: busy, onClick: addMap }), jsx(Button, { small: true, kind: "ghost", label: t.map.reload, disabled: busy, onClick: () => loadMappings(st.source) }), jsx(Button, { small: true, kind: "primary", label: t.map.save(changed.length), disabled: !changed.length || !!badCount || busy, title: badCount ? t.map.fixFirst : '', onClick: saveMappings })] })] }), jsx("div", { class: "s4vp-small", children: t.map.hint }), jsx("div", { class: "s4vp-pi-box s4vp-pi-edit", children: jsx(Table, { label: t.map.title(src.code), keyOf: (r) => r.key, columns: [
+                                    { key: 'machineId', label: t.cols.machineId, nowrap: true, render: (r) => (r.isNew ? jsx(TextInput, { value: r.machineId, onInput: editMap(r.key, 'machineId'), ariaLabel: t.cols.machineId, width: 130 }) : r.machineId) },
+                                    { key: 'deviceText', label: t.cols.device, nowrap: true, render: (r) => (r.isNew ? jsx(TextInput, { value: r.device, onInput: editMap(r.key, 'device'), placeholder: t.map.anyDevice, ariaLabel: t.cols.device, width: 120 }) : r.deviceText) },
+                                    { key: 'employeeText', label: t.cols.employee, width: 280, render: (r) => jsx(SearchSelect, { value: r.employee, options: pool, placeholder: t.unm.pick, onInput: editMap(r.key, 'employee'), ariaLabel: `${t.cols.employee} ${r.machineId}`, width: 270 }) },
+                                    { key: 'effectiveText', label: t.cols.effective, nowrap: true, render: (r) => jsx(DateInput, { value: r.effective, onInput: editMap(r.key, 'effective'), ariaLabel: t.cols.effective, width: 150 }) },
+                                    { key: 'expirationText', label: t.cols.expiration, nowrap: true, render: (r) => jsx(DateInput, { value: r.expiration, min: r.effective || undefined, onInput: editMap(r.key, 'expiration'), ariaLabel: t.cols.expiration, width: 150 }) },
+                                    {
+                                        key: 'state',
+                                        label: t.cols.state,
+                                        render: (r) => {
+                                            const err = r.changed ? mappingError(r) : '';
+                                            const note = err ? jsx("span", { class: "s4vp-pi-err", children: t.map.errors[err] }) : r.isNew ? Badge({ text: t.map.isNew, tone: 'info' }) : r.inactive ? Badge({ text: t.map.inactive, tone: 'error' }) : r.changed ? Badge({ text: t.map.changed, tone: 'warn' }) : null;
+                                            let act;
+                                            if (r.isNew)
+                                                act = jsx(Button, { small: true, kind: "ghost", label: t.map.remove, onClick: () => removeNew(r.key) });
+                                            else if (r.inactive)
+                                                act = jsx(Button, { small: true, kind: "ghost", label: t.map.undo, onClick: () => editMap(r.key, 'inactive')(false) });
+                                            else
+                                                act = jsx(Button, { small: true, kind: "ghost", label: t.map.deactivate, onClick: () => editMap(r.key, 'inactive')(true) });
+                                            return (jsxs("span", { class: "s4vp-actions", children: [note, act] }));
+                                        },
+                                    },
+                                ], rows: rows, search: true, searchPlaceholder: t.map.search, empty: t.map.empty }) })] }),
+            ];
+        }
+        // ---- khung, nút chân
+        const stepState = (k) => {
+            if (k === 'pick')
+                return v ? 'done' : 'current';
+            if (k === 'preview')
+                return !v ? 'todo' : c ? 'done' : 'current';
+            return c && c.done && !c.stopped && !c.more && !c.stalled ? 'done' : c ? 'current' : 'todo';
+        };
+        const steps = jsx(Stepper, { steps: ['pick', 'preview', 'commit'].map((k) => ({ key: k, label: t.steps[k], state: stepState(k) })), label: t.steps.label });
+        let why = '';
+        if (!st.source)
+            why = t.needSource;
+        else if (!dataText)
+            why = t.needData;
+        else if (tooBig)
+            why = t.tooBig(mb(size));
+        const newCount = v ? v.counts.new : 0;
+        let commitWhy = why;
+        if (!commitWhy && !v)
+            commitWhy = t.needPreview;
+        else if (!commitWhy && !newCount)
+            commitWhy = t.nothingNew;
+        const close = () => !committing && props.onClose && props.onClose();
+        const finished = c && c.done && !c.stopped && !c.more && !c.stalled;
+        const actions = st.tab === 'import'
+            ? [
+                jsx(Button, { label: t.close, disabled: committing, title: committing ? t.running : '', onClick: close }),
+                jsx(Button, { label: v ? t.previewAgain : t.preview, kind: v ? 'default' : 'primary', disabled: !!why || busy || committing, title: why, onClick: () => preview() }),
+                finished ? null : jsx(Button, { label: t.commit(newCount), kind: v && newCount ? 'primary' : 'default', disabled: !!commitWhy || busy || committing, title: commitWhy, onClick: commit }),
+            ]
+            : [jsx(Button, { label: t.close, onClick: close })];
+        return (jsxs(Dialog, { title: t.title, width: 1180, onClose: close, actions: actions, children: [tabs, st.tab === 'import' ? steps : null, st.error ? jsx("div", { class: "s4vp-pi-err", role: "alert", children: st.error }) : null, (st.tab === 'import' ? importBody : mapBody).map((n, i) => (n ? jsx("div", { style: { display: 'contents' }, children: n }, `b${i}`) : null))] }));
+    }
+
     const TEXT$c = {
         vi: {
             crumb: 'Chấm công',
@@ -2331,6 +3197,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             act: {
                 build: 'Tổng hợp công', rebuild: 'Tổng hợp lại', lock: 'Khóa công', unlock: 'Mở khóa công', toPayroll: 'Sang chạy lương', punches: 'Xử lý chấm công máy',
                 loadSheet: 'Nạp nhân viên vào bảng công', readOnly: 'Vai trò của bạn chỉ được xem', lockedHint: 'Kỳ công đã khóa', noUnlock: 'Kỳ đã có bảng lương ghi sổ, không mở khóa được',
+                importPunches: 'Nạp chấm công', importHint: 'Nạp file hoặc dữ liệu dán từ máy chấm công theo hồ sơ nguồn', needSubsidiary: 'Chọn công ty con trước',
             },
             confirmLock: (n) => (n ? `Còn ${n} ngoại lệ chưa xử lý: chứng từ chưa duyệt sẽ không được tính vào công.\n` : '') + 'Khóa công sẽ tổng hợp lại lần cuối, chốt số công của kỳ và khóa các chứng từ công đã duyệt. Tiếp tục?',
             confirmUnlock: 'Mở khóa công của kỳ này? Số công có thể thay đổi; bảng lương đã tính của kỳ cần tính lại.',
@@ -2445,6 +3312,7 @@ input[type="number"].s4vp-in{padding-right:4px}
             act: {
                 build: 'Build attendance', rebuild: 'Rebuild', lock: 'Lock attendance', unlock: 'Unlock attendance', toPayroll: 'Go to payroll', punches: 'Process punches',
                 loadSheet: 'Load employees into the sheet', readOnly: 'Your role can only view', lockedHint: 'Attendance of the period is locked', noUnlock: 'The period has a released payroll batch; it cannot be unlocked',
+                importPunches: 'Import time clock', importHint: 'Import a file or pasted data from a time clock using a punch source', needSubsidiary: 'Select a subsidiary first',
             },
             confirmLock: (n) => (n ? `${n} exceptions are still open: unapproved documents will not be counted.\n` : '') + 'Locking rebuilds the summary one last time, freezes the attendance of the period and locks approved attendance documents. Continue?',
             confirmUnlock: 'Unlock the attendance of this period? Work days may change; calculated payroll batches of the period must be recalculated.',
@@ -2651,6 +3519,8 @@ input[type="number"].s4vp-in{padding-right:4px}
         const pickRef = core.useRef(null);
         const renders = core.useRef(0);
         renders.current += 1;
+        // Hộp thoại Nạp chấm công (punchImport.js) đang mở
+        const [punchDlg, setPunchDlg] = core.useState(false);
         const load = () => {
             if (!subsidiary)
                 return Promise.resolve();
@@ -2848,8 +3718,15 @@ input[type="number"].s4vp-in{padding-right:4px}
         const current = picked || periodId;
         const periodSelect = jsx(AutoSelect, { value: current, onInput: (v) => v && v !== current && app.go('attendance', { period: v }), options: periodOptions, placeholder: current ? null : t.period, ariaLabel: t.period, width: 250 });
         const legacyItem = { label: t.legacy, onClick: () => app.go('attendanceLegacy') };
+        // Nạp chấm công: HR và administrator (cùng nhóm chạy processPunches); không phụ thuộc kỳ nên có cả khi chưa tải được bảng công
+        const mayImport = canImport(boot.user, data);
+        const importButton = mayImport ? jsx(Button, { label: t.act.importPunches, disabled: !subsidiary || !!app.busy, title: subsidiary ? t.act.importHint : t.act.needSubsidiary, onClick: () => setPunchDlg(true) }) : null;
+        const punchDialog = (onProcess) => punchDlg && mayImport && subsidiary ? (jsx(PunchImportDialog, { app: app, subsidiary: subsidiary, period: data ? data.period : null, periods: myPeriods.length ? myPeriods : periods, employees: data ? (data.rows || []).map((r) => ({ id: r.employee, code: r.code, name: r.name })) : [], onClose: () => setPunchDlg(false), onProcess: onProcess, onOpenPeriod: (id) => {
+                setPunchDlg(false);
+                app.go('attendance', { period: id });
+            } })) : null;
         if (!data) {
-            return (jsxs(Page, { children: [jsx(PageHeader, { title: t.titleNone, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: [legacyItem] }), jsx(Button, { label: t.reload, kind: "primary", disabled: !subsidiary || !!app.busy, onClick: () => load() })] }), jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading }) })] }));
+            return (jsxs(Page, { children: [jsx(PageHeader, { title: t.titleNone, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: [legacyItem] }), importButton, jsx(Button, { label: t.reload, kind: "primary", disabled: !subsidiary || !!app.busy, onClick: () => load() })] }), jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading }) }), punchDialog(null)] }));
         }
         // ------------------------------------------------------------------ dữ liệu suy ra
         const period = data.period;
@@ -3235,7 +4112,12 @@ input[type="number"].s4vp-in{padding-right:4px}
         const jobOpText = job ? t.job.ops[job.op] || t.job.ops.other : '';
         const jobStage = job && job.stage ? t.job.stage(job.stage, job.percent) : job && /PENDING/i.test(job.status || '') ? t.job.waiting : '';
         const jobCard = job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job.running(jobOpText) }), jobStage ? jsx("span", { children: jobStage }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null;
-        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb }, { label: t.periodCrumb(period.code) }], title: t.title(period.code), status: status, sub: subLine, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: menuItems }), showRebuild ? jsx(Button, { label: t.act.rebuild, disabled: !canEdit || busy, title: editTitle, onClick: build }) : null, primary] }), jobCard, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: gridCard }), panel || excCard ? (jsxs("div", { class: "s4vp-col-side", children: [panel, excCard] })) : null] }), dialog] }));
+        return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb }, { label: t.periodCrumb(period.code) }], title: t.title(period.code), status: status, sub: subLine, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: menuItems }), importButton, showRebuild ? jsx(Button, { label: t.act.rebuild, disabled: !canEdit || busy, title: editTitle, onClick: build }) : null, primary] }), jobCard, jsx(Stepper, { steps: steps, label: t.stepsLabel }), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: gridCard }), panel || excCard ? (jsxs("div", { class: "s4vp-col-side", children: [panel, excCard] })) : null] }), dialog, punchDialog(canEdit
+                    ? () => {
+                        setPunchDlg(false);
+                        processPunches();
+                    }
+                    : null)] }));
     }
 
     const TEXT$b = {

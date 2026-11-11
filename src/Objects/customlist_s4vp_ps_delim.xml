@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_s4vp_ps_delim">
+  <name>S4VP ps_delim</name>
+  <description>S4 VN Payroll code list ps_delim; values keep the Acumatica codes (A, C, S, T).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_ps_delim_a">
+      <value>A - Tự nhận</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_ps_delim_c">
+      <value>C - Dấu phẩy</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_ps_delim_s">
+      <value>S - Dấu chấm phẩy</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_ps_delim_t">
+      <value>T - Tab</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,6 +1,6 @@
 // api/Attendance: hàng đợi tác vụ nền của kỳ (queue, assertNotQueued, jobState, finishJob) với N/task, N/cache giả.
 // Kiểm: op punches xếp hàng được, hai tác vụ nền cùng kỳ không chạy chồng, màn hình đọc được tiến độ và kết quả khi xong.
-const mockEnv = { cache: {}, tasks: {}, submitted: [], seq: 0, punchError: null };
+const mockEnv = { cache: {}, tasks: {}, submitted: [], seq: 0, punchError: null, size: { employees: 12, cells: 372, background: false }, synced: [], submitError: null };
 
 jest.mock("N/runtime", () => ({ getCurrentUser: () => ({ id: 1 }) }), { virtual: true });
 jest.mock("N/log", () => ({ error: () => undefined, audit: () => undefined }), { virtual: true });
@@ -21,6 +21,11 @@ jest.mock("N/task", () => ({
   TaskStatus: { PENDING: "PENDING", PROCESSING: "PROCESSING", COMPLETE: "COMPLETE", FAILED: "FAILED" },
   create: (opt) => ({
     submit: () => {
+      if (mockEnv.submitError) {
+        const e = new Error(mockEnv.submitError.message);
+        e.name = mockEnv.submitError.name;
+        throw e;
+      }
       const id = `MR${++mockEnv.seq}`;
       mockEnv.tasks[id] = { status: "PENDING", stage: "" };
       mockEnv.submitted.push(Object.assign({ id }, opt));
@@ -42,12 +47,20 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Shifts", () =
     if (mockEnv.punchError) throw new Error(mockEnv.punchError);
     return { empIds: [] };
   },
+  punchSize: () => {
+    if (mockEnv.punchError) throw new Error(mockEnv.punchError);
+    return mockEnv.size;
+  },
+  processPunches: (id) => {
+    mockEnv.synced.push(id);
+    return { period: "202703", employees: mockEnv.size.employees, exceptions: 4, overtime: 2 };
+  },
 }));
 
 const Attendance = require("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Attendance");
 
 beforeEach(() => {
-  Object.assign(mockEnv, { cache: {}, tasks: {}, submitted: [], seq: 0, punchError: null });
+  Object.assign(mockEnv, { cache: {}, tasks: {}, submitted: [], seq: 0, punchError: null, size: { employees: 12, cells: 372, background: false }, synced: [], submitError: null });
 });
 
 describe("tác vụ nền chấm công của kỳ", () => {
@@ -105,5 +118,44 @@ describe("tác vụ nền chấm công của kỳ", () => {
     mockEnv.cache.period_8 = "MR9";
     expect(() => Attendance.assertNotQueued("8")).toThrow(/background/);
     expect(Attendance.jobState("8")).toMatchObject({ running: true, job: "MR9", op: "" });
+  });
+
+  test("xử lý chấm công: kỳ nhỏ chạy ngay, kỳ vượt ngưỡng hoặc chọn chạy nền thì xếp hàng op punches", () => {
+    expect(Attendance.runPunches("5")).toMatchObject({ employees: 12, exceptions: 4, overtime: 2 });
+    expect(mockEnv.synced).toEqual(["5"]);
+    expect(mockEnv.submitted).toHaveLength(0);
+    // Chọn chạy nền dù kỳ nhỏ
+    expect(Attendance.runPunches("6", true)).toEqual({ queued: true, job: "MR1", op: "punches" });
+    // Kỳ vượt ngưỡng (Shifts.punchSize quyết định)
+    mockEnv.size = { employees: 201, cells: 1407, background: true };
+    expect(Attendance.runPunches("7")).toEqual({ queued: true, job: "MR2", op: "punches" });
+    expect(mockEnv.synced).toEqual(["5"]);
+    expect(mockEnv.submitted.map((t) => t.params.custscript_s4vp_mra_period)).toEqual(["6", "7"]);
+    // Kỳ không hợp lệ: báo lỗi, không chạy gì
+    mockEnv.punchError = "The pay period is closed";
+    expect(() => Attendance.runPunches("8")).toThrow(/closed/);
+    expect(mockEnv.submitted).toHaveLength(2);
+  });
+
+  test("kỳ đang chạy nền: không chạy đồng bộ chồng lên, không xếp hàng lần hai", () => {
+    mockEnv.size = { employees: 1005, cells: 31155, background: true };
+    Attendance.runPunches("5");
+    mockEnv.size = { employees: 12, cells: 372, background: false };
+    expect(() => Attendance.runPunches("5")).toThrow(/background/);
+    expect(() => Attendance.runPunches("5", true)).toThrow(/background/);
+    expect(mockEnv.synced).toHaveLength(0);
+    expect(mockEnv.submitted).toHaveLength(1);
+    // Xong (summarize gỡ cờ): chạy lại được, kể cả đồng bộ
+    Attendance.finishJob("5", { op: "punches", ok: true, employees: 1005, errors: 0, exceptions: 1, overtime: 0 });
+    mockEnv.tasks.MR1.status = "COMPLETE";
+    expect(Attendance.runPunches("5")).toMatchObject({ exceptions: 4 });
+  });
+
+  test("deployment đang bận với kỳ khác: báo thử lại, không ghi cờ cho kỳ", () => {
+    mockEnv.submitError = { name: "MAP_REDUCE_ALREADY_RUNNING", message: "Map/Reduce script is already running" };
+    expect(() => Attendance.runPunches("5", true)).toThrow(/Another attendance background job is running/);
+    expect(mockEnv.cache.period_5).toBeUndefined();
+    mockEnv.submitError = { name: "SSS_OTHER", message: "boom" };
+    expect(() => Attendance.queue("5", "punches")).toThrow(/boom/);
   });
 });

@@ -595,7 +595,16 @@ define([
 		}
 		assertNotQueued(op === "accrue" ? null : periodId);
 		const t = task.create({ taskType: task.TaskType.MAP_REDUCE, scriptId: MR.scriptId, deploymentId: MR.deploymentId, params });
-		const job = t.submit();
+		let job;
+		try {
+			job = t.submit();
+		} catch (e) {
+			// Một deployment chỉ chạy một tác vụ tại một thời điểm: kỳ khác (hoặc cấp phép năm) đang chạy nền thì báo thử lại
+			if (/ALREADY_RUNNING|NO_DEPLOYMENTS_AVAILABLE|FAILED_TO_SUBMIT_JOB/i.test(`${(e && e.name) || ""} ${(e && e.message) || ""}`)) {
+				throw fail("Another attendance background job is running; try again in a few minutes", "Đang có tác vụ chấm công khác chạy nền, hãy thử lại sau ít phút");
+			}
+			throw e;
+		}
 		try {
 			const c = jobCache();
 			const owner = op === "accrue" ? null : periodId;
@@ -606,6 +615,19 @@ define([
 			log.error({ title: "s4vp attendance job cache", details: String(e.message || e) });
 		}
 		return { queued: true, job, op };
+	}
+
+	/**
+	 * Xử lý chấm công máy của kỳ (action processPunches): kỳ vượt ngưỡng (Shifts.punchBackground) hoặc người dùng chọn chạy
+	 * nền thì xếp hàng Map/Reduce op punches - trả {queued, job, op: 'punches'} như lập bảng công; kỳ nhỏ chạy ngay, nhưng
+	 * không chạy khi kỳ đang có tác vụ nền (tránh hai lần xử lý cùng xóa và sinh chứng từ tạm giữ của cùng nhân viên).
+	 * @param {string} periodId
+	 * @param {boolean} [background]
+	 */
+	function runPunches(periodId, background) {
+		if (background || Shifts.punchSize(periodId).background) return queue(periodId, "punches");
+		assertNotQueued(periodId);
+		return Shifts.processPunches(periodId);
 	}
 
 	// ------------------------------------------------------------------ sổ phép
@@ -824,5 +846,5 @@ define([
 		RECORD, INPUT, SYNC_LIMIT, reference, derive, save, act, build, lock, unlock, accrue, expire, adjust, balances, remainingPaidLeave, available, list,
 		// Chạy theo lô (Map/Reduce s4vp_mr_attendance)
 		sizeOf, queue, buildContext, eligibleProfiles, cleanupStale, buildChunk, lockChunk, unlockContext, unlockEmployees, unlockChunk, setSummaryLocked,
-		accrualProfiles, accrueFor, unlockSize, assertNotQueued, clearQueued, finishJob, jobState };
+		accrualProfiles, accrueFor, unlockSize, assertNotQueued, clearQueued, finishJob, jobState, runPunches };
 });

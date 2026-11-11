@@ -15,8 +15,13 @@ define([
 ], (Store, Settings, Clock, Dates, Money, Plan, Matcher, Sheet, Summary, RuleEval, WorkingDays, TimeImport, EmploymentDays) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
-	// Xử lý đồng bộ trong RESTlet tối đa số nhân viên x ngày này; lớn hơn thì chạy nền
+	// Ngưỡng xử lý chấm công máy (docs/PUNCH_IMPORT.md mục 5) - chỉ khai báo ở đây: RESTlet chạy đồng bộ khi kỳ có tối đa
+	// SYNC_EMPLOYEES nhân viên và tối đa SYNC_CELLS nhân viên x ngày; vượt một trong hai thì Map/Reduce s4vp_mr_attendance
+	// (op punches) chạy nền theo lô PUNCH_CHUNK nhân viên
 	const SYNC_CELLS = 3000;
+	const SYNC_EMPLOYEES = 200;
+	// Mỗi lô ở reduce (5.000 đơn vị): mỗi nhân viên tới một phiếu ngoại lệ và một đơn OT mỗi ngày, cộng phần xóa của lần trước
+	const PUNCH_CHUNK = 10;
 
 	// Điều kiện ngày trong SQL (QC lượt 2 #11): tham số chuỗi 'YYYY-MM-DD'
 	const DATE = "TO_DATE(?, 'YYYY-MM-DD')";
@@ -225,10 +230,21 @@ define([
 		return { period, from, to, days, prof, empIds, cells: empIds.length * days };
 	}
 
-	/** Cỡ việc xử lý chấm công của kỳ (nhân viên x ngày): RESTlet quyết định chạy ngay hay chạy nền. */
+	/**
+	 * Kỳ phải chạy nền? Nhân viên là hồ sơ lương thuộc nhóm lương của kỳ, ô là nhân viên x ngày dương lịch của kỳ (cận
+	 * trên của số ô phân ca, không cần truy vấn đếm phân ca trong RESTlet).
+	 * @param {{employees: number, cells: number}} size
+	 */
+	function punchBackground(size) {
+		return (Number(size && size.employees) || 0) > SYNC_EMPLOYEES || (Number(size && size.cells) || 0) > SYNC_CELLS;
+	}
+
+	/** Cỡ việc xử lý chấm công của kỳ (nhân viên x ngày): RESTlet quyết định chạy ngay hay chạy nền (background). */
 	function punchSize(periodId) {
 		const c = punchContext(periodId);
-		return { employees: c.empIds.length, days: c.days, cells: c.cells };
+		const size = { employees: c.empIds.length, days: c.days, cells: c.cells };
+		size.background = punchBackground(size);
+		return size;
 	}
 
 	/** Nhân viên của kỳ để Map/Reduce chia lô (kèm kiểm tra kỳ). */
@@ -320,12 +336,12 @@ define([
 	/**
 	 * Process Punches (VP502000): khớp lượt chấm với phân ca của kỳ, sinh phiếu ngoại lệ và đơn OT đề xuất ở Tạm giữ.
 	 * Chạy lại chỉ thay chứng từ Tạm giữ do lần trước sinh; chứng từ khác (kể cả nhập tay) không sinh trùng.
-	 * Chạy ngay trong RESTlet cho kỳ đến SYNC_CELLS nhân viên x ngày; kỳ lớn hơn do Map/Reduce s4vp_mr_attendance (op punches)
-	 * gọi processPunchChunk theo lô - RESTlet xếp hàng bằng Attendance.queue(kỳ, "punches").
+	 * Chạy ngay trong RESTlet khi kỳ không vượt ngưỡng (punchBackground); kỳ lớn hơn do Map/Reduce s4vp_mr_attendance
+	 * (op punches) gọi processPunchChunk theo lô - RESTlet xếp hàng qua Attendance.runPunches.
 	 */
 	function processPunches(periodId) {
 		const ctx = punchContext(periodId);
-		if (ctx.cells > SYNC_CELLS) {
+		if (punchBackground({ employees: ctx.empIds.length, cells: ctx.cells })) {
 			throw fail(`Too many employees x days (${ctx.empIds.length} x ${ctx.days}); run punch processing in the background`, `Quá nhiều nhân viên x ngày (${ctx.empIds.length} x ${ctx.days}), cần chạy xử lý chấm công nền`);
 		}
 		const r = processPunchChunk(periodId, ctx.empIds, ctx);
@@ -425,7 +441,7 @@ define([
 	}
 
 	return {
-		SYNC_CELLS, shifts, patterns, generateRoster, setRosterCell, roster, importPunches, processPunches, loadSheetEmployees, saveSheet, sheetSummaries, symbols,
+		SYNC_CELLS, SYNC_EMPLOYEES, PUNCH_CHUNK, punchBackground, shifts, patterns, generateRoster, setRosterCell, roster, importPunches, processPunches, loadSheetEmployees, saveSheet, sheetSummaries, symbols,
 		// Xử lý chấm công theo lô (Map/Reduce s4vp_mr_attendance, op punches)
 		punchContext, punchSize, punchEmployees, processPunchChunk, mergePunchResults,
 	};

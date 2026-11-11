@@ -302,5 +302,13 @@
       <permkey>[customrecord_s4vp_decision]</permkey>
       <permlevel>VIEW</permlevel>
     </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_punch_source]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_punch_map]</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
   </permissions>
 </role>

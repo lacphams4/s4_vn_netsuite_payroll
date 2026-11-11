@@ -24,6 +24,8 @@ import {call, post, openRecord} from '../lib/api.js';
 import {num, fmtDate, toNumber, fold} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
 import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, SearchBox, Tabs, Badge, Table, Field, TextInput, NumberInput, Select, AutoSelect, Dialog, SidePanel, Empty} from '../ui/kit.js';
+// Nạp dữ liệu máy chấm công theo hồ sơ nguồn (docs/PUNCH_IMPORT.md mục 4): hộp thoại và hàm thuần ở file riêng
+import {PunchImportDialog, canImport} from './punchImport.js';
 
 const TEXT = {
 	vi: {
@@ -50,6 +52,7 @@ const TEXT = {
 		act: {
 			build: 'Tổng hợp công', rebuild: 'Tổng hợp lại', lock: 'Khóa công', unlock: 'Mở khóa công', toPayroll: 'Sang chạy lương', punches: 'Xử lý chấm công máy',
 			loadSheet: 'Nạp nhân viên vào bảng công', readOnly: 'Vai trò của bạn chỉ được xem', lockedHint: 'Kỳ công đã khóa', noUnlock: 'Kỳ đã có bảng lương ghi sổ, không mở khóa được',
+			importPunches: 'Nạp chấm công', importHint: 'Nạp file hoặc dữ liệu dán từ máy chấm công theo hồ sơ nguồn', needSubsidiary: 'Chọn công ty con trước',
 		},
 		confirmLock: (n) => (n ? `Còn ${n} ngoại lệ chưa xử lý: chứng từ chưa duyệt sẽ không được tính vào công.\n` : '') + 'Khóa công sẽ tổng hợp lại lần cuối, chốt số công của kỳ và khóa các chứng từ công đã duyệt. Tiếp tục?',
 		confirmUnlock: 'Mở khóa công của kỳ này? Số công có thể thay đổi; bảng lương đã tính của kỳ cần tính lại.',
@@ -164,6 +167,7 @@ const TEXT = {
 		act: {
 			build: 'Build attendance', rebuild: 'Rebuild', lock: 'Lock attendance', unlock: 'Unlock attendance', toPayroll: 'Go to payroll', punches: 'Process punches',
 			loadSheet: 'Load employees into the sheet', readOnly: 'Your role can only view', lockedHint: 'Attendance of the period is locked', noUnlock: 'The period has a released payroll batch; it cannot be unlocked',
+			importPunches: 'Import time clock', importHint: 'Import a file or pasted data from a time clock using a punch source', needSubsidiary: 'Select a subsidiary first',
 		},
 		confirmLock: (n) => (n ? `${n} exceptions are still open: unapproved documents will not be counted.\n` : '') + 'Locking rebuilds the summary one last time, freezes the attendance of the period and locks approved attendance documents. Continue?',
 		confirmUnlock: 'Unlock the attendance of this period? Work days may change; calculated payroll batches of the period must be recalculated.',
@@ -375,6 +379,8 @@ export default function AttendanceView({app}) {
 	const pickRef = useRef(null);
 	const renders = useRef(0);
 	renders.current += 1;
+	// Hộp thoại Nạp chấm công (punchImport.js) đang mở
+	const [punchDlg, setPunchDlg] = useState(false);
 
 	const load = () => {
 		if (!subsidiary) return Promise.resolve();
@@ -555,13 +561,34 @@ export default function AttendanceView({app}) {
 	const periodSelect = <AutoSelect value={current} onInput={(v) => v && v !== current && app.go('attendance', {period: v})} options={periodOptions} placeholder={current ? null : t.period} ariaLabel={t.period} width={250} />;
 	const legacyItem = {label: t.legacy, onClick: () => app.go('attendanceLegacy')};
 
+	// Nạp chấm công: HR và administrator (cùng nhóm chạy processPunches); không phụ thuộc kỳ nên có cả khi chưa tải được bảng công
+	const mayImport = canImport(boot.user, data);
+	const importButton = mayImport ? <Button label={t.act.importPunches} disabled={!subsidiary || !!app.busy} title={subsidiary ? t.act.importHint : t.act.needSubsidiary} onClick={() => setPunchDlg(true)} /> : null;
+	const punchDialog = (onProcess) =>
+		punchDlg && mayImport && subsidiary ? (
+			<PunchImportDialog
+				app={app}
+				subsidiary={subsidiary}
+				period={data ? data.period : null}
+				periods={myPeriods.length ? myPeriods : periods}
+				employees={data ? (data.rows || []).map((r) => ({id: r.employee, code: r.code, name: r.name})) : []}
+				onClose={() => setPunchDlg(false)}
+				onProcess={onProcess}
+				onOpenPeriod={(id) => {
+					setPunchDlg(false);
+					app.go('attendance', {period: id});
+				}}
+			/>
+		) : null;
+
 	if (!data) {
 		return (
 			<Page>
-				<PageHeader title={t.titleNone} actions={[periodSelect, <Menu label={t.more} align="right" items={[legacyItem]} />, <Button label={t.reload} kind="primary" disabled={!subsidiary || !!app.busy} onClick={() => load()} />]} />
+				<PageHeader title={t.titleNone} actions={[periodSelect, <Menu label={t.more} align="right" items={[legacyItem]} />, importButton, <Button label={t.reload} kind="primary" disabled={!subsidiary || !!app.busy} onClick={() => load()} />]} />
 				<Card>
 					<Empty text={!subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading} />
 				</Card>
+				{punchDialog(null)}
 			</Page>
 		);
 	}
@@ -1216,7 +1243,7 @@ export default function AttendanceView({app}) {
 				title={t.title(period.code)}
 				status={status}
 				sub={subLine}
-				actions={[periodSelect, <Menu label={t.more} align="right" items={menuItems} />, showRebuild ? <Button label={t.act.rebuild} disabled={!canEdit || busy} title={editTitle} onClick={build} /> : null, primary]}
+				actions={[periodSelect, <Menu label={t.more} align="right" items={menuItems} />, importButton, showRebuild ? <Button label={t.act.rebuild} disabled={!canEdit || busy} title={editTitle} onClick={build} /> : null, primary]}
 			/>
 			{jobCard}
 			<Stepper steps={steps} label={t.stepsLabel} />
@@ -1231,6 +1258,14 @@ export default function AttendanceView({app}) {
 				) : null}
 			</div>
 			{dialog}
+			{punchDialog(
+				canEdit
+					? () => {
+							setPunchDlg(false);
+							processPunches();
+					  }
+					: null
+			)}
 		</Page>
 	);
 }

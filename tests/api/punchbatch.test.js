@@ -1,6 +1,14 @@
 // api/Shifts xử lý chấm công theo lô (Map/Reduce s4vp_mr_attendance, op punches) với Store giả trong bộ nhớ: chạy theo lô
 // phải cho cùng kết quả với chạy một lần (processPunches), chạy lại một lô không sinh trùng, kỳ lớn không chạy đồng bộ.
-const mockDb = { tables: {}, seq: 1000, removed: [] };
+// Phần cuối chạy chính script Map/Reduce (getInputData, map, reduce, summarize) trên cùng dữ liệu giả.
+const mockDb = { tables: {}, seq: 1000, removed: [], params: {}, finished: [], logs: [] };
+
+jest.mock("N/runtime", () => ({ getCurrentScript: () => ({ getParameter: ({ name }) => mockDb.params[name] || null }) }), { virtual: true });
+jest.mock("N/log", () => ({ audit: (o) => mockDb.logs.push(o), error: (o) => mockDb.logs.push(o), debug: () => undefined }), { virtual: true });
+// summarize ghi kết quả vào cờ / kết quả tác vụ nền của kỳ (cache) - ở đây chỉ ghi lại để kiểm
+jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Attendance", () => ({
+  finishJob: (period, result) => mockDb.finished.push({ period, result }),
+}));
 
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () => {
   const rows = (name) => mockDb.tables[name] || (mockDb.tables[name] = []);
@@ -42,6 +50,7 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Settings", ()
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Clock", () => ({ today: () => "2026-11-10" }));
 
 const Shifts = require("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Shifts");
+const Mr = require("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_mr_attendance");
 
 const PERIOD = "5";
 const EMPLOYEES = 12;
@@ -186,11 +195,11 @@ describe("xử lý chấm công theo lô", () => {
 
   test("cỡ việc và ngưỡng chạy nền", () => {
     seed();
-    expect(Shifts.punchSize(PERIOD)).toEqual({ employees: EMPLOYEES, days: 31, cells: EMPLOYEES * 31 });
+    expect(Shifts.punchSize(PERIOD)).toEqual({ employees: EMPLOYEES, days: 31, cells: EMPLOYEES * 31, background: false });
     expect(Shifts.punchSize(PERIOD).cells).toBeLessThanOrEqual(Shifts.SYNC_CELLS);
     // Kỳ 1.005 nhân viên: không chạy đồng bộ (RESTlet xếp hàng thay vì gọi), danh sách chia lô vẫn lấy được
     for (let n = 1; n <= 1005 - EMPLOYEES; n++) mockDb.tables.employee.push({ id: `b${n}`, name: `b${n}`, employee: String(2000 + n), subsidiary: "13", paygroup: "1" });
-    expect(Shifts.punchSize(PERIOD)).toEqual({ employees: 1005, days: 31, cells: 1005 * 31 });
+    expect(Shifts.punchSize(PERIOD)).toEqual({ employees: 1005, days: 31, cells: 1005 * 31, background: true });
     expect(Shifts.punchSize(PERIOD).cells).toBeGreaterThan(Shifts.SYNC_CELLS);
     expect(() => Shifts.processPunches(PERIOD)).toThrow(/background/);
     expect(mockDb.removed).toHaveLength(0);
@@ -205,5 +214,135 @@ describe("xử lý chấm công theo lô", () => {
     mockDb.tables.period[0].att_status = "O";
     mockDb.tables.period[0].status = "C";
     expect(() => Shifts.punchSize(PERIOD)).toThrow(/closed/);
+  });
+});
+
+describe("ngưỡng chạy nền xử lý chấm công", () => {
+  test("ngưỡng: quá 200 nhân viên hoặc quá 3.000 nhân viên x ngày", () => {
+    expect(Shifts.SYNC_EMPLOYEES).toBe(200);
+    expect(Shifts.SYNC_CELLS).toBe(3000);
+    expect(Shifts.punchBackground({ employees: 200, cells: 3000 })).toBe(false);
+    expect(Shifts.punchBackground({ employees: 201, cells: 1407 })).toBe(true);
+    expect(Shifts.punchBackground({ employees: 96, cells: 2976 })).toBe(false);
+    expect(Shifts.punchBackground({ employees: 97, cells: 3007 })).toBe(true);
+    expect(Shifts.punchBackground(null)).toBe(false);
+  });
+
+  test("kỳ tuần: 200 người chạy ngay, 201 người chạy nền dù chưa tới 3.000 ô", () => {
+    seed();
+    mockDb.tables.period[0].end = "2027-03-07";
+    const add = (n) => {
+      for (let i = 0; i < n; i++) mockDb.tables.employee.push({ id: `w${mockDb.tables.employee.length}`, name: "w", employee: String(5000 + mockDb.tables.employee.length), subsidiary: "13", paygroup: "1" });
+    };
+    add(200 - EMPLOYEES);
+    expect(Shifts.punchSize(PERIOD)).toEqual({ employees: 200, days: 7, cells: 1400, background: false });
+    expect(Shifts.processPunches(PERIOD).employees).toBe(200);
+    add(1);
+    expect(Shifts.punchSize(PERIOD)).toEqual({ employees: 201, days: 7, cells: 1407, background: true });
+    expect(() => Shifts.processPunches(PERIOD)).toThrow(/background/);
+  });
+});
+
+describe("Map/Reduce s4vp_mr_attendance op punches", () => {
+  let sync;
+  let syncDocs;
+
+  beforeAll(() => {
+    seed();
+    sync = Shifts.processPunches(PERIOD);
+    syncDocs = snapshot();
+  });
+
+  /** Chạy đủ bốn giai đoạn như NetSuite; failKey: lô có reduce lỗi (không ghi gì), như hết governance trước khi ghi. */
+  function runMr(opt = {}) {
+    mockDb.params = { custscript_s4vp_mra_op: "punches", custscript_s4vp_mra_period: PERIOD };
+    mockDb.finished = [];
+    mockDb.logs = [];
+    const it = (list) => ({
+      iterator: () => ({
+        each: (fn) => {
+          for (const [k, v] of list) if (fn(k, v) === false) break;
+        },
+      }),
+    });
+    let input = [];
+    let inputError = null;
+    try {
+      input = Mr.getInputData();
+    } catch (e) {
+      inputError = JSON.stringify({ name: "S4VP", message: e.message });
+    }
+    const mapped = {};
+    input.forEach((v, i) => Mr.map({ key: String(i), value: JSON.stringify(v), write: ({ key, value }) => (mapped[key] = mapped[key] || []).push(value) }));
+    const output = [];
+    const reduceErrors = [];
+    for (const [key, values] of Object.entries(mapped)) {
+      if (opt.failKey === key) {
+        reduceErrors.push([key, JSON.stringify({ name: "SSS_USAGE_LIMIT_EXCEEDED", message: "Script Execution Usage Limit Exceeded" })]);
+        continue;
+      }
+      Mr.reduce({ key, values, write: ({ key: k, value }) => output.push([k, value]) });
+    }
+    Mr.summarize({ inputSummary: { error: inputError }, mapSummary: { errors: it([]) }, reduceSummary: { errors: it(reduceErrors) }, output: it(output) });
+    return { input, finished: mockDb.finished };
+  }
+
+  test("chia lô theo PUNCH_CHUNK nhân viên của nhóm lương của kỳ", () => {
+    seed();
+    mockDb.params = { custscript_s4vp_mra_op: "punches", custscript_s4vp_mra_period: PERIOD };
+    const input = Mr.getInputData();
+    expect(input).toHaveLength(Math.ceil(EMPLOYEES / Shifts.PUNCH_CHUNK));
+    expect(input.every((c) => c.op === "punches" && c.period === PERIOD && c.ids.length <= Shifts.PUNCH_CHUNK)).toBe(true);
+    expect(input.flatMap((c) => c.ids).sort()).toEqual(Shifts.punchEmployees(PERIOD).sort());
+    expect(input.flatMap((c) => c.ids)).not.toContain("900");
+  });
+
+  test("chạy nền cho cùng chứng từ và cùng tổng với chạy đồng bộ; summarize ghi kết quả cho màn hình", () => {
+    seed();
+    const { finished } = runMr();
+    expect(snapshot()).toEqual(syncDocs);
+    expect(finished).toEqual([
+      { period: PERIOD, result: { op: "punches", ok: true, employees: EMPLOYEES, errors: 0, deleted: sync.deleted, exceptions: sync.exceptions, overtime: sync.overtime, kept: sync.kept } },
+    ]);
+    // Màn hình (views/attendance.js t.done.punches) đọc exceptions, overtime của kết quả
+    expect(finished[0].result.exceptions).toBeGreaterThan(0);
+    expect(finished[0].result.overtime).toBeGreaterThan(0);
+    expect(mockDb.logs.some((l) => /exception\(s\)/.test(l.details))).toBe(true);
+  });
+
+  test("chạy lại cả tác vụ không sinh trùng", () => {
+    seed();
+    runMr();
+    const first = mockDb.finished[0].result;
+    runMr();
+    expect(snapshot()).toEqual(syncDocs);
+    const again = mockDb.finished[0].result;
+    expect(again).toMatchObject({ ok: true, exceptions: first.exceptions, overtime: first.overtime, kept: first.kept });
+    // Lần sau thay đúng chứng từ tạm giữ lần trước sinh
+    expect(again.deleted).toBe(first.exceptions + first.overtime);
+  });
+
+  test("một lô lỗi: kết quả báo lỗi, vẫn gỡ cờ; chạy lại thì đủ chứng từ", () => {
+    seed();
+    const { finished } = runMr({ failKey: "1" });
+    expect(finished).toHaveLength(1);
+    expect(finished[0].result).toMatchObject({ op: "punches", ok: false, errors: 1, message: "Script Execution Usage Limit Exceeded" });
+    expect(finished[0].result.employees).toBe(Shifts.PUNCH_CHUNK);
+    expect(mockDb.logs.some((l) => /s4vp_mr_attendance punches/.test(l.title) && /Usage Limit/.test(l.details))).toBe(true);
+    runMr();
+    expect(snapshot()).toEqual(syncDocs);
+    expect(mockDb.finished[0].result).toMatchObject({ ok: true, employees: EMPLOYEES, exceptions: sync.exceptions, overtime: sync.overtime });
+  });
+
+  test("kỳ bị khóa công sau khi xếp hàng: getInputData lỗi, không đụng chứng từ, kết quả báo lỗi", () => {
+    seed();
+    const before = snapshot();
+    mockDb.tables.period[0].att_status = "L";
+    const { input, finished } = runMr();
+    expect(input).toHaveLength(0);
+    expect(snapshot()).toEqual(before);
+    expect(mockDb.removed).toHaveLength(0);
+    expect(finished[0].result).toMatchObject({ op: "punches", ok: false, errors: 1, employees: 0 });
+    expect(finished[0].result.message).toMatch(/locked/);
   });
 });

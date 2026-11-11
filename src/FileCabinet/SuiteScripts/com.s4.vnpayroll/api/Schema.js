@@ -4370,6 +4370,135 @@ define([], () => {
 					"target": null
 				}
 			}
+		},
+		"punch_source": {
+			"type": "customrecord_s4vp_punch_source",
+			"includeName": true,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_psr_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"description": {
+					"id": "custrecord_s4vp_psr_description",
+					"type": "text",
+					"target": null
+				},
+				"layout": {
+					"id": "custrecord_s4vp_psr_layout",
+					"type": "select",
+					"target": "list:ps_layout"
+				},
+				"has_header": {
+					"id": "custrecord_s4vp_psr_has_header",
+					"type": "check",
+					"target": null
+				},
+				"skip_lines": {
+					"id": "custrecord_s4vp_psr_skip_lines",
+					"type": "int",
+					"target": null
+				},
+				"delimiter": {
+					"id": "custrecord_s4vp_psr_delimiter",
+					"type": "select",
+					"target": "list:ps_delim"
+				},
+				"col_emp": {
+					"id": "custrecord_s4vp_psr_col_emp",
+					"type": "text",
+					"target": null
+				},
+				"col_datetime": {
+					"id": "custrecord_s4vp_psr_col_datetime",
+					"type": "text",
+					"target": null
+				},
+				"col_date": {
+					"id": "custrecord_s4vp_psr_col_date",
+					"type": "text",
+					"target": null
+				},
+				"col_time": {
+					"id": "custrecord_s4vp_psr_col_time",
+					"type": "text",
+					"target": null
+				},
+				"col_in": {
+					"id": "custrecord_s4vp_psr_col_in",
+					"type": "text",
+					"target": null
+				},
+				"col_out": {
+					"id": "custrecord_s4vp_psr_col_out",
+					"type": "text",
+					"target": null
+				},
+				"col_device": {
+					"id": "custrecord_s4vp_psr_col_device",
+					"type": "text",
+					"target": null
+				},
+				"date_format": {
+					"id": "custrecord_s4vp_psr_date_format",
+					"type": "select",
+					"target": "list:ps_datefmt"
+				},
+				"id_kind": {
+					"id": "custrecord_s4vp_psr_id_kind",
+					"type": "select",
+					"target": "list:ps_idkind"
+				},
+				"device_default": {
+					"id": "custrecord_s4vp_psr_device_default",
+					"type": "text",
+					"target": null
+				},
+				"minute_offset": {
+					"id": "custrecord_s4vp_psr_minute_offset",
+					"type": "int",
+					"target": null
+				}
+			}
+		},
+		"punch_map": {
+			"type": "customrecord_s4vp_punch_map",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"source": {
+					"id": "custrecord_s4vp_pmp_source",
+					"type": "select",
+					"target": "rec:punch_source"
+				},
+				"device": {
+					"id": "custrecord_s4vp_pmp_device",
+					"type": "text",
+					"target": null
+				},
+				"machine_id": {
+					"id": "custrecord_s4vp_pmp_machine_id",
+					"type": "text",
+					"target": null
+				},
+				"employee": {
+					"id": "custrecord_s4vp_pmp_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"effective": {
+					"id": "custrecord_s4vp_pmp_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiration": {
+					"id": "custrecord_s4vp_pmp_expiration",
+					"type": "date",
+					"target": null
+				}
+			}
 		}
 	};
 	const lists = {
@@ -4965,6 +5094,39 @@ define([], () => {
 			"values": {
 				"D": "val_s4vp_hrd_status_d",
 				"A": "val_s4vp_hrd_status_a"
+			}
+		},
+		"ps_layout": {
+			"type": "customlist_s4vp_ps_layout",
+			"values": {
+				"E": "val_s4vp_ps_layout_e",
+				"P": "val_s4vp_ps_layout_p",
+				"Z": "val_s4vp_ps_layout_z"
+			}
+		},
+		"ps_delim": {
+			"type": "customlist_s4vp_ps_delim",
+			"values": {
+				"A": "val_s4vp_ps_delim_a",
+				"C": "val_s4vp_ps_delim_c",
+				"S": "val_s4vp_ps_delim_s",
+				"T": "val_s4vp_ps_delim_t"
+			}
+		},
+		"ps_datefmt": {
+			"type": "customlist_s4vp_ps_datefmt",
+			"values": {
+				"YMD": "val_s4vp_ps_datefmt_ymd",
+				"DMY": "val_s4vp_ps_datefmt_dmy",
+				"MDY": "val_s4vp_ps_datefmt_mdy"
+			}
+		},
+		"ps_idkind": {
+			"type": "customlist_s4vp_ps_idkind",
+			"values": {
+				"N": "val_s4vp_ps_idkind_n",
+				"M": "val_s4vp_ps_idkind_m",
+				"B": "val_s4vp_ps_idkind_b"
 			}
 		}
 	};

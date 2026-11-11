@@ -1,0 +1,20 @@
+<customlist scriptid="customlist_s4vp_ps_layout">
+  <name>S4VP ps_layout</name>
+  <description>S4 VN Payroll code list ps_layout; values keep the Acumatica codes (E, P, Z).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_ps_layout_e">
+      <value>E - Mỗi dòng một lượt chấm</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_ps_layout_p">
+      <value>P - Mỗi dòng giờ vào và giờ ra</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_ps_layout_z">
+      <value>Z - ZKTeco attlog</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

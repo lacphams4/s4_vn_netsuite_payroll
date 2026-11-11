@@ -15,8 +15,8 @@
 define(["N/runtime", "N/log", "../api/Attendance", "../api/Store", "../api/Shifts"], (runtime, log, Attendance, Store, Shifts) => {
 	// Làm việc ở reduce (5.000 đơn vị), không ở map (1.000 đơn vị): mỗi lô nạp lại ngữ cảnh kỳ
 	const CHUNK = 25;
-	// Xử lý chấm công ghi nhiều record hơn (mỗi nhân viên tới một phiếu ngoại lệ và một đơn OT mỗi ngày, cộng phần xóa của lần trước)
-	const PUNCH_CHUNK = 10;
+	// Xử lý chấm công ghi nhiều record hơn: lô nhỏ hơn, cỡ lô khai báo cùng ngưỡng chạy nền ở api/Shifts
+	const PUNCH_CHUNK = Shifts.PUNCH_CHUNK || 10;
 
 	function param(name) {
 		return String(runtime.getCurrentScript().getParameter({ name }) || "");

@@ -17,7 +17,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth", "../api/LaborAnalytics", "../api/HrCore", "../api/ReportsHub", "../api/AdvancesV2", "../api/SetupHub", "../api/OutputsV2", "../api/Approvals", "../api/CommissionV2", "../api/OutputSources"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources) => {
+define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth", "../api/LaborAnalytics", "../api/HrCore", "../api/ReportsHub", "../api/AdvancesV2", "../api/SetupHub", "../api/OutputsV2", "../api/Approvals", "../api/CommissionV2", "../api/OutputSources", "../api/PunchImport"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
@@ -56,7 +56,9 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	// Thứ tự đăng ký quyết định mô-đun nào thắng khi trùng tên action (không nên trùng); action cũ luôn được ưu tiên.
 	// CommissionV2: hoa hồng (đọc "payroll", ghi "acct"); OutputSources: sản lượng từ giao dịch (outputSources, outputSourcePreview,
 	// outputSourceGenerate - quyền khai trong mô-đun)
-	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources];
+	// PunchImport: nạp file máy chấm công theo hồ sơ nguồn (punchSourcesView, punchMappings đọc "payroll"; punchPreview, punchCommit,
+	// punchMapSave ghi "hr") - docs/PUNCH_IMPORT.md mục 3
+	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport];
 	const ROLE_SETS = {
 		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
 		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
@@ -424,12 +426,9 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 					return Shifts.setRosterCell(body.employee, body.workDate, body.shift, body.location, body.workCenter);
 				case "importPunches":
 					return Shifts.importPunches(body.rows || [], body.source || "I");
-				case "processPunches": {
-					// Kỳ lớn (nhân viên x ngày vượt ngưỡng) chạy nền bằng Map/Reduce chấm công, op punches; mỗi kỳ một tác vụ nền
-					if (body.background || Shifts.punchSize(body.id).cells > Shifts.SYNC_CELLS) return Attendance.queue(body.id, "punches");
-					Attendance.assertNotQueued(body.id);
-					return Shifts.processPunches(body.id);
-				}
+				case "processPunches":
+					// Kỳ vượt ngưỡng (api/Shifts: 200 nhân viên hoặc 3.000 nhân viên x ngày) chạy nền Map/Reduce op punches; mỗi kỳ một tác vụ nền
+					return Attendance.runPunches(body.id, !!body.background);
 				case "loadSheetEmployees":
 					return Shifts.loadSheetEmployees(body.id);
 				case "saveSheet":
