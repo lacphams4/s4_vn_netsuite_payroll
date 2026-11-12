@@ -1,4 +1,4 @@
-"""Hai hình cho wiki S4 VN Payroll: (1) sơ đồ khối hai tầng, (2) lưu đồ chu kỳ tháng lương. Xuất một khối HTML tự chứa."""
+"""Hai hình cho wiki S4 Advanced Payroll: (1) sơ đồ khối hai tầng, (2) lưu đồ chu kỳ tháng lương. Xuất một khối HTML tự chứa."""
 import html
 import sys
 
@@ -32,7 +32,7 @@ def tlines(x, y, lines, cls, lh=14.5, anchor="start"):
 GROUPS = [
     ("nb", "Nền tảng", 200, [(1, "Thiết lập ban đầu", "Tham số pháp lý, tài khoản, nhóm lương, kỳ lương, quy tắc thu nhập"),
                              (2, "Hồ sơ nhân sự và lương", "Hồ sơ lương, lịch sử lương, hợp đồng, quyết định, người phụ thuộc")]),
-    ("gn", "Ghi nhận trong kỳ", 262, [(3, "Chấm công và thời gian", "Đơn từ, máy chấm công, khóa công"),
+    ("gn", "Ghi nhận trong kỳ", 262, [(3, "Chấm công và thời gian", "Chế độ ca, xếp ca, đơn từ, máy chấm công, khóa công"),
                                        (4, "Nghỉ phép", "Cấp phép, sổ phép, đơn nghỉ"),
                                        (5, "Sản lượng và lương khoán", "Đơn giá, phiếu cá nhân / tổ"),
                                        (6, "Hoa hồng nhân viên kinh doanh", "Kế hoạch, doanh số NetSuite, DMS"),
@@ -55,7 +55,7 @@ CORE = [
     ("Role & Permission", "Vai trò S4VP Payroll HR, Accountant; vai trò chạy ẩn của cổng", "→ 16", [("quyền", "up")]),
     ("Employee Center", "Tab Lương của tôi, portlet; đăng nhập của nhân viên", "↔ 15", [("đơn từ", "up"), ("phiếu lương", "down")]),
 ]
-BAR = [("Menu", "Tab Lương VN trong menu NetSuite"), ("Dữ liệu", "Custom record ngay trong NetSuite"), ("Quyền", "Vai trò, quyền chuẩn của NetSuite"),
+BAR = [("Menu", "Tab S4 Advanced Payroll trong menu NetSuite"), ("Dữ liệu", "Custom record ngay trong NetSuite"), ("Quyền", "Vai trò, quyền chuẩn của NetSuite"),
        ("Ghi sổ", "Journal Entry, Vendor Bill chuẩn"), ("Người dùng", "Người dùng NetSuite, Employee Center"), ("Báo cáo", "Báo cáo trong gói, CSV, bản in PDF")]
 
 
@@ -75,7 +75,7 @@ def fig1():
     o.append(f'<text x="250" y="40" class="f-sub">một cơ sở dữ liệu · một lần đăng nhập · một bộ phân quyền</text>')
     # tầng 1
     o.append(f'<rect x="22" y="{T1Y - 24}" width="{W - 44}" height="{T1B - T1Y + 30}" rx="12" class="f-t1"/>')
-    o.append(f'<text x="{X0}" y="{T1Y - 5}" class="f-h2">S4 VN Payroll · SuiteApp cài ngay trong Oracle NetSuite</text>')
+    o.append(f'<text x="{X0}" y="{T1Y - 5}" class="f-h2">S4 Advanced Payroll · SuiteApp cài ngay trong Oracle NetSuite</text>')
     # hàng kiểm soát
     o.append(f'<rect x="{X0}" y="{T1Y + 6}" width="{X1 - X0}" height="44" rx="8" class="f-box" style="--c: var(--dg-nb)"/>')
     o.append(f'<text x="{X0 + 12}" y="{T1Y + 25}" class="f-name"><tspan class="f-num">16</tspan>  Kiểm soát nội bộ và phân quyền</text>')
@@ -140,7 +140,7 @@ def fig1():
         o.append(f'<rect x="{bx:.1f}" y="{BARY}" width="{bw:.1f}" height="62" rx="8" class="f-bar"/>')
         o.append(f'<text x="{bx + 10:.1f}" y="{BARY + 19}" class="f-name">{esc(k)}</text>')
         o.append(tlines(bx + 10, BARY + 36, wrap(v, bw - 18, FS)[:2], "f-desc"))
-    svg = (f'<svg class="dg-svg" viewBox="0 0 {W} {H}" role="img" aria-label="Sơ đồ khối hai tầng S4 VN Payroll trong Oracle NetSuite" xmlns="http://www.w3.org/2000/svg">'
+    svg = (f'<svg class="dg-svg" viewBox="0 0 {W} {H}" role="img" aria-label="Sơ đồ khối hai tầng S4 Advanced Payroll trong Oracle NetSuite" xmlns="http://www.w3.org/2000/svg">'
            '<defs><marker id="dg-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-ahead"/></marker>'
            '<marker id="dg-ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-aheadr"/></marker></defs>'
            + "".join(o) + "</svg>")
@@ -150,7 +150,9 @@ def fig1():
 # ------------------------------------------------------------------ Hình 2: lưu đồ chu kỳ tháng lương
 LANES = [("HR", "dg-gn"), ("Hệ thống", "dg-core"), ("Người duyệt", "dg-nd"), ("Kế toán", "dg-dr")]
 STEPS = [  # (làn, kiểu s/t/d/e, chữ)
-    (0, "s", "Khóa công kỳ L"),
+    (0, "s", "Chế độ ca, sửa ca ngoại lệ"),
+    (1, "t", "Khớp chấm công với lịch ca"),
+    (0, "t", "Khóa công kỳ L"),
     (0, "t", "Tạo bảng lương, nạp nhân viên, giờ công H"),
     (0, "t", "Nhập tay thu nhập, khấu trừ"),
     (1, "t", "Tính lương B→C"),
@@ -161,11 +163,11 @@ STEPS = [  # (làn, kiểu s/t/d/e, chữ)
     (1, "t", "Cấn trừ tạm ứng, khóa phiếu khoán, hoa hồng"),
     (3, "e", "Bill cơ quan thuế, BHXH; file chi lương; phiếu lương"),
 ]
-BACK = [(5, 3, "Còn lỗi: sửa dữ liệu, tính lại", 66), (7, 3, "Từ chối J, mở lại về H", 44), (8, 2, "Sai sau ghi sổ: void bill, đảo R→V, lập bảng mới", 22)]
+BACK = [(7, 5, "Còn lỗi: sửa dữ liệu, tính lại", 66), (9, 5, "Từ chối J, mở lại về H", 44), (10, 4, "Sai sau ghi sổ: void bill, đảo R→V, lập bảng mới", 22)]
 
 
 def fig2():
-    W, LW, TOP, LH = 1240, 112, 86, 112
+    W, LW, TOP, LH = 1400, 112, 86, 112
     H = TOP + LH * len(LANES) + 12
     colw = (W - LW - 20) / len(STEPS)
     NW = colw - 16
@@ -203,7 +205,7 @@ def fig2():
             d = f"M{sx:.1f},{ay:.1f} L{mx:.1f},{ay:.1f} L{mx:.1f},{by:.1f} L{ex - 2:.1f},{by:.1f}"
         o.append(f'<path d="{d}" class="f-edge" marker-end="url(#dg-ah)"/>')
         if ak == "d":
-            lab = "Có: P→A" if k == 6 else "Có"
+            lab = "Có: P→A" if k == 8 else "Có"
             o.append(f'<text x="{sx + 4:.1f}" y="{ay + 15:.1f}" class="f-elab">{esc(lab)}</text>')
     # nhánh quay lại (đỏ, nét đứt) đi phía trên làn HR
     for fr, to, lab, ly in BACK:
@@ -270,12 +272,12 @@ STYLE = """<style>
 .dg-cap b { color: var(--dg-ink); }
 </style>"""
 
-SRC = "Nguồn: Sổ tay quy trình S4 VN Payroll (wiki), đối chiếu ngày 11/11/2026."
+SRC = "Nguồn: Sổ tay quy trình S4 Advanced Payroll (wiki), đối chiếu ngày 12/11/2026."
 CAP1 = ("Đọc hình: tầng trên là 16 module của gói, xếp theo dòng dữ liệu từ nền tảng tới đầu ra; tầng dưới là các phân hệ chuẩn "
         "của Oracle NetSuite mà gói đọc vào (→) hoặc vừa đọc vừa ghi (↔). Cả hai tầng nằm trong một khung: gói chạy ngay trong "
         "Oracle NetSuite, không phải hệ thống riêng. * Sản lượng từ chứng từ sản xuất, xuất kho mới kiểm bằng test, chưa chạy trên "
         "account có dùng sản xuất.")
-CAP2 = ("Đọc hình: HR khóa công, lập và tính bảng lương; người duyệt duyệt lần lượt từng cấp; kế toán ghi sổ một Journal Entry "
+CAP2 = ("Đọc hình: HR khai chế độ ca và sửa ca ngoại lệ, hệ thống khớp lượt chấm với lịch ca; HR khóa công, lập và tính bảng lương; người duyệt duyệt lần lượt từng cấp; kế toán ghi sổ một Journal Entry "
         "rồi lập bill, file chi lương. Mã trạng thái: L công đã khóa; bảng lương H Tạm giữ, B Chờ tính, C Đã tính, P Chờ duyệt, "
         "A Đã duyệt, J Từ chối, R Đã ghi sổ, V Đã đảo. Nét đứt đỏ là nhánh quay lại.")
 

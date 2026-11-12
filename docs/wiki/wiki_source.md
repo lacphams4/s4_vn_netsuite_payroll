@@ -1,4 +1,4 @@
-# S4 VN Payroll trên Oracle NetSuite - quy trình nghiệp vụ (tài liệu nguồn cho wiki)
+# S4 Advanced Payroll (S4 Tính Lương Nâng Cao) trên Oracle NetSuite - quy trình nghiệp vụ (tài liệu nguồn cho wiki)
 
 Tài liệu nguồn để biên soạn wiki theo góc nhìn quy trình nghiệp vụ, dành cho HR, kế toán, kế toán trưởng, CFO, nhân viên tính lương và tư vấn S4. Nội dung đối chiếu với mã nguồn repo `s4_vn_netsuite_payroll` (lõi `core/`, lớp `api/`, màn hình `spa/payroll/views/`), mô hình dữ liệu `tools/schema.mjs` và `tools/schema/*.mjs`, tài liệu `docs/` và đặc tả chuyển giao "Đặc tả chuyển giao S4 eSuite Payroll - từ Acumatica sang Oracle NetSuite" (bản 20/10/2026). Khi tài liệu và mã khác nhau, tài liệu này theo mã (mã mới hơn `docs/ARCHITECTURE.md` và `docs/DOI_CHIEU_DAC_TA.md` ở một số điểm, đã ghi chú).
 
@@ -20,17 +20,18 @@ Quy ước:
 | Kế toán / kế toán trưởng | S4VP Payroll Accountant (`customrole_s4vp_accountant`) | Bảng lương (gồm ghi sổ, đảo, bill cơ quan thu), ghi sổ tạm ứng, tài khoản hạch toán, cấp duyệt, hoa hồng, phân tích chi phí; xem thiết lập và hồ sơ |
 | Nhân viên | Không cần vai trò của gói; dùng Employee Center | Cổng tự phục vụ "Lương của tôi" (Suitelet chạy bằng vai trò ẩn `customrole_s4vp_selfservice`, lọc cứng theo người đăng nhập) |
 | Quản lý trực tiếp | KHÔNG có vai trò riêng trên NetSuite | Bản Acumatica có "VP Manager"; trên NetSuite đơn từ do người có vai trò HR (hoặc Administrator) duyệt |
+| Trình diễn, quay video | S4 Advanced Payroll - Demo (`customrole_s4vp_demo`) | Toàn quyền mọi record của gói, làm được mọi thao tác của HR và kế toán; menu riêng (custom center `custcenter_s4vp_demo`: tab S4 Advanced Payroll, Nhân sự & thời gian, Kinh doanh, Kế toán); không có thao tác bảo trì chỉ dành cho Administrator (sinh dữ liệu thử, gỡ cờ tác vụ nền treo); không giới hạn công ty con. Chỉ dùng cho môi trường demo |
 | Kế toán trưởng / giám đốc duyệt nhiều cấp | Khai theo nhân viên cụ thể hoặc theo vai trò trong "Cấp duyệt bảng lương" | Chỉ khi bật duyệt nhiều cấp |
 
 Ghi chú: gói không có vai trò riêng cho "kế toán trưởng"; phân biệt kế toán viên và kế toán trưởng làm bằng cấu hình cấp duyệt theo nhân viên cụ thể.
 
-### 0.2 Màn hình (tab trong ứng dụng "Lương VN")
+### 0.2 Màn hình (tab trong ứng dụng "S4 Advanced Payroll")
 
-Menu NetSuite: tab **Lương VN > Lương > Màn hình Lương VN** (SPA `/spa/s4vp-payroll`). Hàng tab ngang:
+Menu NetSuite: tab **S4 Advanced Payroll** (giao diện tiếng Việt: **S4 Tính Lương Nâng Cao**) **> Lương > Màn hình S4 Advanced Payroll** (SPA `/spa/s4vp-payroll`); tiêu đề ứng dụng cũng đổi theo ngôn ngữ người dùng. Vai trò Demo có menu riêng dẫn thẳng tới từng màn. Hàng tab ngang:
 
 | Tab | Việc chính |
 | --- | --- |
-| Trang chủ | Kỳ đang chạy, mốc việc (khóa công, tính, duyệt, ghi sổ), cảnh báo tham số pháp lý chưa đối chiếu |
+| Trang chủ | Kỳ đang chạy, mốc việc (khóa công, tính, duyệt, ghi sổ), cảnh báo tham số pháp lý chưa đối chiếu. Bốn thẻ số liệu bấm được: Kỳ đang chạy mở Chấm công của kỳ; Bảng lương của kỳ mở bảng lương (hoặc danh sách lọc theo kỳ); Việc cần xử lý cuộn tới bảng việc cần làm (mỗi việc có nút đi thẳng tới màn xử lý); Thực lĩnh mở hộp thoại theo bảng lương, so kỳ trước |
 | Chấm công | Bảng công tháng theo kỳ, các bước thu thập - ngoại lệ - khóa - chuyển sang lương, chứng từ công, bảng công ký hiệu, xử lý chấm công |
 | Chạy lương | Danh sách bảng lương; màn một bảng lương: thanh bước, lưới nhân viên, khung chi tiết theo tab, Cần soát, Bút toán, Bill cơ quan thu, duyệt |
 | Nhân sự | Danh sách nhân viên, hồ sơ một người: tổng quan, lương và phụ cấp, hợp đồng, quyết định, người phụ thuộc, phân bổ chi phí, giấy phép lao động, phép năm, bảng lương |
@@ -39,7 +40,9 @@ Menu NetSuite: tab **Lương VN > Lương > Màn hình Lương VN** (SPA `/spa/s
 | Phân tích chi phí | Chi phí lao động 12 tháng, cầu biến động, phân rã theo chiều, lãi lỗ, đối chiếu sổ cái |
 | Báo cáo - tờ khai | BH tháng + D02-LT, chi phí theo tài khoản, quỹ lương, 05/KK-TNCN quý, sổ thuế TNCN năm, quyết toán năm, bản in |
 | Thiết lập | Thiết lập chung, tài khoản, tài khoản chi phí theo đích, kỳ lương, cấp duyệt, tham số pháp lý, gói ngành |
-| Khác | Sản lượng - khoán tổ; Giấy phép lao động (màn cũ) |
+| Khác | Xếp ca (lịch ca và chế độ ca, bài 24); Sản lượng - khoán tổ; Giấy phép lao động (màn cũ) |
+
+Ô chọn kỳ lương ở mọi màn chỉ liệt kê kỳ của nhóm lương thuộc công ty con đang chọn (công ty không có nhóm riêng thì dùng nhóm không gắn công ty, ví dụ DEFAULT), sắp giảm dần, nhãn dạng "Tháng 11/2026 (01/11 - 30/11)", mã kỳ ở chú thích khi rê chuột; công ty có nhiều nhóm lương thì gom theo nhóm.
 
 Ngoài SPA: danh sách record chuẩn NetSuite trong nhóm menu "Thiết lập lương" (tham số, biểu thuế, khoản trích, ngày lễ, loại thu nhập, quy tắc, gói phúc lợi, loại nghỉ, chính sách phép, ký hiệu bảng công...), Suitelet in PDF, cổng tự phục vụ và portlet Employee Center.
 
@@ -147,9 +150,9 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 
 ### 3.3 Ca, phân ca, máy chấm công
 1. Khai ca (giờ vào / ra HH:mm, nghỉ giữa ca, loại ca D/E/N, cho phép trễ / sớm, OT tối thiểu; ca qua đêm khi giờ ra nhỏ hơn giờ vào) và mẫu xoay ca.
-2. Sinh phân ca từ mẫu theo tổ (giữ ô đã sửa tay; nguồn G / M).
+2. Xếp ca (màn **Xếp ca**, chi tiết ở bài 24): khai **chế độ ca** - mẫu xoay ca gán cho nhân viên, tổ, phòng ban, nhóm lương hoặc cả công ty con theo hiệu lực - rồi chỉ sửa ngoại lệ thành ô phân ca (nguồn M). Lịch ca hiệu lực = ô đã lưu đè lên lịch suy ra từ chế độ ca; không cần sinh từng ô. Ô sinh từ mẫu theo tổ ở bản trước (nguồn G) vẫn được dùng; action `generateRoster` còn ở máy chủ nhưng không còn nút trên màn hình.
 3. Nạp lượt chấm công: nút **Nạp chấm công** trên tab Chấm công, theo hồ sơ nguồn của từng máy và bảng đối chiếu mã chấm công (chi tiết ở bài "Dữ liệu máy chấm công"); ngoài ra API, CSV Import, REST.
-4. **Xử lý chấm công** (`processPunches`): đối chiếu phân ca với lượt chấm, sinh phiếu trễ / sớm / vắng / thiếu lượt chấm và **đơn OT gợi ý, tất cả ở trạng thái Tạm giữ** để người duyệt xem (hệ thống không tự trừ lương - Điều 127 BLLĐ cấm phạt tiền). Chạy lại thay chứng từ lần trước. Giờ đêm 22:00 - 06:00.
+4. **Xử lý chấm công** (`processPunches`): đối chiếu lịch ca hiệu lực (chế độ ca + ô phân ca) với lượt chấm, sinh phiếu trễ / sớm / vắng / thiếu lượt chấm và **đơn OT gợi ý, tất cả ở trạng thái Tạm giữ** để người duyệt xem (hệ thống không tự trừ lương - Điều 127 BLLĐ cấm phạt tiền). Chạy lại thay chứng từ lần trước. Giờ đêm 22:00 - 06:00.
 5. Kỳ lớn (quá 200 nhân viên hoặc quá 3.000 ô nhân viên x ngày) tự chạy nền bằng Map/Reduce theo lô 10 nhân viên; màn hình theo dõi tác vụ và báo số phiếu, số đơn làm thêm đề xuất khi xong.
 
 ### 3.4 Lập và khóa bảng công (tab Chấm công)
@@ -202,7 +205,7 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 
 **Kiểm soát.** Sổ phép và giao dịch phép chỉ đổi qua màn hình gói (User Event chặn sửa tay); vượt số dư bị chặn khi gửi duyệt.
 
-**Màn hình.** Chấm công (số dư phép theo năm), Nhân sự > Phép năm, cổng tự phục vụ (số dư, hạn phép chuyển).
+**Màn hình.** Chấm công > Thao tác khác > Đơn từ, lượt chấm, phép (màn hình cũ), mục Số dư phép: chọn năm hiện tại hoặc năm sau (chạy năm sau để chuyển phép còn lại sang năm mới), nút Cấp phép năm (kèm chuyển phép năm trước), Hết hạn phép chuyển, Tải lại; lưới số dư chỉ gồm nhân viên của công ty con đang chọn, có ô lọc nhanh theo mã, tên, loại nghỉ; cột Chuyển hiện số ngày chuyển từ năm trước, rê chuột thấy hạn dùng phép chuyển. Ngoài ra: Nhân sự > Phép năm, cổng tự phục vụ (số dư, hạn phép chuyển).
 
 ---
 
@@ -702,6 +705,9 @@ CHƯA LÀM (theo mã và tài liệu repo):
 10. GI / dashboard / saved search kiểu Acumatica; ứng dụng mobile; màn công chi tiết của tôi; đơn ngoại lệ tự phục vụ.
 11. Nhãn record / list tiếng Anh (Translation Collection).
 12. Hạn nộp theo luật trên Trang chủ chưa có dữ liệu nạp sẵn.
+13. Xếp ca: ô chưa hiện ngày nghỉ phép, công tác; chế độ ca không mang chi nhánh, work center.
+14. Phân hệ **Phân ca kíp sản xuất** tạm dừng sau màn Xếp ca: định biên theo chuyền / ca, tay nghề, kiểm luật lao động khi xếp ca, công bố kế hoạch, ca thực tế do tổ trưởng xác nhận, sản lượng theo chuyền ca và chia sản lượng theo giờ có mặt (thiết kế: `docs/SHIFT_CREW.md`, `docs/SHIFT_CREW_SPEC.md`).
+15. Quy tắc thu nhập nguồn số lượng H (số ca đã làm) và phương pháp phân bổ R (ngày phân ca): lõi tính đã có nhưng lớp api chưa cấp số ca và ngày phân ca cho bảng lương.
 
 Chưa xác minh:
 1. Không có kiểm tra người lập khác người duyệt ở chế độ duyệt một cấp; không có kiểm tra người tính khác người duyệt bảng tính hoa hồng (đọc theo mã; có thể là chủ đích dựa vào tổ chức).

@@ -7,7 +7,7 @@
 **Dữ liệu cần có trước.**
 - **Ca làm việc** (record `shift`): mã ca, giờ vào, giờ ra (HH:mm; giờ ra nhỏ hơn giờ vào là ca qua đêm), nghỉ giữa ca (phút), loại ca D ngày / E chiều / N đêm, cho phép trễ (phút), cho phép về sớm (phút), OT tối thiểu (phút, trống = 30).
 - **Mẫu xoay ca** (record `shift_pattern`): chuỗi mã ca theo chu kỳ, ô trống là ngày nghỉ (ví dụ mẫu 3 ca 4 kíp của gói ngành Sản xuất).
-- **Phân ca** (record `roster`): mỗi nhân viên mỗi ngày một ô ca. Sinh từ mẫu xoay ca theo tổ, sửa tay từng ô; sinh lại không ghi đè ô đã sửa tay. Ngày không có ca là ngày nghỉ.
+- **Lịch ca** (bài 24 "Xếp ca và chế độ ca"): chế độ ca (record `shift_assign`, mẫu xoay ca gán cho nhân viên, tổ, phòng ban, nhóm lương hoặc cả công ty con theo hiệu lực) cộng ô phân ca sửa tay (record `roster`, đè lên chế độ ca). Ngày có chế độ ca hoặc ô mà không có ca là ngày nghỉ; người ngoài diện xếp ca thì không có ô nào.
 
 ### 21.1 Hồ sơ nguồn chấm công: mỗi máy hoặc hệ thống một hồ sơ
 

@@ -1,4 +1,4 @@
-"""Dựng wiki quy trình S4 VN Payroll: wiki_source.md + shell.html -> wiki/index.html (một trang, định tuyến bằng #)."""
+"""Dựng wiki quy trình S4 Advanced Payroll: wiki_source.md + shell.html -> wiki/index.html (một trang, định tuyến bằng #)."""
 import html
 import json
 import re
@@ -155,7 +155,7 @@ for ln in text.splitlines():
     (cur["lines"] if cur else intro).append(ln)
 
 SHORT = {0: "Bức tranh chung", 17: "Chu kỳ tháng", 18: "Cuối năm, đầu năm", 19: "Thuật ngữ", 20: "Chưa làm, chưa chắc",
-         21: "Máy chấm công", 22: "Sản lượng, năng suất", 23: "Doanh số, hoa hồng"}
+         21: "Máy chấm công", 22: "Sản lượng, năng suất", 23: "Doanh số, hoa hồng", 24: "Xếp ca, chế độ ca"}
 for p in pages:
     p["id"] = slug(p["title"]) or f"muc-{p['n']}"
     p["short"] = SHORT.get(p["n"], p["title"])
@@ -164,7 +164,7 @@ GROUPS = [
     ("Tổng quan", [0, 17, 18]),
     ("Thiết lập và dữ liệu gốc", [1, 2]),
     ("Ghi nhận trong kỳ", [3, 4, 5, 6, 7]),
-    ("Dữ liệu đầu vào chi tiết", [21, 22, 23]),
+    ("Dữ liệu đầu vào chi tiết", [24, 21, 22, 23]),
     ("Tính và duyệt lương", [8, 9, 10]),
     ("Hạch toán và chi trả", [11, 12]),
     ("Báo cáo và phân tích", [13, 14]),
@@ -208,10 +208,11 @@ for p in pages:
         body = cycle_html() + body
     fb = flows.block(p["n"])
     # quy trình có bài dữ liệu đầu vào chi tiết: dẫn sang ngay dưới lưu đồ
-    deep = {3: 21, 5: 22, 6: 23}.get(p["n"])
-    if deep and deep in byn:
+    deep = [n for n in {3: [24, 21], 5: [22], 6: [23]}.get(p["n"], []) if n in byn]
+    if deep:
+        links = ", ".join(f'<a href="#{byn[n]["id"]}">{html.escape(byn[n]["title"])}</a>' for n in deep)
         fb += (f'<div class="callout info"><b>Dữ liệu đầu vào</b>Cách nạp, định dạng file, quy tắc kiểm tra và hỏi đáp thường gặp: '
-               f'xem <a href="#{byn[deep]["id"]}">{html.escape(byn[deep]["title"])}</a>.</div>')
+               f'xem {links}.</div>')
     if fb:
         # lưu đồ đặt ngay sau đoạn Mục đích (đoạn đầu tiên của bài)
         cut = body.find("</p>")
@@ -227,7 +228,7 @@ for p in pages:
     arts.append(
         f'<article id="{p["id"]}" data-page hidden><div class="eyebrow">{num}{html.escape(grp)}</div>'
         f'<h1>{html.escape(p["title"])}</h1>{extra if p["n"] == 0 else ""}{body}{nav}'
-        f'<p class="foot">Nguồn: đặc tả chuyển giao S4 eSuite Payroll (20/10/2026), mã nguồn gói s4_vn_netsuite_payroll và tài liệu repo, đối chiếu ngày 11/11/2026.</p></article>'
+        f'<p class="foot">Nguồn: đặc tả chuyển giao S4 eSuite Payroll (20/10/2026), mã nguồn gói s4_vn_netsuite_payroll và tài liệu repo, đối chiếu ngày 12/11/2026.</p></article>'
     )
 
 toc = []
@@ -244,7 +245,7 @@ home = byn[0]["id"]
 page = shell + """
 <header class="top">
   <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="toc">Mục lục</button>
-  <div class="brand"><b>Sổ tay quy trình</b><span>S4 VN Payroll trên NetSuite</span></div>
+  <div class="brand"><b>Sổ tay quy trình</b><span>S4 Advanced Payroll trên NetSuite</span></div>
   <div class="search"><input id="q" type="search" placeholder="Tìm trong sổ tay: bảo hiểm, 334, D02-LT, tạm ứng..." aria-label="Tìm trong sổ tay" autocomplete="off"></div>
 </header>
 <div class="wrap">
@@ -269,7 +270,7 @@ page = shell + """
     }
     pages.forEach(function(a){ a.hidden = a !== target; });
     links.forEach(function(l){ if (l.getAttribute('data-for') === id) l.setAttribute('aria-current','page'); else l.removeAttribute('aria-current'); });
-    document.title = (id === HOME ? '' : target.querySelector('h1').textContent + ' - ') + 'Sổ tay quy trình S4 VN Payroll';
+    document.title = (id === HOME ? '' : target.querySelector('h1').textContent + ' - ') + 'Sổ tay quy trình S4 Advanced Payroll';
     toc.classList.remove('open'); btn.setAttribute('aria-expanded','false');
     // trình duyệt tự nhảy tới phần tử có id trùng hash sau khi xử lý: cuộn về đầu bài ở khung kế tiếp
     window.scrollTo(0,0); setTimeout(function(){ window.scrollTo(0,0); }, 0);
