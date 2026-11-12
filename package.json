@@ -2,7 +2,7 @@
   "name": "s4-vn-netsuite-payroll",
   "version": "0.1.0",
   "private": true,
-  "description": "S4 VN Payroll cho Oracle NetSuite: lương, BHXH, thuế TNCN, chấm công theo luật Việt Nam, tương đương S4 eSuite Payroll for Acumatica (SuiteCloud Development Framework)",
+  "description": "S4 Advanced Payroll cho Oracle NetSuite: lương, BHXH, thuế TNCN, chấm công theo luật Việt Nam, tương đương S4 eSuite Payroll for Acumatica (SuiteCloud Development Framework)",
   "license": "UNLICENSED",
   "author": "S4 Consulting",
   "scripts": {

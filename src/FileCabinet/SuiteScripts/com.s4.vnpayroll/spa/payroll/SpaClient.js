@@ -16459,7 +16459,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
 
     const TEXT = {
         vi: {
-            title: 'Lương VN',
+            title: 'S4 Advanced Payroll',
             nav: 'Phân hệ',
             tabs: { home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', commission: 'Hoa hồng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập' },
             more: 'Khác',
@@ -16478,7 +16478,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             openSetup: 'Mở Thiết lập',
         },
         en: {
-            title: 'VN Payroll',
+            title: 'S4 Advanced Payroll',
             nav: 'Module',
             tabs: { home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', commission: 'Commission', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup' },
             more: 'More',

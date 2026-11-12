@@ -4,7 +4,7 @@
   <label>Lương</label>
   <links>
     <link>
-      <linklabel>Màn hình Lương VN</linklabel>
+      <linklabel>Màn hình S4 Advanced Payroll</linklabel>
       <linkobject>[scriptid=customscript_s4vp_sl_open.customdeploy_s4vp_sl_open]</linkobject>
       <linktasktype>SCRIPT</linktasktype>
       <shortlist>F</shortlist>

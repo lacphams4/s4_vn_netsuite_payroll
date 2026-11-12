@@ -4,6 +4,6 @@
   <allroles>F</allroles>
   <allvendors>F</allvendors>
   <audslctrole>ADMINISTRATOR|[customrole_s4vp_hr]|[customrole_s4vp_accountant]</audslctrole>
-  <center>BASIC</center>
-  <label>Lương VN</label>
+  <center>ALL</center>
+  <label>S4 - Advanced Payroll</label>
 </centertab>

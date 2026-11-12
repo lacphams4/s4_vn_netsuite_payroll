@@ -1,5 +1,5 @@
 <manifest projecttype="ACCOUNTCUSTOMIZATION">
-  <projectname>S4 VN Payroll</projectname>
+  <projectname>S4 Advanced Payroll</projectname>
   <frameworkversion>1.0</frameworkversion>
   <dependencies>
     <features>
