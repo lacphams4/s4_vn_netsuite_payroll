@@ -101,7 +101,12 @@ define(["./Dates"], (Dates) => {
 			.filter((x) => x && x.start && x.end && Dates.cmp(x.start, x.end) <= 0 && upper(x.p.status) !== "C");
 	}
 
-	function currentPeriod(periods, today, activePeriodIds) {
+	/**
+	 * Kỳ đang chạy. Thứ tự: kỳ có bảng lương đang dở (activePeriodIds) -> kỳ chứa hôm nay -> kỳ đã qua gần nhất -> kỳ sớm nhất.
+	 * postedPeriodIds (tùy chọn): kỳ đã có bảng lương ghi sổ. Khi kỳ chứa hôm nay (hoặc kỳ đã qua gần nhất) đã ghi sổ xong thì việc
+	 * tiếp theo là kỳ kế sau kỳ ghi sổ muộn nhất - trả kỳ đó thay cho một kỳ không còn việc gì.
+	 */
+	function currentPeriod(periods, today, activePeriodIds, postedPeriodIds) {
 		const t = safeIso(today);
 		const list = usable(periods);
 		if (!t || !list.length) return null;
@@ -109,6 +114,21 @@ define(["./Dates"], (Dates) => {
 		const byStart = (a, b) => Dates.cmp(a.start, b.start) || Dates.cmp(a.end, b.end);
 		const running = list.filter((x) => active.has(String(x.p.id))).sort(byStart);
 		if (running.length) return running[0].p;
+		const posted = new Set((postedPeriodIds || []).map(String));
+		if (posted.size) {
+			const done = list.filter((x) => posted.has(String(x.p.id))).sort((a, b) => Dates.cmp(a.end, b.end));
+			const last = done.length ? done[done.length - 1] : null;
+			const byDate = list.filter((x) => Dates.within(t, x.start, x.end)).sort(byStart);
+			const pastList = list.filter((x) => Dates.cmp(x.end, t) < 0).sort((a, b) => Dates.cmp(a.end, b.end));
+			const natural = byDate.length ? byDate[byDate.length - 1] : pastList.length ? pastList[pastList.length - 1] : null;
+			if (last && natural && Dates.cmp(natural.end, last.end) <= 0) {
+				// Ưu tiên kỳ cùng nhóm lương với kỳ vừa ghi sổ (tài khoản nhiều nhóm lương có kỳ trùng ngày)
+				const groupOf = (x) => (x.p.paygroup === null || x.p.paygroup === undefined ? "" : String(x.p.paygroup));
+				const later = list.filter((x) => Dates.cmp(x.start, last.end) > 0).sort(byStart);
+				const next = later.filter((x) => groupOf(x) === groupOf(last))[0] || later[0];
+				if (next) return next.p;
+			}
+		}
 		const containing = list.filter((x) => Dates.within(t, x.start, x.end)).sort(byStart);
 		if (containing.length) return containing[containing.length - 1].p;
 		const past = list.filter((x) => Dates.cmp(x.end, t) < 0).sort((a, b) => Dates.cmp(a.end, b.end));

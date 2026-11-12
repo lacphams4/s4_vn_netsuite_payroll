@@ -236,8 +236,8 @@ describe("homeSummary", () => {
     expect(r.permits).toEqual({ expired: 2, expiring: 2, nextExpiry: "2027-04-10" });
     expect(todo(r, "permitsExpired")).toMatchObject({ tone: "error", count: 2, go: { view: "permits" } });
     expect(todo(r, "permitsExpiring")).toMatchObject({ count: 2, date: "2027-04-10", daysLeft: 11 });
-    // chỉ đọc hai cột của giấy đang hiệu lực / đã hết hạn
-    expect(state.sql.find((q) => q.tag === "s4vp_home_permits").columns).toBeLessThanOrEqual(3);
+    // chỉ đọc ba cột (trạng thái, hạn, giấy trước) của giấy đang hiệu lực / đã hết hạn
+    expect(state.sql.find((q) => q.tag === "s4vp_home_permits").columns).toBeLessThanOrEqual(4);
     state.reminderDays = 15;
     expect(run().permits).toEqual({ expired: 2, expiring: 1, nextExpiry: "2027-04-10" });
     state.data.failPermits = true;

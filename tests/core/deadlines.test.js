@@ -109,6 +109,25 @@ describe("currentPeriod - chọn kỳ đang chạy theo ngày", () => {
   const P = (id, start, end, extra) => Object.assign({ id, start, end, status: "O", paygroup: "1" }, extra);
   const year = [P("1", "2027-01-01", "2027-01-31"), P("2", "2027-02-01", "2027-02-28"), P("3", "2027-03-01", "2027-03-31"), P("4", "2027-04-01", "2027-04-30")];
 
+  test("kỳ chứa hôm nay đã ghi sổ: kỳ đang chạy là kỳ kế sau kỳ ghi sổ muộn nhất", () => {
+    // Hôm nay giữa kỳ 2; kỳ 1, 2 đã ghi sổ -> kỳ 3
+    expect(Deadlines.currentPeriod(year, "2027-02-15", [], ["1", "2"]).id).toBe("3");
+    // Đã ghi sổ trước cả kỳ 3 (dữ liệu dựng trước): hôm nay ở kỳ 2 -> kỳ 4
+    expect(Deadlines.currentPeriod(year, "2027-02-15", [], ["1", "2", "3"]).id).toBe("4");
+    // Kỳ chứa hôm nay chưa ghi sổ: giữ kỳ đó
+    expect(Deadlines.currentPeriod(year, "2027-03-10", [], ["1", "2"]).id).toBe("3");
+    // Kỳ ghi sổ muộn nhất là kỳ cuối cùng: không có kỳ kế tiếp, giữ cách chọn theo ngày
+    expect(Deadlines.currentPeriod(year, "2027-04-10", [], ["4"]).id).toBe("4");
+    // Có bảng lương đang dở thì kỳ của bảng đó vẫn thắng
+    expect(Deadlines.currentPeriod(year, "2027-02-15", ["2"], ["1", "2"]).id).toBe("2");
+    // Hai nhóm lương có kỳ trùng ngày: lấy kỳ kế tiếp cùng nhóm với kỳ vừa ghi sổ
+    const two = [P("a1", "2027-01-01", "2027-01-31", { paygroup: "9" }), P("a2", "2027-02-01", "2027-02-28", { paygroup: "9" })].concat(year);
+    expect(Deadlines.currentPeriod(two, "2027-01-15", [], ["1"]).id).toBe("2");
+    expect(Deadlines.currentPeriod(two, "2027-01-15", [], ["a1"]).id).toBe("a2");
+    // Không truyền danh sách kỳ đã ghi sổ: như cũ
+    expect(Deadlines.currentPeriod(year, "2027-02-15", []).id).toBe("2");
+  });
+
   test("không có kỳ, hôm nay sai, hoặc mọi kỳ đã đóng: null", () => {
     expect(Deadlines.currentPeriod([], "2027-03-30")).toBeNull();
     expect(Deadlines.currentPeriod(null, "2027-03-30")).toBeNull();

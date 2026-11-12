@@ -180,13 +180,21 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "./Lean", ".
 		return safe("permits", null, () => {
 			const out = { expired: 0, expiring: 0, nextExpiry: null };
 			const mine = `EXISTS (SELECT 1 FROM ${Lean.rec("employee").type} p WHERE ${Lean.col("employee", "employee", "p")} = {employee} AND ${Lean.col("employee", "subsidiary", "p")} = ?)`;
-			const rows = Lean.select("work_permit", ["status", "expiry"], {
+			const rows = Lean.select("work_permit", ["status", "expiry", "previous"], {
 				where: `{status} IN (?, ?) AND ${mine}`, params: [Store.idOf("wp_status", "A"), Store.idOf("wp_status", "E"), subsidiary], tag: "s4vp_home_permits",
 			});
 			let reminder = null;
+			// Giấy đã được gia hạn / cấp lại bằng một giấy đang hiệu lực (giấy sau trỏ "giấy trước" về nó): không còn là việc phải làm
+			const renewed = new Set();
+			for (const p of rows) {
+				if (p.status !== "A" || !p.previous) continue;
+				const left = p.expiry ? Dates.diff(today, p.expiry) : null;
+				if (left === null || left >= 0) renewed.add(String(p.previous));
+			}
 			for (const p of rows) {
 				// A = đang hiệu lực, E = đã hết hạn; bản nháp, đã nộp, đã thu hồi không nhắc
 				const daysLeft = p.expiry ? Dates.diff(today, p.expiry) : null;
+				if (renewed.has(String(p.id))) continue;
 				if (p.status === "E" || (p.status === "A" && daysLeft !== null && daysLeft < 0)) {
 					out.expired += 1;
 					continue;
@@ -267,7 +275,8 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "./Lean", ".
 		const open = batches.filter((b) => !FINAL.includes(b.status));
 		const finished = batches.filter((b) => FINAL.includes(b.status));
 
-		const current = Deadlines.currentPeriod(periods, today, open.map((b) => b.period));
+		// Kỳ đã có bảng lương ghi sổ (R): kỳ chứa hôm nay mà đã ghi sổ xong thì kỳ đang chạy là kỳ kế tiếp
+		const current = Deadlines.currentPeriod(periods, today, open.map((b) => b.period), batches.filter((b) => b.status === "R").map((b) => b.period));
 		const currentId = current ? String(current.id) : "";
 		const previous = Deadlines.previousPeriod(periods, current);
 		const inCurrent = current ? batches.filter((b) => String(b.period) === currentId) : [];
