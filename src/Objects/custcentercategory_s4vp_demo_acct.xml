@@ -1,0 +1,32 @@
+<centercategory scriptid="custcentercategory_s4vp_demo_acct">
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <centertab>[scriptid=custcentertab_s4vp_demo_4_acct]</centertab>
+  <label>Chứng từ kế toán</label>
+  <links>
+    <link>
+      <linkid>LIST_TRAN_JOURNAL</linkid>
+      <linklabel>Bút toán (Journal Entry)</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>TRAN_JOURNALAPPROVAL</linkid>
+      <linklabel>Duyệt bút toán</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_VENDBILL</linkid>
+      <linklabel>Hóa đơn nhà cung cấp (Vendor Bill)</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>TRAN_VENDBILLAPPRV</linkid>
+      <linklabel>Duyệt hóa đơn nhà cung cấp</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_ACCOUNT</linkid>
+      <linklabel>Hệ thống tài khoản</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

@@ -1,0 +1,9 @@
+<centertab scriptid="custcentertab_s4vp_demo_2_hr">
+  <allcustomers>F</allcustomers>
+  <allemployees>F</allemployees>
+  <allroles>F</allroles>
+  <allvendors>F</allvendors>
+  <audslctrole>[customrole_s4vp_demo]</audslctrole>
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <label>Nhân sự &amp; thời gian</label>
+</centertab>

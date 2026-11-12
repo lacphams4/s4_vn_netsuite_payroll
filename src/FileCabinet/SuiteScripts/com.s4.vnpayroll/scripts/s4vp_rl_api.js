@@ -10,6 +10,7 @@
  * Giao diện bản 2 (docs/UI_V2.md mục 5): action không có trong hai switch bên dưới được tra trong các mô-đun route đã đăng ký
  * (ROUTE_MODULES); mỗi mô-đun xuất routes: { get: { tên: { roles, run(params) } }, post: { tên: { roles, run(body) } } }.
  * roles: "all" | "payroll" (administrator, HR, kế toán), "hr" (administrator + HR), "acct" (administrator + kế toán), "admin".
+ * Vai trò trình diễn customrole_s4vp_demo có trong mọi nhóm trừ "admin"; bootstrap trả isAccountant = true, fullAccess = true.
  * Sau mỗi POST thành công (action cũ lẫn mới) gọi AuditLog.record({action, batch, period, id, lineId, result}); ghi nhật ký lỗi
  * không làm hỏng thao tác.
  *
@@ -35,10 +36,15 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	const ACCOUNTANT_ACTIONS = BATCH_ACTIONS.concat(ACCOUNTANT_ONLY);
 	const ADMIN_ONLY = ["generateTestData", "generateTestTime", "generateTestBulk", "clearJob"];
 
+	// Vai trò trình diễn (customrole_s4vp_demo, quay video): mọi thao tác của HR lẫn kế toán như administrator, trừ thao tác bảo
+	// trì ADMIN_ONLY (sinh dữ liệu test, gỡ cờ job treo) - các thao tác này không thuộc kịch bản trình diễn
+	const ROLE_DEMO = "customrole_s4vp_demo";
+
 	function allowed(action) {
 		const r = role();
 		if (r === "administrator") return true;
 		if (ADMIN_ONLY.includes(action)) return false;
+		if (r === ROLE_DEMO) return true;
 		if (r === "customrole_s4vp_hr") return HR_ACTIONS.includes(action);
 		if (r === "customrole_s4vp_accountant") return ACCOUNTANT_ACTIONS.includes(action);
 		return false;
@@ -60,10 +66,11 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	// punchMapSave ghi "hr") - docs/PUNCH_IMPORT.md mục 3
 	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport];
 	const ROLE_SETS = {
-		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
-		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"],
-		hr: ["administrator", "customrole_s4vp_hr"],
-		acct: ["administrator", "customrole_s4vp_accountant"],
+		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", ROLE_DEMO],
+		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", ROLE_DEMO],
+		hr: ["administrator", "customrole_s4vp_hr", ROLE_DEMO],
+		acct: ["administrator", "customrole_s4vp_accountant", ROLE_DEMO],
+		// Route "admin" (bảo trì) không mở cho vai trò trình diễn
 		admin: ["administrator"],
 	};
 	// Action POST của switch cũ (đã có ma trận quyền riêng): không tra trong mô-đun route
@@ -171,7 +178,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 		const enabled = new Set(companies.filter((c) => c.enabled !== false).map((c) => c.subsidiary));
 		const u = runtime.getCurrentUser();
 		return {
-			user: { id: u.id, name: u.name, role: role(), isHr: isHr(), isAccountant: role() === "customrole_s4vp_accountant", canEditSetup: allowed("saveSetup"), canAttendance: allowed("saveDoc"), lang: /^vi/i.test(String(u.getPreference({ name: "LANGUAGE" }) || "")) ? "vi" : "en" },
+			user: { id: u.id, name: u.name, role: role(), isHr: isHr(), isAccountant: role() === "customrole_s4vp_accountant" || role() === ROLE_DEMO, fullAccess: role() === "administrator" || role() === ROLE_DEMO, canEditSetup: allowed("saveSetup"), canAttendance: allowed("saveDoc"), lang: /^vi/i.test(String(u.getPreference({ name: "LANGUAGE" }) || "")) ? "vi" : "en" },
 			setupReady: setup.length > 0,
 			subsidiaries: subsidiaries.map((s) => Object.assign(s, { enabled: !companies.length || enabled.has(s.id) })),
 			paygroups: Store.find("paygroup").map((g) => ({ id: g.id, code: g.name, description: g.description, frequency: g.frequency, subsidiary: g.subsidiary })),

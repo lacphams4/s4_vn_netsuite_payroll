@@ -353,7 +353,7 @@ export function mergeMappings(rows, edits, added) {
 export function canImport(user, data) {
 	if (data && typeof data.canEdit === 'boolean') return data.canEdit;
 	const role = str(user && user.role);
-	return !!(user && user.isHr) || role === 'administrator' || role === 'customrole_s4vp_hr';
+	return !!(user && (user.isHr || user.fullAccess === true)) || role === 'administrator' || role === 'customrole_s4vp_hr';
 }
 
 export function initialState(source) {

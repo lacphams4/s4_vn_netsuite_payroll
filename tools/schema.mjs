@@ -76,8 +76,13 @@ const ROLE_ACCT = "customrole_s4vp_accountant";
 // Vai trò chạy (run-as) của cổng tự phục vụ: KHÔNG gán cho người dùng nào; Suitelet s4vp_sl_my_payroll chạy bằng vai trò này
 // thay cho Administrator và tự lọc cứng theo nhân viên đang đăng nhập (phương án A, người dùng duyệt 11/11/2026).
 const ROLE_ESS = "customrole_s4vp_selfservice";
+// Vai trò trình diễn, quay video: toàn quyền mọi record của gói, quyền chuẩn đủ cho mọi màn và luồng (ghi sổ, duyệt JE / bill,
+// hoa hồng, phân tích chi phí), menu riêng custcenter_s4vp_demo; không giới hạn công ty con. RESTlet coi như administrator với
+// thao tác của gói, trừ thao tác bảo trì chỉ dành cho administrator (sinh dữ liệu test, gỡ cờ job treo) - docs/ARCHITECTURE.md mục 5.1
+const ROLE_DEMO = "customrole_s4vp_demo";
+const DEMO_CENTER = "custcenter_s4vp_demo";
 // Record cổng tự phục vụ được ghi (đơn của nhân viên và phần giữ chỗ phép khi gửi duyệt); mọi record khác của gói chỉ xem
-const ESS_WRITE = ["leave_request", "ot_request", "business_trip", "leave_balance", "leave_tran", "audit_log"];
+const ESS_WRITE =["leave_request", "ot_request", "business_trip", "leave_balance", "leave_tran", "audit_log"];
 
 // Quyền theo ma trận 1.4.1: HR thiết lập, hồ sơ, bảng lương (không ghi sổ); kế toán xem thiết lập, toàn quyền bảng lương, tạm ứng
 const SETUP = { [ROLE_HR]: "FULL", [ROLE_ACCT]: "VIEW" };
@@ -846,6 +851,25 @@ export const roles = [
 	{ id: ROLE_ESS, name: "S4VP Self-service (run-as only)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_EMPLOYEE_RECORD", "VIEW"], ["ADMI_CUSTLIST", "VIEW"], ["LIST_FILECABINET", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"]] },
 	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"]] },
 	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"]] },
+	{
+		id: ROLE_DEMO, name: "S4 Advanced Payroll - Demo", center: `[scriptid=${DEMO_CENTER}]`,
+		// Quyền chuẩn theo màn và luồng của gói (permkey đã đối chiếu bảng quyền NetSuite); record của gói FULL thêm ở vòng lặp cuối file
+		perms: [
+			// Nhân sự, thời gian: hồ sơ nhân viên (xem, sửa), giờ công Time Bill (đồng bộ giờ công, phiếu sản lượng), báo cáo thời gian
+			["LIST_EMPLOYEE", "EDIT"], ["LIST_EMPLOYEE_RECORD", "EDIT"], ["TRAN_TIMEBILL", "EDIT"], ["REPO_TIME", "VIEW"],
+			// Danh mục tổ chức và phân bổ chi phí (không giới hạn công ty con: subsidiaryoption ALL)
+			["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"],
+			// Hoa hồng, sản lượng từ giao dịch: khách hàng, nhóm khách hàng (accounting list), mặt hàng, chứng từ bán hàng chỉ xem
+			["LIST_CUSTJOB", "VIEW"], ["ADMI_ACCOUNTINGLIST", "VIEW"], ["LIST_ITEM", "VIEW"],
+			["TRAN_CUSTINVC", "VIEW"], ["TRAN_CASHSALE", "VIEW"], ["TRAN_CUSTCRED", "VIEW"], ["TRAN_CUSTPYMT", "VIEW"],
+			// Kế toán: ghi sổ / đảo bảng lương, tạm ứng (JE), bill cơ quan thu (Vendor Bill), duyệt khi bật duyệt JE / bill
+			["LIST_ACCOUNT", "VIEW"], ["LIST_VENDOR", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_JOURNALAPPRV", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_VENDBILLAPPRV", "FULL"],
+			// Báo cáo tài chính cho cảnh đối chiếu sổ cái của phân tích chi phí lương
+			["REPO_FINANCIALS", "VIEW"], ["REPO_PANDL", "VIEW"], ["REPO_GL", "VIEW"], ["REPO_TRIALBALANCE", "VIEW"],
+			// Tìm kiếm, file in PDF / file ngân hàng, giá trị custom list, danh sách custom record
+			["TRAN_FIND", "VIEW"], ["LIST_FIND", "VIEW"], ["LIST_FILECABINET", "EDIT"], ["ADMI_CUSTLIST", "VIEW"], ["LIST_CUSTRECORDENTRY", "VIEW"],
+		],
+	},
 ];
 
 // ---------------------------------------------------------------- phần mở rộng theo phân hệ (tools/schema/*.mjs)
@@ -877,4 +901,10 @@ for (const file of partFiles) {
 for (const rec of records) {
 	if (!rec.perms) continue;
 	rec.perms = Object.assign({}, rec.perms, { [ROLE_ESS]: ESS_WRITE.includes(rec.id) ? "EDIT" : "VIEW" });
+}
+
+// Vai trò trình diễn: toàn quyền mọi record của gói (User Event của gói vẫn chặn sửa trực tiếp record kiểm soát)
+for (const rec of records) {
+	if (!rec.perms) continue;
+	rec.perms = Object.assign({}, rec.perms, { [ROLE_DEMO]: "FULL" });
 }

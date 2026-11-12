@@ -1,6 +1,7 @@
 """Deploy hai bước khi thêm custom record mới (bài học SDF: role và record tham chiếu vòng thì lỗi BEGIN_DEPLOYMENT).
 
-Bước 1: record mới (chưa có trong git HEAD) bỏ khối <permissions>, tạm dùng CUSTRECORDENTRYPERM, role lấy bản ở HEAD -> deploy.
+Bước 1: record mới (chưa có trong git HEAD) bỏ khối <permissions>, tạm dùng CUSTRECORDENTRYPERM, role lấy bản ở HEAD (role mới:
+bỏ quyền custom record, giữ quyền chuẩn và trung tâm) -> deploy.
 Bước 2: trả lại file đầy đủ -> deploy.
 Cách dùng (thư mục gốc repo): python tools/deploy_two_pass.py (đã commit record mới rồi thì: S4VP_BASE=<commit đã deploy> python tools/deploy_two_pass.py)
 """
@@ -51,6 +52,13 @@ def main():
             head = git("show", f"{base}:{p.replace(os.sep, '/')}")
             if head:
                 open(os.path.join(ROOT, p), "w", encoding="utf8", newline="").write(head)
+            else:
+                # Role mới (chưa có ở mốc): bước 1 chỉ giữ quyền chuẩn, bỏ quyền custom record (record đã ghi role vào danh sách
+                # quyền của mình, hai phía cùng tham chiếu thì vòng); bước 2 trả lại đủ quyền
+                full = os.path.join(ROOT, p)
+                s = open(full, encoding="utf8").read()
+                s = re.sub(r"\s*<permission>\s*<permkey>\[customrecord_[^\]]+\]</permkey>\s*<permlevel>\w+</permlevel>\s*</permission>", "", s)
+                open(full, "w", encoding="utf8", newline="").write(s)
         print("Pass 1:")
         ok = deploy()
     finally:

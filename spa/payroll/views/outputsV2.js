@@ -649,7 +649,7 @@ export default function OutputsView({app}) {
 	const subsidiary = app.subsidiary || '';
 	const params = (app.route && app.route.params) || {};
 	// Ma trận quyền của RESTlet: saveOutput, loadTeamMembers, splitOutput, outputAction chỉ cho administrator và HR
-	const canWrite = user.role === 'administrator' || !!user.isHr || user.role === 'customrole_s4vp_hr';
+	const canWrite = user.role === 'administrator' || user.fullAccess === true || !!user.isHr || user.role === 'customrole_s4vp_hr';
 	// Kỳ của nhóm lương thuộc công ty con đang chọn, giảm dần
 	const periods = periodsForSubsidiary(boot, subsidiary);
 

@@ -207,3 +207,13 @@ describe("ApprovalFlow.load và approverNames", () => {
     expect(Flow.approverNames(step, {}, "en")[1]).toBe("Accountant role");
   });
 });
+
+describe("ApprovalFlow vai trò trình diễn", () => {
+  const step = { level: 1, name: "", approvers: [{ employee: "", role: "A" }, { employee: "", role: "H" }] };
+  test("customrole_s4vp_demo khớp mọi vai trò duyệt, vai trò khác vẫn phải đúng mã", () => {
+    expect(Flow.isApprover(step, { id: "7", role: "customrole_s4vp_demo" })).toBe(true);
+    expect(Flow.isApprover({ level: 1, approvers: [{ employee: "", role: "D" }] }, { id: "7", role: "customrole_s4vp_demo" })).toBe(true);
+    expect(Flow.isApprover({ level: 1, approvers: [{ employee: "", role: "D" }] }, { id: "7", role: "customrole_s4vp_hr" })).toBe(false);
+    expect(Flow.isApprover({ level: 1, approvers: [{ employee: "9", role: "" }] }, { id: "7", role: "customrole_s4vp_demo" })).toBe(false);
+  });
+});

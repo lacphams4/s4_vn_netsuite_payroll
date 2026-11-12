@@ -16,8 +16,9 @@
 define(["N/runtime", "./Store", "./Profiles", "./WorkPermits", "./AllocationPlans", "./Clock", "../core/Dates", "../core/HrTimeline", "../core/LeaveLedger"], (runtime, Store, Profiles, WorkPermits, AllocationPlans, Clock, Dates, Timeline, Ledger) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const num = (v) => (blank(v) || isNaN(Number(v)) ? null : Number(v));
-	const PAY_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"];
-	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr"];
+	// customrole_s4vp_demo: vai trò trình diễn, quyền như administrator với dữ liệu của gói
+	const PAY_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", "customrole_s4vp_demo"];
+	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_demo"];
 	const FILTERS = ["all", "working", "probation", "expiring", "missing", "left"];
 	const FAR = "9999-12-31";
 	const DUE_LIMIT = 200;

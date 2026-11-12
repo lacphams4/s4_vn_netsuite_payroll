@@ -7,5 +7,5 @@
   <serverscriptfile>[/SuiteScripts/com.s4.vnpayroll/spa/payroll/SpaServer.js]</serverscriptfile>
   <loglevel>AUDIT</loglevel>
   <audienceallroles>F</audienceallroles>
-  <audienceroles>ADMINISTRATOR|[customrole_s4vp_hr]|[customrole_s4vp_accountant]</audienceroles>
+  <audienceroles>ADMINISTRATOR|[customrole_s4vp_hr]|[customrole_s4vp_accountant]|[customrole_s4vp_demo]</audienceroles>
 </singlepageapp>

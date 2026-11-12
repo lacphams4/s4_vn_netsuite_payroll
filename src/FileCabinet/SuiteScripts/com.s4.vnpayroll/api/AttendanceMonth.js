@@ -60,7 +60,8 @@ define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean"
 	const IN_RANGE = (field) => `{${field}} >= ${DATE} AND {${field}} <= ${DATE}`;
 	// Cùng ngưỡng với api/Attendance.SYNC_LIMIT: kỳ nhiều nhân viên hơn thì lập / khóa công chạy nền
 	const SYNC_LIMIT = 150;
-	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr"];
+	// customrole_s4vp_demo: vai trò trình diễn, quyền như administrator với dữ liệu của gói
+	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_demo"];
 
 	function fail(en, vi) {
 		const e = new Error(`${en} / ${vi}`);

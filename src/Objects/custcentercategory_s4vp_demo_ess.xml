@@ -1,0 +1,13 @@
+<centercategory scriptid="custcentercategory_s4vp_demo_ess">
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <centertab>[scriptid=custcentertab_s4vp_demo_1_payroll]</centertab>
+  <label>Tự phục vụ</label>
+  <links>
+    <link>
+      <linklabel>Cổng nhân viên (phiếu lương, phép, đơn)</linklabel>
+      <linkobject>[scriptid=customscript_s4vp_sl_my_payroll.customdeploy_s4vp_sl_my_payroll]</linkobject>
+      <linktasktype>SCRIPT</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

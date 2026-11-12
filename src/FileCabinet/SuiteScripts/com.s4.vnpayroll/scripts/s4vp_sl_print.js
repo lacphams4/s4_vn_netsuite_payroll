@@ -32,10 +32,11 @@ define(["N/file", "N/query", "N/render", "N/runtime", "N/log", "../api/Payroll",
 	PrintData,
 	Extra
 ) => {
-	const ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"];
+	// customrole_s4vp_demo: vai trò trình diễn, in như administrator
+	const ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", "customrole_s4vp_demo"];
 	// Vai trò được xem số tiền lương (cùng danh sách với api/HrCore.PAY_ROLES). Hiện trùng ROLES; tách riêng để khi mở bản in
 	// không có số tiền cho vai trò khác thì bản có lương vẫn bị chặn.
-	const PAY_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant"];
+	const PAY_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", "customrole_s4vp_demo"];
 	// Bảng chấm công: tối đa số nhân viên trong một file PDF (khoảng 20 trang A4 ngang, mỗi dòng 31 ô ngày). Nhiều hơn thì in
 	// từng phần (tham số page) hoặc lọc theo bộ phận: dựng PDF vài chục nghìn ô dễ vượt thời gian chạy của Suitelet.
 	const TIMESHEET_MAX_ROWS = 500;

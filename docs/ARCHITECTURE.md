@@ -116,6 +116,41 @@ Không khai phòng ban riêng và không có bản ghi `cost_account` thì kết
 
 Toàn vẹn khi ghi sổ (đặc tả 5.4): NetSuite không có giao dịch nhiều record. Ghi sổ kiểm tra mọi điều kiện trước, tạo JE, lưu id JE lên bảng lương ngay, rồi mới cập nhật tạm ứng; bảng đã có JE thì không tạo JE thứ hai. Dấu dữ liệu đầu vào (`calc_stamp`) được kiểm khi duyệt và ghi sổ: sửa dòng nhập, công, giảm trừ sau khi tính thì phải tính lại.
 
+### 5.1 Vai trò của gói
+
+| Vai trò | Dùng cho | Phạm vi |
+| --- | --- | --- |
+| `customrole_s4vp_hr` "S4VP Payroll HR" | Nhân sự | Thiết lập, hồ sơ, chứng từ công, bảng lương; không ghi sổ, không đảo, không lập bill |
+| `customrole_s4vp_accountant` "S4VP Payroll Accountant" | Kế toán | Bảng lương, tạm ứng, hoa hồng đầy đủ (ghi sổ, đảo, bill cơ quan thu); thiết lập, hồ sơ chỉ xem |
+| `customrole_s4vp_selfservice` | Vai trò chạy (run-as) của cổng nhân viên | Không gán cho người dùng |
+| `customrole_s4vp_demo` "S4 Advanced Payroll - Demo" | Trình diễn, quay video | Mọi thao tác của HR lẫn kế toán; menu riêng; không giới hạn công ty con |
+
+Vai trò trình diễn (sinh từ `tools/schema.mjs`, `ROLE_DEMO`):
+
+- Record của gói: FULL trên mọi custom record (User Event của gói vẫn chặn sửa trực tiếp bảng lương, sổ phép, trạng thái tạm ứng, kỳ).
+- Quyền chuẩn: Employees, Employee Record, Track Time (EDIT); Time Tracking report, Subsidiaries, Departments, Classes, Locations, Jobs, Customers, Accounting Lists, Items, Invoice, Cash Sale, Credit Memo, Customer Payment, Accounts, Vendors, Financial Statements, Income Statement, General Ledger, Trial Balance, Find Transaction, Perform Search, Custom Lists, Custom Record Entries (VIEW); Documents and Files (EDIT); Make Journal Entry, Journal Approval, Bills, Vendor Bill Approval (FULL). Không có quyền web services, SuiteScript, thiết lập công ty hay quản lý kỳ kế toán.
+- RESTlet `s4vp_rl_api`: được mọi thao tác như administrator (nhóm route "all", "payroll", "hr", "acct"), trừ thao tác bảo trì `ADMIN_ONLY` (sinh dữ liệu test, gỡ cờ job treo) và route "admin" - các việc này không thuộc kịch bản trình diễn và vẫn làm bằng Administrator. Bootstrap trả `isAccountant = true`, `fullAccess = true` (`isHr = false` để màn bảng lương hiện ghi sổ, đảo, bill). `api/HrCore`, `api/AttendanceMonth`, Suitelet in có vai trò này trong danh sách được sửa / xem lương.
+- Duyệt nhiều cấp (`core/ApprovalFlow`): vai trò trình diễn khớp mọi cấp khai theo vai trò (HR, Kế toán, Administrator); quy tắc người gửi duyệt không tự duyệt và tách nhiệm vụ giữa hai cấp liền nhau vẫn áp dụng. Cấp khai theo nhân viên chỉ khớp đúng nhân viên đó.
+- Audience: RESTlet, Suitelet mở màn, Suitelet in, SPA `custspa_s4vp_payroll`. Không thêm vào tab `custcentertab_s4vp_payroll` (tab đó thuộc trung tâm BASIC, vai trò trình diễn dùng trung tâm riêng).
+
+Menu (trung tâm `custcenter_s4vp_demo`, gán qua `centertype` của role; NetSuite không cho đổi trung tâm của role đã tạo):
+
+| Tab | Nhóm | Liên kết |
+| --- | --- | --- |
+| Home | (chuẩn) | Bảng điều khiển |
+| S4 Advanced Payroll (`custcentertab_s4vp_demo_1_payroll`) | Màn hình S4 Advanced Payroll | Trang chủ lương, Chấm công, Chạy lương, Nhân sự, Tạm ứng, Hoa hồng, Sản lượng, Phân tích chi phí lương, Báo cáo - tờ khai, Thiết lập (center link `custlink_s4vp_demo_*` tới `/spa/s4vp-payroll#/<view>`) |
+| | Tự phục vụ | Cổng nhân viên (Suitelet `customscript_s4vp_sl_my_payroll`) |
+| Nhân sự & thời gian (`_2_hr`) | Nhân sự & thời gian | Nhân viên, Nhập giờ công (Track Time), Báo cáo thời gian theo nhân viên, Dự án |
+| Kinh doanh (`_3_sales`) | Kinh doanh | Hóa đơn bán hàng, Bán hàng thu tiền ngay, Credit Memo, Thu tiền khách hàng, Khách hàng |
+| Kế toán (`_4_acct`) | Chứng từ kế toán | Bút toán, Duyệt bút toán, Vendor Bill, Duyệt Vendor Bill, Hệ thống tài khoản |
+| | Báo cáo tài chính | Báo cáo kết quả hoạt động kinh doanh, Bảng cân đối kế toán, Bảng cân đối thử, Sổ cái chung, Chi tiết giao dịch |
+
+SDF không có trường thứ tự tab trong `center` / `centertab`: tab tạo theo thứ tự deploy, tên script id đánh số 1 - 4 cho dễ nhận. Sau deploy cần mở role để kiểm tra thứ tự; nếu lệch thì chỉnh trên giao diện (Customization > Centers and Tabs). Nhãn menu chỉ tiếng Việt: dự án chưa có translation collection; muốn song ngữ thì thêm translationcollection và đổi `label` sang tham chiếu chuỗi dịch. Màn SPA tự song ngữ theo ngôn ngữ người dùng.
+
+Gán vai trò: người dùng tự mở hồ sơ nhân viên của mình (Lists > Employees > Edit > Access), thêm "S4 Advanced Payroll - Demo" vào danh sách vai trò, lưu, rồi đổi vai trò ở góc phải trên. Script và trợ lý không gán vai trò cho người dùng.
+
+Deploy lần đầu: role mới và custom record cùng tham chiếu nhau, dùng `python tools/deploy_two_pass.py` (bước 1 tạo role với quyền chuẩn và trung tâm riêng, bước 2 thêm quyền custom record). Không deploy role khi chưa có `custcenter_s4vp_demo` trong cùng lượt: role tạo với trung tâm khác thì không đổi được.
+
 ## 6. Lộ trình
 
 | Giai đoạn | Nội dung | Trạng thái 21/10/2026 |

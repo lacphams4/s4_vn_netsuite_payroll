@@ -47,10 +47,12 @@ Deploy (Java 17+, SuiteCloud CLI, `suitecloud account:setup` do người dùng t
 npm run deploy
 ```
 
-Khi thêm custom record mới, deploy hai bước để tránh lỗi tham chiếu vòng giữa role và record:
+Khi thêm custom record mới hoặc role mới, deploy hai bước để tránh lỗi tham chiếu vòng giữa role và record:
 
 ```bash
 python tools/deploy_two_pass.py
 ```
 
 Bản production: không deploy `api/TestData.js` (tạo dữ liệu test) - xem docs/HUONG_DAN.md.
+
+Trình diễn, quay video: vai trò `customrole_s4vp_demo` "S4 Advanced Payroll - Demo" (mọi thao tác của gói trừ bảo trì chỉ dành cho Administrator, menu riêng `custcenter_s4vp_demo`, không giới hạn công ty con). Người dùng tự thêm vai trò vào tab Access trên hồ sơ nhân viên của mình. Quyền và menu: docs/ARCHITECTURE.md mục 5.1.

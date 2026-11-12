@@ -1,0 +1,32 @@
+<centercategory scriptid="custcentercategory_s4vp_demo_reports">
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <centertab>[scriptid=custcentertab_s4vp_demo_4_acct]</centertab>
+  <label>Báo cáo tài chính</label>
+  <links>
+    <link>
+      <linkid>REPO_NEG200</linkid>
+      <linklabel>Báo cáo kết quả hoạt động kinh doanh</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_NEG202</linkid>
+      <linklabel>Bảng cân đối kế toán</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_292</linkid>
+      <linklabel>Bảng cân đối thử</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_293</linkid>
+      <linklabel>Sổ cái chung</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_250</linkid>
+      <linklabel>Chi tiết giao dịch</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

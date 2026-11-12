@@ -2169,7 +2169,8 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     function roleKey(user) {
         const u = user || {};
-        if (u.role === 'administrator')
+        // fullAccess: administrator hoặc vai trò trình diễn customrole_s4vp_demo (RESTlet bootstrap) - trang chủ đầy đủ như quản trị
+        if (u.role === 'administrator' || u.fullAccess === true)
             return 'admin';
         if (u.isHr || u.role === 'customrole_s4vp_hr')
             return 'hr';
@@ -3010,7 +3011,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         if (data && typeof data.canEdit === 'boolean')
             return data.canEdit;
         const role = str$3(user && user.role);
-        return !!(user && user.isHr) || role === 'administrator' || role === 'customrole_s4vp_hr';
+        return !!(user && (user.isHr || user.fullAccess === true)) || role === 'administrator' || role === 'customrole_s4vp_hr';
     }
     function initialState(source) {
         return {
@@ -10296,7 +10297,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const subsidiary = app.subsidiary || '';
         const params = (app.route && app.route.params) || {};
         // Ma trận quyền của RESTlet: saveOutput, loadTeamMembers, splitOutput, outputAction chỉ cho administrator và HR
-        const canWrite = user.role === 'administrator' || !!user.isHr || user.role === 'customrole_s4vp_hr';
+        const canWrite = user.role === 'administrator' || user.fullAccess === true || !!user.isHr || user.role === 'customrole_s4vp_hr';
         // Kỳ của nhóm lương thuộc công ty con đang chọn, giảm dần
         const periods = periodsForSubsidiary(boot, subsidiary);
         const [data, setData] = core.useState(null);

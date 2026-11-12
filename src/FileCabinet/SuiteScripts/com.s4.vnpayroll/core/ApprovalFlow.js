@@ -10,7 +10,8 @@
  *   batch    { id, subsidiary, net, status }
  *   logs     dòng record approval_log của bảng lương: { id, round, level, step_name, approver, approver_name, decision, at, note, waived }
  *   markers  mốc từ nhật ký thao tác (audit_log) của bảng lương: [{ action: "submitRun" | "reopen" | "reject", at, user }]
- *   user     { id, role } người đang thao tác (role là script id: administrator, customrole_s4vp_hr, customrole_s4vp_accountant)
+ *   user     { id, role } người đang thao tác (role là script id: administrator, customrole_s4vp_hr, customrole_s4vp_accountant;
+ *            customrole_s4vp_demo khớp mọi vai trò duyệt)
  *   roleMembers  tùy chọn { H: n, A: n, D: n } số người có vai trò; thiếu = coi như vai trò có nhiều người
  *
  * Quy tắc:
@@ -35,6 +36,10 @@ define([], () => {
 		A: { en: "Accountant role", vi: "Vai trò Kế toán" },
 		D: { en: "Administrator", vi: "Administrator" },
 	};
+	// Vai trò trình diễn (quay video): được coi là thành viên của mọi vai trò duyệt (H, A, D); quy tắc người gửi duyệt và tách
+	// nhiệm vụ giữa hai cấp liền nhau vẫn áp dụng như mọi người duyệt
+	const DEMO_ROLE = "customrole_s4vp_demo";
+	const roleMatch = (code, userRole) => !!ROLE_IDS[code] && (ROLE_IDS[code] === str(userRole) || str(userRole) === DEMO_ROLE);
 	const MARKER_ACTIONS = ["submitRun", "reopen", "reject"];
 	const APPROVED = ["A", "R", "V"];
 
@@ -72,7 +77,7 @@ define([], () => {
 
 	function isApprover(step, user) {
 		const u = user || {};
-		return !!step && step.approvers.some((a) => (a.employee && a.employee === str(u.id)) || (a.role && ROLE_IDS[a.role] === str(u.role)));
+		return !!step && step.approvers.some((a) => (a.employee && a.employee === str(u.id)) || (a.role && roleMatch(a.role, u.role)));
 	}
 
 	/** Cấp chỉ có đúng một người đủ quyền và đó là người đang thao tác (vai trò: chỉ khi biết chắc vai trò có không quá một người). */
@@ -82,7 +87,7 @@ define([], () => {
 		if (!step || !step.approvers.length || !isApprover(step, u)) return false;
 		return step.approvers.every((a) => {
 			if (a.employee) return a.employee === str(u.id);
-			return ROLE_IDS[a.role] === str(u.role) && !blank(members[a.role]) && int(members[a.role]) <= 1;
+			return roleMatch(a.role, u.role) && !blank(members[a.role]) && int(members[a.role]) <= 1;
 		});
 	}
 

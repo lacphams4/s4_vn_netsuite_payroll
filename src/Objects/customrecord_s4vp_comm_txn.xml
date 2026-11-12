@@ -339,5 +339,9 @@
       <permittedlevel>VIEW</permittedlevel>
       <permittedrole>[customrole_s4vp_selfservice]</permittedrole>
     </permission>
+    <permission>
+      <permittedlevel>FULL</permittedlevel>
+      <permittedrole>[customrole_s4vp_demo]</permittedrole>
+    </permission>
   </permissions>
 </customrecordtype>

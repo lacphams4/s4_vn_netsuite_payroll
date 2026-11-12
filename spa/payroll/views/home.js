@@ -340,7 +340,8 @@ function weekday(iso, names) {
 
 function roleKey(user) {
 	const u = user || {};
-	if (u.role === 'administrator') return 'admin';
+	// fullAccess: administrator hoặc vai trò trình diễn customrole_s4vp_demo (RESTlet bootstrap) - trang chủ đầy đủ như quản trị
+	if (u.role === 'administrator' || u.fullAccess === true) return 'admin';
 	if (u.isHr || u.role === 'customrole_s4vp_hr') return 'hr';
 	if (u.isAccountant || u.role === 'customrole_s4vp_accountant') return 'acct';
 	return 'other';

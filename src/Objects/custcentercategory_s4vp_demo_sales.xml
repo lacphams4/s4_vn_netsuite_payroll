@@ -1,0 +1,32 @@
+<centercategory scriptid="custcentercategory_s4vp_demo_sales">
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <centertab>[scriptid=custcentertab_s4vp_demo_3_sales]</centertab>
+  <label>Kinh doanh</label>
+  <links>
+    <link>
+      <linkid>LIST_TRAN_CUSTINVC</linkid>
+      <linklabel>Hóa đơn bán hàng</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_CASHSALE</linkid>
+      <linklabel>Bán hàng thu tiền ngay</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_CUSTCRED</linkid>
+      <linklabel>Giảm trừ / trả lại hàng (Credit Memo)</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_CUSTPYMT</linkid>
+      <linklabel>Thu tiền khách hàng</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_CUSTJOB</linkid>
+      <linklabel>Khách hàng</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>
