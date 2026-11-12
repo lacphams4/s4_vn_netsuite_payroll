@@ -1,0 +1,182 @@
+<title>Sổ tay quy trình S4 VN Payroll</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Bố cục: sổ tay hai cột - mục lục quy trình bên trái (gập thành ngăn kéo trên điện thoại), bài viết bên phải; mỗi bài là một quy trình có luồng bước theo vai trò */
+:root {
+  --bg: #f6f8f7;
+  --surface: #ffffff;
+  --ink: #17231f;
+  --muted: #5a6964;
+  --line: #dbe3e0;
+  --accent: #1f6f5c;
+  --accent-soft: #e2efeb;
+  --mark: #b5651d;
+  --mark-soft: #f7ebdd;
+  --warn: #8a5a00;
+  --warn-soft: #fbf1d9;
+  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --r-hr: #2f6db5; --r-mgr: #7a4fb0; --r-acc: #1f6f5c; --r-chief: #9b3d3d; --r-emp: #b5651d; --r-admin: #4a5560; --r-sys: #6b7b76;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1614; --surface: #16201d; --ink: #e3ece9; --muted: #9db0aa; --line: #2a3733;
+  --accent: #5cc0a3; --accent-soft: #1b3a32; --mark: #e2a368; --mark-soft: #3a2a1b; --warn: #e7c06a; --warn-soft: #362c14;
+  --r-hr: #7fb0ea; --r-mgr: #b99be6; --r-acc: #5cc0a3; --r-chief: #e39191; --r-emp: #e2a368; --r-admin: #a9b5bf; --r-sys: #9db0aa;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1614; --surface: #16201d; --ink: #e3ece9; --muted: #9db0aa; --line: #2a3733;
+  --accent: #5cc0a3; --accent-soft: #1b3a32; --mark: #e2a368; --mark-soft: #3a2a1b; --warn: #e7c06a; --warn-soft: #362c14;
+  --r-hr: #7fb0ea; --r-mgr: #b99be6; --r-acc: #5cc0a3; --r-chief: #e39191; --r-emp: #e2a368; --r-admin: #a9b5bf; --r-sys: #9db0aa;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, .code { font-family: var(--font-code); font-size: 0.86em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.brand b { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
+.brand span { color: var(--muted); font-size: 13px; }
+.search { margin-left: auto; position: relative; flex: 1 1 260px; max-width: 420px; }
+.search input { width: 100%; font: inherit; font-size: 14px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.menu-btn { display: none; font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+
+.wrap { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 0; max-width: 1280px; margin: 0 auto; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 58px); align-self: start; max-height: calc(100vh - 70px); overflow-y: auto;
+  padding: 18px 14px 40px max(16px, env(safe-area-inset-left, 0px)); border-right: 1px solid var(--line); }
+.toc h4 { margin: 16px 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.toc a { display: flex; gap: 8px; align-items: baseline; padding: 5px 8px; border-radius: 6px; text-decoration: none; color: var(--ink); font-size: 14px; }
+.toc a .n { font-family: var(--font-code); font-size: 11px; color: var(--muted); min-width: 18px; }
+.toc a:hover { background: var(--accent-soft); }
+.toc a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.toc .empty { color: var(--muted); font-size: 13px; padding: 6px 8px; }
+
+main { min-width: 0; padding-block: 28px 64px; padding-left: max(16px, 40px); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+article { max-width: 1240px; }
+.tbl, .diagram { max-width: 1100px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font-size: 30px; line-height: 1.25; margin: 6px 0 10px; letter-spacing: -0.015em; text-wrap: balance; }
+h2 { font-size: 19px; margin: 34px 0 10px; letter-spacing: -0.01em; text-wrap: balance; }
+h3 { font-size: 15.5px; margin: 20px 0 6px; }
+.lede { font-size: 16.5px; color: var(--ink); max-width: 68ch; }
+p, li { max-width: 72ch; }
+ul { padding-left: 20px; }
+li + li { margin-top: 3px; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 18px 0 6px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.fact .k { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.fact .v { font-size: 14px; margin-top: 3px; }
+
+.roles { display: flex; flex-wrap: wrap; gap: 6px; }
+.role { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 2px 9px 2px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); white-space: nowrap; }
+.role::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rc, var(--r-sys)); }
+
+/* Luồng bước: mỗi bước một hàng, cột trái là vai trò, nối bằng đường dọc */
+.flow { list-style: none; padding: 0; margin: 12px 0; position: relative; }
+.flow li { display: grid; grid-template-columns: 136px 28px minmax(0, 1fr); gap: 0 10px; max-width: none; margin: 0; position: relative; }
+.flow .who { text-align: right; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: var(--rc, var(--r-sys)); }
+.flow .dot { position: relative; display: flex; justify-content: center; }
+.flow .dot::before { content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.flow li:first-child .dot::before { top: 18px; }
+.flow li:last-child .dot::before { bottom: calc(100% - 18px); }
+.flow .dot span { position: relative; margin-top: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 2px solid var(--rc, var(--r-sys)); font: 600 11px var(--font-code); display: grid; place-items: center; color: var(--ink); }
+.flow .body { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; min-width: 0; }
+.flow .body b { font-weight: 600; }
+.flow .body .note { color: var(--muted); font-size: 13.5px; }
+.st { display: inline-block; font: 500 11.5px var(--font-code); padding: 1px 7px; border-radius: 5px; background: var(--mark-soft); color: var(--mark); margin-left: 6px; white-space: nowrap; }
+
+.callout { border: 1px solid var(--line); border-left: 3px solid var(--warn); background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; margin: 14px 0; }
+.callout.info { border-left-color: var(--accent); background: var(--accent-soft); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); margin: 10px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Bản đồ chu kỳ tháng: các giai đoạn theo thứ tự, mỗi giai đoạn liệt kê quy trình */
+.cycle { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 16px 0; counter-reset: ph; }
+.phase { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; counter-increment: ph; }
+.phase h3 { margin: 0 0 6px; font-size: 14px; }
+.phase h3::before { content: "B" counter(ph) " "; font: 500 11px var(--font-code); color: var(--mark); margin-right: 4px; }
+.phase a { display: block; font-size: 13.5px; text-decoration: none; padding: 3px 0; }
+.phase a:hover { text-decoration: underline; }
+.phase .when { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+
+.next { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); }
+.next a { text-decoration: none; font-size: 14px; }
+.hl { background: var(--mark-soft); color: inherit; border-radius: 3px; }
+.foot { color: var(--muted); font-size: 12.5px; margin-top: 30px; }
+
+/* Luồng bước: danh sách đánh số đầu tiên của mục "Các bước" vẽ thành chuỗi có đường nối */
+ol.steps { list-style: none; counter-reset: st; padding-left: 0; margin: 12px 0 16px; }
+ol.steps > li { counter-increment: st; position: relative; padding: 9px 12px 9px 46px; margin: 0; max-width: 76ch;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+ol.steps > li + li { margin-top: 8px; }
+ol.steps > li::before { content: counter(st); position: absolute; left: 11px; top: 9px; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; font: 600 12px var(--font-code); color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent); }
+ol.steps > li + li::after { content: ""; position: absolute; left: 22px; top: -9px; height: 9px; width: 2px; background: var(--line); }
+ol.steps ol, ol.steps ul { margin-top: 4px; }
+ol:not(.steps) { padding-left: 22px; }
+li > ul, li > ol { margin: 4px 0; }
+pre.cyc { font: 12.5px/1.55 var(--font-code); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
+.todo { font: 600 11.5px var(--font-code); color: var(--warn); background: var(--warn-soft); border: 1px solid var(--warn); border-radius: 5px; padding: 0 5px; white-space: nowrap; }
+.unsure { font-size: 12px; color: var(--muted); border: 1px dashed var(--line); border-radius: 5px; padding: 0 5px; white-space: nowrap; }
+.toc a .t { flex: 1; min-width: 0; }
+.toc a .cnt { font: 500 11px var(--font-code); color: var(--mark); background: var(--mark-soft); border-radius: 999px; padding: 0 7px; }
+mark.hl { background: var(--mark-soft); color: inherit; outline: 1px solid var(--mark); border-radius: 2px; }
+h2[id] { scroll-margin-top: 80px; }
+
+/* Lưu đồ làn (SVG): màu lấy từ token nên đổi theo giao diện sáng / tối */
+.diagram { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 10px; margin: 8px 0 18px; }
+.flowsvg { display: block; width: 100%; min-width: 520px; height: auto; font-family: var(--font-body); }
+.flowsvg .lane { fill: var(--surface); }
+.flowsvg .lane.alt { fill: var(--bg); }
+.flowsvg .lanehead { fill: var(--accent-soft); }
+.flowsvg .lanename { fill: var(--rc); font-size: 13px; font-weight: 700; text-anchor: middle; }
+.flowsvg .node { fill: var(--surface); stroke: var(--rc); stroke-width: 1.6; }
+.flowsvg .node.term { stroke-width: 2.4; }
+.flowsvg .node.dec { fill: var(--warn-soft); stroke: var(--rc); }
+.flowsvg .ntext { fill: var(--ink); font-size: 12px; text-anchor: middle; }
+.flowsvg .nnum { fill: var(--muted); font: 600 10.5px var(--font-code); text-anchor: end; }
+.flowsvg .edge { fill: none; stroke: var(--muted); stroke-width: 1.4; }
+.flowsvg .edge.back { stroke: var(--mark); stroke-dasharray: 5 4; }
+.flowsvg .ah { fill: var(--muted); }
+.flowsvg .lead { stroke: var(--mark); stroke-width: 1; stroke-dasharray: 2 3; }
+.flowsvg .elabel { fill: var(--muted); font-size: 11px; }
+.flowsvg .blabel { fill: var(--mark); font-size: 11.5px; font-weight: 500; }
+.flowsvg .stbg { fill: var(--mark-soft); stroke: var(--mark); stroke-width: 1; }
+.flowsvg .sttext { fill: var(--mark); font: 600 11px var(--font-code); text-anchor: middle; }
+.flowhint { color: var(--muted); font-size: 13.5px; margin-bottom: 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); margin: 4px 0 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { display: inline-block; width: 22px; height: 12px; border: 1.6px solid var(--muted); background: var(--surface); }
+.lg.term { border-radius: 8px; border-width: 2.4px; }
+.lg.box { border-radius: 3px; }
+.lg.dia { width: 11px; height: 11px; transform: rotate(45deg); background: var(--warn-soft); margin: 0 5px; }
+.lg.back { height: 0; border: 0; border-top: 1.6px dashed var(--mark); }
+.lgst { font: 600 11px var(--font-code); color: var(--mark); background: var(--mark-soft); border: 1px solid var(--mark); border-radius: 5px; padding: 0 5px; }
+
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); }
+  .menu-btn { display: inline-block; }
+  nav.toc { display: none; position: fixed; inset: calc(env(safe-area-inset-top, 0px) + 56px) 0 0 0; max-height: none; z-index: 4; background: var(--surface); border-right: 0; padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  nav.toc.open { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  .flow li { grid-template-columns: 28px minmax(0, 1fr); }
+  .flow .who { grid-column: 2; text-align: left; padding-top: 0; order: -1; }
+  .flow .dot { grid-row: 1 / span 2; }
+  h1 { font-size: 25px; }
+}
+@media (prefers-reduced-motion: no-preference) { .toc a, .phase a { transition: background .15s; } }
+</style>
