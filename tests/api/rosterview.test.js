@@ -232,6 +232,22 @@ describe("Chế độ ca", () => {
     expect(ER.rows(["101", "102"], "2026-12-01", "2026-12-03").map((x) => x.id)).toEqual(["r1", "r2"]);
   });
 
+  test("EffectiveRoster.forPayroll: số ca theo loại ca trừ ngày nghỉ đã duyệt, ngày có ca cho phân bổ", () => {
+    mockDb.t.shift = [{ id: "5", name: "C1", kind: "D" }, { id: "6", name: "C3", kind: "N" }];
+    mockDb.t.roster.push({ id: "r9", employee: "102", work_date: "2026-12-02", shift: "6", source: "M", location: "L7", work_center: "W3", key: "102|2026-12-02" });
+    mockDb.t.leave_request = [
+      { id: "l1", employee: "102", from: "2026-12-01", to: "2026-12-01", status: "A" },
+      { id: "l2", employee: "101", from: "2026-12-01", to: "2026-12-01", status: "P" },
+    ];
+    const r = ER.forPayroll(["101", "102"], "2026-12-01", "2026-12-04");
+    // 101: 01/12 C1 (ô đã lưu), 02/12 nghỉ (ô đã lưu), 03/12 nghỉ theo chu kỳ, 04/12 C1 theo chế độ ca; đơn nghỉ chờ duyệt không trừ
+    expect(r.counts["101"]).toEqual({ D: 2, E: 0, N: 0 });
+    // 102: 01/12 C1 nhưng nghỉ phép đã duyệt (không đếm), 02/12 ca đêm sửa tay, 04/12 C1
+    expect(r.counts["102"]).toEqual({ D: 1, E: 0, N: 1 });
+    expect(r.days["102"].map((d) => [d.date, d.shiftCode, d.branch])).toEqual(expect.arrayContaining([["2026-12-01", "C1", ""], ["2026-12-02", "C3", "L7"], ["2026-12-04", "C1", ""]]));
+    expect(ER.forPayroll([], "2026-12-01", "2026-12-04")).toEqual({ counts: {}, days: {} });
+  });
+
   test("rosterReset: bỏ ô đã lưu (không xóa), lưu lại thì dùng lại bản ghi cũ; kỳ khóa chặn", () => {
     expect(RosterView.resetCells({ subsidiary: "14", cells: [{ employee: "101", workDate: "2026-12-01" }, { employee: "101", workDate: "2026-12-09" }] })).toEqual({ reset: 1, missing: 1 });
     expect(mockDb.t.roster.find((x) => x.id === "r1").isInactive).toBe(true);

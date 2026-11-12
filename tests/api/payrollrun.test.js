@@ -142,7 +142,7 @@ beforeEach(() => {
 
 describe("routes", () => {
   test("khai đúng tên action và vai trò", () => {
-    expect(Object.keys(PayrollRun.routes.get)).toEqual(["runView", "runLine"]);
+    expect(Object.keys(PayrollRun.routes.get)).toEqual(["runView", "runLine", "segmentNames"]);
     expect(Object.keys(PayrollRun.routes.post)).toEqual(["submitRun"]);
     for (const r of Object.values(PayrollRun.routes.get).concat(Object.values(PayrollRun.routes.post))) {
       expect(r.roles).toBe("payroll");

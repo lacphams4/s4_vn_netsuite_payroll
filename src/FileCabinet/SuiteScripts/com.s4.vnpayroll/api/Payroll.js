@@ -19,8 +19,8 @@ define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings", "./Lean", "../core/StatutoryParameterProvider",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
 	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines", "./Checks", "./LaborAnalytics", "./CostAccounts",
-	"../core/PitCalculator", "../core/ApprovalFlow",
-], (query, record, runtime, Store, Settings, Lean, Provider, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts, Pit, ApprovalFlow) => {
+	"../core/PitCalculator", "../core/ApprovalFlow", "./EffectiveRoster",
+], (query, record, runtime, Store, Settings, Lean, Provider, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts, Pit, ApprovalFlow, EffectiveRoster) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -581,6 +581,22 @@ define([
 		return { method, selfDeduction: self, dependentDeduction: Money.D(family).minus(Money.D(self)).toNumber() };
 	}
 
+	/** Lượt tính có cần lịch ca không: có quy tắc thu nhập nguồn H đang dùng, hoặc phương pháp phân bổ R (thiết lập hoặc hồ sơ). */
+	function usesShifts(c, profileList) {
+		if ((c.rules || []).some((r) => norm(r.quantitySource) === "H" && r.isActive !== false)) return true;
+		if (norm(c.settings && c.settings.allocationMethod) === "R") return true;
+		return (profileList || []).some((p) => norm(p.alloc_method) === "R");
+	}
+
+	/** Số ca theo loại ca và ngày có ca của từng nhân viên trong kỳ; lỗi đọc (role thiếu quyền) thì coi như không có ca. */
+	function shiftsForPayroll(empIds, from, to) {
+		try {
+			return EffectiveRoster.forPayroll(empIds, from, to);
+		} catch (e) {
+			return { counts: {}, days: {} };
+		}
+	}
+
 	/**
 	 * Tính bảng lương. Lỗi một nhân viên không dừng cả bảng: dòng đó về 0 và ghi lỗi (4.6.9).
 	 * @param {string} batchId
@@ -634,6 +650,8 @@ define([
 		// Giấy phép lao động chỉ xét hồ sơ người nước ngoài (WorkPermits.forPayroll tự lọc như vậy): lô không có ai thì không truy vấn
 		const permits = WorkPermits.forPayroll(empIds.filter((id) => foreign.has(id)), c.period.start, c.period.end);
 		const plans = AllocationPlans.forPayroll(empIds);
+		// Số ca đã làm (quy tắc thu nhập nguồn H) và ngày có ca (phân bổ phương pháp R) từ lịch ca hiệu lực: chỉ đọc khi có nơi dùng
+		const shiftData = usesShifts(c, Object.values(profiles)) ? shiftsForPayroll(empIds, c.period.start, c.period.end) : { counts: {}, days: {} };
 		// Tài khoản chi phí theo đích (class / dự án / phòng ban): thuộc ngữ cảnh tĩnh; không đọc được thì bảng rỗng, tính như cũ
 		const costAccounts = c.costAccounts;
 		const leaving = empIds.filter((id) => profiles[id] && EmploymentDays.terminatesIn(profiles[id].termination_date, c.period.start, c.period.end));
@@ -674,6 +692,8 @@ define([
 					outputShares: (outputs.shares || {})[line.employee] || [],
 					commissionLines: commission.lines[line.employee] || [],
 					allocationVersions: plans[line.employee] || [],
+					shiftCounts: shiftData.counts[line.employee] || {},
+					rosterDays: shiftData.days[line.employee] || [],
 					extraWarnings: (wp && wp.warning ? [wp.warning] : []).concat(
 						(prof.salary_type || "M") === "H" && !(regular[line.employee] || []).length && !myInputs.some((i) => i.kind === "E")
 							? [{ code: "NO_HOURS", message: "Hourly employee without payroll hours: click Load Time", messageVi: "Nhân viên lương giờ chưa có giờ công: bấm Nạp giờ công" }]

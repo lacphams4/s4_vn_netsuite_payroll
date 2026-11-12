@@ -14021,6 +14021,25 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const [dialog, setDialog] = core.useState(null);
         const [jobInfo, setJobInfo] = core.useState(null);
         const [journal, setJournal] = core.useState(null);
+        // Tên phòng ban, địa điểm, class, dự án theo id (tab Phân bổ, Bút toán); chưa tải hoặc không đọc được thì hiện id
+        const [segNames, setSegNames] = core.useState(null);
+        const segOf = (kind, v) => {
+            const key = v === null || v === undefined ? '' : String(v);
+            if (!key)
+                return '';
+            const map = (segNames || {})[kind] || {};
+            return map[key] || key;
+        };
+        core.useEffect(() => {
+            let on = true;
+            call({ action: 'segmentNames' }).then((r) => {
+                if (on && r)
+                    setSegNames(r);
+            }, () => undefined);
+            return () => {
+                on = false;
+            };
+        }, []);
         const formRef = core.useRef(EMPTY_FORM);
         const [form, setForm] = core.useState(EMPTY_FORM);
         const timeRef = core.useRef(EMPTY_TIME);
@@ -14675,7 +14694,10 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                             ], rows: days, total: dayTotal, search: true, searchPlaceholder: search, label: tm.sheetTitle(fmtDate(sheet.from), fmtDate(sheet.to)), toolbar: jsx("span", { style: { fontWeight: '600', fontSize: '13px' }, children: tm.sheetTitle(fmtDate(sheet.from), fmtDate(sheet.to)) }) }))] }));
             }
             if (tab === 'alloc') {
-                const list = (d.allocations || []).map((x, i) => Object.assign({}, x, { id: `a${i}`, sourceText: x.source ? t.panel.allocSrc[x.source] || x.source : '' }));
+                const list = (d.allocations || []).map((x, i) => Object.assign({}, x, {
+                    id: `a${i}`, sourceText: x.source ? t.panel.allocSrc[x.source] || x.source : '',
+                    project: segOf('project', x.project), branch: segOf('location', x.branch), workCenter: segOf('classification', x.workCenter),
+                }));
                 const total = list.length > 1 ? { component: t.journal.total, amount: sumOf(list, 'amount') } : null;
                 return (jsx(Table, { columns: [
                         { key: 'component', label: pc.component, nowrap: true },
@@ -14748,7 +14770,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 return (jsxs("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }, children: [jsx(Empty, { text: `${t.journal.failed} ${journal.error}` }), jsx(Button, { small: true, label: t.retry, onClick: () => loadJournal(true) })] }));
             }
             const j = journal.data || {};
-            const list = (j.lines || []).map((x, i) => Object.assign({}, x, { id: `j${i}`, accountText: x.accountNumber || x.account || '', dim: [x.sub, x.branch, x.workCenter, x.project].filter(Boolean).join(' / ') }));
+            const list = (j.lines || []).map((x, i) => Object.assign({}, x, { id: `j${i}`, accountText: x.accountNumber || x.account || '', dim: [segOf('department', x.sub), segOf('location', x.branch), segOf('classification', x.workCenter), segOf('project', x.project)].filter(Boolean).join(' / ') }));
             const total = { accountText: t.journal.total, debit: sumOf(list, 'debit'), credit: sumOf(list, 'credit') };
             const heading = `${b.journal ? t.journal.titleReleased : t.journal.title}${j.memo ? `: ${j.memo}` : ''}`;
             return (jsx(Table, { columns: [

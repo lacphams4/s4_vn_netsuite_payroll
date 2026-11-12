@@ -562,6 +562,23 @@ export default function PayrollRunView({app}) {
 	const [dialog, setDialog] = useState(null);
 	const [jobInfo, setJobInfo] = useState(null);
 	const [journal, setJournal] = useState(null);
+	// Tên phòng ban, địa điểm, class, dự án theo id (tab Phân bổ, Bút toán); chưa tải hoặc không đọc được thì hiện id
+	const [segNames, setSegNames] = useState(null);
+	const segOf = (kind, v) => {
+		const key = v === null || v === undefined ? '' : String(v);
+		if (!key) return '';
+		const map = (segNames || {})[kind] || {};
+		return map[key] || key;
+	};
+	useEffect(() => {
+		let on = true;
+		call({action: 'segmentNames'}).then((r) => {
+			if (on && r) setSegNames(r);
+		}, () => undefined);
+		return () => {
+			on = false;
+		};
+	}, []);
 	const formRef = useRef(EMPTY_FORM);
 	const [form, setForm] = useState(EMPTY_FORM);
 	const timeRef = useRef(EMPTY_TIME);
@@ -1309,7 +1326,10 @@ export default function PayrollRunView({app}) {
 			);
 		}
 		if (tab === 'alloc') {
-			const list = (d.allocations || []).map((x, i) => Object.assign({}, x, {id: `a${i}`, sourceText: x.source ? t.panel.allocSrc[x.source] || x.source : ''}));
+			const list = (d.allocations || []).map((x, i) => Object.assign({}, x, {
+				id: `a${i}`, sourceText: x.source ? t.panel.allocSrc[x.source] || x.source : '',
+				project: segOf('project', x.project), branch: segOf('location', x.branch), workCenter: segOf('classification', x.workCenter),
+			}));
 			const total = list.length > 1 ? {component: t.journal.total, amount: sumOf(list, 'amount')} : null;
 			return (
 				<Table
@@ -1443,7 +1463,7 @@ export default function PayrollRunView({app}) {
 			);
 		}
 		const j = journal.data || {};
-		const list = (j.lines || []).map((x, i) => Object.assign({}, x, {id: `j${i}`, accountText: x.accountNumber || x.account || '', dim: [x.sub, x.branch, x.workCenter, x.project].filter(Boolean).join(' / ')}));
+		const list = (j.lines || []).map((x, i) => Object.assign({}, x, {id: `j${i}`, accountText: x.accountNumber || x.account || '', dim: [segOf('department', x.sub), segOf('location', x.branch), segOf('classification', x.workCenter), segOf('project', x.project)].filter(Boolean).join(' / ')}));
 		const total = {accountText: t.journal.total, debit: sumOf(list, 'debit'), credit: sumOf(list, 'credit')};
 		const heading = `${b.journal ? t.journal.titleReleased : t.journal.title}${j.memo ? `: ${j.memo}` : ''}`;
 		return (

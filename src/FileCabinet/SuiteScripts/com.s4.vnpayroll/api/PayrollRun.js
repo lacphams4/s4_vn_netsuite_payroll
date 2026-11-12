@@ -384,10 +384,31 @@ define(["./Store", "./Payroll", "./Settings", "./Checks", "./TimeLines", "./Lean
 		return { ok: true, status: "P" };
 	}
 
+	/**
+	 * GET segmentNames -> {department, location, classification, project: {id: tên}}: tên phân đoạn để tab Phân bổ, Bút toán hiện tên
+	 * thay cho internal id. Bốn truy vấn nhỏ, mỗi bảng bọc riêng: vai trò không đọc được bảng nào thì bảng đó rỗng (màn hình hiện id).
+	 */
+	function segmentNames() {
+		const out = { department: {}, location: {}, classification: {}, project: {} };
+		const fill = (key, sql) => {
+			try {
+				for (const r of Store.run(sql, [], `s4vp_seg_${key}`)) if (r.id !== null && r.id !== undefined) out[key][String(r.id)] = String(r.name || "");
+			} catch (e) {
+				// không đọc được: để rỗng
+			}
+		};
+		fill("department", "SELECT d.id AS id, d.name AS name FROM department d");
+		fill("location", "SELECT l.id AS id, l.name AS name FROM location l");
+		fill("classification", "SELECT c.id AS id, c.name AS name FROM classification c");
+		fill("project", "SELECT j.id AS id, j.entityid AS name FROM job j");
+		return out;
+	}
+
 	const routes = {
 		get: {
 			runView: { roles: "payroll", run: view },
 			runLine: { roles: "payroll", run: lineDetail },
+			segmentNames: { roles: "payroll", run: segmentNames },
 		},
 		post: {
 			submitRun: { roles: "payroll", run: submit },

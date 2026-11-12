@@ -10,6 +10,9 @@
  *                                   patternId, anchor, effective, expiration, note}
  *   patternsById()                  {id mẫu: {code, cycle}}
  *   people(employeeIds)             {nhân viên: {employee, subsidiary, department, paygroup, memberships}} - 3 truy vấn cho cả danh sách
+ *   forPayroll(employeeIds, from, to)  số liệu cho bảng lương: counts {nhân viên: {D, E, N}} = số ca theo loại ca của các ngày có
+ *                                   ca trong lịch hiệu lực, trừ ngày thuộc đơn nghỉ / đơn công tác đã duyệt (quy tắc thu nhập nguồn H);
+ *                                   days {nhân viên: [{date, shiftCode, branch, workCenter}]} = ngày có ca (phân bổ chi phí phương pháp R)
  *   rows(employeeIds, from, to)     ô theo dạng record roster: {id | null, employee, work_date, shift (id | null), source, location,
  *                                   work_center, virtual?: true}; ô suy ra từ chế độ ca có source "A", id null
  *
@@ -97,5 +100,43 @@ define(["./Store", "./Lean", "../core/Dates", "../core/RosterPlan", "../core/Shi
 		return out;
 	}
 
-	return { schemes, patternsById, people, stored, rows, toCore };
+	/** Ngày thuộc đơn nghỉ, đơn công tác đã duyệt trong [from, to]: tập khóa nhân viên|ngày. */
+	function excused(ids, from, to) {
+		const out = new Set();
+		for (const name of ["leave_request", "business_trip"]) {
+			for (const d of Store.findIn(name, "employee", ids, `{from} <= ${DATE} AND {to} >= ${DATE}`, [to, from])) {
+				if (d.status !== "A" || !d.from) continue;
+				const s = Dates.max(d.from, from);
+				const e = Dates.min(d.to || d.from, to);
+				if (Dates.cmp(e, s) < 0) continue;
+				for (const day of Dates.range(s, e)) out.add(Plan.key(d.employee, day));
+			}
+		}
+		return out;
+	}
+
+	function forPayroll(employeeIds, from, to) {
+		const f = Dates.iso(from);
+		const t = Dates.iso(to);
+		const ids = [...new Set((employeeIds || []).filter((e) => !blank(e)).map(String))];
+		const out = { counts: {}, days: {} };
+		if (!ids.length) return out;
+		const cells = rows(ids, f, t).filter((c) => !blank(c.shift));
+		if (!cells.length) return out;
+		const shiftOf = {};
+		for (const s of Store.find("shift", { includeInactive: true })) shiftOf[String(s.id)] = { code: norm(s.name), kind: s.kind || "D" };
+		const off = excused(ids, f, t);
+		for (const c of cells) {
+			const s = shiftOf[String(c.shift)];
+			if (!s) continue;
+			const e = String(c.employee);
+			(out.days[e] = out.days[e] || []).push({ date: c.work_date, shiftCode: s.code, branch: c.location || "", workCenter: c.work_center || "" });
+			if (off.has(Plan.key(e, c.work_date))) continue;
+			const k = out.counts[e] || (out.counts[e] = { D: 0, E: 0, N: 0 });
+			k[s.kind] = (k[s.kind] || 0) + 1;
+		}
+		return out;
+	}
+
+	return { schemes, patternsById, people, stored, rows, forPayroll, toCore };
 });
