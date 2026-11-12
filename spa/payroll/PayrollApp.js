@@ -22,6 +22,7 @@ import OutputsView from './views/outputsV2.js';
 import CommissionView, {canSeeCommission} from './views/commission.js';
 import PayrollRunView from './views/payrollRun.js';
 import CheckDetailView from './views/checkDetail.js';
+import RosterView from './views/roster.js';
 import LegacyView from './views/legacy.js';
 
 const TEXT = {
@@ -30,6 +31,7 @@ const TEXT = {
 		nav: 'Phân hệ',
 		tabs: {home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', commission: 'Hoa hồng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập'},
 		more: 'Khác',
+		roster: 'Xếp ca',
 		outputs: 'Sản lượng - khoán tổ',
 		permits: 'Giấy phép lao động',
 		subsidiary: 'Công ty con',
@@ -49,6 +51,7 @@ const TEXT = {
 		nav: 'Module',
 		tabs: {home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', commission: 'Commission', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup'},
 		more: 'More',
+		roster: 'Shift roster',
 		outputs: 'Output - team piecework',
 		permits: 'Work permits',
 		subsidiary: 'Subsidiary',
@@ -66,11 +69,11 @@ const TEXT = {
 };
 
 // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
-const VIEWS = {home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView};
+const VIEWS = {home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView, roster: RosterView};
 const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
 // Tab đang sáng theo view
 const TAB_OF = {
-	home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
+	home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', roster: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
 	profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', commission: 'commission', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
 };
 // View mở khi bấm tab
@@ -297,7 +300,7 @@ export default function PayrollApp() {
 			<nav class="s4vp-nav" aria-label={t.nav}>
 				<div class="s4vp-brand">{t.title}</div>
 				{tabs}
-				<Menu key="more" kind="tab" active={activeTab === 'more'} label={t.more} items={[{label: t.outputs, onClick: () => go('outputsV2')}, {label: t.permits, onClick: () => go('permits')}]} />
+				<Menu key="more" kind="tab" active={activeTab === 'more'} label={t.more} items={[{label: t.roster, onClick: () => go('roster')}, {label: t.outputs, onClick: () => go('outputsV2')}, {label: t.permits, onClick: () => go('permits')}]} />
 				<div class="s4vp-navright">
 					{busy ? (
 						<span class="s4vp-busy" role="status" aria-live="polite">

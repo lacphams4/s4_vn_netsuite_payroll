@@ -40,6 +40,7 @@ const TEXT = {
 		noData: 'Chưa tải được bảng công của kỳ. Kiểm tra thông báo phía trên rồi bấm Tải lại.',
 		noSubsidiary: 'Hãy chọn công ty con ở góc phải thanh tab.',
 		reload: 'Tải lại',
+		roster: 'Xếp ca',
 		legacy: 'Đơn từ, lượt chấm, phép (màn hình cũ)',
 		more: 'Thao tác khác',
 		sub: (p, n) => `Kỳ ${fmtDate(p.start)} - ${fmtDate(p.end)} · Nhóm lương ${p.paygroupName || p.paygroupCode} · Công chuẩn ${num(p.stdDays)} ngày · ${n} nhân viên`,
@@ -155,6 +156,7 @@ const TEXT = {
 		noData: 'The attendance of the period could not be loaded. Check the message above, then click Refresh.',
 		noSubsidiary: 'Select a subsidiary at the right of the tab bar.',
 		reload: 'Refresh',
+		roster: 'Shift roster',
 		legacy: 'Requests, punches, leave (previous screen)',
 		more: 'More actions',
 		sub: (p, n) => `Period ${fmtDate(p.start)} - ${fmtDate(p.end)} · Pay group ${p.paygroupName || p.paygroupCode} · Standard days: ${num(p.stdDays)} · Employees: ${n}`,
@@ -559,6 +561,7 @@ export default function AttendanceView({app}) {
 	const current = picked || periodId;
 	const periodSelect = <AutoSelect value={current} onInput={(v) => v && v !== current && app.go('attendance', {period: v})} options={periodOptions} placeholder={current ? null : t.period} ariaLabel={t.period} width={250} />;
 	const legacyItem = {label: t.legacy, onClick: () => app.go('attendanceLegacy')};
+	const rosterItem = {label: t.roster, onClick: () => app.go('roster')};
 
 	// Nạp chấm công: HR và administrator (cùng nhóm chạy processPunches); không phụ thuộc kỳ nên có cả khi chưa tải được bảng công
 	const mayImport = canImport(boot.user, data);
@@ -583,7 +586,7 @@ export default function AttendanceView({app}) {
 	if (!data) {
 		return (
 			<Page>
-				<PageHeader title={t.titleNone} actions={[periodSelect, <Menu label={t.more} align="right" items={[legacyItem]} />, importButton, <Button label={t.reload} kind="primary" disabled={!subsidiary || !!app.busy} onClick={() => load()} />]} />
+				<PageHeader title={t.titleNone} actions={[periodSelect, <Menu label={t.more} align="right" items={[rosterItem, legacyItem]} />, importButton, <Button label={t.reload} kind="primary" disabled={!subsidiary || !!app.busy} onClick={() => load()} />]} />
 				<Card>
 					<Empty text={!subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading} />
 				</Card>
@@ -728,6 +731,7 @@ export default function AttendanceView({app}) {
 		{label: t.act.punches, onClick: processPunches, disabled: !canEdit || busy, title: editTitle},
 		sheetMode ? {label: t.act.loadSheet, onClick: loadSheet, disabled: !canEdit || busy, title: editTitle} : null,
 		locked ? {label: t.act.unlock, onClick: unlock, disabled: !mayEdit || !data.canUnlock || data.closed || busy, title: !data.canEdit ? t.act.readOnly : jobOn ? t.job.lockedHint : !data.canUnlock ? t.act.noUnlock : ''} : null,
+		rosterItem,
 		legacyItem,
 		{label: t.reload, onClick: () => load(), disabled: busy},
 	];

@@ -290,7 +290,7 @@ define(['exports', '@uif-js/core/jsx-runtime', '@uif-js/core', 'N/url', 'N/https
      * dính mép phải, đứng yên khi cuộn: mọi thứ nằm trong dải đó đều có lúc bị che, nên cả trang tránh dải này.
      * Bố cục hai cột: s4vp-cols > s4vp-col-main (6 phần) + s4vp-col-side hoặc SidePanel (4 phần); hẹp hơn 812 px thì xếp dọc.
      */
-    const CSS$1 = `
+    const CSS$2 = `
 .s4vp-app{--s4vp-bg:#F3F4F2;--s4vp-surface:#FFFFFF;--s4vp-text:#1D2730;--s4vp-sub:#55616B;--s4vp-accent:#24566B;--s4vp-accent-dark:#16394A;--s4vp-accent-soft:#E6EFF3;--s4vp-line:#E1E5E8;--s4vp-line-soft:#E8EBEE;--s4vp-ctl:#B8C1C8;
 --s4vp-ok:#0F5132;--s4vp-ok-bg:#DDF1E4;--s4vp-warn:#6B3A00;--s4vp-warn-bg:#FFE9C7;--s4vp-warn-line:#C97A12;--s4vp-err:#8A1C14;--s4vp-err-bg:#FBE3E0;--s4vp-info:#16394A;--s4vp-info-bg:#E6EFF3;--s4vp-pad-l:12px;--s4vp-pad-r:52px;--s4vp-gap:12px;
 font-family:inherit;font-size:14px;line-height:1.4;color:var(--s4vp-text);background:var(--s4vp-bg);min-height:80vh;height:max-content;width:100%;flex:0 0 auto;box-sizing:border-box;text-align:left}
@@ -944,7 +944,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
 `;
     let done = false;
     // Chèn CSS một lần; gọi ở đầu mỗi lần vẽ khung cũng không sao (đã có thẻ thì bỏ qua)
-    function ensureCss() {
+    function ensureCss$1() {
         try {
             if (done)
                 return;
@@ -954,7 +954,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 st.id = 's4vp-css';
                 document.head.appendChild(st);
             }
-            st.textContent = CSS$1;
+            st.textContent = CSS$2;
             done = true;
         }
         catch (e) {
@@ -1025,7 +1025,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return { rows: out, count: out.length };
     }
 
-    const TEXT$g = {
+    const TEXT$h = {
         vi: {
             search: 'Tìm (tên, mã, số tiền)', matches: (n) => `${n} dòng khớp`, empty: 'Không có dữ liệu', close: 'Đóng', steps: 'Các bước', back: 'Quay lại', backTo: (name) => `Quay lại ${name}`,
             choose: 'Chọn...', filter: 'Gõ để lọc', noMatch: 'Không có mục nào khớp', more: (n) => `Còn ${n} mục, gõ thêm để lọc`, required: 'Bắt buộc', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
@@ -1035,7 +1035,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             choose: 'Select...', filter: 'Type to filter', noMatch: 'No matching items', more: (n) => `${n} more, type to narrow the list`, required: 'Required', monthHint: 'yyyy-mm', timeHint: 'hh:mm',
         },
     };
-    const cx$2 = (...names) => names.filter(Boolean).join(' ');
+    const cx$3 = (...names) => names.filter(Boolean).join(' ');
     const px = (v) => (typeof v === 'number' ? `${v}px` : v);
     const blank$4 = (v) => v === null || v === undefined || v === false;
     const text = (v) => (blank$4(v) ? '' : String(v));
@@ -1075,7 +1075,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
      * làm nút quay lại; hoặc truyền thẳng `back` {label, onClick}. Tiêu đề dài bị cắt bằng dấu ba chấm, có title đầy đủ.
      */
     function PageHeader({ crumbs, back, title, status, sub, actions }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         const parents = (crumbs || []).filter((c) => c && c.onClick);
         const up = back && back.onClick ? back : parents.length ? parents[parents.length - 1] : null;
         const upLabel = up ? (blank$4(up.label) || up.label === '' ? t.back : t.backTo(text(up.label))) : '';
@@ -1085,7 +1085,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // ------------------------------------------------------------------ nút, menu
     /** kind: 'primary' | 'default' | 'ghost' | 'link' | 'danger' | 'dashed'; small, block: tùy chọn kích thước. */
     function Button({ label, onClick, kind, disabled, title, small, block, ariaLabel, pressed }) {
-        const attrs = { type: 'button', class: cx$2('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : '', small ? 's4vp-btn-sm' : '', block ? 's4vp-btn-block' : '') };
+        const attrs = { type: 'button', class: cx$3('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : '', small ? 's4vp-btn-sm' : '', block ? 's4vp-btn-block' : '') };
         if (disabled)
             attrs.disabled = 'disabled';
         else if (onClick)
@@ -1114,14 +1114,14 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             };
         }, [open]);
         const list = (items || []).filter(Boolean);
-        const attrs = { type: 'button', class: kind === 'tab' ? cx$2('s4vp-navtab', active ? 's4vp-on' : '') : cx$2('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : ''), 'aria-haspopup': 'true', 'aria-expanded': open ? 'true' : 'false' };
+        const attrs = { type: 'button', class: kind === 'tab' ? cx$3('s4vp-navtab', active ? 's4vp-on' : '') : cx$3('s4vp-btn', kind && kind !== 'default' ? `s4vp-btn-${kind}` : ''), 'aria-haspopup': 'true', 'aria-expanded': open ? 'true' : 'false' };
         if (disabled || !list.length)
             attrs.disabled = 'disabled';
         else
             attrs.onClick = () => setOpen(!open);
         if (title)
             attrs.title = title;
-        return (jsxs("div", { class: cx$2('s4vp-menu', align === 'right' ? 's4vp-menu-right' : ''), onKeyUp: (m) => keyOfMessage(m) === 'Escape' && open && setOpen(false), children: [jsx("button", { ...attrs, children: `${text(label)} ▾` }), open ? (jsx("div", { class: "s4vp-menu-list", role: "menu", children: list.map((it, i) => {
+        return (jsxs("div", { class: cx$3('s4vp-menu', align === 'right' ? 's4vp-menu-right' : ''), onKeyUp: (m) => keyOfMessage(m) === 'Escape' && open && setOpen(false), children: [jsx("button", { ...attrs, children: `${text(label)} ▾` }), open ? (jsx("div", { class: "s4vp-menu-list", role: "menu", children: list.map((it, i) => {
                         const a = { type: 'button', class: 's4vp-menu-item', role: 'menuitem' };
                         if (it.disabled)
                             a.disabled = 'disabled';
@@ -1143,22 +1143,22 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // ------------------------------------------------------------------ thanh bước, thẻ số, bộ lọc nhanh, tab
     /** steps: [{label, note, state, noteTone, onClick}]; state: 'done' | 'current' | 'todo'. */
     function Stepper({ steps, label }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         return (jsx("ol", { class: "s4vp-steps", "aria-label": label || t.steps, children: (steps || []).filter(Boolean).map((s, i) => {
                 const state = s.state === 'done' || s.state === 'current' ? s.state : 'todo';
-                const attrs = { class: cx$2('s4vp-step', `s4vp-step-${state}`) };
+                const attrs = { class: cx$3('s4vp-step', `s4vp-step-${state}`) };
                 if (state === 'current')
                     attrs['aria-current'] = 'step';
                 const tone = s.noteTone || (state === 'current' ? 'warn' : '');
                 const body = [jsx("span", { class: "s4vp-step-n", children: String(i + 1) }, "n"), jsx("span", { children: text(s.label) }, "l")];
                 if (!blank$4(s.note) && s.note !== '')
-                    body.push(jsx("span", { class: cx$2('s4vp-step-note', tone ? `s4vp-t-${tone}` : ''), children: text(s.note) }, "t"));
+                    body.push(jsx("span", { class: cx$3('s4vp-step-note', tone ? `s4vp-t-${tone}` : ''), children: text(s.note) }, "t"));
                 return (jsx("li", { ...attrs, children: s.onClick ? jsx("button", { type: "button", class: "s4vp-step-btn", onClick: () => s.onClick(), children: body }) : body }, s.key || `s${i}`));
             }) }));
     }
     /** cards: [{label, value, note, tone, onClick}]. */
     function StatCards({ cards }) {
-        return (jsx("div", { class: "s4vp-stats", children: (cards || []).filter(Boolean).map((c, i) => (jsxs("div", { class: cx$2('s4vp-stat', c.tone ? `s4vp-t-${c.tone}` : ''), children: [jsx("div", { class: "s4vp-stat-l", children: text(c.label) }), jsx("div", { class: "s4vp-stat-v", children: text(c.value) }), blank$4(c.note) || c.note === '' ? null : jsx("div", { class: "s4vp-stat-n", children: c.note })] }, c.key || `c${i}`))) }));
+        return (jsx("div", { class: "s4vp-stats", children: (cards || []).filter(Boolean).map((c, i) => (jsxs("div", { class: cx$3('s4vp-stat', c.tone ? `s4vp-t-${c.tone}` : ''), children: [jsx("div", { class: "s4vp-stat-l", children: text(c.label) }), jsx("div", { class: "s4vp-stat-v", children: text(c.value) }), blank$4(c.note) || c.note === '' ? null : jsx("div", { class: "s4vp-stat-n", children: c.note })] }, c.key || `c${i}`))) }));
     }
     /** Bộ lọc nhanh dạng viên: items [{value, label, count, tone}], value đang chọn, onPick(value). */
     function Chips({ items, value, onPick, label }) {
@@ -1167,7 +1167,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             attrs['aria-label'] = label;
         return (jsx("div", { ...attrs, children: (items || []).filter(Boolean).map((it) => {
                 const on = it.value === value;
-                return (jsx("button", { type: "button", class: cx$2('s4vp-chip', on ? 's4vp-on' : '', it.tone ? `s4vp-t-${it.tone}` : ''), "aria-pressed": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
+                return (jsx("button", { type: "button", class: cx$3('s4vp-chip', on ? 's4vp-on' : '', it.tone ? `s4vp-t-${it.tone}` : ''), "aria-pressed": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
             }) }));
     }
     /** items [{value, label, count}], value đang chọn, onPick(value). */
@@ -1177,22 +1177,22 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             attrs['aria-label'] = label;
         return (jsx("div", { ...attrs, children: (items || []).filter(Boolean).map((it) => {
                 const on = it.value === value;
-                return (jsx("button", { type: "button", role: "tab", class: cx$2('s4vp-tab', on ? 's4vp-on' : ''), "aria-selected": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
+                return (jsx("button", { type: "button", role: "tab", class: cx$3('s4vp-tab', on ? 's4vp-on' : ''), "aria-selected": on ? 'true' : 'false', onClick: () => onPick && onPick(it.value), children: blank$4(it.count) ? text(it.label) : `${text(it.label)} ${it.count}` }, `v${it.value}`));
             }) }));
     }
     /** tone: 'ok' | 'warn' | 'error' | 'info' | 'muted'. */
     function Badge({ text: label, tone, large }) {
-        return jsx("span", { class: cx$2('s4vp-badge', tone && tone !== 'muted' ? `s4vp-t-${tone}` : '', large ? 's4vp-badge-lg' : ''), children: text(label) });
+        return jsx("span", { class: cx$3('s4vp-badge', tone && tone !== 'muted' ? `s4vp-t-${tone}` : '', large ? 's4vp-badge-lg' : ''), children: text(label) });
     }
     /** Thẻ nội dung; flush: phần thân không có lề (cho bảng sát mép thẻ); tone: 'warn' | 'error' | 'ok' đổi màu viền. */
     function Card({ title, sub, actions, children, tone, flush, label }) {
-        const attrs = { class: cx$2('s4vp-card', tone ? `s4vp-t-${tone}` : '') };
+        const attrs = { class: cx$3('s4vp-card', tone ? `s4vp-t-${tone}` : '') };
         if (label || title)
             attrs['aria-label'] = label || text(title);
-        return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$2('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
+        return (jsxs("section", { ...attrs, children: [title || actions ? (jsxs("div", { class: "s4vp-card-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-card-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-card-s", children: sub })] }), actions ? jsx("div", { class: "s4vp-actions", children: keyed(actions) }) : null] })) : null, jsx("div", { class: cx$3('s4vp-card-b', flush ? 's4vp-card-flush' : ''), children: children })] }));
     }
     function Empty({ text: label }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         return jsx("div", { class: "s4vp-empty", children: text(label) || t.empty });
     }
     // ------------------------------------------------------------------ ô nhập
@@ -1219,7 +1219,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return id;
     }
     function controlAttrs(p, id, extraClass) {
-        const attrs = { id, class: cx$2('s4vp-in', extraClass, p.align === 'right' ? 's4vp-r' : '') };
+        const attrs = { id, class: cx$3('s4vp-in', extraClass, p.align === 'right' ? 's4vp-r' : '') };
         if (p.onInput)
             attrs.onInput = (m) => p.onInput(p.read ? p.read(valueOf(m)) : valueOf(m));
         if (p.onEnter)
@@ -1351,7 +1351,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return text(spec.show(v));
     }
     function TypedImpl(p) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         const kind = TYPED[p.kind] ? p.kind : 'date';
         const spec = TYPED[kind];
         const [, redraw] = core.useState(0);
@@ -1505,7 +1505,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     const SEARCH_LIMIT = 200;
     function SearchSelectImpl(p) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         const [open, setOpen] = core.useState(false);
         const [query, setQuery] = core.useState('');
         const [active, setActive] = core.useState(0);
@@ -1620,7 +1620,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             }
         });
         const label = current ? current.label : want ? want : t.choose;
-        const btn = { id: `${base}-b`, type: 'button', class: cx$2('s4vp-in', 's4vp-ss-btn', current && current.value !== '' ? '' : 's4vp-ss-ph'), 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false' };
+        const btn = { id: `${base}-b`, type: 'button', class: cx$3('s4vp-in', 's4vp-ss-btn', current && current.value !== '' ? '' : 's4vp-ss-ph'), 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false' };
         if (p.disabled)
             btn.disabled = 'disabled';
         else
@@ -1628,7 +1628,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         if (p.ariaLabel)
             btn['aria-label'] = `${p.ariaLabel}: ${label}`;
         btn.title = p.title || label;
-        const wrap = { id: base, class: cx$2('s4vp-ss', open ? 's4vp-ss-open' : '') };
+        const wrap = { id: base, class: cx$3('s4vp-ss', open ? 's4vp-ss-open' : '') };
         if (p.width)
             wrap.style = { width: px(p.width) };
         const q = { id: `${base}-q`, type: 'search', class: 's4vp-in', value: query, placeholder: t.filter, 'aria-label': p.ariaLabel ? `${p.ariaLabel} - ${t.filter}` : t.filter, autocomplete: 'off', role: 'combobox', 'aria-controls': `${base}-l`, 'aria-expanded': 'true' };
@@ -1642,7 +1642,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                                     // Tiêu đề nhóm trước mục đầu của mỗi nhóm
                                     if (o.group && (i === 0 || shown.items[i - 1].group !== o.group))
                                         out.push(jsx("div", { class: "s4vp-ss-note", role: "presentation", children: o.group }, `g${i}`));
-                                    const a = { key: `o${o.value}`, id: `${base}-o${i}`, type: 'button', role: 'option', tabindex: '-1', class: cx$2('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : ''), 'aria-selected': o.value === want ? 'true' : 'false', onClick: () => choose(o) };
+                                    const a = { key: `o${o.value}`, id: `${base}-o${i}`, type: 'button', role: 'option', tabindex: '-1', class: cx$3('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : ''), 'aria-selected': o.value === want ? 'true' : 'false', onClick: () => choose(o) };
                                     if (o.title)
                                         a.title = o.title;
                                     out.push(jsx("button", { ...a, children: o.label || o.value || t.choose }));
@@ -1738,19 +1738,19 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     /** Ô tìm kiếm: {value, onInput(chuỗi), placeholder, width, label}. */
     function SearchBox({ value, onInput, placeholder, width, label }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         return jsx(InputImpl, { type: "search", value: value, onInput: onInput, placeholder: placeholder || t.search, ariaLabel: label || placeholder || t.search, width: width || 260 });
     }
     /** Nhãn + ô nhập (+ gợi ý); bọc bằng <label> nên bấm nhãn là vào ô. required: thêm dấu * đỏ sau nhãn. */
     function Field({ label, children, hint, required }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         return (jsxs("label", { class: "s4vp-field", children: [jsxs("span", { children: [text(label), required ? jsx("span", { class: "s4vp-req", title: t.required, children: ' *' }) : null] }), children, blank$4(hint) || hint === '' ? null : jsx("span", { class: "s4vp-field-hint", children: hint })] }));
     }
     // ------------------------------------------------------------------ bảng
     const TYPE_FORMAT = { money, num, pct, date: fmtDate };
     const formatCell$1 = (col, v) => (TYPE_FORMAT[col.type] ? TYPE_FORMAT[col.type](v) : text(v));
     const alignOf = (col) => col.align || (col.type === 'money' || col.type === 'num' || col.type === 'pct' ? 'right' : 'left');
-    const cellClass$1 = (col) => cx$2(alignOf(col) === 'right' ? 's4vp-r' : alignOf(col) === 'center' ? 's4vp-c' : '', col.nowrap ? 's4vp-nw' : '');
+    const cellClass$1 = (col) => cx$3(alignOf(col) === 'right' ? 's4vp-r' : alignOf(col) === 'center' ? 's4vp-c' : '', col.nowrap ? 's4vp-nw' : '');
     function cellOf(col, row) {
         try {
             if (col.render) {
@@ -1767,7 +1767,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // nên ô ghi lại thời điểm bấm và dòng bỏ qua lượt bấm vừa được ô nhận.
     let cellClickAt = 0;
     function TableImpl({ columns, rows, keyOf, onRowClick, selectedKey, total, empty, search, maxHeight, toolbar, searchPlaceholder, label }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         const [query, setQuery] = core.useState('');
         const cols = (columns || []).filter(Boolean);
         const all = Array.isArray(rows) ? rows : [];
@@ -1792,7 +1792,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const wrap = { class: 's4vp-tbl-wrap' };
         if (maxHeight)
             wrap.style = { maxHeight: px(maxHeight), overflowY: 'auto' };
-        const tableAttrs = { class: cx$2('s4vp-tbl', onRowClick ? 's4vp-tbl-click' : '', maxHeight ? 's4vp-tbl-sticky' : '') };
+        const tableAttrs = { class: cx$3('s4vp-tbl', onRowClick ? 's4vp-tbl-click' : '', maxHeight ? 's4vp-tbl-sticky' : '') };
         if (label)
             tableAttrs['aria-label'] = label;
         return (jsxs("div", { children: [search || toolbar ? (jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: toolbar || null }), search ? (jsxs("div", { class: "s4vp-tbl-bar-r", children: [shown.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.matches(shown.count) }), jsx(InputImpl, { type: "search", value: query, onInput: setQuery, placeholder: searchPlaceholder || t.search, ariaLabel: searchPlaceholder || t.search, width: 260 })] })) : null] })) : null, jsx("div", { ...wrap, children: jsxs("table", { ...tableAttrs, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => {
@@ -1802,7 +1802,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                                         return (jsx("th", { ...a, children: text(c.label) }, `h${c.key || i}`));
                                     }) }) }), jsxs("tbody", { children: [shown.rows.map((row, i) => {
                                         const k = keyFor(row, i);
-                                        const a = { class: cx$2('s4vp-row', !blank$4(selectedKey) && String(selectedKey) === k ? 's4vp-sel' : '') };
+                                        const a = { class: cx$3('s4vp-row', !blank$4(selectedKey) && String(selectedKey) === k ? 's4vp-sel' : '') };
                                         if (onRowClick)
                                             a.onClick = () => Date.now() - cellClickAt > 80 && onRowClick(row);
                                         return (jsx("tr", { ...a, children: cols.map((c, j) => {
@@ -1833,7 +1833,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // ------------------------------------------------------------------ hộp thoại, khung bên phải
     /** Hộp thoại giữa màn hình; actions: mảng nút ở chân; onClose: nút đóng góc phải và phím Esc. */
     function Dialog({ title, children, actions, onClose, width }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         const panel = { class: 's4vp-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': text(title) };
         if (width)
             panel.style = { width: px(width) };
@@ -1841,11 +1841,11 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     /** Khung chi tiết cho cột bên phải (không cố định vị trí); đặt cạnh cột chính trong <div class="s4vp-cols"> (tỷ lệ 6:4), hoặc trong <div class="s4vp-col-side"> khi cột phải có nhiều khối. */
     function SidePanel({ title, sub, onClose, children, actions }) {
-        const t = pick(TEXT$g);
+        const t = pick(TEXT$h);
         return (jsxs("aside", { class: "s4vp-side", "aria-label": text(title), children: [jsxs("div", { class: "s4vp-side-h", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-side-t", children: text(title) }), blank$4(sub) || sub === '' ? null : jsx("div", { class: "s4vp-side-s", children: sub })] }), jsxs("div", { class: "s4vp-actions", children: [keyed(actions), onClose ? jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.close, title: t.close, onClick: () => onClose(), children: '×' }) : null] })] }), children] }));
     }
 
-    const TEXT$f = {
+    const TEXT$g = {
         vi: {
             title: 'Việc hôm nay',
             weekdays: ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
@@ -2369,7 +2369,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (jsxs(Dialog, { title: t.netDlg.title(period.code || ''), width: 760, onClose: onClose, actions: [jsx(Button, { label: t.netDlg.openList, onClick: () => onGo(listGo) }), jsx(Button, { kind: "primary", label: t.netDlg.close, onClick: onClose })], children: [jsx("div", { class: "s4vp-small s4vp-muted", children: t.netDlg.sub }), jsxs("div", { class: "s4vp-home-net", children: [jsxs("div", { children: [jsx("div", { class: "s4vp-small s4vp-muted", children: t.netDlg.current(period.code || '') }), jsx("div", { class: "s4vp-home-net-v", children: net.current === null || net.current === undefined ? '-' : money(net.current) }), jsx("div", { class: "s4vp-small", children: t.netDlg.batches(count(net.currentBatches)) })] }), jsxs("div", { children: [jsx("div", { class: "s4vp-small s4vp-muted", children: t.netDlg.previous(prevCode) }), jsx("div", { class: "s4vp-home-net-v", children: hasPrev ? money(net.previous) : t.netDlg.noPrev }), hasPrev ? jsx("div", { class: "s4vp-small", children: t.netDlg.batches(count(net.previousBatches)) }) : null] }), jsxs("div", { children: [jsx("div", { class: "s4vp-small s4vp-muted", children: t.netDlg.diff }), jsx("div", { class: "s4vp-home-net-v", children: diff })] })] }), jsx(Table, { columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => onGo({ view: 'payrollRun', params: { id: r.batch } }), empty: t.netDlg.empty, search: true, searchPlaceholder: t.netDlg.search, maxHeight: 320, label: t.netDlg.title(period.code || '') })] }));
     }
     function HomeView({ app }) {
-        const t = pick(TEXT$f);
+        const t = pick(TEXT$g);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const role = roleKey(boot.user);
@@ -2545,7 +2545,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
      * boot.periods: [{id, code, paygroup, start, end, status, attStatus, taxMonth}]; boot.paygroups: [{id, code, description, subsidiary}].
      */
     const EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const TEXT$e = {
+    const TEXT$f = {
         vi: {
             month: (m, y) => `Tháng ${m}/${y}`,
             code: (c) => `Mã kỳ ${c}`,
@@ -2618,7 +2618,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
      */
     function periodLabel(p, opts) {
         const o = opts || {};
-        const t = o.lang ? resolve(TEXT$e, o.lang) : pick(TEXT$e);
+        const t = o.lang ? resolve(TEXT$f, o.lang) : pick(TEXT$f);
         const mo = monthOf(p || {});
         const range = shortRange(p || {});
         const head = mo ? t.month(mo.m, mo.y) : str$4((p || {}).code);
@@ -2627,7 +2627,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     /** Tooltip của kỳ: mã kỳ (kèm lý do khóa). */
     function periodTitle(p, opts) {
         const o = opts || {};
-        const t = o.lang ? resolve(TEXT$e, o.lang) : pick(TEXT$e);
+        const t = o.lang ? resolve(TEXT$f, o.lang) : pick(TEXT$f);
         const why = isLocked(p || {}, o.lock) ? (o.lock === 'att' ? t.attLocked : t.closed) : '';
         return `${t.code(str$4((p || {}).code))}${why ? ` - ${why}` : ''}`;
     }
@@ -2750,7 +2750,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return isFinite(n) ? n : 0;
     };
     const arr$1 = (v) => (Array.isArray(v) ? v : []);
-    const cx$1 = (...names) => names.filter(Boolean).join(' ');
+    const cx$2 = (...names) => names.filter(Boolean).join(' ');
     /** Giá trị đầu tiên có mặt theo danh sách khóa. */
     function rd$1(o, keys) {
         if (!o || typeof o !== 'object')
@@ -3022,7 +3022,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         };
     }
     // ------------------------------------------------------------------ chữ
-    const TEXT$d = {
+    const TEXT$e = {
         vi: {
             button: 'Nạp chấm công',
             title: 'Nạp chấm công từ máy chấm công',
@@ -3161,7 +3161,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
      * kỳ đang mở, null khi không được); onOpenPeriod(id).
      */
     function PunchImportDialog(props) {
-        const t = pick(TEXT$d);
+        const t = pick(TEXT$e);
         const app = props.app;
         const subsidiary = String(props.subsidiary || '');
         const [st, setSt] = core.useState(initialState(remembered()));
@@ -3450,7 +3450,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 const cur = props.period || null;
                 const curIn = cur && (!inRange.length || inRange.some((p) => String(p.id) === String(cur.id)));
                 const others = inRange.filter((p) => !cur || String(p.id) !== String(cur.id));
-                commitBlock = (jsxs("div", { class: cx$1('s4vp-pi-result', c.stopped ? 's4vp-pi-bad' : c.done ? 's4vp-pi-ok' : ''), role: "status", "aria-live": "polite", children: [jsxs("div", { class: "s4vp-pi-sub", children: [jsx("span", { children: c.done ? t.progress.done : t.progress.running(c.rounds + 1) }), target ? jsx("span", { class: "s4vp-small", children: t.progress.of(c.created, target) }) : null] }), jsx("div", { class: "s4vp-pi-track", children: jsx("div", { class: "s4vp-pi-fill", style: { width: `${pct}%` } }) }), jsx("div", { children: t.progress.counts(c) }), c.stopped ? jsx("div", { class: "s4vp-pi-err", children: t.progress.stopped(c.stopped) }) : null, c.failed ? (jsxs("div", { class: "s4vp-pi-err", children: [jsx("div", { children: t.progress.failedLines(c.failed) }), (c.failures || []).slice(0, 10).map((f, i) => (jsx("div", { children: `${t.progress.line(f.line)}: ${serverText(f.en || f.vi, f.vi || f.en)}` }, `f${i}`)))] })) : null, c.stalled ? jsx("div", { class: "s4vp-pi-warn", children: t.progress.stalled }) : null, c.done && !c.stopped && !c.stalled && c.more ? jsx("div", { class: "s4vp-pi-warn", children: t.progress.incomplete }) : null, c.done && !c.stopped && c.created ? (jsxs("div", { class: "s4vp-pi-next", children: [jsx("div", { children: t.progress.next }), jsxs("div", { class: "s4vp-pi-links", children: [curIn && props.onProcess ? jsx(Button, { kind: "primary", small: true, label: t.progress.process(cur.code), disabled: busy, onClick: () => props.onProcess() }) : null, others.length ? jsx("span", { class: "s4vp-small", children: t.progress.otherPeriods }) : null, others.map((p) => (props.onOpenPeriod ? jsx(Button, { small: true, label: t.progress.openPeriod(p.code), onClick: () => props.onOpenPeriod(String(p.id)) }, `p${p.id}`) : null))] }), curIn && props.onProcess ? null : jsx("div", { class: "s4vp-small", children: t.progress.noProcess })] })) : null] }));
+                commitBlock = (jsxs("div", { class: cx$2('s4vp-pi-result', c.stopped ? 's4vp-pi-bad' : c.done ? 's4vp-pi-ok' : ''), role: "status", "aria-live": "polite", children: [jsxs("div", { class: "s4vp-pi-sub", children: [jsx("span", { children: c.done ? t.progress.done : t.progress.running(c.rounds + 1) }), target ? jsx("span", { class: "s4vp-small", children: t.progress.of(c.created, target) }) : null] }), jsx("div", { class: "s4vp-pi-track", children: jsx("div", { class: "s4vp-pi-fill", style: { width: `${pct}%` } }) }), jsx("div", { children: t.progress.counts(c) }), c.stopped ? jsx("div", { class: "s4vp-pi-err", children: t.progress.stopped(c.stopped) }) : null, c.failed ? (jsxs("div", { class: "s4vp-pi-err", children: [jsx("div", { children: t.progress.failedLines(c.failed) }), (c.failures || []).slice(0, 10).map((f, i) => (jsx("div", { children: `${t.progress.line(f.line)}: ${serverText(f.en || f.vi, f.vi || f.en)}` }, `f${i}`)))] })) : null, c.stalled ? jsx("div", { class: "s4vp-pi-warn", children: t.progress.stalled }) : null, c.done && !c.stopped && !c.stalled && c.more ? jsx("div", { class: "s4vp-pi-warn", children: t.progress.incomplete }) : null, c.done && !c.stopped && c.created ? (jsxs("div", { class: "s4vp-pi-next", children: [jsx("div", { children: t.progress.next }), jsxs("div", { class: "s4vp-pi-links", children: [curIn && props.onProcess ? jsx(Button, { kind: "primary", small: true, label: t.progress.process(cur.code), disabled: busy, onClick: () => props.onProcess() }) : null, others.length ? jsx("span", { class: "s4vp-small", children: t.progress.otherPeriods }) : null, others.map((p) => (props.onOpenPeriod ? jsx(Button, { small: true, label: t.progress.openPeriod(p.code), onClick: () => props.onOpenPeriod(String(p.id)) }, `p${p.id}`) : null))] }), curIn && props.onProcess ? null : jsx("div", { class: "s4vp-small", children: t.progress.noProcess })] })) : null] }));
             }
             importBody = [sourceRow, dataRow, big, previewBlock, unmatchedBlock, commitBlock];
         }
@@ -3526,7 +3526,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (jsxs(Dialog, { title: t.title, width: 1180, onClose: close, actions: actions, children: [tabs, st.tab === 'import' ? steps : null, st.error ? jsx("div", { class: "s4vp-pi-err", role: "alert", children: st.error }) : null, (st.tab === 'import' ? importBody : mapBody).map((n, i) => (n ? jsx("div", { style: { display: 'contents' }, children: n }, `b${i}`) : null))] }));
     }
 
-    const TEXT$c = {
+    const TEXT$d = {
         vi: {
             crumb: 'Chấm công',
             title: (code) => `Công kỳ ${code}`,
@@ -3538,6 +3538,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             noData: 'Chưa tải được bảng công của kỳ. Kiểm tra thông báo phía trên rồi bấm Tải lại.',
             noSubsidiary: 'Hãy chọn công ty con ở góc phải thanh tab.',
             reload: 'Tải lại',
+            roster: 'Xếp ca',
             legacy: 'Đơn từ, lượt chấm, phép (màn hình cũ)',
             more: 'Thao tác khác',
             sub: (p, n) => `Kỳ ${fmtDate(p.start)} - ${fmtDate(p.end)} · Nhóm lương ${p.paygroupName || p.paygroupCode} · Công chuẩn ${num(p.stdDays)} ngày · ${n} nhân viên`,
@@ -3653,6 +3654,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             noData: 'The attendance of the period could not be loaded. Check the message above, then click Refresh.',
             noSubsidiary: 'Select a subsidiary at the right of the tab bar.',
             reload: 'Refresh',
+            roster: 'Shift roster',
             legacy: 'Requests, punches, leave (previous screen)',
             more: 'More actions',
             sub: (p, n) => `Period ${fmtDate(p.start)} - ${fmtDate(p.end)} · Pay group ${p.paygroupName || p.paygroupCode} · Standard days: ${num(p.stdDays)} · Employees: ${n}`,
@@ -3759,11 +3761,11 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         },
     };
     // Số dòng nhân viên vẽ mỗi lần (lưới 31 cột: 60 dòng khoảng 2.200 ô); còn lại bấm "Hiện thêm" hoặc tìm
-    const ROW_STEP = 60;
+    const ROW_STEP$1 = 60;
     const EXC_STEP = 20;
-    const GRID_ID = 's4vp-atd-grid';
-    const DAY_W = 30;
-    const NAME_W = 210;
+    const GRID_ID$1 = 's4vp-atd-grid';
+    const DAY_W$1 = 30;
+    const NAME_W$1 = 210;
     const SUM_W = 56;
     const RECORD_OF = { leave: 'leave_request', ot: 'ot_request', trip: 'business_trip', exception: 'att_exception' };
     // Thao tác của kỳ có thể chạy nền -> op của Map/Reduce chấm công
@@ -3771,7 +3773,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // Hỏi trạng thái tác vụ nền: 5 giây một lần trong 5 phút đầu, sau đó 15 giây, tối đa khoảng 1 giờ
     const JOB_FAST_TICKS = 60;
     const JOB_MAX_TICKS = 280;
-    const CSS = `
+    const CSS$1 = `
 .s4vp-atd-bar{padding:8px 12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
 .s4vp-atd-bar-l{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .s4vp-atd-legend{padding:0 12px 8px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--s4vp-sub);align-items:center}
@@ -3815,10 +3817,10 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
 .s4vp-atd-facts span{display:block;color:var(--s4vp-sub)}
 .s4vp-atd-facts b{font-size:16px}
 `;
-    let cssDone = false;
+    let cssDone$1 = false;
     function ensureGridCss() {
         try {
-            if (cssDone)
+            if (cssDone$1)
                 return;
             let st = document.getElementById('s4vp-css-atd');
             if (!st) {
@@ -3826,26 +3828,26 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 st.id = 's4vp-css-atd';
                 document.head.appendChild(st);
             }
-            st.textContent = CSS;
-            cssDone = true;
+            st.textContent = CSS$1;
+            cssDone$1 = true;
         }
         catch (e) {
             // không có document (kiểm thử): bỏ qua
         }
     }
-    const cx = (...names) => names.filter(Boolean).join(' ');
+    const cx$1 = (...names) => names.filter(Boolean).join(' ');
     const shortDate = (iso) => (/^\d{4}-\d{2}-\d{2}$/.test(String(iso || '')) ? `${String(iso).slice(8, 10)}/${String(iso).slice(5, 7)}` : '');
     const KIND_CLASS = { P: 's4vp-atd-kP', T: 's4vp-atd-kT', U: 's4vp-atd-kU', S: 's4vp-atd-kS', A: 's4vp-atd-kA', M: 's4vp-atd-kM', '?': 's4vp-atd-kQ', O: 's4vp-atd-kO' };
     const TONE$4 = { H: 'muted', P: 'warn', A: 'ok' };
     /** Lớp CSS của một ô ngày: nhóm ký hiệu, cột ngày nghỉ, dấu chờ xử lý / làm thêm / trễ sớm, ô đang chọn. */
     function cellClass(c, day, on) {
         const pending = c.p || c.hp;
-        return cx(pending ? 's4vp-atd-p' : KIND_CLASS[c.k] || (day.type !== 'N' && !c.v && !c.h ? 's4vp-atd-off' : ''), c.ot ? 's4vp-atd-ot' : '', c.late ? 's4vp-atd-late' : '', on ? 's4vp-atd-on' : '');
+        return cx$1(pending ? 's4vp-atd-p' : KIND_CLASS[c.k] || (day.type !== 'N' && !c.v && !c.h ? 's4vp-atd-off' : ''), c.ot ? 's4vp-atd-ot' : '', c.late ? 's4vp-atd-late' : '', on ? 's4vp-atd-on' : '');
     }
     /** Chữ trong ô: ký hiệu; ô chờ xử lý mà chưa có ký hiệu hiện "!". */
     const cellText = (c) => (c.s === '' && (c.p || c.hp) ? '!' : c.k === 'M' ? '·' : c.s);
     function AttendanceView({ app }) {
-        const t = pick(TEXT$c);
+        const t = pick(TEXT$d);
         ensureGridCss();
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
@@ -3854,7 +3856,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const [loaded, setLoaded] = core.useState(false);
         const [query, setQuery] = core.useState('');
         const [chip, setChip] = core.useState('all');
-        const [limit, setLimit] = core.useState(ROW_STEP);
+        const [limit, setLimit] = core.useState(ROW_STEP$1);
         const [sel, setSel] = core.useState(null);
         const [detail, setDetail] = core.useState(null);
         const [tab, setTab] = core.useState('days');
@@ -3920,7 +3922,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             alive.current = true;
             setSel(null);
             setDetail(null);
-            setLimit(ROW_STEP);
+            setLimit(ROW_STEP$1);
             setExcLimit(EXC_STEP);
             setJob(null);
             load();
@@ -4042,7 +4044,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         // Gắn lại sau mỗi lần vẽ (gán thuộc tính onclick nên không cộng dồn): khung lưới có thể vừa được tạo lại
         core.useEffect(() => {
             try {
-                const el = document.getElementById(GRID_ID);
+                const el = document.getElementById(GRID_ID$1);
                 if (!el)
                     return undefined;
                 el.onclick = (ev) => {
@@ -4070,6 +4072,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const current = picked || periodId;
         const periodSelect = jsx(AutoSelect, { value: current, onInput: (v) => v && v !== current && app.go('attendance', { period: v }), options: periodOptions$1, placeholder: current ? null : t.period, ariaLabel: t.period, width: 250 });
         const legacyItem = { label: t.legacy, onClick: () => app.go('attendanceLegacy') };
+        const rosterItem = { label: t.roster, onClick: () => app.go('roster') };
         // Nạp chấm công: HR và administrator (cùng nhóm chạy processPunches); không phụ thuộc kỳ nên có cả khi chưa tải được bảng công
         const mayImport = canImport(boot.user, data);
         const importButton = mayImport ? jsx(Button, { label: t.act.importPunches, disabled: !subsidiary || !!app.busy, title: subsidiary ? t.act.importHint : t.act.needSubsidiary, onClick: () => setPunchDlg(true) }) : null;
@@ -4078,7 +4081,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 app.go('attendance', { period: id });
             } })) : null;
         if (!data) {
-            return (jsxs(Page, { children: [jsx(PageHeader, { title: t.titleNone, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: [legacyItem] }), importButton, jsx(Button, { label: t.reload, kind: "primary", disabled: !subsidiary || !!app.busy, onClick: () => load() })] }), jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading }) }), punchDialog(null)] }));
+            return (jsxs(Page, { children: [jsx(PageHeader, { title: t.titleNone, actions: [periodSelect, jsx(Menu, { label: t.more, align: "right", items: [rosterItem, legacyItem] }), importButton, jsx(Button, { label: t.reload, kind: "primary", disabled: !subsidiary || !!app.busy, onClick: () => load() })] }), jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading }) }), punchDialog(null)] }));
         }
         // ------------------------------------------------------------------ dữ liệu suy ra
         const period = data.period;
@@ -4232,6 +4235,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             { label: t.act.punches, onClick: processPunches, disabled: !canEdit || busy, title: editTitle },
             sheetMode ? { label: t.act.loadSheet, onClick: loadSheet, disabled: !canEdit || busy, title: editTitle } : null,
             locked ? { label: t.act.unlock, onClick: unlock, disabled: !mayEdit || !data.canUnlock || data.closed || busy, title: !data.canEdit ? t.act.readOnly : jobOn ? t.job.lockedHint : !data.canUnlock ? t.act.noUnlock : '' } : null,
+            rosterItem,
             legacyItem,
             { label: t.reload, onClick: () => load(), disabled: busy },
         ];
@@ -4275,9 +4279,9 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         }
         const shown = filtered.slice(0, limit);
         shownRef.current = shown;
-        const tableWidth = NAME_W + days.length * DAY_W + 5 * SUM_W;
+        const tableWidth = NAME_W$1 + days.length * DAY_W$1 + 5 * SUM_W;
         const sumCell = (key, v, cls, title) => {
-            const a = { class: cx('s4vp-atd-s', cls) };
+            const a = { class: cx$1('s4vp-atd-s', cls) };
             if (title)
                 a.title = title;
             return (jsx("td", { ...a, children: v }, key));
@@ -4303,8 +4307,8 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 return;
             select(r.employee, null);
         };
-        const grid = (jsx("div", { id: GRID_ID, class: "s4vp-atd-wrap", children: jsxs("table", { class: "s4vp-atd", "aria-label": t.grid.label, style: { width: `${tableWidth}px` }, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { class: "s4vp-atd-l", style: { width: `${NAME_W}px` }, children: t.grid.employee }), days.map((d, i) => {
-                                    const a = { class: d.type !== 'N' ? 's4vp-atd-off' : '', style: { width: `${DAY_W}px` }, title: `${t.dowLong[d.dow]}, ${fmtDate(d.date)}${d.type === 'H' ? ` - ${d.name || t.dayTypes.H}` : ''}` };
+        const grid = (jsx("div", { id: GRID_ID$1, class: "s4vp-atd-wrap", children: jsxs("table", { class: "s4vp-atd", "aria-label": t.grid.label, style: { width: `${tableWidth}px` }, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { class: "s4vp-atd-l", style: { width: `${NAME_W$1}px` }, children: t.grid.employee }), days.map((d, i) => {
+                                    const a = { class: d.type !== 'N' ? 's4vp-atd-off' : '', style: { width: `${DAY_W$1}px` }, title: `${t.dowLong[d.dow]}, ${fmtDate(d.date)}${d.type === 'H' ? ` - ${d.name || t.dayTypes.H}` : ''}` };
                                     if (!a.class)
                                         delete a.class;
                                     return (jsxs("th", { ...a, children: [jsx("div", { children: t.dow[d.dow] }), jsx("div", { children: String(d.day) })] }, `h${i}`));
@@ -4338,11 +4342,11 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const legend = (jsxs("div", { class: "s4vp-atd-legend", "aria-label": t.legend.label, children: [legendItems.map((it, i) => (jsxs("span", { children: [jsx("b", { class: KIND_CLASS[it.k] || '', children: it.s || (it.k === 'A' ? '0,5' : it.k === 'H' ? '8' : it.k === 'M' ? '·' : it.k === '?' ? '?' : '') }), kindLabel(it)] }, `l${i}`))), data.legend && data.legend.pending ? (jsxs("span", { children: [jsx("b", { class: "s4vp-atd-p", children: "!" }), t.legend.pending] }, "lp")) : null, data.legend && data.legend.ot ? (jsxs("span", { children: [jsx("b", { style: { borderBottom: '3px solid #24566B', borderRadius: '0' }, children: "X" }), t.legend.ot] }, "lo")) : null, data.legend && data.legend.late ? (jsxs("span", { children: [jsx("b", { class: "s4vp-atd-late", style: { borderRadius: '0' }, children: "X" }), t.legend.late] }, "ll")) : null, jsxs("span", { children: [jsx("b", { class: "s4vp-atd-off", children: ' ' }), t.legend.off] }, "lw")] }));
         const gridCard = (jsxs(Card, { flush: true, label: t.grid.label, children: [jsx("div", { class: "s4vp-atd-bar", children: jsxs("div", { class: "s4vp-atd-bar-l", children: [jsx(SearchBox, { value: query, onInput: (v) => {
                                     setQuery(v);
-                                    setLimit(ROW_STEP);
+                                    setLimit(ROW_STEP$1);
                                 }, placeholder: t.grid.search, width: 300 }), jsx(Chips, { items: [{ value: 'all', label: t.grid.all, count: rows.length }, { value: 'issues', label: t.grid.issues, count: withIssues, tone: 'warn' }], value: chip, onPick: (v) => {
                                     setChip(v);
-                                    setLimit(ROW_STEP);
-                                }, label: t.grid.label }), words.length ? jsx("span", { class: "s4vp-small", children: t.grid.matches(filtered.length) }) : null] }) }), legend, grid, jsxs("div", { class: "s4vp-atd-foot", children: [jsx("span", { children: [sheetMode ? t.grid.hintS : t.grid.hintE, data.timeUnavailable ? t.grid.timeOff : '', data.otherSubsidiaries ? `${t.otherSubs(data.otherSubsidiaries)}.` : ''].filter(Boolean).join(' ') }), filtered.length > shown.length ? (jsxs("span", { class: "s4vp-actions", children: [jsx("span", { children: t.grid.shown(shown.length, filtered.length) }), jsx(Button, { small: true, label: t.grid.showMore(Math.min(ROW_STEP, filtered.length - shown.length)), onClick: () => setLimit(limit + ROW_STEP) })] })) : null] })] }));
+                                    setLimit(ROW_STEP$1);
+                                }, label: t.grid.label }), words.length ? jsx("span", { class: "s4vp-small", children: t.grid.matches(filtered.length) }) : null] }) }), legend, grid, jsxs("div", { class: "s4vp-atd-foot", children: [jsx("span", { children: [sheetMode ? t.grid.hintS : t.grid.hintE, data.timeUnavailable ? t.grid.timeOff : '', data.otherSubsidiaries ? `${t.otherSubs(data.otherSubsidiaries)}.` : ''].filter(Boolean).join(' ') }), filtered.length > shown.length ? (jsxs("span", { class: "s4vp-actions", children: [jsx("span", { children: t.grid.shown(shown.length, filtered.length) }), jsx(Button, { small: true, label: t.grid.showMore(Math.min(ROW_STEP$1, filtered.length - shown.length)), onClick: () => setLimit(limit + ROW_STEP$1) })] })) : null] })] }));
         // ------------------------------------------------------------------ ngoại lệ
         const docLine = (e) => {
             const type = e.docType || e.type;
@@ -4402,7 +4406,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const excAll = exceptions.map((e) => ({ e, title: excTitle(e), text: excText(e) }));
         const excFiltered = excWords.length ? excAll.filter((x) => excWords.every((w) => fold(`${x.title} ${x.text} ${x.e.date ? fmtDate(x.e.date) : ''}`).indexOf(w) >= 0)) : excAll;
         const excShown = excFiltered.slice(0, excLimit);
-        const excCard = exceptions.length ? (jsxs(Card, { title: t.exc.title(counts.open || 0), tone: counts.open ? 'warn' : '', children: [jsx(SearchBox, { value: excQuery, onInput: (v) => (setExcQuery(v), setExcLimit(EXC_STEP)), placeholder: t.exc.search, width: "100%" }), jsxs("div", { class: "s4vp-atd-excs", children: [excShown.map((x) => (jsxs("div", { class: cx('s4vp-atd-exc', x.e.severity === 'info' ? 's4vp-atd-info' : ''), children: [jsxs("div", { class: "s4vp-atd-exc-t", children: [x.title, x.e.severity === 'info' ? jsx("span", { style: { marginLeft: '8px' }, children: Badge({ text: t.exc.infoBadge, tone: 'muted' }) }) : null] }), jsx("div", { class: "s4vp-atd-exc-d", children: x.text }), jsx("div", { class: "s4vp-actions", children: excButtons(x.e).map((b, i) => jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`)) })] }, x.e.key))), excShown.length ? null : jsx(Empty, { text: t.exc.noMatch }), excFiltered.length > excShown.length ? jsx(Button, { block: true, label: t.exc.showMore(Math.min(EXC_STEP, excFiltered.length - excShown.length)), onClick: () => setExcLimit(excLimit + EXC_STEP) }) : null] }), locked ? null : jsx("div", { class: "s4vp-small", children: t.exc.footer })] })) : null;
+        const excCard = exceptions.length ? (jsxs(Card, { title: t.exc.title(counts.open || 0), tone: counts.open ? 'warn' : '', children: [jsx(SearchBox, { value: excQuery, onInput: (v) => (setExcQuery(v), setExcLimit(EXC_STEP)), placeholder: t.exc.search, width: "100%" }), jsxs("div", { class: "s4vp-atd-excs", children: [excShown.map((x) => (jsxs("div", { class: cx$1('s4vp-atd-exc', x.e.severity === 'info' ? 's4vp-atd-info' : ''), children: [jsxs("div", { class: "s4vp-atd-exc-t", children: [x.title, x.e.severity === 'info' ? jsx("span", { style: { marginLeft: '8px' }, children: Badge({ text: t.exc.infoBadge, tone: 'muted' }) }) : null] }), jsx("div", { class: "s4vp-atd-exc-d", children: x.text }), jsx("div", { class: "s4vp-actions", children: excButtons(x.e).map((b, i) => jsx("span", { style: { display: 'contents' }, children: b }, `b${i}`)) })] }, x.e.key))), excShown.length ? null : jsx(Empty, { text: t.exc.noMatch }), excFiltered.length > excShown.length ? jsx(Button, { block: true, label: t.exc.showMore(Math.min(EXC_STEP, excFiltered.length - excShown.length)), onClick: () => setExcLimit(excLimit + EXC_STEP) }) : null] }), locked ? null : jsx("div", { class: "s4vp-small", children: t.exc.footer })] })) : null;
         // ------------------------------------------------------------------ khung chi tiết nhân viên / ô đang chọn
         const selRow = sel ? rowOf[sel.employee] : null;
         let panel = null;
@@ -4472,7 +4476,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                     : null)] }));
     }
 
-    const TEXT$b = {
+    const TEXT$c = {
         vi: {
             title: 'Chạy lương',
             sub: 'Bảng lương theo kỳ của công ty con đang chọn. Bấm một dòng để mở.',
@@ -4540,7 +4544,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     };
     const SUM_KEYS = ['emp_count', 'gross', 'ee_ins', 'er_ins', 'pit', 'net'];
     function PayrollListView({ app }) {
-        const t = pick(TEXT$b);
+        const t = pick(TEXT$c);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         // Kỳ lọc sẵn từ route (#/payrollList?period=..., ví dụ thẻ "Bảng lương của kỳ" ở Trang chủ)
@@ -4639,7 +4643,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                     ] }), jsx(Card, { flush: true, label: t.title, children: jsx(Table, { columns: columns, rows: data, keyOf: (r) => r.id, onRowClick: (r) => app.go('payrollRun', { id: r.id }), total: total, empty: t.empty, search: true, searchPlaceholder: t.search, toolbar: jsx(AutoSelect, { value: period, onInput: setPeriod, options: periodOptions$1, placeholder: t.allPeriods, ariaLabel: t.period, width: 300 }) }) }), dialog ? (jsxs(Dialog, { title: t.newBatch, onClose: () => setDialog(false), actions: [jsx(Button, { label: t.cancel, onClick: () => setDialog(false) }), jsx(Button, { label: t.create, kind: "primary", disabled: !form.period || !!app.busy, onClick: create })], children: [jsx(Field, { label: t.period, required: true, children: jsx(AutoSelect, { value: form.period, onInput: setField('period'), options: periodOptions$1, placeholder: t.pickPeriod }) }), jsx(Field, { label: t.description, hint: t.descriptionHint, children: jsx(TextInput, { value: form.description, onInput: setField('description'), onEnter: create }) })] })) : null] }));
     }
 
-    const TEXT$a = {
+    const TEXT$b = {
         vi: {
             title: 'Phân tích chi phí lương',
             month: 'Tháng',
@@ -5126,7 +5130,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     // ------------------------------------------------------------------ màn hình
     function LaborAnalyticsView({ app }) {
-        const t = pick(TEXT$a);
+        const t = pick(TEXT$b);
         const user = (app.boot && app.boot.user) || {};
         const allowed = user.role === 'administrator' || user.isAccountant === true || user.role === 'customrole_s4vp_accountant';
         const subsidiary = app.subsidiary || '';
@@ -5485,7 +5489,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (jsxs(Page, { children: [header, jsxs("div", { class: loading ? 's4vp-la s4vp-la-stale' : 's4vp-la', children: [error ? (jsxs("div", { class: "s4vp-la-note s4vp-la-note-error", role: "alert", children: [jsx("span", { children: error }), jsx(Button, { label: t.retry, small: true, onClick: reload })] })) : null, has('FACTS_OUTDATED') && !noFacts ? (jsxs("div", { class: "s4vp-la-note", role: "status", children: [jsx("span", { children: t.outdated }), jsx(Button, { label: t.rebuildNow, small: true, onClick: () => rebuild(curMonth) })] })) : null, noFacts ? (jsxs(Card, { title: t.noFactsTitle, tone: "warn", children: [jsx("div", { children: t.noFacts }), jsxs("div", { class: "s4vp-actions", children: [jsx(Button, { label: t.rebuildNow, kind: "primary", onClick: () => rebuild(curMonth) }), jsx(Button, { label: t.goPayroll, onClick: () => app.go('payrollList', {}) })] })] })) : null, noGl && !noFacts ? (jsx("div", { class: "s4vp-la-note s4vp-la-note-info", role: "status", children: jsx("span", { children: t.noGl }) })) : null, noCompare && !noFacts ? (jsx("div", { class: "s4vp-la-note s4vp-la-note-info", role: "status", children: jsx("span", { children: t.noCompare(cmpName) }) })) : null, noFacts ? null : jsx(StatCards, { cards: cards }), noFacts && !months.length ? null : (jsxs("div", { class: "s4vp-cols s4vp-la-pair", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { title: t.trend.title, children: jsx(TrendChart, { months: months, selected: curMonth, compareMonth: noCompare ? '' : cmpMonth, noGl: noGl, onPick: (m) => go({ month: m }), t: t }) }) }), noFacts ? null : (jsx("div", { class: "s4vp-col-side", children: jsx(Card, { title: noCompare ? t.bridge.title : t.bridge.titleFor(cmpName, monthLabel$1(curMonth)), children: noCompare ? jsx(Empty, { text: t.bridge.none }) : jsx(BridgeChart, { bridge: d.bridge, t: t }) }) }))] })), noFacts ? null : (jsx(Card, { title: t.breakdown.title, sub: t.breakdown.sub, flush: true, children: jsx(Table, { columns: breakdownCols, rows: bdRows, total: bdRows.length ? bdTotal : null, search: true, searchPlaceholder: t.breakdown.search, empty: t.breakdown.empty, maxHeight: 372, label: t.breakdown.title, toolbar: jsx(Chips, { items: dimList.map((k) => ({ value: k, label: t.dims[k] })), value: shownDim, onPick: (k) => k !== dim && go({ dim: k }), label: t.dimLabel }), onRowClick: openDrill, selectedKey: drill ? drill.row.id : '' }) })), noFacts ? null : (jsxs("div", { class: "s4vp-cols s4vp-la-pair", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { title: t.pnl.title, sub: t.pnl.sub, flush: true, actions: [jsx(Button, { label: t.csv, small: true, onClick: exportPnl, disabled: !pnlRows.length })], children: jsx(Table, { columns: pnlCols, rows: pnlRows, search: true, searchPlaceholder: t.pnl.search, label: t.pnl.title }) }) }), jsx("div", { class: "s4vp-col-side", children: jsxs(Card, { title: t.recon.title, sub: t.recon.sub, tone: noGl || recOk || !recRows.length ? '' : 'warn', flush: true, actions: recActions, children: [jsx("div", { class: "s4vp-la-summary", children: recSummary }), recShown && recRows.length ? jsx(Table, { columns: recCols, rows: recRows, total: recTotal, search: true, searchPlaceholder: t.recon.search, maxHeight: 300, label: t.recon.title }) : null] }) })] }))] }), drillDialog] }));
     }
 
-    const TEXT$9 = {
+    const TEXT$a = {
         vi: {
             title: 'Nhân sự',
             sub: 'Tìm một người, xem việc sắp đến hạn. Bấm một dòng để mở hồ sơ.',
@@ -5917,7 +5921,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     };
     // ------------------------------------------------------------------ danh sách
     function EmployeeList({ app }) {
-        const t = pick(TEXT$9);
+        const t = pick(TEXT$a);
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
         const [typing, setTyping] = core.useState('');
@@ -6038,7 +6042,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     // ------------------------------------------------------------------ hồ sơ một người
     function EmployeeCard({ app, id }) {
-        const t = pick(TEXT$9);
+        const t = pick(TEXT$a);
         const boot = app.boot || {};
         const params = (app.route && app.route.params) || {};
         const [data, setData] = core.useState(null);
@@ -6630,7 +6634,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return id ? jsx(EmployeeCard, { app: app, id: String(id) }, `e${id}`) : jsx(EmployeeList, { app: app }, "list");
     }
 
-    const TEXT$8 = {
+    const TEXT$9 = {
         vi: {
             title: 'Báo cáo - tờ khai',
             sub: 'Chọn hồ sơ theo kỳ hạn. Mỗi mục mở sẵn kỳ gần nhất có số liệu.',
@@ -6876,7 +6880,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     const gridColumns = (columns, over) => (columns || []).map((c) => Object.assign({ key: c.key, label: localized(c), type: c.type, nowrap: true }, (over || {})[c.key] || {}));
     // ------------------------------------------------------------------ lưới có ô tìm, phân trang, dòng tổng, xuất CSV
     function GridImpl({ columns, rows, total, empty, placeholder, toolbar, label, exportName, pin, height, plain }) {
-        const t = pick(TEXT$8).grid;
+        const t = pick(TEXT$9).grid;
         const [query, setQuery] = core.useState('');
         const [page, setPage] = core.useState(0);
         const cols = (columns || []).filter(Boolean);
@@ -6931,7 +6935,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (jsxs("div", { class: "s4vp-rp-grid", children: [jsxs("div", { class: "s4vp-tbl-bar", children: [jsx("div", { class: "s4vp-tbl-bar-l", children: toolbar || null }), jsxs("div", { class: "s4vp-tbl-bar-r", children: [shown.rows.length > PAGE_SIZE$1 ? (jsxs("span", { class: "s4vp-rp-pager", children: [jsx("span", { class: "s4vp-tbl-count", children: t.rows(num(at * PAGE_SIZE$1 + 1), num(Math.min((at + 1) * PAGE_SIZE$1, shown.rows.length)), num(shown.rows.length)) }), jsx("button", { ...prevAttrs, children: '‹' }), jsx("button", { ...nextAttrs, children: '›' })] })) : (jsx("span", { class: "s4vp-tbl-count", children: shown.count === null ? t.count(num(all.length)) : t.matches(num(shown.count)) })), jsx(SearchBox, { value: query, onInput: (v) => {
                                         setQuery(v);
                                         setPage(0);
-                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$2(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$8).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$2(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
+                                    }, placeholder: placeholder || t.search, width: 240 }), exportName ? jsx(Button, { label: t.csv, small: true, disabled: !all.length, title: t.csvAll(num(all.length)), onClick: exportAll }) : null] })] }), jsx("div", { ...wrap, children: jsxs("table", { ...table, children: [jsx("thead", { children: jsx("tr", { children: cols.map((c, i) => (jsx("th", { ...attrsOf(c), children: blank$2(c.label) ? '' : String(c.label) }, `h${c.key || i}`))) }) }), jsxs("tbody", { children: [slice.map((row, i) => (jsx("tr", { class: "s4vp-row", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: cell(c, row) }, `c${c.key || j}`))) }, `r${at}-${i}`))), slice.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(cols.length || 1), children: jsx("div", { class: "s4vp-empty", children: empty || pick(TEXT$9).empty }) }) }, "rp-empty")), total && all.length ? (jsx("tr", { class: "s4vp-total", children: cols.map((c, j) => (jsx("td", { ...attrsOf(c), children: j === 0 && blank$2(total[c.key]) ? t.total : c.noTotal ? '' : formatCell(c, total[c.key]) }, `t${c.key || j}`))) }, "rp-total")) : null] })] }) })] }));
     }
     function Grid(props) {
         return jsx(GridImpl, { ...props });
@@ -6969,7 +6973,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     // ------------------------------------------------------------------ màn hình
     function ReportsHubView({ app }) {
-        const t = pick(TEXT$8);
+        const t = pick(TEXT$9);
         const params = (app.route && app.route.params) || {};
         const boot = app.boot || {};
         const subsidiary = app.subsidiary || '';
@@ -7456,7 +7460,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (jsxs(Page, { children: [jsx(PageHeader, { back: { label: t.back, onClick: () => app.go('reportsHub', {}) }, title: period ? `${info.title} - ${period}` : info.title, sub: report === 'print' ? t.print.sub : info.desc, actions: controls }), jsx("div", { class: "s4vp-rp", children: body.length ? body : (jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : pending || app.busy ? t.waiting : t.empty }) })) })] }));
     }
 
-    const TEXT$7 = {
+    const TEXT$8 = {
         vi: {
             title: 'Tạm ứng lương',
             sub: 'HR lập phiếu, kế toán ghi sổ Nợ 141 / Có tiền, bảng lương kỳ sau tự cấn trừ. Bấm một dòng để xem chi tiết.',
@@ -7714,7 +7718,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     const empLabel = (r) => `${r.employeeCode || r.code || ''} ${r.employeeName || r.name || ''}`.trim();
     const list$2 = (v) => (Array.isArray(v) ? v : []);
     function AdvancesView({ app }) {
-        const t = pick(TEXT$7);
+        const t = pick(TEXT$8);
         const boot = app.boot || {};
         const user = boot.user || {};
         const subsidiary = app.subsidiary || '';
@@ -7997,7 +8001,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                     ] }), jsx(StatCards, { cards: statCards }), jsxs("div", { class: "s4vp-cols", children: [jsx("div", { class: "s4vp-col-main", children: jsx(Card, { flush: true, label: t.title, children: jsx(Table, { label: t.title, columns: columns, rows: rows, keyOf: (r) => r.id, onRowClick: (r) => setSelected(String(r.id) === String(selected) ? '' : String(r.id)), selectedKey: current ? current.id : '', total: total, empty: filter ? t.emptyFilter : t.empty, search: true, searchPlaceholder: t.search, maxHeight: "max(260px, calc(100vh - 384px))", toolbar: jsx(Chips, { items: chipItems, value: filter, onPick: setFilter, label: t.chips.label }) }) }) }), current ? jsx("div", { class: "s4vp-col-side s4vp-adv-side", children: detailPanel(current) }) : null] }), dialog ? dialogBody() : null] }));
     }
 
-    const TEXT$6 = {
+    const TEXT$7 = {
         vi: {
             title: 'Thiết lập',
             sub: 'Tình trạng thiết lập của phân hệ lương. Mục thiếu hoặc cần chú ý được đánh dấu để xử lý trước.',
@@ -8905,7 +8909,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     const plainNumber = (v) => (blank$1(v) || isNaN(Number(v)) ? '' : Number(v).toLocaleString('vi-VN', { maximumFractionDigits: 6 }));
     const accountLabel = (a) => (a ? `${a.number || ''} ${a.name || ''}`.trim() : '');
     function SetupHubView({ app }) {
-        const t = pick(TEXT$6);
+        const t = pick(TEXT$7);
         const boot = app.boot || {};
         const user = boot.user || {};
         const subsidiary = app.subsidiary || '';
@@ -9666,7 +9670,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (jsxs(Page, { children: [jsx(PageHeader, { title: current ? current.title : t.title, sub: current ? current.sub : subsidiary ? t.sub : t.noSubsidiary, status: headerStatus, back: current ? { label: t.title, onClick: () => go('') } : null, actions: actions }), safeRender(current ? current.render : hub), dialog ? safeRender(dialogBody) : null] }));
     }
 
-    const TEXT$5 = {
+    const TEXT$6 = {
         vi: {
             title: 'Sản lượng - lương khoán',
             sub: 'Nhập khối lượng của tổ hoặc cá nhân, xem tiền chia cho từng người, gửi duyệt. Phiếu đã duyệt tự vào bảng lương của kỳ.',
@@ -10291,7 +10295,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return currentPeriodId(periodsForSubsidiary(boot, subsidiary), localToday());
     }
     function OutputsView({ app }) {
-        const t = pick(TEXT$5);
+        const t = pick(TEXT$6);
         const boot = app.boot || {};
         const user = boot.user || {};
         const subsidiary = app.subsidiary || '';
@@ -12000,7 +12004,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     }
     const canSeeCommission = (boot) => rolesOf(boot && boot.user).canRead;
     // ================================================================== chữ
-    const TEXT$4 = {
+    const TEXT$5 = {
         vi: {
             cm: {
                 title: 'Hoa hồng',
@@ -12544,7 +12548,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return o ? o.label : str$1(value);
     };
     function CommissionView({ app }) {
-        const t = pick(TEXT$4).cm;
+        const t = pick(TEXT$5).cm;
         const boot = app.boot || {};
         const roles = rolesOf(boot.user);
         const canWrite = roles.canWrite;
@@ -13476,7 +13480,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         };
     }
 
-    const TEXT$3 = {
+    const TEXT$4 = {
         vi: {
             crumb: 'Chạy lương',
             batchOf: (p) => `Bảng lương kỳ ${p}`,
@@ -13994,7 +13998,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     const APV_TONE = { done: 'ok', current: 'warn', todo: 'muted', rejected: 'error' };
     const jobKind = (job) => (!job ? '' : /^release:/.test(job) ? 'release' : /^reverse:/.test(job) ? 'reverse' : job === 'queued' ? 'queued' : 'calc');
     function PayrollRunView({ app }) {
-        const t = pick(TEXT$3);
+        const t = pick(TEXT$4);
         const boot = app.boot || {};
         const user = boot.user || {};
         const params = (app.route && app.route.params) || {};
@@ -14857,7 +14861,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (jsxs(Page, { children: [jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('payrollList') }, { label: b.name || id }], title: b.description || t.batchOf(b.periodName || ''), status: { text: t.status[statusKey] || s, tone: TONE[statusKey] || 'muted' }, sub: docLinks.length || bills.length ? (jsxs("div", { style: { display: 'flex', flexWrap: 'wrap', gap: '0 12px', alignItems: 'center' }, children: [jsx("span", { children: subParts.join(' · ') }), docLinks.map((x, i) => (jsx("span", { children: x }, `d${i}`))), bills.length ? jsx("span", { children: t.docs.bills(bills.length) }) : null] })) : (subParts.join(' · ')), actions: headerActions }), job ? (jsx(Card, { tone: "warn", label: t.job.title, children: jsxs("div", { style: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }, role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { style: { fontWeight: '600' }, children: t.job[kindOfJob] || t.job.calc }), kindOfJob === 'calc' && jobInfo ? jsx("span", { children: t.job.stage(jobInfo.stage, jobInfo.status) }) : null, jsx("span", { class: "s4vp-muted", children: t.job.auto })] }) })) : null, jsx(Stepper, { steps: steps, label: t.stepsLabel }), renderApproval(), jsx(StatCards, { cards: cards }), jsxs("div", { class: "s4vp-cols s4vp-cols-half", children: [jsx("div", { class: "s4vp-col-half", children: jsxs("section", { class: "s4vp-pane", "aria-label": t.emp.title, children: [jsxs("div", { ...headAttrs, children: [jsx(Chips, { items: filterItems, value: filter, onPick: pickFilter, label: t.emp.filterLabel }), jsxs("div", { style: { display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }, children: [found.count === null ? null : jsx("span", { class: "s4vp-tbl-count", children: t.emp.matches(found.count) }), jsx(SearchBox, { value: query, onInput: (v) => (setQuery(v), setLimit(PAGE_SIZE)), placeholder: t.emp.search, label: t.emp.searchLabel, width: 170 })] })] }), jsx("div", { class: "s4vp-pane-b", children: jsx(Table, { columns: empColumns, rows: shown, onRowClick: (r) => selectLine(r.id), selectedKey: sel, total: totalRow, empty: rows.length || filter === 'left' ? t.emp.emptyFilter : t.emp.empty, label: t.emp.title }) }), found.rows.length > shown.length ? (jsxs("div", { class: "s4vp-pane-f", children: [jsx("span", { children: t.emp.showing(shown.length, found.rows.length) }), jsx(Button, { small: true, label: t.emp.more(Math.min(PAGE_SIZE, found.rows.length - shown.length)), onClick: () => setLimit(limit + PAGE_SIZE) })] })) : null] }) }), jsx("div", { class: "s4vp-col-half", children: renderPanel() })] }), renderDialog()] }));
     }
 
-    const TEXT$2 = {
+    const TEXT$3 = {
         vi: {
             title: 'Kiểm tra bảng lương',
             crumbRun: 'Chạy lương',
@@ -15056,14 +15060,14 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // Số cảnh báo mỗi trang của danh sách bên trái (máy chủ lọc và cắt trang)
     const PAGE = 100;
     const SEARCH_DELAY = 350;
-    const pad = (n) => String(n).padStart(2, '0');
+    const pad$1 = (n) => String(n).padStart(2, '0');
     // Thời điểm lưu dạng ISO UTC; hiện theo giờ máy người dùng dd/mm/yyyy HH:mm
     const fmtAt = (iso) => {
         try {
             const d = new Date(iso);
             if (!iso || isNaN(d.getTime()))
                 return String(iso || '');
-            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            return `${pad$1(d.getDate())}/${pad$1(d.getMonth() + 1)}/${d.getFullYear()} ${pad$1(d.getHours())}:${pad$1(d.getMinutes())}`;
         }
         catch (e) {
             return String(iso || '');
@@ -15079,7 +15083,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     const csvCell = (v) => `"${String(v === null || v === undefined ? '' : v).replace(/"/g, '""')}"`;
     const who = (it) => [it.employeeCode, it.employeeName].filter(Boolean).join(' ');
     function CheckDetailView({ app }) {
-        const t = pick(TEXT$2);
+        const t = pick(TEXT$3);
         const boot = app.boot || {};
         const params = (app.route && app.route.params) || {};
         const id = params.id ? String(params.id) : '';
@@ -15386,6 +15390,516 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                         { value: 'checks', label: t.tabChecks, count: list ? counts.open : null },
                         { value: 'log', label: t.tabLog },
                     ] }), tab === 'log' ? (logCard) : (jsxs("div", { class: "s4vp-cols", children: [jsx("div", { style: { flex: '3 1 300px', minWidth: '0' }, children: listCard }), jsx("div", { style: { flex: '7 1 700px', minWidth: '0' }, children: detailArea })] }))] }));
+    }
+
+    const TEXT$2 = {
+        vi: {
+            crumb: 'Chấm công',
+            title: 'Xếp ca',
+            sub: 'Phân ca theo ngày cho từng nhân viên. Chọn một ca rồi bấm ô để xếp; giữ Shift bấm ô thứ hai cùng dòng để tô cả đoạn.',
+            loading: 'Đang tải bảng phân ca...',
+            saving: 'Đang lưu phân ca...',
+            generating: 'Đang sinh phân ca từ mẫu...',
+            noSubsidiary: 'Chọn công ty con ở góc trên để xem phân ca.',
+            noData: 'Chưa tải được bảng phân ca. Kiểm tra thông báo phía trên rồi bấm Tải lại.',
+            reload: 'Tải lại',
+            generate: 'Sinh từ mẫu xoay ca',
+            save: (n) => `Lưu ${n} ô`,
+            discard: 'Bỏ thay đổi',
+            prev: 'Trước',
+            next: 'Sau',
+            today: 'Tuần này',
+            from: 'Từ ngày',
+            span: 'Số ngày',
+            spans: { 7: '1 tuần', 14: '2 tuần', 31: '31 ngày' },
+            team: 'Tổ',
+            allTeams: 'Mọi tổ',
+            search: 'Tìm mã, tên, phòng ban, tổ',
+            brush: 'Ca để xếp',
+            brushNone: 'Chọn ca rồi bấm ô. Ô viền cam là thay đổi chưa lưu.',
+            brushOn: (name) => `Đang xếp: ${name}. Bấm ô để gán, bấm lại để bỏ.`,
+            off: 'Nghỉ',
+            offLong: 'Ngày nghỉ (không ca)',
+            employee: 'Nhân viên',
+            showMore: (n) => `Hiện thêm ${n} người`,
+            shown: (a, b) => `Đang hiện ${a} / ${b} người`,
+            empty: 'Không có nhân viên nào đang làm việc trong khoảng ngày này.',
+            noMatch: 'Không có nhân viên nào khớp ô tìm.',
+            noShifts: 'Chưa khai ca làm việc. Vào Thiết lập, mục Ca làm việc để khai ca trước.',
+            headcount: 'Số người theo ca',
+            readOnly: 'Vai trò của bạn chỉ được xem phân ca.',
+            locked: (code) => `Kỳ công ${code} đã khóa, không sửa được phân ca của ngày này.`,
+            pickBrush: 'Chọn một ca (hoặc Nghỉ) ở dải ca phía trên trước khi bấm ô.',
+            saved: (r) => `Đã lưu phân ca: ${r.created} ô mới, ${r.updated} ô sửa${r.unchanged ? `, ${r.unchanged} ô không đổi` : ''}.`,
+            generated: (r) => `Đã sinh phân ca: ${r.created} ô mới, ${r.updated} ô cập nhật, ${r.keptManual} ô sửa tay giữ nguyên, ${r.unchanged} ô không đổi.`,
+            confirmDiscard: (n) => `Có ${n} ô đã đổi nhưng chưa lưu. Bỏ các thay đổi này?`,
+            cellTitle: (name, day, shift) => `${name} - ${day}: ${shift}`,
+            manual: 'sửa tay',
+            pending: 'chưa lưu',
+            noCell: 'chưa xếp',
+            dayTypes: { W: 'nghỉ hằng tuần', H: 'ngày lễ' },
+            dow: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+            kinds: { D: 'Ca ngày', E: 'Ca chiều', N: 'Ca đêm' },
+            summary: (people, cells) => `${people} người, ${cells} ô đã xếp ca`,
+            dlg: {
+                title: 'Sinh phân ca từ mẫu xoay ca',
+                team: 'Tổ',
+                pickTeam: 'Chọn tổ',
+                pattern: 'Mẫu xoay ca',
+                pickPattern: 'Chọn mẫu xoay ca',
+                from: 'Từ ngày',
+                to: 'Đến ngày',
+                anchor: 'Ngày ứng với ngày 1 của chu kỳ',
+                anchorHint: 'Để trống = ngày bắt đầu. Dùng khi chu kỳ đã chạy từ trước khoảng ngày này.',
+                cycle: (text, n) => `Chu kỳ ${n} ngày: ${text}`,
+                members: (n) => `${n} thành viên hiệu lực trong khoảng đang xem`,
+                note: 'Ô đã sửa tay được giữ nguyên. Ngày thuộc kỳ công đã khóa thì không sinh.',
+                run: 'Sinh phân ca',
+                cancel: 'Hủy',
+                noTeams: 'Công ty con này chưa có tổ. Khai tổ và thành viên ở Sản lượng - khoán tổ, mục Tổ đội.',
+                noPatterns: 'Chưa có mẫu xoay ca. Vào Thiết lập, mục Mẫu xoay ca.',
+            },
+        },
+        en: {
+            crumb: 'Attendance',
+            title: 'Shift roster',
+            sub: 'Daily shift assignment per employee. Pick a shift, then click cells; hold Shift and click a second cell in the same row to fill the range.',
+            loading: 'Loading the roster...',
+            saving: 'Saving the roster...',
+            generating: 'Generating the roster from the pattern...',
+            noSubsidiary: 'Select a subsidiary at the top to see the roster.',
+            noData: 'The roster could not be loaded. Check the message above and click Reload.',
+            reload: 'Reload',
+            generate: 'Generate from pattern',
+            save: (n) => `Save ${n} cells`,
+            discard: 'Discard changes',
+            prev: 'Previous',
+            next: 'Next',
+            today: 'This week',
+            from: 'From',
+            span: 'Days',
+            spans: { 7: '1 week', 14: '2 weeks', 31: '31 days' },
+            team: 'Team',
+            allTeams: 'All teams',
+            search: 'Search code, name, department, team',
+            brush: 'Shift to assign',
+            brushNone: 'Pick a shift, then click cells. Orange outlined cells are unsaved changes.',
+            brushOn: (name) => `Assigning: ${name}. Click a cell to assign, click again to undo.`,
+            off: 'Off',
+            offLong: 'Day off (no shift)',
+            employee: 'Employee',
+            showMore: (n) => `Show ${n} more`,
+            shown: (a, b) => `Showing ${a} of ${b} employees`,
+            empty: 'No employee is working in this date range.',
+            noMatch: 'No employee matches the search.',
+            noShifts: 'No work shift is defined. Open Setup, Work shifts first.',
+            headcount: 'Headcount per shift',
+            readOnly: 'Your role can only view the roster.',
+            locked: (code) => `Attendance of period ${code} is locked; the roster of this day cannot be changed.`,
+            pickBrush: 'Pick a shift (or Off) in the shift bar before clicking a cell.',
+            saved: (r) => `Roster saved: ${r.created} new cells, ${r.updated} changed${r.unchanged ? `, ${r.unchanged} unchanged` : ''}.`,
+            generated: (r) => `Roster generated: ${r.created} new cells, ${r.updated} updated, ${r.keptManual} manual cells kept, ${r.unchanged} unchanged.`,
+            confirmDiscard: (n) => `${n} changed cells are not saved. Discard these changes?`,
+            cellTitle: (name, day, shift) => `${name} - ${day}: ${shift}`,
+            manual: 'manual',
+            pending: 'unsaved',
+            noCell: 'not assigned',
+            dayTypes: { W: 'weekly day off', H: 'public holiday' },
+            dow: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+            kinds: { D: 'Day shift', E: 'Evening shift', N: 'Night shift' },
+            summary: (people, cells) => `${people} employees, ${cells} assigned cells`,
+            dlg: {
+                title: 'Generate the roster from a shift pattern',
+                team: 'Team',
+                pickTeam: 'Select a team',
+                pattern: 'Shift pattern',
+                pickPattern: 'Select a shift pattern',
+                from: 'From',
+                to: 'To',
+                anchor: 'Date matching day 1 of the cycle',
+                anchorHint: 'Empty = the start date. Use it when the cycle started before this range.',
+                cycle: (text, n) => `${n}-day cycle: ${text}`,
+                members: (n) => `${n} members effective in the range on screen`,
+                note: 'Manually edited cells are kept. Days in a locked attendance period are not generated.',
+                run: 'Generate',
+                cancel: 'Cancel',
+                noTeams: 'This subsidiary has no team. Define teams and members under Output - team piecework, Teams.',
+                noPatterns: 'No shift pattern is defined. Open Setup, Shift patterns.',
+            },
+        },
+    };
+    const ROW_STEP = 60;
+    const GRID_ID = 's4vp-ros-grid';
+    const DAY_W = 46;
+    const NAME_W = 230;
+    const SPANS = [7, 14, 31];
+    const OFF = 'OFF';
+    const SAVE_CHUNK = 200;
+    const CSS = `
+.s4vp-ros-bar{padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.s4vp-ros-bar .s4vp-ros-grow{flex:1 1 auto}
+.s4vp-ros-brush{padding:0 12px 8px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:var(--s4vp-sub)}
+.s4vp-ros-wrap{overflow:auto;max-height:560px;max-height:max(300px,calc(100vh - 250px));max-width:100%;border-top:1px solid var(--s4vp-line);border-bottom:1px solid var(--s4vp-line)}
+.s4vp-ros{border-collapse:separate;border-spacing:0;table-layout:fixed;user-select:none;-webkit-user-select:none}
+.s4vp-ros th{position:sticky;top:0;z-index:2;background:#F7F8F9;font-size:11px;font-weight:600;color:var(--s4vp-sub);text-align:center;padding:5px 0;border-bottom:1px solid #D9DEE2;line-height:1.25;overflow:hidden;white-space:nowrap}
+.s4vp-ros td{font-size:12px;text-align:center;padding:0;height:34px;border-bottom:1px solid var(--s4vp-line-soft);border-right:1px solid #F0F2F4;overflow:hidden;white-space:nowrap;color:var(--s4vp-text);cursor:pointer;font-weight:600}
+.s4vp-ros .s4vp-ros-l{position:sticky;left:0;z-index:1;background:var(--s4vp-surface);text-align:left;padding:3px 10px;border-right:1px solid #D9DEE2;text-overflow:ellipsis;cursor:default;font-weight:400}
+.s4vp-ros th.s4vp-ros-l{z-index:3;background:#F7F8F9;font-size:12px}
+.s4vp-ros-name{display:block;overflow:hidden;text-overflow:ellipsis;font-size:13px;line-height:1.3}
+.s4vp-ros-kind{display:block;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--s4vp-sub);line-height:1.3}
+.s4vp-ros .s4vp-ros-off{background:#ECEEF0}
+.s4vp-ros .s4vp-ros-hol{background:#FBE9E7}
+.s4vp-ros td.s4vp-ros-kD{background:#DCEBFA;color:#0B4A8F}
+.s4vp-ros td.s4vp-ros-kE{background:#FFE9C7;color:#6B3A00}
+.s4vp-ros td.s4vp-ros-kN{background:#E7E1F5;color:#4A2C8F}
+.s4vp-ros td.s4vp-ros-rest{color:var(--s4vp-sub);font-weight:400}
+.s4vp-ros td.s4vp-ros-m{box-shadow:inset -6px 6px 0 -3px #55616B}
+.s4vp-ros td.s4vp-ros-p{outline:2px solid #C97A12;outline-offset:-2px}
+.s4vp-ros td.s4vp-ros-lock{cursor:not-allowed;opacity:.55}
+.s4vp-ros tr.s4vp-ros-sum td{cursor:default;background:#F7F8F9;font-weight:700;border-top:1px solid #D9DEE2;height:28px}
+.s4vp-ros tr.s4vp-ros-sum td.s4vp-ros-l{background:#F7F8F9;font-weight:600}
+.s4vp-ros-foot{padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;font-size:12px;color:var(--s4vp-sub)}
+.s4vp-ros-cycle{font-size:12px;color:var(--s4vp-sub);margin:-4px 0 8px}
+`;
+    let cssDone = false;
+    function ensureCss() {
+        try {
+            if (cssDone)
+                return;
+            let st = document.getElementById('s4vp-css-ros');
+            if (!st) {
+                st = document.createElement('style');
+                st.id = 's4vp-css-ros';
+                document.head.appendChild(st);
+            }
+            st.textContent = CSS;
+            cssDone = true;
+        }
+        catch (e) {
+            // không có document (kiểm thử): bỏ qua
+        }
+    }
+    const cx = (...names) => names.filter(Boolean).join(' ');
+    const ISO = /^\d{4}-\d{2}-\d{2}$/;
+    const pad = (n) => String(n).padStart(2, '0');
+    /** Cộng ngày cho chuỗi yyyy-mm-dd (tính bằng UTC để không lệch múi giờ). */
+    function addDays(iso, n) {
+        if (!ISO.test(String(iso || '')))
+            return '';
+        const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) + n));
+        return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+    }
+    /** Thứ hai của tuần chứa ngày iso. */
+    function mondayOf(iso) {
+        if (!ISO.test(String(iso || '')))
+            return '';
+        const dow = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))).getUTCDay();
+        return addDays(iso, dow === 0 ? -6 : 1 - dow);
+    }
+    /** Ô nén của máy chủ {nhân viên: [[chỉ số ngày, ca, nguồn]]} -> {nhân viên: mảng theo ngày của {s, m} hoặc undefined}. */
+    function expandCells(cells, dayCount) {
+        const out = {};
+        Object.keys(cells || {}).forEach((e) => {
+            const row = new Array(dayCount);
+            (cells[e] || []).forEach((c) => {
+                if (c[0] >= 0 && c[0] < dayCount)
+                    row[c[0]] = { s: String(c[1] || ''), m: c[2] === 'M' };
+            });
+            out[e] = row;
+        });
+        return out;
+    }
+    /** Kỳ công khóa của ngày với nhân viên (group trống = tài khoản một nhóm lương, không lọc nhóm). */
+    function lockOf(locks, group, date) {
+        return (locks || []).find((l) => (!l.group || !group || l.group === group) && date >= l.from && date <= l.to) || null;
+    }
+    const shortDay = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+    function RosterView({ app }) {
+        ensureCss();
+        const t = pick(TEXT$2);
+        const subsidiary = app.subsidiary || '';
+        const params = (app.route || {}).params || {};
+        const from = ISO.test(String(params.from || '')) ? String(params.from) : mondayOf(localToday());
+        const span = SPANS.indexOf(Number(params.days)) >= 0 ? Number(params.days) : 14;
+        const team = String(params.team || '');
+        const to = addDays(from, span - 1);
+        const [data, setData] = core.useState(null);
+        const [loaded, setLoaded] = core.useState(false);
+        const [q, setQ] = core.useState('');
+        const [brush, setBrush] = core.useState('');
+        const [limit, setLimit] = core.useState(ROW_STEP);
+        // Thay đổi chưa lưu: khóa "nhân viên|chỉ số ngày" -> id ca ('' = nghỉ). Giữ trong ref + bộ đếm để vẽ lại
+        const pendingRef = core.useRef({});
+        const tickRef = core.useRef(0);
+        const [, setTick] = core.useState(0);
+        const bump = () => {
+            tickRef.current += 1;
+            setTick(tickRef.current);
+        };
+        const [dialog, setDialog] = core.useState(false);
+        const formRef = core.useRef({ team: '', pattern: '', from: '', to: '', anchor: '' });
+        const [form, setForm] = core.useState(formRef.current);
+        const alive = core.useRef(true);
+        const request = core.useRef(0);
+        const shownRef = core.useRef([]);
+        const pickRef = core.useRef(() => undefined);
+        const lastRef = core.useRef(null);
+        const pendingCount = () => Object.keys(pendingRef.current).length;
+        const clearPending = () => {
+            pendingRef.current = {};
+            lastRef.current = null;
+            bump();
+        };
+        const load = () => {
+            if (!subsidiary)
+                return Promise.resolve();
+            request.current += 1;
+            const mine = request.current;
+            const args = { action: 'rosterView', subsidiary, from, to };
+            if (team)
+                args.team = team;
+            return app.run(t.loading, call(args)).then((r) => {
+                if (!alive.current || mine !== request.current)
+                    return;
+                setLoaded(true);
+                if (!r)
+                    return;
+                pendingRef.current = {};
+                lastRef.current = null;
+                setData(r);
+            });
+        };
+        core.useEffect(() => {
+            alive.current = true;
+            setLimit(ROW_STEP);
+            load();
+            return () => {
+                alive.current = false;
+            };
+        }, [subsidiary, from, span, team]);
+        // Đổi khoảng ngày / tổ: có thay đổi chưa lưu thì hỏi trước
+        const goWith = (next) => {
+            const target = Object.assign({ from, days: String(span), team }, next);
+            const move = () => {
+                pendingRef.current = {};
+                app.go('roster', target);
+            };
+            if (pendingCount())
+                app.confirm(t.confirmDiscard(pendingCount()), move);
+            else
+                move();
+        };
+        const days = data ? data.days || [] : [];
+        const shifts = data ? data.shifts || [] : [];
+        const shiftById = {};
+        shifts.forEach((s) => (shiftById[s.id] = s));
+        const rows = data ? data.rows || [] : [];
+        const cellMap = data ? expandCells(data.cells, days.length) : {};
+        const canEdit = !!(data && data.canEdit);
+        const needle = fold(q).split(/\s+/).filter((w) => w);
+        const filtered = needle.length ? rows.filter((r) => {
+            const hay = fold([r.code, r.name, r.department, (r.teams || []).join(' ')].join(' '));
+            return needle.every((w) => hay.indexOf(w) >= 0);
+        }) : rows;
+        const shown = filtered.slice(0, limit);
+        shownRef.current = shown;
+        // Giá trị hiện tại của ô (đã tính thay đổi chưa lưu): {s, m, p} hoặc null khi chưa có ô
+        const cellOf = (employee, i) => {
+            const key = `${employee}|${i}`;
+            if (Object.prototype.hasOwnProperty.call(pendingRef.current, key))
+                return { s: pendingRef.current[key], m: true, p: true };
+            const c = (cellMap[employee] || [])[i];
+            return c ? { s: c.s, m: c.m, p: false } : null;
+        };
+        const setCell = (row, i, value) => {
+            const key = `${row.employee}|${i}`;
+            const orig = (cellMap[row.employee] || [])[i];
+            // Trùng giá trị đã lưu: không coi là thay đổi (ô gốc sinh từ mẫu mà gán lại đúng ca thì vẫn giữ nguồn G)
+            if (orig && orig.s === value)
+                delete pendingRef.current[key];
+            else
+                pendingRef.current[key] = value;
+        };
+        pickRef.current = (rowIndex, dayIndex, shiftKey) => {
+            const row = shownRef.current[rowIndex];
+            if (!row || !data || dayIndex < 0 || dayIndex >= days.length)
+                return;
+            if (!canEdit) {
+                app.notify(t.readOnly, 'warn');
+                return;
+            }
+            if (!brush) {
+                app.notify(t.pickBrush, 'warn');
+                return;
+            }
+            const value = brush === OFF ? '' : brush;
+            const last = lastRef.current;
+            const list = shiftKey && last && last.employee === row.employee ? (() => {
+                const a = Math.min(last.day, dayIndex);
+                const b = Math.max(last.day, dayIndex);
+                const out = [];
+                for (let i = a; i <= b; i++)
+                    out.push(i);
+                return out;
+            })() : [dayIndex];
+            let blocked = null;
+            const single = list.length === 1;
+            list.forEach((i) => {
+                const lock = lockOf(data.locks, row.group, days[i].date);
+                if (lock) {
+                    blocked = lock;
+                    return;
+                }
+                const key = `${row.employee}|${i}`;
+                // Bấm lại một ô đang chờ lưu với cùng ca: bỏ thay đổi của ô đó
+                if (single && Object.prototype.hasOwnProperty.call(pendingRef.current, key) && pendingRef.current[key] === value)
+                    delete pendingRef.current[key];
+                else
+                    setCell(row, i, value);
+            });
+            lastRef.current = { employee: row.employee, day: dayIndex };
+            if (blocked)
+                app.notify(t.locked(blocked.code), 'warn');
+            bump();
+        };
+        // Một listener DOM trên khung lưới; gắn lại sau mỗi lần vẽ (gán thuộc tính nên không cộng dồn)
+        core.useEffect(() => {
+            try {
+                const el = document.getElementById(GRID_ID);
+                if (!el)
+                    return undefined;
+                el.onclick = (ev) => {
+                    try {
+                        const td = ev && ev.target && ev.target.closest ? ev.target.closest('td') : null;
+                        const tr = td ? td.parentNode : null;
+                        if (!td || !tr || !el.contains(td) || td.cellIndex < 1)
+                            return;
+                        pickRef.current(tr.rowIndex - 1, td.cellIndex - 1, !!ev.shiftKey);
+                    }
+                    catch (e) {
+                        // bỏ qua lượt bấm lỗi
+                    }
+                };
+            }
+            catch (e) {
+                // không có document
+            }
+            return undefined;
+        });
+        const save = () => {
+            const cells = Object.keys(pendingRef.current).map((key) => {
+                const cut = key.indexOf('|');
+                return { employee: key.slice(0, cut), workDate: days[Number(key.slice(cut + 1))].date, shift: pendingRef.current[key] };
+            });
+            if (!cells.length)
+                return;
+            const chunks = [];
+            for (let i = 0; i < cells.length; i += SAVE_CHUNK)
+                chunks.push(cells.slice(i, i + SAVE_CHUNK));
+            const total = { created: 0, updated: 0, unchanged: 0 };
+            const work = chunks.reduce((p, chunk) => p.then(() => post({ action: 'rosterCells', subsidiary, cells: chunk })).then((r) => {
+                ['created', 'updated', 'unchanged'].forEach((k) => (total[k] += Number((r || {})[k]) || 0));
+            }), Promise.resolve());
+            app.run(t.saving, work.then(() => total)).then((r) => {
+                if (!alive.current)
+                    return;
+                // Lỗi giữa chừng: các lô trước đã ghi, tải lại để thấy đúng hiện trạng
+                load().then(() => {
+                    if (r)
+                        app.notify(t.saved(r));
+                });
+            });
+        };
+        const setField = (k) => (v) => {
+            formRef.current = Object.assign({}, formRef.current, { [k]: v });
+            setForm(formRef.current);
+        };
+        const openDialog = () => {
+            formRef.current = { team: team || '', pattern: '', from, to, anchor: '' };
+            setForm(formRef.current);
+            setDialog(true);
+        };
+        const generate = () => {
+            const v = formRef.current;
+            if (!v.team || !v.pattern || !ISO.test(v.from) || !ISO.test(v.to))
+                return;
+            // Action cũ: lỗi phân quyền trả ở khóa error / errorVi (không ném)
+            const work = post({ action: 'generateRoster', team: v.team, pattern: v.pattern, anchor: ISO.test(v.anchor) ? v.anchor : v.from, from: v.from, to: v.to }).then((r) => {
+                if (r && r.error)
+                    throw { message: serverText(r.error, r.errorVi) };
+                return r;
+            });
+            app.run(t.generating, work).then((r) => {
+                if (!r || !alive.current)
+                    return;
+                setDialog(false);
+                load().then(() => app.notify(t.generated({ created: r.created || 0, updated: r.updated || 0, keptManual: r.keptManual || 0, unchanged: r.unchanged || 0 })));
+            });
+        };
+        const startGenerate = () => {
+            if (pendingCount())
+                app.confirm(t.confirmDiscard(pendingCount()), () => {
+                    clearPending();
+                    openDialog();
+                });
+            else
+                openDialog();
+        };
+        const header = (extra) => (jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('attendance') }], title: t.title, sub: t.sub, actions: [jsx(Button, { label: t.reload, disabled: !subsidiary || !!app.busy, onClick: () => (pendingCount() ? app.confirm(t.confirmDiscard(pendingCount()), () => load()) : load()) })].concat(extra || []) }));
+        if (!data) {
+            return (jsxs(Page, { children: [header(), jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading }) })] }));
+        }
+        // ------------------------------------------------------------------ dữ liệu suy ra
+        const teams = data.teams || [];
+        const patterns = (data.patterns || []).filter((p) => p.active);
+        const activeShifts = shifts.filter((s) => s.active);
+        const shiftLabel = (s) => `${s.code} ${s.start}-${s.end}`;
+        const brushItems = activeShifts.map((s) => ({ value: s.id, label: shiftLabel(s) })).concat([{ value: OFF, label: t.off }]);
+        const brushName = brush === OFF ? t.offLong : shiftById[brush] ? `${shiftById[brush].code}${shiftById[brush].description ? ` - ${shiftById[brush].description}` : ''}` : '';
+        const nPending = pendingCount();
+        // Số người theo ca từng ngày, tính trên mọi nhân viên của lưới (kể cả dòng chưa hiện), gồm thay đổi chưa lưu
+        const counts = {};
+        let assigned = 0;
+        rows.forEach((r) => {
+            for (let i = 0; i < days.length; i++) {
+                const c = cellOf(r.employee, i);
+                if (!c || !c.s)
+                    continue;
+                assigned += 1;
+                (counts[c.s] = counts[c.s] || new Array(days.length).fill(0))[i] += 1;
+            }
+        });
+        const countShifts = shifts.filter((s) => counts[s.id]);
+        const tableWidth = NAME_W + days.length * DAY_W;
+        const dayClass = (d) => (d.type === 'H' ? 's4vp-ros-hol' : d.type === 'W' ? 's4vp-ros-off' : '');
+        const grid = (jsx("div", { id: GRID_ID, class: "s4vp-ros-wrap", children: jsxs("table", { class: "s4vp-ros", "aria-label": t.title, style: { width: `${tableWidth}px` }, children: [jsx("thead", { children: jsxs("tr", { children: [jsx("th", { class: "s4vp-ros-l", style: { width: `${NAME_W}px` }, children: t.employee }), days.map((d, i) => {
+                                    const a = { style: { width: `${DAY_W}px` }, title: `${t.dow[d.dow]}, ${fmtDate(d.date)}${d.type !== 'N' ? ` - ${t.dayTypes[d.type]}` : ''}` };
+                                    const cls = dayClass(d);
+                                    if (cls)
+                                        a.class = cls;
+                                    return (jsxs("th", { ...a, children: [jsx("div", { children: t.dow[d.dow] }), jsx("div", { children: shortDay(d.date) })] }, `h${i}`));
+                                })] }) }), jsxs("tbody", { children: [shown.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(days.length + 1), style: { cursor: 'default', height: 'auto', textAlign: 'left', fontWeight: '400' }, children: jsx(Empty, { text: rows.length ? t.noMatch : t.empty }) }) }, "s4vp-none")), shown.map((r) => (jsxs("tr", { children: [jsxs("td", { class: "s4vp-ros-l", title: `${r.code} ${r.name}${r.department ? ` - ${r.department}` : ''}`, children: [jsxs("span", { class: "s4vp-ros-name", children: [jsx("span", { class: "s4vp-link", children: r.code }), ` ${r.name}`] }), jsx("span", { class: "s4vp-ros-kind", children: [(r.teams || []).join(', '), r.department].filter(Boolean).join(' · ') })] }), days.map((d, i) => {
+                                        const c = cellOf(r.employee, i);
+                                        const s = c && c.s ? shiftById[c.s] : null;
+                                        const lock = lockOf(data.locks, r.group, d.date);
+                                        const cls = cx(s ? `s4vp-ros-k${s.kind || 'D'}` : c ? cx('s4vp-ros-rest', dayClass(d)) : dayClass(d), c && c.m && !c.p ? 's4vp-ros-m' : '', c && c.p ? 's4vp-ros-p' : '', lock ? 's4vp-ros-lock' : '');
+                                        const label = s ? `${s.code} ${s.start}-${s.end}` : c ? t.offLong : t.noCell;
+                                        const notes = [c && c.p ? t.pending : c && c.m ? t.manual : '', lock ? t.locked(lock.code) : ''].filter(Boolean).join('; ');
+                                        const a = { title: `${t.cellTitle(r.name || r.code, fmtDate(d.date), label)}${notes ? ` (${notes})` : ''}` };
+                                        if (cls)
+                                            a.class = cls;
+                                        return (jsx("td", { ...a, children: s ? s.code : c ? '-' : '' }, `d${i}`));
+                                    })] }, `e${r.employee}`))), countShifts.map((s) => (jsxs("tr", { class: "s4vp-ros-sum", children: [jsx("td", { class: "s4vp-ros-l", title: t.headcount, children: `${t.headcount}: ${s.code}` }), days.map((d, i) => (jsx("td", { children: counts[s.id][i] ? String(counts[s.id][i]) : '' }, `n${i}`)))] }, `c${s.id}`)))] })] }) }));
+        const teamOptions = teams.map((x) => ({ value: x.id, label: `${x.code}${x.description ? ` - ${x.description}` : ''} (${x.members})` }));
+        const formTeam = teams.find((x) => x.id === form.team) || null;
+        const formPattern = patterns.find((p) => p.id === form.pattern) || null;
+        return (jsxs(Page, { children: [header(canEdit ? [jsx(Button, { label: t.generate, kind: nPending ? 'default' : 'primary', disabled: !!app.busy, onClick: startGenerate })] : []), jsxs(Card, { flush: true, label: t.title, children: [jsxs("div", { class: "s4vp-ros-bar", children: [jsx(Button, { small: true, label: `‹ ${t.prev}`, onClick: () => goWith({ from: addDays(from, -span) }) }), jsx(DateInput, { value: from, onInput: (v) => ISO.test(v) && v !== from && goWith({ from: v }), ariaLabel: t.from, width: 150 }), jsx(Button, { small: true, label: `${t.next} ›`, onClick: () => goWith({ from: addDays(from, span) }) }), jsx(Button, { small: true, kind: "ghost", label: t.today, onClick: () => goWith({ from: mondayOf(localToday()) }) }), jsx(Select, { value: String(span), onInput: (v) => Number(v) !== span && goWith({ days: v }), options: SPANS.map((n) => ({ value: String(n), label: t.spans[n] })), ariaLabel: t.span, width: 110 }), jsx(AutoSelect, { value: team, onInput: (v) => v !== team && goWith({ team: v }), options: teamOptions, placeholder: t.allTeams, ariaLabel: t.team, width: 230 }), jsx("span", { class: "s4vp-ros-grow" }), jsx(SearchBox, { value: q, onInput: (v) => {
+                                        setQ(v);
+                                        setLimit(ROW_STEP);
+                                    }, placeholder: t.search, width: 250 })] }), canEdit ? (jsxs("div", { class: "s4vp-ros-brush", children: [activeShifts.length ? jsx(Chips, { items: brushItems, value: brush, onPick: (v) => setBrush(v === brush ? '' : v), label: t.brush }) : jsx("span", { children: t.noShifts }), jsx("span", { children: brush ? t.brushOn(brushName) : t.brushNone })] })) : (jsx("div", { class: "s4vp-ros-brush", children: jsx("span", { children: t.readOnly }) })), grid, jsxs("div", { class: "s4vp-ros-foot", children: [jsxs("span", { children: [t.summary(rows.length, assigned), filtered.length > shown.length || needle.length ? ` · ${t.shown(shown.length, filtered.length)}` : ''] }), jsxs("span", { class: "s4vp-actions", children: [filtered.length > shown.length ? jsx(Button, { small: true, label: t.showMore(Math.min(ROW_STEP, filtered.length - shown.length)), onClick: () => setLimit(limit + ROW_STEP) }) : null, nPending ? jsx(Button, { small: true, label: t.discard, disabled: !!app.busy, onClick: clearPending }) : null, nPending ? jsx(Button, { small: true, kind: "primary", label: t.save(nPending), disabled: !!app.busy, onClick: save }) : null] })] })] }), dialog ? (jsxs(Dialog, { title: t.dlg.title, onClose: () => setDialog(false), width: 520, actions: [
+                        jsx(Button, { label: t.dlg.cancel, onClick: () => setDialog(false) }),
+                        jsx(Button, { label: t.dlg.run, kind: "primary", disabled: !form.team || !form.pattern || !ISO.test(form.from) || !ISO.test(form.to) || !!app.busy, onClick: generate }),
+                    ], children: [teams.length ? null : jsx("div", { class: "s4vp-ros-cycle", children: t.dlg.noTeams }), patterns.length ? null : jsx("div", { class: "s4vp-ros-cycle", children: t.dlg.noPatterns }), jsx(Field, { label: t.dlg.team, required: true, hint: formTeam ? t.dlg.members(formTeam.members) : null, children: jsx(AutoSelect, { value: form.team, onInput: setField('team'), options: teamOptions, placeholder: t.dlg.pickTeam }) }), jsx(Field, { label: t.dlg.pattern, required: true, hint: formPattern ? t.dlg.cycle(formPattern.cycle.map((c) => c || t.off).join(', '), formPattern.cycle.length) : null, children: jsx(AutoSelect, { value: form.pattern, onInput: setField('pattern'), options: patterns.map((p) => ({ value: p.id, label: `${p.code}${p.description ? ` - ${p.description}` : ''}` })), placeholder: t.dlg.pickPattern }) }), jsx(Field, { label: t.dlg.from, required: true, children: jsx(DateInput, { value: form.from, onInput: setField('from') }) }), jsx(Field, { label: t.dlg.to, required: true, children: jsx(DateInput, { value: form.to, onInput: setField('to'), min: form.from }) }), jsx(Field, { label: t.dlg.anchor, hint: t.dlg.anchorHint, children: jsx(DateInput, { value: form.anchor, onInput: setField('anchor') }) }), jsx("div", { class: "s4vp-ros-cycle", children: t.dlg.note })] })) : null] }));
     }
 
     /**
@@ -16937,6 +17451,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             nav: 'Phân hệ',
             tabs: { home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', commission: 'Hoa hồng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập' },
             more: 'Khác',
+            roster: 'Xếp ca',
             outputs: 'Sản lượng - khoán tổ',
             permits: 'Giấy phép lao động',
             subsidiary: 'Công ty con',
@@ -16956,6 +17471,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             nav: 'Module',
             tabs: { home: 'Home', attendance: 'Attendance', payroll: 'Run payroll', profiles: 'Employees', advances: 'Advances', commission: 'Commission', analytics: 'Cost analysis', reports: 'Reports - declarations', setup: 'Setup' },
             more: 'More',
+            roster: 'Shift roster',
             outputs: 'Output - team piecework',
             permits: 'Work permits',
             subsidiary: 'Subsidiary',
@@ -16972,11 +17488,11 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         },
     };
     // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
-    const VIEWS = { home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView };
+    const VIEWS = { home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView, roster: RosterView };
     const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
     // Tab đang sáng theo view
     const TAB_OF = {
-        home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
+        home: 'home', attendance: 'attendance', attendanceLegacy: 'attendance', roster: 'attendance', payrollList: 'payroll', payrollRun: 'payroll', checkDetail: 'payroll', batches: 'payroll',
         profiles: 'profiles', employees: 'profiles', employee: 'profiles', advances: 'advances', advancesV2: 'advances', commission: 'commission', laborAnalytics: 'analytics', reports: 'reports', reportsHub: 'reports', setup: 'setup', setupHub: 'setup', outputsV2: 'more', outputs: 'more', permits: 'more',
     };
     // View mở khi bấm tab
@@ -17033,7 +17549,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         renders += 1;
         if (renders > 60)
             throw new Error('S4VP payroll: render loop detected');
-        ensureCss();
+        ensureCss$1();
         const t = core.useRef(pick(TEXT)).current;
         const lang = core.useRef(language()).current;
         const [boot, setBoot] = core.useState(null);
@@ -17197,7 +17713,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 content = jsx(LegacyView, { app: app, view: current.view }, "legacy");
             }
         }
-        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.outputs, onClick: () => go('outputsV2') }, { label: t.permits, onClick: () => go('permits') }] }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view === 'home' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setupHub') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot(true) })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
+        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.roster, onClick: () => go('roster') }, { label: t.outputs, onClick: () => go('outputsV2') }, { label: t.permits, onClick: () => go('permits') }] }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view === 'home' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setupHub') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot(true) })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
                         jsx(Button, { label: t.cancel, onClick: () => setConfirm(null) }),
                         jsx(Button, { kind: "primary", label: t.yes, onClick: () => {
                                 const c = confirm;

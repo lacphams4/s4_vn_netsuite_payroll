@@ -18,7 +18,7 @@
  * @NScriptType Restlet
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth", "../api/LaborAnalytics", "../api/HrCore", "../api/ReportsHub", "../api/AdvancesV2", "../api/SetupHub", "../api/OutputsV2", "../api/Approvals", "../api/CommissionV2", "../api/OutputSources", "../api/PunchImport"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport) => {
+define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Settings", "../api/Defaults", "../api/Periods", "../api/Payroll", "../api/Profiles", "../api/Advances", "../api/TestData", "../api/Reports", "../api/Attendance", "../api/Output", "../api/WorkPermits", "../api/AllocationPlans", "../api/Shifts", "../api/Home", "../api/PayrollRun", "../api/Checks", "../api/AuditLog", "../api/AttendanceMonth", "../api/LaborAnalytics", "../api/HrCore", "../api/ReportsHub", "../api/AdvancesV2", "../api/SetupHub", "../api/OutputsV2", "../api/Approvals", "../api/CommissionV2", "../api/OutputSources", "../api/PunchImport", "../api/RosterView"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport, RosterView) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
@@ -64,7 +64,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 	// outputSourceGenerate - quyền khai trong mô-đun)
 	// PunchImport: nạp file máy chấm công theo hồ sơ nguồn (punchSourcesView, punchMappings đọc "payroll"; punchPreview, punchCommit,
 	// punchMapSave ghi "hr") - docs/PUNCH_IMPORT.md mục 3
-	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport];
+	// RosterView: màn Xếp ca (rosterView đọc "payroll"; rosterCells ghi "hr"); sinh từ mẫu vẫn là action cũ generateRoster
+	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport, RosterView];
 	const ROLE_SETS = {
 		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", ROLE_DEMO],
 		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", ROLE_DEMO],
