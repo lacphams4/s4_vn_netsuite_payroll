@@ -23,6 +23,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openRecord} from '../lib/api.js';
 import {num, fmtDate, toNumber, fold} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
+import {periodOptions as periodChoices, periodsForSubsidiary} from '../lib/periods.js';
 import {Page, PageHeader, Card, Button, Menu, Stepper, StatCards, Chips, SearchBox, Tabs, Badge, Table, Field, TextInput, NumberInput, Select, AutoSelect, Dialog, SidePanel, Empty} from '../ui/kit.js';
 // Nạp dữ liệu máy chấm công theo hồ sơ nguồn (docs/PUNCH_IMPORT.md mục 4): hộp thoại và hàm thuần ở file riêng
 import {PunchImportDialog, canImport} from './punchImport.js';
@@ -552,11 +553,9 @@ export default function AttendanceView({app}) {
 
 	// ------------------------------------------------------------------ chưa có dữ liệu
 
-	const periods = Array.isArray(boot.periods) ? boot.periods : [];
-	const groupSub = {};
-	(boot.paygroups || []).forEach((g) => (groupSub[String(g.id)] = g.subsidiary ? String(g.subsidiary) : ''));
-	const myPeriods = periods.filter((p) => !groupSub[String(p.paygroup)] || groupSub[String(p.paygroup)] === subsidiary);
-	const periodOptions = (myPeriods.length ? myPeriods : periods).map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`}));
+	// Kỳ của nhóm lương thuộc công ty con đang chọn (công ty không có nhóm riêng thì nhóm dùng chung), giảm dần (lib/periods.js)
+	const myPeriods = periodsForSubsidiary(boot, subsidiary);
+	const periodOptions = periodChoices(boot, subsidiary, {lock: 'att'});
 	const current = picked || periodId;
 	const periodSelect = <AutoSelect value={current} onInput={(v) => v && v !== current && app.go('attendance', {period: v})} options={periodOptions} placeholder={current ? null : t.period} ariaLabel={t.period} width={250} />;
 	const legacyItem = {label: t.legacy, onClick: () => app.go('attendanceLegacy')};
@@ -570,7 +569,7 @@ export default function AttendanceView({app}) {
 				app={app}
 				subsidiary={subsidiary}
 				period={data ? data.period : null}
-				periods={myPeriods.length ? myPeriods : periods}
+				periods={myPeriods}
 				employees={data ? (data.rows || []).map((r) => ({id: r.employee, code: r.code, name: r.name})) : []}
 				onClose={() => setPunchDlg(false)}
 				onProcess={onProcess}

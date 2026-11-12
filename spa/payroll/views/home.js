@@ -3,12 +3,14 @@
  * (bảng lương, bảng công) kèm tiến độ theo bước, việc cần làm có nút đi thẳng tới màn xử lý, và các mốc sắp đến hạn.
  * Chỉ đọc: một lần gọi GET homeSummary {subsidiary} (api/Home.js); mọi thao tác là điều hướng bằng app.go.
  * Mốc hạn chỉ gồm mốc nội bộ của kỳ (core/Deadlines); hạn nộp theo luật chỉ hiện khi máy chủ trả về.
+ * Bốn thẻ số liệu là nút bấm (tileTargets): Kỳ đang chạy -> Chấm công của kỳ; Bảng lương của kỳ -> bảng lương duy nhất
+ * hoặc danh sách lọc theo kỳ; Việc cần xử lý -> cuộn tới bảng việc cần làm; Thực lĩnh -> hộp thoại theo bảng lương, so kỳ trước.
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call} from '../lib/api.js';
 import {money, num, pct, fmtDate, localToday, quickFilter} from '../lib/format.js';
 import {pick} from '../lib/i18n.js';
-import {Page, PageHeader, Card, Button, Table, Badge, StatCards, Chips, SearchBox, SidePanel, Empty} from '../ui/kit.js';
+import {Page, PageHeader, Card, Button, Table, Badge, Chips, SearchBox, SidePanel, Dialog, Empty} from '../ui/kit.js';
 
 const TEXT = {
 	vi: {
@@ -47,6 +49,22 @@ const TEXT = {
 			netNoPrev: 'Chưa có số kỳ trước để so sánh',
 			netSame: (code) => `Bằng kỳ ${code}`,
 			netDiff: (text, code, prev) => `${text} so với kỳ ${code} (${prev})`,
+			label: 'Số liệu của kỳ',
+			hint: 'Bấm để xem chi tiết',
+		},
+		netDlg: {
+			title: (code) => (code ? `Thực lĩnh kỳ ${code}` : 'Thực lĩnh kỳ này'),
+			sub: 'Chỉ cộng bảng lương đã tính, không cộng bảng đã đảo. Bấm một dòng để mở bảng lương.',
+			current: (code) => `Kỳ này${code ? ` (${code})` : ''}`,
+			previous: (code) => `Kỳ trước${code ? ` (${code})` : ''}`,
+			diff: 'Chênh lệch',
+			noPrev: 'Chưa có số',
+			batches: (n) => `${n} bảng lương`,
+			search: 'Tìm bảng lương, kỳ, trạng thái, số tiền',
+			empty: 'Chưa có bảng lương đã tính.',
+			cols: {name: 'Bảng lương', period: 'Kỳ', status: 'Trạng thái', employees: 'Số người', net: 'Thực lĩnh', share: 'Tỷ trọng trong kỳ'},
+			openList: 'Danh sách bảng lương của kỳ',
+			close: 'Đóng',
 		},
 		status: {H: 'Tạm giữ', B: 'Chờ tính', C: 'Đã tính', P: 'Chờ duyệt', A: 'Đã duyệt', J: 'Từ chối', R: 'Đã ghi sổ', V: 'Đã đảo'},
 		statusCount: (n, text) => `${n} ${text.toLowerCase()}`,
@@ -170,6 +188,22 @@ const TEXT = {
 			netNoPrev: 'No previous period to compare',
 			netSame: (code) => `Same as period ${code}`,
 			netDiff: (text, code, prev) => `${text} vs period ${code} (${prev})`,
+			label: 'Period figures',
+			hint: 'Click to see details',
+		},
+		netDlg: {
+			title: (code) => (code ? `Net pay for period ${code}` : 'Net pay this period'),
+			sub: 'Only calculated batches are added up; reversed batches are left out. Click a row to open the batch.',
+			current: (code) => `This period${code ? ` (${code})` : ''}`,
+			previous: (code) => `Previous period${code ? ` (${code})` : ''}`,
+			diff: 'Difference',
+			noPrev: 'No figure yet',
+			batches: (n) => (n === 1 ? '1 batch' : `${n} batches`),
+			search: 'Search batch, period, status, amount',
+			empty: 'No calculated batch yet.',
+			cols: {name: 'Batch', period: 'Period', status: 'Status', employees: 'Employees', net: 'Net pay', share: 'Share of period'},
+			openList: 'Batches of the period',
+			close: 'Close',
 		},
 		status: {H: 'On hold', B: 'Pending calculation', C: 'Calculated', P: 'Pending approval', A: 'Approved', J: 'Rejected', R: 'Released', V: 'Reversed'},
 		statusCount: (n, text) => `${n} ${text.toLowerCase()}`,
@@ -263,6 +297,9 @@ const STATUS_ORDER = ['H', 'B', 'C', 'J', 'P', 'A', 'R', 'V'];
 const TONE_RANK = {error: 0, warn: 1, info: 2};
 const STATE_TONE = {done: 'ok', overdue: 'error', due: 'warn', upcoming: 'muted'};
 const RUN_LIMIT = 6;
+const TODO_ID = 's4vp-home-todos';
+const FLASH = 's4vp-home-flash';
+const FLASH_MS = 2600;
 
 // Kiểu dáng riêng của trang chủ (theo mẫu), viết bằng đối tượng style vì CSS chung không thuộc phân hệ này
 const S = {
@@ -390,6 +427,150 @@ function describeTodo(t, todo, mine) {
 	};
 }
 
+/**
+ * Nơi đi tới khi bấm từng thẻ số liệu (dữ liệu homeSummary):
+ *   period  -> Chấm công của kỳ đang chạy; chưa có kỳ thì Thiết lập, mục kỳ lương
+ *   batches -> kỳ có đúng một bảng lương thì mở thẳng bảng đó, ngược lại danh sách bảng lương lọc theo kỳ
+ *   todos   -> {todos: true}: cuộn tới bảng việc cần làm ngay bên dưới
+ *   net     -> {dialog: 'net'} khi đã có thực lĩnh (hộp thoại theo bảng lương, so kỳ trước), chưa có thì như batches
+ */
+export function tileTargets(data) {
+	const d = data || {};
+	const period = d.period || null;
+	const pid = period && period.id ? String(period.id) : '';
+	const current = list((d.periodBatches || {}).current).filter((b) => b && b.id);
+	let batches;
+	if (current.length === 1 && count((d.batchCounts || {}).total) <= 1) batches = {view: 'payrollRun', params: {id: String(current[0].id)}};
+	else batches = {view: 'payrollList', params: pid ? {period: pid} : {}};
+	const net = d.net || {};
+	return {
+		period: pid ? {view: 'attendance', params: {period: pid}} : {view: 'setupHub', params: {section: 'periods'}},
+		batches,
+		todos: {todos: true},
+		net: net.current === null || net.current === undefined ? batches : {dialog: 'net'},
+	};
+}
+
+/** Dòng của hộp thoại thực lĩnh: bảng lương đã tính của kỳ này rồi kỳ trước, tỷ trọng trong tổng của kỳ mình. */
+export function netRows(t, data) {
+	const d = data || {};
+	const net = d.net || {};
+	const pb = d.periodBatches || {};
+	const make = (b, code, total, which) => {
+		const value = Number(b.net) || 0;
+		return {
+			id: `${which}:${b.id}`, batch: String(b.id), which, name: b.name || String(b.id), description: b.description || '', periodCode: code || '',
+			statusText: t.status[b.status] || b.status || '', status: b.status || '', empCount: count(b.empCount), net: value, share: total ? value / total : null,
+		};
+	};
+	const cur = list(pb.current).filter((b) => b && b.id && b.counted).map((b) => make(b, (d.period || {}).code, Number(net.current) || 0, 'current'));
+	const prev = list(pb.previous).filter((b) => b && b.id && b.counted !== false).map((b) => make(b, (d.previousPeriod || {}).code, Number(net.previous) || 0, 'previous'));
+	return cur.concat(prev);
+}
+
+/** Cuộn tới bảng việc cần làm, nháy viền để mắt bắt được, đặt con trỏ vào ô tìm. Trả false khi không tìm thấy khung. */
+export function revealTodos(doc, timer) {
+	try {
+		const el = doc && typeof doc.getElementById === 'function' ? doc.getElementById(TODO_ID) : null;
+		if (!el) return false;
+		if (typeof el.scrollIntoView === 'function') el.scrollIntoView({behavior: 'smooth', block: 'start'});
+		const cls = el.classList;
+		if (cls) {
+			// Bấm lại khi đang nháy: gỡ lớp, ép trình duyệt tính lại bố cục rồi gắn lại để hiệu ứng chạy lại từ đầu
+			cls.remove(FLASH);
+			void el.offsetWidth;
+			cls.add(FLASH);
+			(timer || setTimeout)(() => cls.remove(FLASH), FLASH_MS);
+		}
+		const input = typeof el.querySelector === 'function' ? el.querySelector('input') : null;
+		if (input && typeof input.focus === 'function') {
+			try {
+				input.focus({preventScroll: true});
+			} catch (e) {
+				input.focus();
+			}
+		}
+		return true;
+	} catch (e) {
+		return false;
+	}
+}
+
+/** Hàng thẻ số liệu bấm được: mỗi thẻ là một <button> mang dáng thẻ số liệu (Enter / Space do trình duyệt lo). */
+export function StatTiles({cards, label, hint, onOpen}) {
+	return (
+		<div class="s4vp-stats" role="group" aria-label={label}>
+			{list(cards).map((c) => (
+				<button key={c.key} type="button" class={c.tone ? `s4vp-stat s4vp-home-tile s4vp-t-${c.tone}` : 's4vp-stat s4vp-home-tile'} title={hint} onClick={() => onOpen && onOpen(c.key)}>
+					<span class="s4vp-home-tile-h">
+						<span class="s4vp-stat-l">{c.label}</span>
+						<span class="s4vp-home-tile-go" aria-hidden="true">
+							{'›'}
+						</span>
+					</span>
+					<span class="s4vp-stat-v">{c.value}</span>
+					{c.note ? <span class="s4vp-stat-n">{c.note}</span> : null}
+				</button>
+			))}
+		</div>
+	);
+}
+
+/** Hộp thoại thực lĩnh của kỳ: tổng kỳ này, kỳ trước, chênh lệch; lưới theo bảng lương có ô tìm, bấm dòng mở bảng lương. */
+function NetDialog({t, data, onGo, onClose}) {
+	const net = data.net || {};
+	const period = data.period || {};
+	const prevCode = (data.previousPeriod || {}).code || '';
+	const rows = netRows(t, data);
+	const hasPrev = net.previous !== null && net.previous !== undefined;
+	let diff = '-';
+	if (hasPrev && net.diff !== null && net.diff !== undefined) {
+		const sign = net.diff > 0 ? '+' : net.diff < 0 ? '-' : '';
+		diff = `${sign}${money(Math.abs(net.diff))}${net.pct === null || net.pct === undefined ? '' : ` (${sign}${pct(Math.abs(net.pct))})`}`;
+	}
+	const columns = [
+		{key: 'name', label: t.netDlg.cols.name, render: (r) => (
+			<span>
+				<span class="s4vp-link">{r.name}</span>
+				{r.description ? <span class="s4vp-small s4vp-muted">{` · ${r.description}`}</span> : null}
+			</span>
+		)},
+		{key: 'periodCode', label: t.netDlg.cols.period, nowrap: true},
+		{key: 'statusText', label: t.netDlg.cols.status, nowrap: true},
+		{key: 'empCount', label: t.netDlg.cols.employees, type: 'num', nowrap: true},
+		{key: 'net', label: t.netDlg.cols.net, type: 'money', nowrap: true},
+		{key: 'share', label: t.netDlg.cols.share, type: 'pct', nowrap: true},
+	];
+	const listGo = {view: 'payrollList', params: period.id ? {period: String(period.id)} : {}};
+	return (
+		<Dialog
+			title={t.netDlg.title(period.code || '')}
+			width={760}
+			onClose={onClose}
+			actions={[<Button label={t.netDlg.openList} onClick={() => onGo(listGo)} />, <Button kind="primary" label={t.netDlg.close} onClick={onClose} />]}
+		>
+			<div class="s4vp-small s4vp-muted">{t.netDlg.sub}</div>
+			<div class="s4vp-home-net">
+				<div>
+					<div class="s4vp-small s4vp-muted">{t.netDlg.current(period.code || '')}</div>
+					<div class="s4vp-home-net-v">{net.current === null || net.current === undefined ? '-' : money(net.current)}</div>
+					<div class="s4vp-small">{t.netDlg.batches(count(net.currentBatches))}</div>
+				</div>
+				<div>
+					<div class="s4vp-small s4vp-muted">{t.netDlg.previous(prevCode)}</div>
+					<div class="s4vp-home-net-v">{hasPrev ? money(net.previous) : t.netDlg.noPrev}</div>
+					{hasPrev ? <div class="s4vp-small">{t.netDlg.batches(count(net.previousBatches))}</div> : null}
+				</div>
+				<div>
+					<div class="s4vp-small s4vp-muted">{t.netDlg.diff}</div>
+					<div class="s4vp-home-net-v">{diff}</div>
+				</div>
+			</div>
+			<Table columns={columns} rows={rows} keyOf={(r) => r.id} onRowClick={(r) => onGo({view: 'payrollRun', params: {id: r.batch}})} empty={t.netDlg.empty} search={true} searchPlaceholder={t.netDlg.search} maxHeight={320} label={t.netDlg.title(period.code || '')} />
+		</Dialog>
+	);
+}
+
 export default function HomeView({app}) {
 	const t = pick(TEXT);
 	const boot = app.boot || {};
@@ -399,6 +580,7 @@ export default function HomeView({app}) {
 	const [failed, setFailed] = useState(false);
 	const [group, setGroup] = useState('');
 	const [query, setQuery] = useState('');
+	const [netOpen, setNetOpen] = useState(false);
 	const alive = useRef(true);
 	const request = useRef(0);
 
@@ -423,6 +605,7 @@ export default function HomeView({app}) {
 		setData(null);
 		setGroup('');
 		setQuery('');
+		setNetOpen(false);
 		load();
 		return () => {
 			alive.current = false;
@@ -534,6 +717,15 @@ export default function HomeView({app}) {
 		{key: 'todos', label: t.stats.todos, value: num(todos.length), note: !todos.length ? t.stats.todosNone : urgent ? t.stats.todosUrgent(urgent) : t.stats.todosCalm, tone: urgent ? 'error' : todos.length ? 'warn' : 'ok'},
 		{key: 'net', label: t.stats.net, value: net.current === null || net.current === undefined ? '-' : money(net.current), note: netNote},
 	];
+	// Bấm thẻ số liệu: đi tới màn có số chi tiết, hoặc cuộn tới bảng việc cần làm, hoặc mở hộp thoại thực lĩnh
+	const targets = tileTargets(data);
+	const openTile = (key) => {
+		const target = targets[key];
+		if (!target) return;
+		if (target.todos) revealTodos(typeof document === 'undefined' ? null : document);
+		else if (target.dialog === 'net') setNetOpen(true);
+		else go(target);
+	};
 
 	// Thao tác nhanh: việc chính theo vai trò đứng đầu và được tô đậm
 	const payrollQuick = firstRunning ? {key: 'payroll', label: t.quickItems.continueBatch(firstRunning.name || firstRunning.title), go: firstRunning.go} : {key: 'payroll', label: t.quickItems.newBatch, go: {view: 'payrollList'}};
@@ -580,7 +772,7 @@ export default function HomeView({app}) {
 					</div>
 				</Card>
 			)}
-			<StatCards cards={cards} />
+			<StatTiles cards={cards} label={t.stats.label} hint={t.stats.hint} onOpen={openTile} />
 
 			<section aria-label={t.quick} style={S.section}>
 				<div style={S.heading}>{t.quick}</div>
@@ -638,9 +830,11 @@ export default function HomeView({app}) {
 						) : null}
 					</Card>
 
-					<Card title={t.todos(todos.length)} sub={t.todoSub} flush={true}>
-						<Table columns={todoColumns} rows={todos} keyOf={(r) => r.id} onRowClick={(r) => go(r)} empty={t.todoEmpty} search={true} searchPlaceholder={t.todoSearch} label={t.todos(todos.length)} />
-					</Card>
+					<div id={TODO_ID} class="s4vp-home-todos">
+						<Card title={t.todos(todos.length)} sub={t.todoSub} flush={true}>
+							<Table columns={todoColumns} rows={todos} keyOf={(r) => r.id} onRowClick={(r) => go(r)} empty={t.todoEmpty} search={true} searchPlaceholder={t.todoSearch} label={t.todos(todos.length)} />
+						</Card>
+					</div>
 				</div>
 
 				<SidePanel title={t.deadlines} sub={period ? t.deadlinesSub(period.code) : ''}>
@@ -669,6 +863,17 @@ export default function HomeView({app}) {
 					{data.statutoryDeadlines === false ? <div class="s4vp-small">{t.noStatutory}</div> : null}
 				</SidePanel>
 			</div>
+			{netOpen ? (
+				<NetDialog
+					t={t}
+					data={data}
+					onClose={() => setNetOpen(false)}
+					onGo={(target) => {
+						setNetOpen(false);
+						go(target);
+					}}
+				/>
+			) : null}
 		</Page>
 	);
 }

@@ -519,14 +519,22 @@ function CheckImpl(p) {
 
 // ------------------------------------------------------------------ ô chọn có tìm kiếm
 
-const normOptions = (options) => (options || []).filter((o) => !blank(o)).map((o) => (typeof o === 'object' ? {value: text(o.value), label: text(o.label)} : {value: text(o), label: text(o)}));
+// Mục chọn: {value, label} hoặc chuỗi; tùy chọn title (tooltip của mục) và group (tên nhóm, các mục cùng nhóm đứng liền nhau)
+const normOption = (o) => {
+	if (typeof o !== 'object') return {value: text(o), label: text(o)};
+	const out = {value: text(o.value), label: text(o.label)};
+	if (!blank(o.title) && o.title !== '') out.title = text(o.title);
+	if (!blank(o.group) && o.group !== '') out.group = text(o.group);
+	return out;
+};
+const normOptions = (options) => (options || []).filter((o) => !blank(o)).map(normOption);
 
 /** Lọc danh sách chọn: mọi từ gõ phải khớp nhãn hoặc giá trị (không phân biệt dấu); trả tối đa `limit` mục và tổng số khớp. */
 export function filterOptions(options, query, limit) {
 	const list = normOptions(options);
 	const words = fold(query).split(/\s+/).filter((w) => w);
 	const hits = words.length ? list.filter((o) => {
-		const s = fold(`${o.label} ${o.value}`);
+		const s = fold(`${o.label} ${o.value} ${o.title || ''} ${o.group || ''}`);
 		return words.every((w) => s.indexOf(w) >= 0);
 	}) : list;
 	return {items: hits.slice(0, limit || 200), total: hits.length};
@@ -652,11 +660,14 @@ function SearchSelectImpl(p) {
 				<div class="s4vp-ss-pop">
 					<input {...q} />
 					<div id={`${base}-l`} class="s4vp-ss-list" role="listbox">
-						{shown.items.map((o, i) => (
-							<button key={`o${o.value}`} id={`${base}-o${i}`} type="button" role="option" tabindex="-1" class={cx('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : '')} aria-selected={o.value === want ? 'true' : 'false'} onClick={() => choose(o)}>
-								{o.label || o.value || t.choose}
-							</button>
-						))}
+						{shown.items.reduce((out, o, i) => {
+							// Tiêu đề nhóm trước mục đầu của mỗi nhóm
+							if (o.group && (i === 0 || shown.items[i - 1].group !== o.group)) out.push(<div key={`g${i}`} class="s4vp-ss-note" role="presentation">{o.group}</div>);
+							const a = {key: `o${o.value}`, id: `${base}-o${i}`, type: 'button', role: 'option', tabindex: '-1', class: cx('s4vp-ss-opt', i === active ? 's4vp-on' : '', o.value === want ? 's4vp-sel' : ''), 'aria-selected': o.value === want ? 'true' : 'false', onClick: () => choose(o)};
+							if (o.title) a.title = o.title;
+							out.push(<button {...a}>{o.label || o.value || t.choose}</button>);
+							return out;
+						}, [])}
 						{shown.total ? null : <div class="s4vp-ss-note">{t.noMatch}</div>}
 						{shown.total > shown.items.length ? <div class="s4vp-ss-note">{t.more(shown.total - shown.items.length)}</div> : null}
 					</div>
@@ -671,20 +682,34 @@ function SelectImpl(p) {
 	const id = useSyncedId(want);
 	const attrs = controlAttrs(p, id, '');
 	attrs.value = want;
-	const options = (p.options || []).filter(Boolean).map((o) => (typeof o === 'object' ? {value: text(o.value), label: text(o.label)} : {value: text(o), label: text(o)}));
+	const options = (p.options || []).filter(Boolean).map(normOption);
 	const list = blank(p.placeholder) ? options : [{value: '', label: text(p.placeholder)}].concat(options.filter((o) => o.value !== ''));
 	delete attrs.placeholder;
+	const option = (o) => {
+		const a = {value: o.value};
+		if (o.value === want) a.selected = 'selected';
+		if (o.title) a.title = o.title;
+		return (
+			<option key={`o${o.value}`} {...a}>
+				{o.label}
+			</option>
+		);
+	};
+	// Mục có group: các mục liền nhau cùng nhóm gom vào một <optgroup>
+	const children = [];
+	list.forEach((o) => {
+		const last = children[children.length - 1];
+		if (!o.group) children.push(option(o));
+		else if (last && last.group === o.group) last.items.push(option(o));
+		else children.push({group: o.group, items: [option(o)]});
+	});
 	return (
 		<select {...attrs}>
-			{list.map((o) => {
-				const a = {value: o.value};
-				if (o.value === want) a.selected = 'selected';
-				return (
-					<option key={`o${o.value}`} {...a}>
-						{o.label}
-					</option>
-				);
-			})}
+			{children.map((c, i) => (c && c.group !== undefined && Array.isArray(c.items) ? (
+				<optgroup key={`g${i}`} label={c.group}>
+					{c.items}
+				</optgroup>
+			) : c))}
 		</select>
 	);
 }

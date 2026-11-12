@@ -17,6 +17,7 @@ import url from 'N/url';
 import {call, post, openRecord, errorText} from '../lib/api.js';
 import {money, num, fmtDate, toNumber, localToday, fold} from '../lib/format.js';
 import {pick, serverText} from '../lib/i18n.js';
+import {periodOptions as periodChoices, periodsForSubsidiary, currentPeriodId} from '../lib/periods.js';
 import {Page, PageHeader, Card, Button, Table, Badge, Chips, StatCards, Select, AutoSelect, SearchSelect, Field, TextInput, TextArea, NumberInput, MoneyInput, DateInput, Dialog, SidePanel, SearchBox, Empty} from '../ui/kit.js';
 
 const TEXT = {
@@ -636,14 +637,9 @@ function stepOf(r) {
 	return 'submit';
 }
 
-/** Kỳ mặc định: kỳ chưa đóng chứa hôm nay (ưu tiên nhóm lương DEFAULT); không có thì mọi kỳ. */
-function defaultPeriod(boot) {
-	const today = localToday();
-	const groups = list(boot.paygroups);
-	const def = groups.find((g) => upper(g.code) === 'DEFAULT');
-	const hits = list(boot.periods).filter((p) => p.status !== 'C' && p.start && p.end && p.start <= today && p.end >= today);
-	const hit = (def && hits.find((p) => String(p.paygroup) === String(def.id))) || hits[0];
-	return hit ? String(hit.id) : '';
+/** Kỳ mặc định: kỳ chưa đóng chứa hôm nay trong các kỳ của công ty con (lib/periods.js); không có thì '' (mọi kỳ). */
+function defaultPeriod(boot, subsidiary) {
+	return currentPeriodId(periodsForSubsidiary(boot, subsidiary), localToday());
 }
 
 export default function OutputsView({app}) {
@@ -654,10 +650,11 @@ export default function OutputsView({app}) {
 	const params = (app.route && app.route.params) || {};
 	// Ma trận quyền của RESTlet: saveOutput, loadTeamMembers, splitOutput, outputAction chỉ cho administrator và HR
 	const canWrite = user.role === 'administrator' || !!user.isHr || user.role === 'customrole_s4vp_hr';
-	const periods = list(boot.periods);
+	// Kỳ của nhóm lương thuộc công ty con đang chọn, giảm dần
+	const periods = periodsForSubsidiary(boot, subsidiary);
 
 	const [data, setData] = useState(null);
-	const [period, setPeriod] = useState(params.period === 'all' ? '' : String(params.period || defaultPeriod(boot)));
+	const [period, setPeriod] = useState(params.period === 'all' ? '' : String(params.period || defaultPeriod(boot, subsidiary)));
 	const [filter, setFilter] = useState('');
 	const [selected, setSelected] = useState(String(params.id || ''));
 	const [tab, setTab] = useState('');
@@ -1523,7 +1520,7 @@ export default function OutputsView({app}) {
 		if (f.project && !projectOptions.some((o) => o.value === f.project)) projectOptions.push({value: f.project, label: f.project});
 		const departmentOptions = list(lk.departments).map((x) => ({value: String(x.id), label: x.name || String(x.id)}));
 		if (f.department && !departmentOptions.some((o) => o.value === f.department)) departmentOptions.push({value: f.department, label: f.departmentName || f.department});
-		const periodOptions = periods.filter((p) => p.status !== 'C' || String(p.id) === f.period).map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`}));
+		const periodOptions = periodChoices(boot, subsidiary, {lock: 'status', filter: (p) => p.status !== 'C' || String(p.id) === f.period});
 		const err = (k) => (f.errors && f.errors[k] ? <span class="s4vp-out-err">{f.errors[k]}</span> : null);
 		const pickKind = (k) => {
 			const keep = list(lk.rateTables).some((x) => x.id === f.rateTable && (k === 'S' ? x.type === 'S' : x.type !== 'S'));
@@ -1602,7 +1599,7 @@ export default function OutputsView({app}) {
 	};
 	/** Khoảng ngày mặc định: kỳ đang xem, không có thì kỳ mặc định chứa hôm nay, không có nữa thì tháng hiện tại. */
 	const srcRange = () => {
-		const pid = period || defaultPeriod(boot);
+		const pid = period || defaultPeriod(boot, subsidiary);
 		const p = pid ? periods.find((x) => String(x.id) === String(pid)) : null;
 		if (p && validIso(p.start) && validIso(p.end)) return {from: p.start, to: p.end};
 		const today = localToday();
@@ -1802,7 +1799,7 @@ export default function OutputsView({app}) {
 		{key: 'included', label: t.cards.included, value: zero(included.amount), note: t.cards.includedNote(included.count || 0, list(included.batches).map((b) => b.name).filter(Boolean).slice(0, 3).join(', ')), tone: included.count ? 'ok' : ''},
 	];
 	const todo = list(view.issues);
-	const periodOptions = periods.map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`}));
+	const periodOptions = periodChoices(boot, subsidiary, {lock: 'status'});
 
 	return (
 		<Page>

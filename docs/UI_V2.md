@@ -85,7 +85,7 @@ Ghi chú khi dùng `app`:
 - Đổi view thì view cũ bị gỡ hẳn (state mất); các màn trong legacy.js dùng chung một thành phần nên giữ state khi chuyển qua lại giữa chúng.
 - `app.boot` luôn khác null khi view được vẽ (khung chờ bootstrap xong mới vẽ view); `app.subsidiary` có thể là `''` nếu tài khoản không có công ty con nào.
 
-Tên view cho `app.go`: `home`, `attendance` (params `period`), `payrollList`, `payrollRun` (params `id`), `checkDetail` (params `id`, `rule`, `employee`), và các tên cũ `outputs`, `permits`, `reports`, `profiles`, `advances`, `setup`, `batches` (danh sách và chi tiết bảng lương bản cũ), `attendanceLegacy` (chấm công và phép bản cũ). Tên lạ về `home`. Tab sáng: `payrollList`, `payrollRun`, `checkDetail`, `batches` -> Chạy lương; `attendance`, `attendanceLegacy` -> Chấm công; `outputs`, `permits` nằm trong menu "Khác".
+Tên view cho `app.go`: `home`, `attendance` (params `period`), `payrollList` (params `period` lọc sẵn theo kỳ), `payrollRun` (params `id`), `checkDetail` (params `id`, `rule`, `employee`), và các tên cũ `outputs`, `permits`, `reports`, `profiles`, `advances`, `setup`, `batches` (danh sách và chi tiết bảng lương bản cũ), `attendanceLegacy` (chấm công và phép bản cũ). Tên lạ về `home`. Tab sáng: `payrollList`, `payrollRun`, `checkDetail`, `batches` -> Chạy lương; `attendance`, `attendanceLegacy` -> Chấm công; `outputs`, `permits` nằm trong menu "Khác".
 
 ## 4. Bộ thành phần `ui/kit.js`
 

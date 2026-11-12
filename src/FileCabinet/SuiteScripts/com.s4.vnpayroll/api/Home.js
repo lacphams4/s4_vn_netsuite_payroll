@@ -22,6 +22,9 @@
  *   pendingDocs      {leave, ot, trip, exception, total} chứng từ công chờ duyệt (trạng thái P) của công ty con
  *   net              {current, previous, diff, pct, currentBatches, previousBatches} tổng thực lĩnh các bảng lương đã tính
  *                    (không tính bảng đã đảo) của kỳ đang chạy và kỳ liền trước; previous / diff / pct = null khi không có
+ *   periodBatches    {current, previous}: [{id, name, description, status, empCount, counted, net}] - current là mọi bảng lương
+ *                    của kỳ đang chạy, previous chỉ bảng đã tính của kỳ liền trước (tối đa MAX_PERIOD_BATCHES mỗi kỳ, mới nhất
+ *                    trước); net chỉ có khi counted (đã tính, chưa đảo), ngược lại null. Lấy từ cùng truy vấn bảng lương.
  *   deadlines        core/Deadlines.milestones của kỳ đang chạy: [{key, date, state, daysLeft}]
  *   deadlineBatch    {id, name} bảng lương dùng để tính mốc, hoặc null
  *   statutoryDeadlines  false: gói chưa có tham số hạn nộp tờ khai / bảo hiểm nên chỉ có mốc nội bộ
@@ -41,6 +44,7 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "./Lean", ".
 	const MAX_CHECKED = 6; // số bảng lương đang dở được hỏi cảnh báo (Checks.summary)
 	const RECENT_DONE = 5; // số bảng lương đã xong gần nhất đưa lên trang chủ
 	const UPCOMING = 2; // số kỳ sắp tới
+	const MAX_PERIOD_BATCHES = 50; // số bảng lương mỗi kỳ trả trong periodBatches (thẻ số liệu bấm xem chi tiết)
 	const DOC_TYPES = { leave: "leave_request", ot: "ot_request", trip: "business_trip", exception: "att_exception" };
 	// Trường ngày đầu / ngày cuối của từng loại chứng từ công (đơn làm thêm, phiếu ngoại lệ chỉ có một ngày)
 	const DOC_DATES = { leave: ["from", "to"], trip: ["from", "to"], ot: ["work_date", "work_date"], exception: ["work_date", "work_date"] };
@@ -311,7 +315,7 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "./Lean", ".
 			if (todo) todos.push(todo);
 		});
 		if (current && !inCurrent.some((b) => b.status !== "V")) {
-			todos.push({ key: `create:${currentId}`, kind: "createBatch", tone: "info", owner: "all", period: periodRef(current), go: { view: "payrollList", params: {} } });
+			todos.push({ key: `create:${currentId}`, kind: "createBatch", tone: "info", owner: "all", period: periodRef(current), go: { view: "payrollList", params: { period: currentId } } });
 		}
 		const withBatch = new Set(batches.map((b) => String(b.period)));
 		const upcoming = Deadlines.upcomingPeriods(periods, today, UPCOMING + 1).filter((p) => String(p.id) !== currentId && !withBatch.has(String(p.id))).slice(0, UPCOMING);
@@ -333,6 +337,13 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "./Lean", ".
 			net.diff = net.current - net.previous;
 			net.pct = net.previous ? net.diff / net.previous : null;
 		}
+		// Bảng lương của kỳ cho thẻ số liệu bấm xem chi tiết: dựng từ danh sách bảng lương đã đọc, không thêm truy vấn
+		const countedIds = new Set(curList.concat(prevList).map((b) => String(b.id)));
+		const brief = (b) => {
+			const counted = countedIds.has(String(b.id));
+			return { id: String(b.id), name: b.name || String(b.id), description: b.description || "", status: b.status || "", empCount: int(b.emp_count), counted, net: counted ? amount(b.net) : null };
+		};
+		const periodBatches = { current: inCurrent.slice(0, MAX_PERIOD_BATCHES).map(brief), previous: prevList.slice(0, MAX_PERIOD_BATCHES).map(brief) };
 
 		// Mốc việc của kỳ: theo bảng lương đang dở của kỳ, không có thì bảng lương mới nhất chưa bị đảo
 		const mainBatch = inCurrent.find((b) => !FINAL.includes(b.status)) || inCurrent.find((b) => b.status !== "V") || null;
@@ -358,6 +369,7 @@ define(["N/log", "./Store", "./Clock", "./Checks", "./WorkPermits", "./Lean", ".
 			todos,
 			pendingDocs: docCounts,
 			net,
+			periodBatches,
 			deadlines,
 			deadlineBatch: batchRef(mainBatch),
 			statutoryDeadlines: false,

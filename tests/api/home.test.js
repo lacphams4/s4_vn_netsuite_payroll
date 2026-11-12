@@ -179,6 +179,20 @@ describe("homeSummary", () => {
     expect(run().net).toEqual({ current: null, previous: null, diff: null, pct: null, currentBatches: 0, previousBatches: 0 });
   });
 
+  test("periodBatches cho thẻ số liệu: mọi bảng lương của kỳ này, bảng đã tính của kỳ trước; số tiền chỉ khi đã tính", () => {
+    const r = run();
+    expect(r.periodBatches.current).toEqual([
+      { id: "8", name: "BL000008", description: "", status: "H", empCount: 4, counted: false, net: null },
+      { id: "7", name: "BL000007", description: "", status: "C", empCount: 4, counted: true, net: 100766900 },
+    ]);
+    // kỳ trước: bảng đã đảo (5) không vào
+    expect(r.periodBatches.previous).toEqual([{ id: "6", name: "BL000006", description: "", status: "R", empCount: 4, counted: true, net: 90000000 }]);
+    expect(JSON.stringify(r.periodBatches)).not.toMatch(/bills|messages/);
+    state.data.period = [];
+    state.data.batch = [];
+    expect(run().periodBatches).toEqual({ current: [], previous: [] });
+  });
+
   test("mốc hạn: chỉ mốc nội bộ suy ra từ kỳ và bảng lương, không có hạn theo luật", () => {
     const r = run();
     expect(r.statutoryDeadlines).toBe(false);
@@ -193,7 +207,7 @@ describe("homeSummary", () => {
     expect(r.period.id).toBe("4");
     state.today = "2027-03-30";
     r = run();
-    expect(todo(r, "createBatch")).toMatchObject({ tone: "info", period: { id: "3", code: "2027-03" }, go: { view: "payrollList" } });
+    expect(todo(r, "createBatch")).toMatchObject({ tone: "info", period: { id: "3", code: "2027-03" }, go: { view: "payrollList", params: { period: "3" } } });
     state.data.period = periods().map((p) => (p.id === "3" ? Object.assign(p, { att_status: "L" }) : p));
     r = run();
     expect(todo(r, "lockAttendance")).toBeUndefined();

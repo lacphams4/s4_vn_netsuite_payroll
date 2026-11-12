@@ -1,10 +1,11 @@
 /**
- * Danh sách bảng lương của công ty con đang chọn (tab Chạy lương): lọc theo kỳ, tìm nhanh, bấm một dòng để vào màn
+ * Danh sách bảng lương của công ty con đang chọn (tab Chạy lương): lọc theo kỳ (params `period` lọc sẵn), tìm nhanh, bấm một dòng để vào màn
  * chạy lương của bảng đó; tạo bảng lương mới trong hộp thoại (kỳ, diễn giải) qua action createBatch.
  */
 import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, post, openJournal} from '../lib/api.js';
-import {fmtDate} from '../lib/format.js';
+import {localToday} from '../lib/format.js';
+import {periodOptions as periodChoices, periodsForSubsidiary, defaultPeriodId} from '../lib/periods.js';
 import {pick, serverText} from '../lib/i18n.js';
 import {Page, PageHeader, Card, Button, Table, Badge, AutoSelect, Field, TextInput, Dialog} from '../ui/kit.js';
 
@@ -76,8 +77,9 @@ export default function PayrollListView({app}) {
 	const t = pick(TEXT);
 	const boot = app.boot || {};
 	const subsidiary = app.subsidiary || '';
-	const periods = Array.isArray(boot.periods) ? boot.periods : [];
-	const [period, setPeriod] = useState('');
+	// Kỳ lọc sẵn từ route (#/payrollList?period=..., ví dụ thẻ "Bảng lương của kỳ" ở Trang chủ)
+	const routePeriod = String(((app.route || {}).params || {}).period || '');
+	const [period, setPeriod] = useState(routePeriod);
 	const [rows, setRows] = useState([]);
 	const [dialog, setDialog] = useState(false);
 	// Giá trị form giữ trong ref rồi setState: hai ô cập nhật liền nhau không ghi đè nhau
@@ -97,6 +99,11 @@ export default function PayrollListView({app}) {
 		});
 	};
 
+	// Cùng view, đổi kỳ trên hash (bấm lại từ Trang chủ hoặc tab): theo kỳ mới
+	useEffect(() => {
+		if (routePeriod !== period) setPeriod(routePeriod);
+	}, [routePeriod]);
+
 	useEffect(() => {
 		alive.current = true;
 		load();
@@ -110,7 +117,8 @@ export default function PayrollListView({app}) {
 		setForm(formRef.current);
 	};
 	const openDialog = () => {
-		formRef.current = {period: period || '', description: ''};
+		// Bảng lương mới: kỳ đang lọc, không lọc thì kỳ đang chạy của công ty con
+		formRef.current = {period: period || defaultPeriodId(periodsForSubsidiary(boot, subsidiary), localToday()), description: ''};
 		setForm(formRef.current);
 		setDialog(true);
 	};
@@ -130,8 +138,8 @@ export default function PayrollListView({app}) {
 		});
 	};
 
-	const periodLabel = (p) => `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`;
-	const periodOptions = periods.map((p) => ({value: String(p.id), label: periodLabel(p)}));
+	// Kỳ của công ty con đang chọn, giảm dần, nhãn "Tháng 11/2026 (01/11 - 30/11)", mã kỳ ở tooltip (lib/periods.js)
+	const periodOptions = periodChoices(boot, subsidiary, {lock: 'status'});
 	const total = rows.length > 1 ? rows.reduce((acc, r) => {
 		SUM_KEYS.forEach((k) => (acc[k] = (acc[k] || 0) + (Number(r[k]) || 0)));
 		return acc;

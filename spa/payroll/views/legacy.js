@@ -11,6 +11,8 @@ import url from 'N/url';
 import {PRINT, call, post, errorText, openRecord, openJournal, download} from '../lib/api.js';
 import {money, num, pct, fmtDate, toIso, localToday, quickFilter} from '../lib/format.js';
 import {pick, localized, serverText, serverLanguage} from '../lib/i18n.js';
+import {periodOptions, periodsForSubsidiary, defaultPeriodId} from '../lib/periods.js';
+import {leaveYearOptions, balanceRows, carryTip} from '../lib/leave.js';
 
 const TEXT = {
 	vi: {
@@ -123,11 +125,21 @@ const TEXT = {
 			advanceAmount: 'Số tiền tạm ứng', exceptionType: 'Loại ngoại lệ', exTypes: {L: 'Đi trễ', E: 'Về sớm', A: 'Điều chỉnh công'},
 			half: {A: 'Buổi sáng', P: 'Buổi chiều'}, fromHalf: 'Bắt đầu', toHalf: 'Kết thúc', days: 'Số ngày', dayUnit: 'ngày', dayType: 'Loại ngày',
 			accrue: 'Cấp phép năm', expire: 'Hết hạn phép chuyển', balances: 'Số dư phép', year: 'Năm',
+			accrueYear: (y) => `Cấp phép năm ${y} (kèm chuyển phép năm ${Number(y) - 1})`,
+			expireYear: (y) => `Hết hạn phép chuyển năm ${y}`,
+			reloadYear: (y) => `Tải lại Số dư phép ${y}`,
+			leaveYear: 'Năm phép',
+			leaveHint: (y) => `Cấp phép năm ${y} đồng thời chuyển phép còn lại của năm ${Number(y) - 1} sang (tối đa theo chính sách phép, có hạn dùng). Cuối năm chọn năm sau để chuyển phép trước; hết hạn thì bấm Hết hạn phép chuyển để trừ phần chuyển chưa dùng.`,
+			confirmExpire: (y, d) => `Hết hạn phép chuyển năm ${y} tính đến ngày ${d}? Phần phép chuyển chưa dùng của số dư đã quá hạn sẽ bị trừ (giao dịch X), chỉ áp cho nhân viên của công ty con đang chọn.`,
+			expired: (rows) => `Đã xử lý hết hạn: ${rows.length} số dư, trừ ${rows.reduce((s, r) => s + (Number(r.expired) || 0), 0)} ngày`,
+			carryTip: (d) => `Chuyển từ năm trước, hạn đến ${d}`,
+			carryTipNoExpiry: 'Chuyển từ năm trước, không có hạn hoặc đã xử lý hết hạn',
+			leaveQuick: 'Lọc nhanh (mã, tên nhân viên, loại nghỉ...)',
 			cols: {std: 'Công chuẩn', paid: 'Nghỉ có lương', unpaid: 'Không lương', si: 'BHXH', trip: 'Công tác', late: 'Trừ trễ sớm', adj: 'Điều chỉnh', work: 'Công hưởng lương', ot: 'Giờ OT', status: 'Trạng thái',
 				entitled: 'Được cấp', carried: 'Chuyển', adjusted: 'Điều chỉnh', used: 'Đã dùng', pending: 'Chờ duyệt', available: 'Còn lại'},
 			punches: 'Chấm công máy',
 			noSummary: 'Kỳ này chưa có bảng tổng hợp công: bấm Lập bảng công (nếu không, bảng lương dùng công chuẩn trừ ngày ngoài hợp đồng)',
-			confirmAccrue: (y) => `Cấp phép năm ${y} cho nhân viên đang có hồ sơ? Chạy lại không cấp trùng.`,
+			confirmAccrue: (y) => `Cấp phép năm ${y} và chuyển phép còn lại của năm ${Number(y) - 1} cho nhân viên đang có hồ sơ của công ty con đang chọn? Chạy lại không cấp trùng, không chuyển trùng.`,
 			tabs: {summary: 'Bảng tổng hợp công', docs: 'Chứng từ', punches: 'Chấm công máy', leave: 'Số dư phép'},
 			confirmUnlock: 'Mở khóa công của kỳ này? Bảng lương đã tính theo công cũ cần tính lại.', punchHint: 'Mỗi dòng: mã nhân viên, thời điểm YYYY-MM-DD HH:mm, thiết bị (cách nhau dấu phẩy). Xử lý chấm công sinh phiếu trễ / sớm / vắng và đơn OT gợi ý ở trạng thái Tạm giữ, không tự trừ lương.',
 			importPunches: 'Nạp lượt chấm', processPunches: 'Xử lý chấm công kỳ đang chọn',
@@ -284,11 +296,21 @@ const TEXT = {
 			advanceAmount: 'Advance amount', exceptionType: 'Exception type', exTypes: {L: 'Late arrival', E: 'Early leave', A: 'Day adjustment'},
 			half: {A: 'Morning', P: 'Afternoon'}, fromHalf: 'Starts', toHalf: 'Ends', days: 'Days', dayUnit: 'days', dayType: 'Day type',
 			accrue: 'Accrue Annual Leave', expire: 'Expire Carried Leave', balances: 'Leave balances', year: 'Year',
+			accrueYear: (y) => `Accrue ${y} leave (incl. carry-over from ${Number(y) - 1})`,
+			expireYear: (y) => `Expire carried leave ${y}`,
+			reloadYear: (y) => `Reload leave balances ${y}`,
+			leaveYear: 'Leave year',
+			leaveHint: (y) => `Accruing ${y} leave also carries the unused ${Number(y) - 1} balance over (up to the leave policy maximum, with an expiry date). Near year end, pick next year to carry leave over early; once it expires, click Expire carried leave to deduct the unused carry-over.`,
+			confirmExpire: (y, d) => `Expire carried leave for ${y} as of ${d}? The unused carry-over of balances past their expiry date is deducted (transaction X), for employees of the selected subsidiary only.`,
+			expired: (rows) => `Expiry processed: ${rows.length} balances, ${rows.reduce((s, r) => s + (Number(r.expired) || 0), 0)} days deducted`,
+			carryTip: (d) => `Carried over from last year, expires ${d}`,
+			carryTipNoExpiry: 'Carried over from last year, no expiry date or expiry already processed',
+			leaveQuick: 'Quick filter (employee ID, name, leave type...)',
 			cols: {std: 'Standard days', paid: 'Paid leave', unpaid: 'Unpaid', si: 'Social insurance', trip: 'Business trip', late: 'Late / early deduction', adj: 'Adjustment', work: 'Paid days', ot: 'OT hours', status: 'Status',
 				entitled: 'Entitled', carried: 'Carried over', adjusted: 'Adjusted', used: 'Used', pending: 'Pending approval', available: 'Available'},
 			punches: 'Time clock',
 			noSummary: 'This period has no attendance summary: click Build Attendance (otherwise the payroll batch uses standard days less days outside the contract)',
-			confirmAccrue: (y) => `Accrue annual leave for ${y} for employees with a payroll profile? Running it again does not accrue twice.`,
+			confirmAccrue: (y) => `Accrue ${y} annual leave and carry over the unused ${Number(y) - 1} leave for employees with a payroll profile in the selected subsidiary? Running it again does not accrue or carry over twice.`,
 			tabs: {summary: 'Attendance summary', docs: 'Documents', punches: 'Time clock', leave: 'Leave balances'},
 			confirmUnlock: 'Unlock attendance for this period? Payroll batches calculated on the old attendance must be recalculated.', punchHint: 'One punch per line: employee ID, time as YYYY-MM-DD HH:mm, device (comma separated). Processing punches creates late / early / absence exceptions and suggested overtime requests in On Hold status; it does not deduct pay by itself.',
 			importPunches: 'Import Punches', processPunches: 'Process punches for the selected period',
@@ -405,6 +427,9 @@ const fitCols = (columns) => {
 const autoH = (n, max) => `${Math.min(max, 84 + 44 * Math.max(n, 2))}px`;
 
 // Thanh nút dạng tab: nút đang chọn tô đậm
+// Tooltip của ô chọn kỳ (Dropdown UIF không có tooltip từng mục): mã kỳ của mục đang chọn
+const periodTip = (list, value) => ((list || []).find((o) => o.value === String(value || '')) || {}).title || null;
+
 const tabStrip = (keys, labels, current, pick) =>
 	keys.map((k) => <Button label={labels[k]} hierarchy={current === k ? Button.Hierarchy.PRIMARY : Button.Hierarchy.SECONDARY} type={current === k ? Button.Type.PRIMARY : Button.Type.GHOST} action={() => pick(k)} />);
 
@@ -474,6 +499,9 @@ export default function LegacyView(props) {
 	const [docType, setDocType] = useState('leave');
 	const [docs, setDocs] = useState([]);
 	const [balances, setBalances] = useState([]);
+	// Năm của mục Số dư phép (riêng với ô Năm sinh kỳ ở Thiết lập): năm nay hoặc năm sau
+	const [leaveYear, setLeaveYear] = useState(String(new Date().getFullYear()));
+	const balReq = useRef(0);
 	const [employees, setEmployees] = useState([]);
 	const docRef = useRef({});
 	const [docForm, setDocForm] = useState({});
@@ -549,32 +577,54 @@ export default function LegacyView(props) {
 			setReport(null);
 		}
 		if (moved && batchState) setBatch(null);
+		const subChanged = last.current.subsidiary !== subsidiary;
 		last.current = {view, subsidiary};
 		if (!boot) return;
+		// Đổi công ty con: bỏ kỳ lọc không thuộc công ty mới (effect chạy lại khi period đổi), bỏ số dư phép và danh sách nhân
+		// viên của công ty cũ (số dư phép chỉ nạp khi lưới rỗng nên phải dọn, nếu không lưới vẫn hiện nhân viên công ty trước)
+		const ownPeriod = (id) => !id || periodsForSubsidiary(boot, subsidiary).some((x) => String(x.id) === String(id));
+		const outPer = subChanged && !ownPeriod(outPeriod) ? '' : outPeriod;
+		if (outPer !== outPeriod) setOutPeriod('');
+		if (subChanged) {
+			setBalances([]);
+			setEmployees([]);
+		}
+		if (subChanged && !ownPeriod(period)) {
+			setPeriod('');
+			return;
+		}
 		if (subsidiary && view === 'batches' && !batch) loadBatches(subsidiary, period);
 		if (subsidiary && view === 'profiles') run(t.loading, call({action: 'profiles', subsidiary}), (r) => setProfiles(r.employees));
 		if (subsidiary && view === 'advances') run(t.loading, call({action: 'advances', subsidiary}), (r) => setAdvances(r.advances));
-		if (subsidiary && view === 'outputs') run(t.loading, call({action: 'outputs', subsidiary, period: outPeriod}), (r) => setOutputs(r.outputs));
+		if (subsidiary && view === 'outputs') run(t.loading, call({action: 'outputs', subsidiary, period: outPer}), (r) => setOutputs(r.outputs));
 		if (subsidiary && view === 'permits') run(t.loading, call({action: 'workPermits', subsidiary}), (r) => setPermits(r.permits));
-		if (subsidiary && (view === 'outputs' || view === 'permits' || view === 'advances') && !employees.length) call({action: 'profiles', subsidiary}).then((r) => alive.current && setEmployees(r.employees.filter((e) => e.profile))).catch(() => {});
+		if (subsidiary && (view === 'outputs' || view === 'permits' || view === 'advances') && (subChanged || !employees.length)) call({action: 'profiles', subsidiary}).then((r) => alive.current && setEmployees(r.employees.filter((e) => e.profile))).catch(() => {});
 		if (subsidiary && view === 'attendance') {
-			const p = attPeriod || defaultPeriod();
+			// Kỳ đang chọn không thuộc công ty con mới (đổi công ty) thì về kỳ mặc định của công ty đó
+			const own = !!attPeriod && periodsForSubsidiary(boot, subsidiary).some((x) => String(x.id) === attPeriod);
+			const p = own ? attPeriod : defaultPeriod();
 			if (p && p !== attPeriod) setAttPeriod(p);
 			if (p) loadAttendance(p);
 			loadDocs(docType);
 			call({action: 'profiles', subsidiary}).then((r) => alive.current && setEmployees(r.employees.filter((e) => e.profile))).catch(() => {});
+			// Đang ở tab Số dư phép: nạp lại theo công ty con mới
+			if (subChanged && attTab === 'leave') loadBalances();
 		}
 	}, [subsidiary, period, view, !!boot]);
 
+	// Kỳ mặc định trong các kỳ của công ty con đang chọn (lib/periods.js)
 	function defaultPeriod() {
 		if (!boot) return '';
-		const today = localToday();
-		const ps = boot.periods || [];
-		const cur = ps.find((p) => p.start <= today && today <= p.end) || ps.filter((p) => p.end < today).sort((a, b) => (a.end < b.end ? 1 : -1))[0] || ps[0];
-		return cur ? String(cur.id) : '';
+		return defaultPeriodId(periodsForSubsidiary(boot, subsidiary), localToday());
 	}
 
 	const loadDocs = (type) => run(t.loading, call({action: 'docs', type, subsidiary}), (r) => setDocs(r.docs));
+	// Số dư phép của công ty con đang chọn; bỏ kết quả về muộn của lần nạp trước (đổi công ty / năm liền nhau)
+	const loadBalances = (y) => {
+		balReq.current += 1;
+		const mine = balReq.current;
+		return run(t.loading, call({action: 'leaveBalances', subsidiary, year: y || leaveYear}), (x) => mine === balReq.current && setBalances((x && x.balances) || []));
+	};
 	const loadAttendance = (per) => per && run(t.loading, call({action: 'attendance', period: per}), (r) => setAttRows(r.rows));
 	const setDoc = (k) => (a) => {
 		docRef.current = Object.assign({}, docRef.current, {[k]: a.value !== undefined ? a.value : String(a.text || '')});
@@ -606,10 +656,11 @@ export default function LegacyView(props) {
 	}
 
 	items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{t.views[view] || ''}</Heading>, 'view-title'));
-	const periodItems = [{value: '', label: t.allPeriods}].concat(boot.periods.map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`})));
+	// Kỳ của công ty con đang chọn, giảm dần; nhiều nhóm lương thì nhãn có tiền tố mã nhóm (Dropdown UIF không có nhóm)
+	const periodItems = [{value: '', label: t.allPeriods}].concat(periodOptions(boot, subsidiary, {lock: 'status', prefixGroup: true}));
 	if (view === 'batches' && !batch) {
 		const filters = [
-			cell(labeled(t.period, <Dropdown size={Dropdown.Size.L} rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={period} onSelectionChanged={(a) => a.value !== undefined && a.value !== period && setPeriod(a.value)} />), 'f-period'),
+			cell(labeled(t.period, <Dropdown size={Dropdown.Size.L} rootStyle={{width: '100%'}} tooltip={periodTip(periodItems, period)} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={period} onSelectionChanged={(a) => a.value !== undefined && a.value !== period && setPeriod(a.value)} />), 'f-period'),
 			cell(labeled(t.newBatchDesc, <TextBox rootStyle={{width: '100%'}} text={description} onTextChanged={(a) => setDescription(String(a.text || ''))} />), 'f-desc'),
 		];
 		items.push(
@@ -711,11 +762,11 @@ export default function LegacyView(props) {
 		);
 	}
 
-	function quickBox(count) {
+	function quickBox(count, placeholder) {
 		return (
 			<StackPanel orientation={StackPanel.Orientation.HORIZONTAL} itemGap={StackPanel.GapSize.M} alignment={StackPanel.Alignment.CENTER}>
 				<StackPanel.Item key="q">
-					<TextBox rootStyle={{width: '360px'}} text={quick} placeholder={t.quick} onTextChanged={(a) => setQuick(String(a.text || ''))} />
+					<TextBox rootStyle={{width: '360px'}} text={quick} placeholder={placeholder || t.quick} onTextChanged={(a) => setQuick(String(a.text || ''))} />
 				</StackPanel.Item>
 				<StackPanel.Item key="c">
 					<Text size={Text.Size.S} type={Text.Type.WEAK}>
@@ -1343,13 +1394,13 @@ export default function LegacyView(props) {
 	// ------------------------------------------------------------------ chấm công và phép
 	function renderAttendance() {
 		const ta = t.att;
-		const periodItems = boot.periods.map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})${p.attStatus === 'L' ? ' 🔒' : ''}`}));
+		const periodItems = periodOptions(boot, subsidiary, {lock: 'att', prefixGroup: true});
 		const per = boot.periods.find((p) => String(p.id) === attPeriod);
 		items.push(
 			item(
 				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(340px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
 					{[
-						cell(labeled(t.period, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={attPeriod} onSelectionChanged={(a) => a.value && a.value !== attPeriod && (setAttPeriod(a.value), loadAttendance(a.value))} />), 'a-per'),
+						cell(labeled(t.period, <Dropdown rootStyle={{width: '100%'}} tooltip={periodTip(periodItems, attPeriod)} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={attPeriod} onSelectionChanged={(a) => a.value && a.value !== attPeriod && (setAttPeriod(a.value), loadAttendance(a.value))} />), 'a-per'),
 					]}
 				</GridPanel>,
 				'a-filters'
@@ -1378,8 +1429,8 @@ export default function LegacyView(props) {
 			const e = employees.find((x) => x.employee === String(id));
 			return e ? `${e.code} ${e.name}` : id;
 		};
-		const loadBalances = () => run(t.loading, call({action: 'leaveBalances', subsidiary, year}), (x) => setBalances(x.balances));
 		const pickAttTab = (k) => {
+			if (k !== attTab) setQuick('');
 			setAttTab(k);
 			if (k === 'leave' && !balances.length) loadBalances();
 		};
@@ -1537,30 +1588,60 @@ export default function LegacyView(props) {
 
 		}
 
-		// Phép năm
+		// Phép năm: năm nay hoặc năm sau; cấp phép năm Y kèm chuyển phép còn lại của năm Y-1, hết hạn phép chuyển (giao dịch X)
 		function renderLeave() {
+			const y = leaveYear;
+			const yearItems = leaveYearOptions(localToday());
+			if (!yearItems.some((o) => o.value === y)) yearItems.unshift({value: y, label: y});
+			const okYear = /^\d{4}$/.test(y);
 			items.push(item(<Heading type={Heading.Type.SMALL_HEADING}>{ta.balances}</Heading>, 'a-bal-title'));
 			items.push(
 				item(
+					<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(200px, 260px))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
+						{[cell(labeled(ta.leaveYear, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(yearItems)} valueMember="value" displayMember="label" selectedValue={y} onSelectionChanged={(a) => a.value && a.value !== y && (setLeaveYear(a.value), setBalances([]), loadBalances(a.value))} />), 'a-bal-year')]}
+					</GridPanel>,
+					'a-bal-filters'
+				)
+			);
+			items.push(item(<Text size={Text.Size.S} type={Text.Type.WEAK} rootStyle={{whiteSpace: 'normal'}}>{ta.leaveHint(y)}</Text>, 'a-bal-hint'));
+			const today = localToday();
+			items.push(
+				item(
 					actionRow([
-						<Button label={`${ta.accrue} ${year}`} enabled={!busy && boot.user.canAttendance && /^\d{4}$/.test(year)} action={() => setConfirm({text: ta.confirmAccrue(year), go: () => run(t.working, post({action: 'accrueLeave', year: Number(year), subsidiary, runDate: localToday()}), (r) => {
+						<Button label={ta.accrueYear(y)} enabled={!busy && boot.user.canAttendance && okYear && !!subsidiary} action={() => setConfirm({text: ta.confirmAccrue(y), go: () => run(t.working, post({action: 'accrueLeave', year: Number(y), subsidiary, runDate: today}), (r) => {
 							setNotice(ta.accrued(r.rows || []));
-							return loadBalances();
+							return loadBalances(y);
 						})})} />,
-						<Button label={`${t.actions.refresh} ${ta.balances} ${year}`} enabled={!busy} action={loadBalances} />,
+						<Button label={ta.expireYear(y)} enabled={!busy && boot.user.canAttendance && okYear && !!subsidiary} action={() => setConfirm({text: ta.confirmExpire(y, fmtDate(today)), go: () => run(t.working, post({action: 'expireLeave', year: Number(y), subsidiary, runDate: today}), (r) => {
+							setNotice(ta.expired(r.rows || []));
+							return loadBalances(y);
+						})})} />,
+						<Button label={ta.reloadYear(y)} enabled={!busy && !!subsidiary} action={() => loadBalances(y)} />,
 					]),
 					'a-bal-actions'
 				)
 			);
+			// Dòng đã ghép mã, tên nhân viên và loại nghỉ để ô lọc nhanh khớp được
+			const filtered = quickFilter(balanceRows(balances, employees, boot.leaveTypes), quick);
+			items.push(item(quickBox(filtered.count, ta.leaveQuick), 'a-bal-quick'));
+			// Ô Chuyển: tooltip "chuyển từ năm trước, hạn đến ..." khi có phép chuyển
+			const carriedCol = Object.assign(numCol('carried', ta.cols.carried, 80, (r) => num(r.carried)), {
+				content: safe((r) => {
+					const tip = carryTip(r, ta);
+					const p = {rootStyle: {paddingRight: '28px'}};
+					if (tip) p.tooltip = tip;
+					return <Text {...p}>{num(r.carried)}</Text>;
+				}),
+			});
 			items.push(
 				item(
 					<DataGrid
-						dataSource={new ArrayDataSource(balances)}
+						dataSource={new ArrayDataSource(filtered.rows)}
 						columns={fitCols([
-							textCol('employee', t.employee, 220, (r) => empName(r.employee)),
+							textCol('employee', t.employee, 220, (r) => (r.code ? `${r.code} ${r.name}` : r.employee)),
 							textCol('leaveTypeCode', ta.leaveType, 80, (r) => r.leaveTypeCode || ''),
 							numCol('entitled', ta.cols.entitled, 80, (r) => num(r.entitled)),
-							numCol('carried', ta.cols.carried, 80, (r) => num(r.carried)),
+							carriedCol,
 							numCol('adjusted', ta.cols.adjusted, 80, (r) => num(r.adjusted)),
 							numCol('used', ta.cols.used, 80, (r) => num(r.used)),
 							numCol('pending', ta.cols.pending, 80, (r) => num(r.pending)),
@@ -1568,7 +1649,7 @@ export default function LegacyView(props) {
 						])}
 						columnStretch={true}
 						placeholder={t.empty}
-						rootStyle={{width: '100%', flexShrink: 0, height: autoH(balances.length, 420)}}
+						rootStyle={{width: '100%', flexShrink: 0, height: autoH(filtered.rows.length, 420)}}
 					/>,
 					'a-bal'
 				)
@@ -1581,7 +1662,7 @@ export default function LegacyView(props) {
 		const tr = t.rep;
 		const f = repForm;
 		const typeItems = Object.keys(tr.types).map((k) => ({value: k, label: tr.types[k]}));
-		const months = [...new Set(boot.periods.map((p) => p.taxMonth).filter(Boolean))].sort().reverse().map((m) => ({value: m, label: `${m.slice(4, 6)}/${m.slice(0, 4)}`}));
+		const months = [...new Set(periodsForSubsidiary(boot, subsidiary).map((p) => p.taxMonth).filter(Boolean))].sort().reverse().map((m) => ({value: m, label: `${m.slice(4, 6)}/${m.slice(0, 4)}`}));
 		const yn = [{value: 'F', label: tr.yesNo.F}, {value: 'T', label: tr.yesNo.T}];
 		// Tháng mặc định: tháng hiện tại, chưa có kỳ thì tháng gần nhất đã qua (danh sách sắp xếp giảm dần)
 		const curMonth = localToday().slice(0, 7).replace('-', '');
@@ -1660,12 +1741,12 @@ export default function LegacyView(props) {
 			const e = employees.find((x) => x.employee === String(id));
 			return e ? `${e.code} ${e.name}` : id;
 		};
-		const periodItems = [{value: '', label: t.allPeriods}].concat(boot.periods.map((p) => ({value: String(p.id), label: `${p.code} (${fmtDate(p.start)} - ${fmtDate(p.end)})`})));
+		const periodItems = [{value: '', label: t.allPeriods}].concat(periodOptions(boot, subsidiary, {lock: 'status', prefixGroup: true}));
 		const reload = (per) => run(t.loading, call({action: 'outputs', subsidiary, period: per === undefined ? outPeriod : per}), (r) => setOutputs(r.outputs));
 		items.push(
 			item(
 				<GridPanel rootStyle={{flexShrink: 0}} columns="repeat(auto-fill, minmax(340px, 1fr))" columnGap={GridPanel.GapSize.M} rowGap={GridPanel.GapSize.S}>
-					{[cell(labeled(t.period, <Dropdown rootStyle={{width: '100%'}} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={outPeriod} onSelectionChanged={(a) => a.value !== undefined && a.value !== outPeriod && (setOutPeriod(a.value), reload(a.value))} />), 'o-per')]}
+					{[cell(labeled(t.period, <Dropdown rootStyle={{width: '100%'}} tooltip={periodTip(periodItems, outPeriod)} dataSource={new ArrayDataSource(periodItems)} valueMember="value" displayMember="label" selectedValue={outPeriod} onSelectionChanged={(a) => a.value !== undefined && a.value !== outPeriod && (setOutPeriod(a.value), reload(a.value))} />), 'o-per')]}
 				</GridPanel>,
 				'o-filters'
 			)

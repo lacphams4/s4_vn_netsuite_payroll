@@ -13,6 +13,7 @@ import {useState, useRef, useEffect} from '@uif-js/core';
 import {call, printUrl, download} from '../lib/api.js';
 import {money, num, pct, localToday, toNumber, quickFilter} from '../lib/format.js';
 import {pick, localized} from '../lib/i18n.js';
+import {periodsForSubsidiary} from '../lib/periods.js';
 import {Page, PageHeader, Card, Button, StatCards, Tabs, Chips, Badge, Select, AutoSelect, MoneyInput, SearchBox, Empty} from '../ui/kit.js';
 
 const TEXT = {
@@ -614,7 +615,8 @@ export default function ReportsHubView({app}) {
 
 	const monthValues = {};
 	catMonths.forEach((m) => (monthValues[m.taxMonth] = true));
-	(Array.isArray(boot.periods) ? boot.periods : []).forEach((p) => p && /^\d{6}$/.test(p.taxMonth || '') && (monthValues[p.taxMonth] = true));
+	// Tháng thuế lấy từ kỳ của công ty con đang chọn (không lẫn kỳ của nhóm lương công ty khác)
+	periodsForSubsidiary(boot, subsidiary).forEach((p) => p && /^\d{6}$/.test(p.taxMonth || '') && (monthValues[p.taxMonth] = true));
 	monthValues[month] = true;
 	const monthOptions = Object.keys(monthValues).sort().reverse().map((m) => ({value: m, label: monthLabel(m)}));
 	const yearValues = {};

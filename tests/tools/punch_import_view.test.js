@@ -57,6 +57,10 @@ function loadModules() {
 			if (name === "../lib/i18n.js") return load("lib/i18n.js");
 			if (name === "../ui/kit.js") return load("ui/kit.js");
 			if (name === "./punchImport.js") return load("views/punchImport.js");
+			// Ô chọn kỳ theo công ty con (attendance.js) và import tương đối bên trong lib/
+			if (name === "../lib/periods.js") return load("lib/periods.js");
+			if (name === "./i18n.js") return load("lib/i18n.js");
+			if (name === "./format.js") return load("lib/format.js");
 			throw new Error("unexpected import " + name);
 		};
 		vm.runInContext(`(function (module, exports, require) {${transpile(file)}\n})`, context)(module, module.exports, req);

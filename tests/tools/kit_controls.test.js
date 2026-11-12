@@ -196,3 +196,30 @@ describe("kit SearchSelect", () => {
 		expect(render(kit.AutoSelect({ value: "1", options: long })).type).toBe("div");
 	});
 });
+
+describe("kit Select có nhóm và tooltip từng mục (ô chọn kỳ, lib/periods.js)", () => {
+	const grouped = [
+		{ value: "21", label: "Tháng 10/2027", title: "Mã kỳ SAOMAI-202710", group: "SAOMAI" },
+		{ value: "20", label: "Tháng 9/2027", title: "Mã kỳ SAOMAI-202709", group: "SAOMAI" },
+		{ value: "30", label: "Tháng 10/2027", title: "Mã kỳ XN-202710", group: "SAOMAI-XN" },
+	];
+
+	test("mục cùng nhóm gom vào optgroup, option có title; không có group thì như cũ", () => {
+		const kit = loadKit(null);
+		const sel = render(kit.Select({ value: "20", options: grouped }));
+		const kids = [].concat(sel.props.children);
+		expect(kids.map((k) => k.type)).toEqual(["optgroup", "optgroup"]);
+		expect(kids.map((k) => k.props.label)).toEqual(["SAOMAI", "SAOMAI-XN"]);
+		const first = [].concat(kids[0].props.children);
+		expect(first.map((o) => o.props.value)).toEqual(["21", "20"]);
+		expect(first[1].props).toMatchObject({ title: "Mã kỳ SAOMAI-202709", selected: "selected" });
+		const plain = render(kit.Select({ value: "1", options: [{ value: "1", label: "A" }] }));
+		expect([].concat(plain.props.children).map((k) => k.type)).toEqual(["option"]);
+	});
+
+	test("ô tìm của SearchSelect khớp cả mã kỳ (title) và tên nhóm", () => {
+		const kit = loadKit(null);
+		expect(kit.filterOptions(grouped, "xn-202710").items.map((o) => o.value)).toEqual(["30"]);
+		expect(kit.filterOptions(grouped, "saomai thang 9").items.map((o) => o.value)).toEqual(["20"]);
+	});
+});

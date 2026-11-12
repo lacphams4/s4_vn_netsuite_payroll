@@ -348,7 +348,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "../api/Store", "../api/Setti
 					if (body.background) return Attendance.queue(null, "accrue", { year: Number(body.year), policyCode: body.policy || null, runDate: body.runDate, subsidiary: body.subsidiary || null });
 					return Attendance.accrue(Number(body.year), body.policy || null, body.runDate, body.subsidiary || null);
 				case "expireLeave":
-					return Attendance.expire(Number(body.year), body.runDate);
+					// Chỉ số dư của nhân viên thuộc công ty con đang chọn (không truyền thì mọi công ty, như trước)
+					return Attendance.expire(Number(body.year), body.runDate, body.subsidiary || null);
 				case "adjustLeave":
 					return Attendance.adjust(body.employee, body.leaveType, Number(body.year), Number(body.qty), body.reason || "");
 				case "saveProfile":

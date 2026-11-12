@@ -803,14 +803,34 @@ define([
 		return accrueFor(year, policyCode, runDate, profiles);
 	}
 
-	/** Hết hạn phép chuyển (VP501000 tác vụ X). */
-	function expire(year, runDate) {
+	/** Id nhân viên có hồ sơ lương thuộc công ty con (kể cả hồ sơ ngừng); null = không lọc. Một truy vấn. */
+	function profileEmployees(subsidiary) {
+		if (blank(subsidiary)) return null;
+		return new Set(Store.find("employee", { includeInactive: true }).filter((p) => p.subsidiary === String(subsidiary)).map((p) => p.employee));
+	}
+
+	/**
+	 * Hết hạn phép chuyển (VP501000 tác vụ X): số dư năm `year` có hạn phép chuyển <= runDate.
+	 * subsidiary: chỉ nhân viên có hồ sơ lương của công ty con này (null = mọi công ty, như trước). Số truy vấn không đổi theo số
+	 * dòng: một lượt đọc số dư (+ một lượt đọc hồ sơ khi lọc công ty); ghi trên bản ghi đã đọc, không tra lại theo khóa.
+	 */
+	function expire(year, runDate, subsidiary) {
 		const run = runDate ? Dates.iso(runDate) : Clock.today();
+		const emps = profileEmployees(subsidiary);
 		const out = [];
 		for (const rec of Store.find("leave_balance", { where: "{year} = ?", params: [Number(year)] })) {
+			if (emps && !emps.has(rec.employee)) continue;
 			const plan = Ledger.expiryPlan(toBalance(rec), run);
-			if (plan.transaction) post(rec.employee, rec.leave_type, rec.year, run, plan.transaction, `EXPIRY-${year}`, "Carry-over expiry / Hết hạn phép chuyển");
-			if (plan.clearExpiry) Store.submit("leave_balance", rec.id, { carry_expiry: null });
+			if (plan.transaction) {
+				// Một lần ghi số dư: trừ phần chuyển chưa dùng và xóa ngày hết hạn cùng lúc
+				const b = Ledger.apply(toBalance(rec), plan.transaction);
+				if (plan.clearExpiry) b.carryOverExpiryDate = null;
+				saveBalance(rec, b);
+				writeTran(rec.employee, rec.leave_type, rec.year, run, plan.transaction, `EXPIRY-${year}`, "Carry-over expiry / Hết hạn phép chuyển");
+			} else if (plan.clearExpiry) {
+				Store.submit("leave_balance", rec.id, { carry_expiry: null });
+				rec.carry_expiry = null;
+			}
 			if (plan.transaction || plan.clearExpiry) out.push({ employee: rec.employee, leaveType: rec.leave_type, expired: plan.transaction ? -plan.transaction.qty : 0 });
 		}
 		return { rows: out };
@@ -823,13 +843,18 @@ define([
 		return { balance: Object.assign(toBalance(rec), { available: Ledger.available(toBalance(rec)) }) };
 	}
 
-	/** Số dư phép theo nhân viên của công ty con và năm. */
+	/**
+	 * Số dư phép theo năm, chỉ nhân viên có hồ sơ lương thuộc công ty con (custrecord_s4vp_em_subsidiary); không truyền công ty
+	 * thì nhân viên có hồ sơ của mọi công ty (như trước). Ba truy vấn cố định: hồ sơ, loại nghỉ, số dư (không gọi reference() - không cần kỳ, ngày lễ, quy tắc).
+	 * Dòng có carry_expiry (YYYY-MM-DD) khi phép chuyển còn hạn để màn hình hiện "chuyển từ năm trước, hạn đến ...".
+	 */
 	function balances(subsidiary, year) {
-		const emps = new Set(Store.find("employee", { includeInactive: true }).filter((p) => !subsidiary || p.subsidiary === String(subsidiary)).map((p) => p.employee));
-		const lt = reference().leaveTypes;
+		const emps = profileEmployees(subsidiary) || new Set(Store.find("employee", { includeInactive: true }).map((p) => p.employee));
+		const lt = {};
+		for (const l of Store.find("leave_type", { includeInactive: true })) lt[l.id] = norm(l.name);
 		return Store.find("leave_balance", { where: "{year} = ?", params: [Number(year)] })
 			.filter((b) => emps.has(b.employee))
-			.map((b) => Object.assign({}, b, { leaveTypeCode: (lt[b.leave_type] || {}).code || "", available: Ledger.available(toBalance(b)) }));
+			.map((b) => Object.assign({}, b, { leaveTypeCode: lt[b.leave_type] || "", available: Ledger.available(toBalance(b)) }));
 	}
 
 	/** Tổng số dư khả dụng các loại nghỉ dùng số dư và có lương (trả phép khi nghỉ việc, 2.10.2). */
