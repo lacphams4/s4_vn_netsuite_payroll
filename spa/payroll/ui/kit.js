@@ -630,6 +630,32 @@ function SearchSelectImpl(p) {
 					if (ev.key === 'Escape') ev.stopPropagation();
 				});
 			}
+			// Khung danh sách đặt theo màn hình (position: fixed) để không bị khung cuộn của hộp thoại / thẻ che mất; thiếu chỗ phía
+			// dưới thì mở lên trên
+			const pop = document.getElementById(`${base}-p`);
+			const anchor = document.getElementById(`${base}-b`);
+			if (pop && anchor && anchor.getBoundingClientRect) {
+				const r = anchor.getBoundingClientRect();
+				const vh = window.innerHeight || 0;
+				const below = vh - r.bottom;
+				const up = below < 340 && r.top > below;
+				const room = Math.max(160, (up ? r.top : below) - 12);
+				pop.style.position = 'fixed';
+				pop.style.left = `${Math.round(r.left)}px`;
+				pop.style.right = 'auto';
+				pop.style.width = `${Math.round(Math.max(r.width, 260))}px`;
+				pop.style.marginTop = '0';
+				pop.style.maxHeight = `${Math.round(room)}px`;
+				if (up) {
+					pop.style.top = 'auto';
+					pop.style.bottom = `${Math.round(vh - r.top + 4)}px`;
+				} else {
+					pop.style.bottom = 'auto';
+					pop.style.top = `${Math.round(r.bottom + 4)}px`;
+				}
+				const listEl = document.getElementById(`${base}-l`);
+				if (listEl) listEl.style.maxHeight = `${Math.round(Math.max(90, Math.min(260, room - 70)))}px`;
+			}
 			const opt = document.getElementById(`${base}-o${active}`);
 			if (opt && opt.scrollIntoView) opt.scrollIntoView({block: 'nearest'});
 		} catch (e) {
@@ -657,7 +683,7 @@ function SearchSelectImpl(p) {
 				<span class="s4vp-ss-caret" aria-hidden="true">{'▾'}</span>
 			</button>
 			{open ? (
-				<div class="s4vp-ss-pop">
+				<div id={`${base}-p`} class="s4vp-ss-pop">
 					<input {...q} />
 					<div id={`${base}-l`} class="s4vp-ss-list" role="listbox">
 						{shown.items.reduce((out, o, i) => {
