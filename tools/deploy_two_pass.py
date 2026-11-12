@@ -48,17 +48,35 @@ def main():
             s = re.sub(r"\s*<permissions>.*?</permissions>", "", s, flags=re.S)
             s = s.replace("<accesstype>USEPERMISSIONLIST</accesstype>", "<accesstype>CUSTRECORDENTRYPERM</accesstype>")
             open(full, "w", encoding="utf8", newline="").write(s)
+        new_roles = []
         for p in roles:
             head = git("show", f"{base}:{p.replace(os.sep, '/')}")
             if head:
                 open(os.path.join(ROOT, p), "w", encoding="utf8", newline="").write(head)
             else:
-                # Role mới (chưa có ở mốc): bước 1 chỉ giữ quyền chuẩn, bỏ quyền custom record (record đã ghi role vào danh sách
-                # quyền của mình, hai phía cùng tham chiếu thì vòng); bước 2 trả lại đủ quyền
+                # Role mới (chưa có ở mốc): bước 1 giữ nguyên role (role -> record một chiều), còn các record bỏ tạm dòng quyền
+                # trỏ tới role mới (record -> role mà role chưa có thì lỗi); bước 2 trả lại đủ
+                new_roles.append(os.path.splitext(os.path.basename(p))[0])
+                # và role bỏ quyền custom record (SDF đòi hai phía khớp nhau); bước 2 trả lại cả hai phía
                 full = os.path.join(ROOT, p)
                 s = open(full, encoding="utf8").read()
                 s = re.sub(r"\s*<permission>\s*<permkey>\[customrecord_[^\]]+\]</permkey>\s*<permlevel>\w+</permlevel>\s*</permission>", "", s)
                 open(full, "w", encoding="utf8", newline="").write(s)
+        if new_roles:
+            for f in os.listdir(OBJ):
+                if not f.startswith("customrecord_"):
+                    continue
+                p = os.path.join("src", "Objects", f)
+                full = os.path.join(ROOT, p)
+                s = open(full, encoding="utf8").read()
+                t = s
+                for r in new_roles:
+                    t = re.sub(r"\s*<permission>(?:(?!</permission>).)*?\[" + re.escape(r) + r"\](?:(?!</permission>).)*?</permission>", "", t, flags=re.S)
+                if t != s:
+                    if p not in touched:
+                        shutil.copy2(full, os.path.join(backup, f))
+                        touched.append(p)
+                    open(full, "w", encoding="utf8", newline="").write(t)
         print("Pass 1:")
         ok = deploy()
     finally:

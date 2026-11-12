@@ -26,7 +26,7 @@ import LegacyView from './views/legacy.js';
 
 const TEXT = {
 	vi: {
-		title: 'S4 Advanced Payroll',
+		title: 'S4 Tính Lương Nâng Cao',
 		nav: 'Phân hệ',
 		tabs: {home: 'Trang chủ', attendance: 'Chấm công', payroll: 'Chạy lương', profiles: 'Nhân sự', advances: 'Tạm ứng', commission: 'Hoa hồng', analytics: 'Phân tích chi phí', reports: 'Báo cáo - tờ khai', setup: 'Thiết lập'},
 		more: 'Khác',
