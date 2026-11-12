@@ -322,5 +322,13 @@
       <permkey>[customrecord_s4vp_shift_assign]</permkey>
       <permlevel>VIEW</permlevel>
     </permission>
+    <permission>
+      <permkey>ADMI_MCP_SERVER</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
+      <permkey>ADMI_LOGIN_OAUTH2</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
   </permissions>
 </role>

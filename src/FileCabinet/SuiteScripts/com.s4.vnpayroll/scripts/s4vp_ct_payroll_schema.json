@@ -1,0 +1,812 @@
+{
+	"tools": [
+		{
+			"name": "s4vp_context",
+			"description": "START HERE. Returns the current user and role, the subsidiaries (legal entities) that use S4 Advanced Payroll, pay groups, pay periods and leave types. Other S4 Payroll tools need the subsidiary id and period id from this result. Amounts in all S4 Payroll tools are in VND.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Only return pay groups and periods of this subsidiary (NetSuite internal id, digits only)"
+					},
+					"year": {
+						"type": "integer",
+						"description": "Only return periods starting in this year"
+					}
+				},
+				"required": []
+			},
+			"annotations": {
+				"title": "S4 Payroll: context",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_home",
+			"description": "What needs attention today for one subsidiary: the running pay period, payroll run counts by status, attendance progress, to-do items and upcoming deadlines. Use it to answer 'where are we in this month's payroll'.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					}
+				},
+				"required": [
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: today's work",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_payroll_runs",
+			"description": "Lists payroll runs (bảng lương) of a subsidiary, optionally of one pay period, with status, totals and the journal number once posted. Payroll run status codes: H on hold (draft), B queued for calculation, C calculated, P pending approval, A approved, J rejected, R posted to the general ledger, V reversed.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"period": {
+						"type": "string",
+						"description": "Pay period id (NetSuite internal id, digits only)"
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum rows to return (default 30, max 200)"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "Rows to skip, for paging (default 0)"
+					}
+				},
+				"required": [
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: list payroll runs",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_payroll_run",
+			"description": "One payroll run: steps and status, totals (gross, employee and employer insurance, personal income tax, net pay), comparison with the previous period, open checks, and employee lines (gross, insurance, tax, net per employee). Lines are paged; use q to find an employee. Payroll run status codes: H on hold (draft), B queued for calculation, C calculated, P pending approval, A approved, J rejected, R posted to the general ledger, V reversed.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Payroll run id (NetSuite internal id, digits only)"
+					},
+					"q": {
+						"type": "string",
+						"description": "Filter rows by employee code or name (accent-insensitive, contains)"
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum rows to return (default 30, max 200)"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "Rows to skip, for paging (default 0)"
+					}
+				},
+				"required": [
+					"id"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: payroll run summary",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_payroll_employee",
+			"description": "Full pay detail of one employee line in a payroll run: earnings, deductions, insurance, personal income tax steps, attendance, hours, cost allocation and advance offsets. Get the line id from s4vp_payroll_run.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Payroll run id (NetSuite internal id, digits only)"
+					},
+					"line": {
+						"type": "string",
+						"description": "Employee line id from s4vp_payroll_run (NetSuite internal id, digits only)"
+					},
+					"prev": {
+						"type": "string",
+						"description": "Previous payroll run id (prev.id in s4vp_payroll_run) to compare each amount (NetSuite internal id, digits only)"
+					}
+				},
+				"required": [
+					"id",
+					"line"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: one employee's pay detail",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_payroll_checks",
+			"description": "Warnings and errors found by the payroll checks for a run (missing data, unusual variance, negative net pay...), with counts by severity and whether anything blocks approval.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"batch": {
+						"type": "string",
+						"description": "Payroll run id (NetSuite internal id, digits only)"
+					},
+					"severity": {
+						"type": "string",
+						"description": "Only this severity",
+						"enum": [
+							"error",
+							"warn",
+							"info"
+						]
+					},
+					"status": {
+						"type": "string",
+						"description": "Only this handling status",
+						"enum": [
+							"open",
+							"accepted",
+							"resolved"
+						]
+					},
+					"q": {
+						"type": "string",
+						"description": "Search text"
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum rows to return (default 30, max 200)"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "Rows to skip, for paging (default 0)"
+					}
+				},
+				"required": [
+					"batch"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: payroll checks",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_payroll_journal",
+			"description": "The accounting entry of a payroll run (debit and credit lines by account, department, class, location, project). For a run not yet posted this is a preview.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Payroll run id (NetSuite internal id, digits only)"
+					}
+				},
+				"required": [
+					"id"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: journal preview",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_attendance_month",
+			"description": "Attendance sheet of a pay period: lock state, steps, counts of open attendance documents, statistics, and one row per employee with the day-by-day codes. Rows are paged; use q to find an employee. Without period the default period is used.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"period": {
+						"type": "string",
+						"description": "Pay period id (NetSuite internal id, digits only)"
+					},
+					"q": {
+						"type": "string",
+						"description": "Filter rows by employee code or name (accent-insensitive, contains)"
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum rows to return (default 30, max 200)"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "Rows to skip, for paging (default 0)"
+					}
+				},
+				"required": [
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: attendance of a period",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_attendance_employee",
+			"description": "Clock punches, rostered shifts and NetSuite time entries of one employee in a pay period.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"period": {
+						"type": "string",
+						"description": "Pay period id (NetSuite internal id, digits only)"
+					},
+					"employee": {
+						"type": "string",
+						"description": "Employee id (NetSuite internal id, digits only)"
+					}
+				},
+				"required": [
+					"period",
+					"employee"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: one employee's attendance detail",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_attendance_docs",
+			"description": "Lists attendance documents of one type: leave requests, overtime requests, business trips or attendance exceptions. Status codes: H on hold (draft), P pending approval, A approved, R rejected, C cancelled.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "Document type",
+						"enum": [
+							"leave",
+							"ot",
+							"trip",
+							"exception"
+						]
+					},
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"status": {
+						"type": "string",
+						"description": "Only this status",
+						"enum": [
+							"H",
+							"P",
+							"A",
+							"R",
+							"C"
+						]
+					},
+					"employee": {
+						"type": "string",
+						"description": "Only this employee (NetSuite internal id, digits only)"
+					},
+					"from": {
+						"type": "string",
+						"description": "Documents overlapping from this date (YYYY-MM-DD)"
+					},
+					"to": {
+						"type": "string",
+						"description": "Documents overlapping up to this date (YYYY-MM-DD)"
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum rows to return (default 30, max 200)"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "Rows to skip, for paging (default 0)"
+					}
+				},
+				"required": [
+					"type",
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: attendance documents",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_leave_balances",
+			"description": "Leave balances of a subsidiary for a year: entitled, carried over, adjusted, used, pending and remaining days per employee and leave type.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"year": {
+						"type": "integer",
+						"description": "Leave year"
+					},
+					"employee": {
+						"type": "string",
+						"description": "Only this employee (id from s4vp_employees) (NetSuite internal id, digits only)"
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum rows to return (default 30, max 200)"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "Rows to skip, for paging (default 0)"
+					}
+				},
+				"required": [
+					"subsidiary",
+					"year"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: leave balances",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_employees",
+			"description": "Searches employees of a subsidiary (code, name) with department, job title, contract state, probation and missing-data flags. Base salary is included only for payroll roles. Tax codes, ID numbers and bank accounts are never returned.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"q": {
+						"type": "string",
+						"description": "Search by code or name"
+					},
+					"filter": {
+						"type": "string",
+						"description": "Subset",
+						"enum": [
+							"all",
+							"working",
+							"probation",
+							"expiring",
+							"missing",
+							"left"
+						]
+					},
+					"page": {
+						"type": "integer",
+						"description": "Page number, from 1"
+					},
+					"pageSize": {
+						"type": "integer",
+						"description": "Rows per page (max 50)"
+					}
+				},
+				"required": [
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: find employees",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_employee",
+			"description": "Everything the package knows about one employee: pay profile, contracts, decisions, dependents, leave, recent pay. Identity numbers are returned only as present / missing flags.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Employee id (NetSuite internal id, digits only)"
+					}
+				},
+				"required": [
+					"id"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: employee card",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_labor_cost",
+			"description": "Labor cost of posted payroll for a month, compared with another month, broken down by a dimension, with a 12-month trend. Accounting roles only.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"month": {
+						"type": "string",
+						"description": "Month to analyse; default is the latest posted month (YYYY-MM)"
+					},
+					"compare": {
+						"type": "string",
+						"description": "Comparison: prev (previous month, default), yoy (same month last year) or a month YYYY-MM"
+					},
+					"dim": {
+						"type": "string",
+						"description": "Breakdown dimension (default department)",
+						"enum": [
+							"department",
+							"project",
+							"class",
+							"location",
+							"account",
+							"component",
+							"employmentType"
+						]
+					}
+				},
+				"required": [
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: labor cost analysis",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_commission",
+			"description": "Sales commission calculation of a month for a subsidiary: the run and its status, result per salesperson, summary figures and the months already calculated.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"month": {
+						"type": "string",
+						"description": "Month; default is the current one (YYYY-MM)"
+					}
+				},
+				"required": [
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: sales commission",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_roster",
+			"description": "Effective shift roster for a date range (at most 62 days): shifts, rotation patterns, crews, shift schemes and one row per employee. Rows are paged; use q to find an employee.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"from": {
+						"type": "string",
+						"description": "First day (YYYY-MM-DD)"
+					},
+					"to": {
+						"type": "string",
+						"description": "Last day (YYYY-MM-DD)"
+					},
+					"team": {
+						"type": "string",
+						"description": "Only this crew / team (NetSuite internal id, digits only)"
+					},
+					"q": {
+						"type": "string",
+						"description": "Filter rows by employee code or name (accent-insensitive, contains)"
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum rows to return (default 30, max 200)"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "Rows to skip, for paging (default 0)"
+					}
+				},
+				"required": [
+					"subsidiary",
+					"from",
+					"to"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: shift roster",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_setup_status",
+			"description": "Health of the payroll setup for a subsidiary: which setup areas are complete, what is missing or needs attention, and the first-time setup sequence.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					}
+				},
+				"required": [
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: setup status",
+				"readOnlyHint": true,
+				"idempotentHint": true,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_attendance_doc_save",
+			"description": "Creates a draft (on hold) attendance document for an employee: leave request, overtime request, business trip or attendance exception. It is not submitted; use s4vp_attendance_doc_action to submit. Fields by type - leave: leave_type (id from s4vp_context), from, to, from_half, to_half, reason; ot: work_date, hours, is_night, reason; trip: from, to, destination, purpose; exception: work_date, exception_type, minutes, adjust_days, reason. WRITE: requires confirm = true after the user agrees.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "Document type",
+						"enum": [
+							"leave",
+							"ot",
+							"trip",
+							"exception"
+						]
+					},
+					"employee": {
+						"type": "string",
+						"description": "Employee id (NetSuite internal id, digits only)"
+					},
+					"subsidiary": {
+						"type": "string",
+						"description": "Subsidiary (legal entity) id; get it from s4vp_context (NetSuite internal id, digits only)"
+					},
+					"leave_type": {
+						"type": "string",
+						"description": "Leave type id (leave) (NetSuite internal id, digits only)"
+					},
+					"from": {
+						"type": "string",
+						"description": "First day (leave, trip) (YYYY-MM-DD)"
+					},
+					"to": {
+						"type": "string",
+						"description": "Last day (leave, trip) (YYYY-MM-DD)"
+					},
+					"from_half": {
+						"type": "boolean",
+						"description": "Leave starts at midday (leave)"
+					},
+					"to_half": {
+						"type": "boolean",
+						"description": "Leave ends at midday (leave)"
+					},
+					"work_date": {
+						"type": "string",
+						"description": "Work date (ot, exception) (YYYY-MM-DD)"
+					},
+					"hours": {
+						"type": "number",
+						"description": "Overtime hours (ot)"
+					},
+					"is_night": {
+						"type": "boolean",
+						"description": "Night overtime (ot)"
+					},
+					"exception_type": {
+						"type": "string",
+						"description": "Exception type code (exception)"
+					},
+					"minutes": {
+						"type": "integer",
+						"description": "Minutes late or early (exception)"
+					},
+					"adjust_days": {
+						"type": "number",
+						"description": "Workday adjustment (exception)"
+					},
+					"destination": {
+						"type": "string",
+						"description": "Destination (trip)"
+					},
+					"purpose": {
+						"type": "string",
+						"description": "Purpose (trip)"
+					},
+					"reason": {
+						"type": "string",
+						"description": "Reason"
+					},
+					"confirm": {
+						"type": "boolean",
+						"description": "Must be true to perform the action. Ask the user to confirm first; without it the tool only describes what it would do."
+					}
+				},
+				"required": [
+					"type",
+					"employee",
+					"subsidiary"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: create attendance document",
+				"readOnlyHint": false,
+				"idempotentHint": false,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_attendance_doc_action",
+			"description": "Moves an attendance document through its workflow: submit (draft to pending approval), approve, reject (reason required) or cancel. The approver may not be the employee on the document; locked attendance periods refuse changes. WRITE: requires confirm = true after the user agrees.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "Document type",
+						"enum": [
+							"leave",
+							"ot",
+							"trip",
+							"exception"
+						]
+					},
+					"id": {
+						"type": "string",
+						"description": "Document id (NetSuite internal id, digits only)"
+					},
+					"op": {
+						"type": "string",
+						"description": "Action",
+						"enum": [
+							"submit",
+							"approve",
+							"reject",
+							"cancel"
+						]
+					},
+					"rejectReason": {
+						"type": "string",
+						"description": "Reason, required for reject"
+					},
+					"confirm": {
+						"type": "boolean",
+						"description": "Must be true to perform the action. Ask the user to confirm first; without it the tool only describes what it would do."
+					}
+				},
+				"required": [
+					"type",
+					"id",
+					"op"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: act on attendance document",
+				"readOnlyHint": false,
+				"idempotentHint": false,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		},
+		{
+			"name": "s4vp_payroll_action",
+			"description": "Runs one step of a payroll run: calculate (always queued in the background; poll s4vp_payroll_run for the result), submit (calculated to pending approval), approve (current approval level), reject (note required), hold, removeHold, reopen. Segregation of duties and all status checks of the package apply. Posting to the general ledger, reversing and agency bills are NOT available here; do them on the Payroll Run screen. WRITE: requires confirm = true after the user agrees.",
+			"inputSchema": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"description": "Payroll run id (NetSuite internal id, digits only)"
+					},
+					"op": {
+						"type": "string",
+						"description": "Action",
+						"enum": [
+							"calculate",
+							"submit",
+							"approve",
+							"reject",
+							"hold",
+							"removeHold",
+							"reopen"
+						]
+					},
+					"note": {
+						"type": "string",
+						"description": "Note (required for reject)"
+					},
+					"confirm": {
+						"type": "boolean",
+						"description": "Must be true to perform the action. Ask the user to confirm first; without it the tool only describes what it would do."
+					}
+				},
+				"required": [
+					"id",
+					"op"
+				]
+			},
+			"annotations": {
+				"title": "S4 Payroll: act on payroll run",
+				"readOnlyHint": false,
+				"idempotentHint": false,
+				"destructiveHint": false,
+				"openWorldHint": false
+			}
+		}
+	]
+}

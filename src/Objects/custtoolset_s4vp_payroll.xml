@@ -1,0 +1,6 @@
+<toolset scriptid="custtoolset_s4vp_payroll">
+  <name>S4 Advanced Payroll</name>
+  <scriptfile>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_ct_payroll.js]</scriptfile>
+  <rpcschema>[/SuiteScripts/com.s4.vnpayroll/scripts/s4vp_ct_payroll_schema.json]</rpcschema>
+  <exposetoaiconnector>T</exposetoaiconnector>
+</toolset>
