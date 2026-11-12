@@ -38,7 +38,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean", "../core/Dates", "../core/RunSteps", "../core/RosterPlan", "../core/AttendanceMonthGrid"], (runtime, Store, Settings, TimeLines, Clock, Lean, Dates, RunSteps, Plan, Grid) => {
+define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean", "./EffectiveRoster", "../core/Dates", "../core/RunSteps", "../core/RosterPlan", "../core/AttendanceMonthGrid"], (runtime, Store, Settings, TimeLines, Clock, Lean, ER, Dates, RunSteps, Plan, Grid) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(blank(s) ? "" : s).trim().toUpperCase();
 	const DATE = "TO_DATE(?, 'YYYY-MM-DD')";
@@ -350,7 +350,8 @@ define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean"
 		const punches = Store.findIn("punch", "employee", id, IN_RANGE("punch_date"), [lo, hi])
 			.map((x) => ({ date: x.punch_date, time: String(x.punch_time || "").slice(11, 16), device: x.device || "", source: x.source || "" }))
 			.sort((a, b) => String(a.date + a.time).localeCompare(String(b.date + b.time)));
-		const cells = Store.findIn("roster", "employee", id, IN_RANGE("work_date"), [p.start, p.end]);
+		// Lịch ca hiệu lực: ô đã lưu đè lên lịch của chế độ ca (api/EffectiveRoster)
+		const cells = ER.rows(id, p.start, p.end);
 		const shifts = {};
 		if (cells.length) for (const s of Store.find("shift", { includeInactive: true })) shifts[s.id] = s;
 		const roster = cells

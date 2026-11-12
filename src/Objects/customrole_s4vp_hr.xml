@@ -306,5 +306,9 @@
       <permkey>[customrecord_s4vp_punch_map]</permkey>
       <permlevel>EDIT</permlevel>
     </permission>
+    <permission>
+      <permkey>[customrecord_s4vp_shift_assign]</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
   </permissions>
 </role>

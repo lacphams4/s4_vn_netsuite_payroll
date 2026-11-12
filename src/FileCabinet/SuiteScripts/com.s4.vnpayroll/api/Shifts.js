@@ -12,10 +12,10 @@
  * @NModuleScope SameAccount
  */
 define([
-	"./Store", "./Settings", "./Clock", "./PayGroupPeriods",
+	"./Store", "./Settings", "./Clock", "./PayGroupPeriods", "./EffectiveRoster",
 	"../core/Dates", "../core/Money", "../core/RosterPlan", "../core/ShiftMatcher", "../core/AttendanceSheetCalculator", "../core/AttendanceSummaryCalculator",
 	"../core/AttendanceRuleEvaluator", "../core/WorkingDayCounter", "../core/TimeImport", "../core/EmploymentDays",
-], (Store, Settings, Clock, PG, Dates, Money, Plan, Matcher, Sheet, Summary, RuleEval, WorkingDays, TimeImport, EmploymentDays) => {
+], (Store, Settings, Clock, PG, ER, Dates, Money, Plan, Matcher, Sheet, Summary, RuleEval, WorkingDays, TimeImport, EmploymentDays) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	// Ngưỡng xử lý chấm công máy (docs/PUNCH_IMPORT.md mục 5) - chỉ khai báo ở đây: RESTlet chạy đồng bộ khi kỳ có tối đa
@@ -146,8 +146,12 @@ define([
 		return { id };
 	}
 
+	/**
+	 * Lịch ca hiệu lực: ô phân ca đã lưu đè lên lịch suy ra từ chế độ ca (api/EffectiveRoster). Account chưa khai chế độ ca thì
+	 * đúng bằng các ô đã lưu như trước. Xử lý chấm công khớp lượt chấm với lịch này.
+	 */
 	function roster(employeeIds, from, to) {
-		return Store.findIn("roster", "employee", employeeIds, between("work_date"), [Dates.iso(from), Dates.iso(to)]).filter((r) => Dates.within(r.work_date, from, to));
+		return ER.rows(employeeIds, Dates.iso(from), Dates.iso(to));
 	}
 
 	// ------------------------------------------------------------------ lượt chấm

@@ -45,7 +45,7 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
             const e = emp(p.employee);
             return {
               id: p.id, c_isinactive: p.isInactive ? "T" : "F", c_employee: p.employee, c_subsidiary: p.subsidiary, c_paygroup: p.paygroup || null,
-              c_hire_date: p.hire_date || null, c_termination_date: p.termination_date || null, e_code: e.entityid, e_first: e.firstname, e_last: e.lastname, e_dept: e.dept,
+              c_hire_date: p.hire_date || null, c_termination_date: p.termination_date || null, e_code: e.entityid, e_first: e.firstname, e_last: e.lastname, e_dept: e.dept, e_dept_id: e.deptId || null,
             };
           });
       }
@@ -54,6 +54,7 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
           .filter((r) => !r.isInactive && r.work_date >= params[0] && r.work_date <= params[1])
           .map((r) => ({ id: r.id, c_employee: r.employee, c_work_date: r.work_date, c_shift: r.shift || null, c_source: r.source || null }));
       }
+      if (tag === "s4vp_er_dept") return (mockDb.t.emp || []).map((e) => ({ id: e.id, department: e.deptId || null }));
       throw new Error(`Unexpected query ${tag}`);
     },
     create: (name, values) => {
@@ -62,6 +63,7 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () =>
       return id;
     },
     submit: (name, id, values) => Object.assign(rows(name).find((r) => String(r.id) === String(id)), values),
+    update: (name, id, values) => Object.assign(rows(name).find((r) => String(r.id) === String(id)), values),
   };
 });
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Settings", () => ({
@@ -78,6 +80,7 @@ jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Shifts", () =
 }));
 
 const RosterView = require(path.join(API, "RosterView"));
+const ER = require(path.join(API, "EffectiveRoster"));
 
 function seed() {
   mockDb.seq = 5000;
@@ -89,8 +92,8 @@ function seed() {
       { id: "p3", name: "SAOMAI-202611", paygroup: "2", start: "2026-11-01", end: "2026-11-30", att_status: "L", status: "O" },
     ],
     emp: [
-      { id: "101", entityid: "E1017", firstname: "An", lastname: "Trần", dept: "Xưởng" },
-      { id: "102", entityid: "E1018", firstname: "Bình", lastname: "Lê", dept: "Xưởng" },
+      { id: "101", entityid: "E1017", firstname: "An", lastname: "Trần", dept: "Xưởng", deptId: "40" },
+      { id: "102", entityid: "E1018", firstname: "Bình", lastname: "Lê", dept: "Xưởng", deptId: "40" },
       { id: "103", entityid: "E1019", firstname: "Chi", lastname: "Phạm", dept: "Kho" },
       { id: "201", entityid: "E0500", firstname: "Dũng", lastname: "Vũ", dept: "Kế toán" },
     ],
@@ -134,7 +137,12 @@ describe("RosterView", () => {
     expect(r.canEdit).toBe(true);
     // 103 vào làm ngày 10/12: ngoài khoảng
     expect(r.rows.map((x) => x.code)).toEqual(["E1017", "E1018"]);
-    expect(r.rows[0]).toMatchObject({ employee: "101", name: "Trần An", department: "Xưởng", group: "SAOMAI", teams: ["TO-CAT"] });
+    expect(r.rows[0]).toMatchObject({ employee: "101", name: "Trần An", department: "Xưởng", departmentId: "40", group: "SAOMAI", teams: ["TO-CAT"], eligible: true, patterns: [] });
+    // Chưa khai chế độ ca: người không có ô phân ca nào không thuộc diện xếp ca
+    expect(r.rows[1].eligible).toBe(false);
+    expect(r.vrows).toEqual([]);
+    expect(r.schemes).toEqual([]);
+    expect(r.departments).toEqual([{ id: "40", name: "Xưởng" }]);
     // 102 hết hiệu lực tổ 30/11: không còn thuộc tổ trong khoảng
     expect(r.rows[1].teams).toEqual([]);
     expect(r.cells).toEqual({ 101: [[0, "5", "G"], [1, "", "G"]] });
@@ -189,5 +197,77 @@ describe("RosterView", () => {
     expect(() => RosterView.saveCells({ subsidiary: "14", cells: [{ employee: "101", workDate: "2026-12-20", shift: "99" }] })).toThrow(/does not exist/);
     expect(() => RosterView.saveCells({ subsidiary: "14", cells: [{ employee: "101", workDate: "2026-12-20", shift: "7" }] })).toThrow(/inactive/);
     expect(mockDb.t.roster).toHaveLength(3);
+  });
+});
+
+describe("Chế độ ca", () => {
+  beforeEach(() => {
+    seed();
+    mockDb.t.shift = [{ id: "5", name: "C1" }, { id: "6", name: "C3" }];
+    mockDb.t.shift_pattern = [{ id: "9", name: "XOAY3", cycle: "C1,C1," }];
+    mockDb.t.team.push({ id: "701", name: "TO-B", subsidiary: "14" }, { id: "702", name: "TO-C", subsidiary: "13" });
+    mockDb.t.shift_assign = [
+      { id: "s1", subsidiary: "14", scope: "D", department: "40", pattern: "9", effective: "2026-12-01" },
+      { id: "s2", subsidiary: "13", scope: "S", pattern: "9", effective: "2026-01-01" },
+    ];
+  });
+
+  test("rosterView: lịch suy ra từ chế độ ca, nhân viên trùng lịch dùng chung một dãy, diện xếp ca", () => {
+    const r = RosterView.view({ subsidiary: "14", from: "2026-12-01", to: "2026-12-04" });
+    noErrorKey(r);
+    // Chu kỳ C1, C1, nghỉ neo tại 01/12
+    expect(r.vrows).toEqual([["5", "5", "", "5"]]);
+    expect(r.rows.map((x) => [x.code, x.eligible, x.v, x.patterns.join()])).toEqual([["E1017", true, 0, "XOAY3"], ["E1018", true, 0, "XOAY3"]]);
+    // Ô đã lưu vẫn gửi riêng để đè lên lịch suy ra
+    expect(r.cells).toEqual({ 101: [[0, "5", "G"], [1, "", "G"]] });
+    expect(r.schemes).toEqual([{ id: "s1", scope: "D", target: "40", targetName: "Xưởng", pattern: "9", patternCode: "XOAY3", anchor: "", effective: "2026-12-01", expiration: "", note: "" }]);
+  });
+
+  test("EffectiveRoster.rows: ô đã lưu đè lên lịch của chế độ ca; chưa có chế độ ca thì chỉ trả ô đã lưu", () => {
+    const rows = ER.rows(["101", "102"], "2026-12-01", "2026-12-03");
+    const of = (e) => rows.filter((x) => String(x.employee) === e).sort((a, b) => a.work_date.localeCompare(b.work_date)).map((x) => [x.work_date, x.shift || null, x.source]);
+    expect(of("101")).toEqual([["2026-12-01", "5", "G"], ["2026-12-02", null, "G"], ["2026-12-03", null, "A"]]);
+    expect(of("102")).toEqual([["2026-12-01", "5", "A"], ["2026-12-02", "5", "A"], ["2026-12-03", null, "A"]]);
+    mockDb.t.shift_assign = [];
+    expect(ER.rows(["101", "102"], "2026-12-01", "2026-12-03").map((x) => x.id)).toEqual(["r1", "r2"]);
+  });
+
+  test("rosterReset: bỏ ô đã lưu (không xóa), lưu lại thì dùng lại bản ghi cũ; kỳ khóa chặn", () => {
+    expect(RosterView.resetCells({ subsidiary: "14", cells: [{ employee: "101", workDate: "2026-12-01" }, { employee: "101", workDate: "2026-12-09" }] })).toEqual({ reset: 1, missing: 1 });
+    expect(mockDb.t.roster.find((x) => x.id === "r1").isInactive).toBe(true);
+    expect(mockDb.t.roster).toHaveLength(3);
+    expect(RosterView.view({ subsidiary: "14", from: "2026-12-01", to: "2026-12-04" }).cells).toEqual({ 101: [[1, "", "G"]] });
+    expect(RosterView.saveCells({ subsidiary: "14", cells: [{ employee: "101", workDate: "2026-12-01", shift: "6" }] })).toEqual({ created: 0, updated: 1, unchanged: 0 });
+    expect(mockDb.t.roster.find((x) => x.id === "r1")).toMatchObject({ isInactive: false, shift: "6", source: "M" });
+    expect(mockDb.t.roster).toHaveLength(3);
+    expect(() => RosterView.resetCells({ subsidiary: "14", cells: [{ employee: "101", workDate: "2026-11-20" }] })).toThrow(/SAOMAI-202611/);
+  });
+
+  test("rosterAssignSave: thêm, sửa, thôi dùng; kiểm đích và mẫu", () => {
+    const made = RosterView.saveScheme({ subsidiary: "14", values: { scope: "T", team: "701", pattern: "9", effective: "2026-12-15", anchor: "2026-12-14" } });
+    const rec = mockDb.t.shift_assign.find((x) => x.id === made.id);
+    expect(rec).toMatchObject({ subsidiary: "14", scope: "T", team: "701", employee: null, pattern: "9", anchor: "2026-12-14", effective: "2026-12-15", expiration: null });
+    RosterView.saveScheme({ subsidiary: "14", id: made.id, values: { scope: "T", team: "701", pattern: "9", effective: "2026-12-15", expiration: "2026-12-31" } });
+    expect(rec.expiration).toBe("2026-12-31");
+    RosterView.saveScheme({ subsidiary: "14", id: made.id, inactive: true });
+    expect(rec.isInactive).toBe(true);
+    expect(() => RosterView.saveScheme({ subsidiary: "14", values: { scope: "T", team: "702", pattern: "9", effective: "2026-12-15" } })).toThrow(/Team not found/);
+    expect(() => RosterView.saveScheme({ subsidiary: "14", values: { scope: "E", employee: "201", pattern: "9", effective: "2026-12-15" } })).toThrow(/no payroll profile/);
+    expect(() => RosterView.saveScheme({ subsidiary: "14", values: { scope: "S", pattern: "77", effective: "2026-12-15" } })).toThrow(/pattern not found/);
+    expect(() => RosterView.saveScheme({ subsidiary: "14", values: { scope: "D", pattern: "9", effective: "2026-12-15" } })).toThrow(/department/);
+    // Dòng của công ty con khác không sửa được
+    expect(() => RosterView.saveScheme({ subsidiary: "14", id: "s2", inactive: true })).toThrow(/not found/);
+  });
+
+  test("rosterAssignBatch: gán riêng từng người, đóng dòng riêng cũ giao khoảng hiệu lực", () => {
+    mockDb.t.shift_assign.push({ id: "e1", subsidiary: "14", scope: "E", employee: "101", pattern: "9", effective: "2026-11-01" });
+    mockDb.t.shift_assign.push({ id: "e2", subsidiary: "14", scope: "E", employee: "102", pattern: "9", effective: "2026-12-20" });
+    const r = RosterView.assignBatch({ subsidiary: "14", employees: ["101", "102"], pattern: "9", effective: "2026-12-10" });
+    expect(r).toEqual({ created: 2, closed: 2 });
+    expect(mockDb.t.shift_assign.find((x) => x.id === "e1").expiration).toBe("2026-12-09");
+    expect(mockDb.t.shift_assign.find((x) => x.id === "e2").isInactive).toBe(true);
+    expect(mockDb.t.shift_assign.filter((x) => x.scope === "E" && x.effective === "2026-12-10").map((x) => x.employee)).toEqual(["101", "102"]);
+    expect(() => RosterView.assignBatch({ subsidiary: "14", employees: [], pattern: "9", effective: "2026-12-10" })).toThrow(/at least one/);
+    expect(() => RosterView.assignBatch({ subsidiary: "14", employees: ["201"], pattern: "9", effective: "2026-12-10" })).toThrow(/no payroll profile/);
   });
 });

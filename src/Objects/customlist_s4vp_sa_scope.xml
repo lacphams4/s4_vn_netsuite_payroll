@@ -1,0 +1,28 @@
+<customlist scriptid="customlist_s4vp_sa_scope">
+  <name>S4VP sa_scope</name>
+  <description>S4 VN Payroll code list sa_scope; values keep the Acumatica codes (E, T, D, G, S).</description>
+  <isinactive>F</isinactive>
+  <isordered>T</isordered>
+  <customvalues>
+    <customvalue scriptid="val_s4vp_sa_scope_e">
+      <value>E - Nhân viên</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_sa_scope_t">
+      <value>T - Tổ</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_sa_scope_d">
+      <value>D - Phòng ban</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_sa_scope_g">
+      <value>G - Nhóm lương</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+    <customvalue scriptid="val_s4vp_sa_scope_s">
+      <value>S - Cả công ty con</value>
+      <isinactive>F</isinactive>
+    </customvalue>
+  </customvalues>
+</customlist>

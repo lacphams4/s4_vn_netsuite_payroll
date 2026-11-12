@@ -4499,6 +4499,68 @@ define([], () => {
 					"target": null
 				}
 			}
+		},
+		"shift_assign": {
+			"type": "customrecord_s4vp_shift_assign",
+			"includeName": false,
+			"numbering": null,
+			"fields": {
+				"subsidiary": {
+					"id": "custrecord_s4vp_sas_subsidiary",
+					"type": "select",
+					"target": "subsidiary"
+				},
+				"scope": {
+					"id": "custrecord_s4vp_sas_scope",
+					"type": "select",
+					"target": "list:sa_scope"
+				},
+				"employee": {
+					"id": "custrecord_s4vp_sas_employee",
+					"type": "select",
+					"target": "employee"
+				},
+				"team": {
+					"id": "custrecord_s4vp_sas_team",
+					"type": "select",
+					"target": "rec:team"
+				},
+				"department": {
+					"id": "custrecord_s4vp_sas_department",
+					"type": "select",
+					"target": "department"
+				},
+				"paygroup": {
+					"id": "custrecord_s4vp_sas_paygroup",
+					"type": "select",
+					"target": "rec:paygroup"
+				},
+				"pattern": {
+					"id": "custrecord_s4vp_sas_pattern",
+					"type": "select",
+					"target": "rec:shift_pattern"
+				},
+				"anchor": {
+					"id": "custrecord_s4vp_sas_anchor",
+					"type": "date",
+					"target": null
+				},
+				"effective": {
+					"id": "custrecord_s4vp_sas_effective",
+					"type": "date",
+					"target": null
+				},
+				"expiration": {
+					"id": "custrecord_s4vp_sas_expiration",
+					"type": "date",
+					"target": null
+				},
+				"note": {
+					"id": "custrecord_s4vp_sas_note",
+					"type": "text",
+					"target": null
+				}
+			}
 		}
 	};
 	const lists = {
@@ -5127,6 +5189,16 @@ define([], () => {
 				"N": "val_s4vp_ps_idkind_n",
 				"M": "val_s4vp_ps_idkind_m",
 				"B": "val_s4vp_ps_idkind_b"
+			}
+		},
+		"sa_scope": {
+			"type": "customlist_s4vp_sa_scope",
+			"values": {
+				"E": "val_s4vp_sa_scope_e",
+				"T": "val_s4vp_sa_scope_t",
+				"D": "val_s4vp_sa_scope_d",
+				"G": "val_s4vp_sa_scope_g",
+				"S": "val_s4vp_sa_scope_s"
 			}
 		}
 	};

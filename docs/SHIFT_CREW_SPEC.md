@@ -4,20 +4,45 @@ Tài liệu đi kèm: `docs/SHIFT_CREW.md` (thiết kế nghiệp vụ). Tài li
 `tools/schema.mjs`, mô-đun lõi và api, route RESTlet, thuật toán, điểm nối với record chuẩn NetSuite và với các phân hệ khác của
 S4 Advanced Payroll. Mã phân hệ: **shiftcrew**, tiền tố tài liệu SC.
 
-## Tình trạng (12/11/2026): TẠM DỪNG sau màn Xếp ca
+## Tình trạng (12/11/2026): TẠM DỪNG sau màn Xếp ca (bản 2 có Chế độ ca)
 
-Người dùng quyết định: làm màn hình Xếp ca trước rồi dừng, chuyển sang giai đoạn bán hàng; phần còn lại làm tiếp khi có khách
-hàng. Account td2937310 không có giấy phép Manufacturing nên nguồn sản xuất NetSuite (mục 6.2, lát 4 - 5) chưa thể kiểm.
+Người dùng quyết định: làm màn hình Xếp ca rồi dừng, chuyển sang giai đoạn bán hàng; phần còn lại làm tiếp khi có khách hàng.
+Account td2937310 không có giấy phép Manufacturing nên nguồn sản xuất NetSuite (mục 6.2, lát 4 - 5) chưa thể kiểm.
 
-Đã làm và deploy (không thêm record, không đổi dữ liệu cũ):
-- Màn **Xếp ca** trong SPA (`spa/payroll/views/roster.js`, route `#/roster`; vào từ menu Khác > Xếp ca hoặc Chấm công > Thao tác
-  khác > Xếp ca): lưới nhân viên x ngày trên record `roster` hiện có, chọn ca rồi bấm ô (giữ Shift để tô đoạn), lưu theo lô, sinh
-  từ mẫu xoay ca theo tổ, lọc tổ, ô tìm, số người theo ca từng ngày, chặn kỳ công đã khóa theo nhóm lương.
-- `api/RosterView.js` (GET `rosterView`, POST `rosterCells`), `core/RosterGrid.js`, test `tests/core/rostergrid.test.js`,
-  `tests/api/rosterview.test.js`.
+Yêu cầu bổ sung của người dùng cho màn Xếp ca (đã làm ở bản 2): cấu hình linh hoạt theo từng công ty; ca ít khi đổi nên phải thao
+tác hàng loạt được cho hàng nghìn công nhân; không phải nhân viên nào cũng thuộc diện xếp ca; học cách làm của phần mềm lớn.
 
-Chưa làm (mọi mục còn lại của tài liệu này): lát 0 (cấp `shiftCounts`, `rosterDays` cho bảng lương), chuyền, định biên, tay nghề,
-kế hoạch có công bố, ca thực tế, sản lượng chuyền ca. Màn Xếp ca hiện chưa hiện ngày nghỉ phép / công tác trên ô.
+### Chế độ ca (đã làm, đã deploy)
+Học cách của SAP (quy tắc lịch làm việc gán cho nhân viên theo hiệu lực, chỉ lưu "thay ca") và UKG (mẫu lịch gán cho nhóm): **không
+lưu từng ô cho từng người**. Lịch ca hiệu lực = ô phân ca đã lưu (`roster`, thực chất là ngoại lệ sửa tay) đè lên lịch suy ra từ
+**chế độ ca**.
+
+- Record mới `shift_assign` (Chế độ ca, `tools/schema/shiftassign.mjs`): công ty con, phạm vi `E` nhân viên / `T` tổ / `D` phòng
+  ban / `G` nhóm lương / `S` cả công ty con, đích tương ứng, mẫu xoay ca, ngày neo chu kỳ, hiệu lực từ - đến, ghi chú.
+- Ưu tiên theo ngày: E > T > D > G > S; cùng mức lấy dòng hiệu lực muộn nhất (`core/ShiftAssign.js`). Tổ xét thành viên hiệu lực
+  tại từng ngày. Các kíp lệch nhau bằng ngày neo.
+- `api/EffectiveRoster.js` là nơi duy nhất trả "nhân viên làm ca nào ngày nào": xử lý chấm công (`Shifts.roster`), khung chi tiết
+  nhân viên của màn Chấm công và màn Xếp ca đều đọc qua đây. Account chưa khai chế độ ca thì kết quả đúng bằng các ô đã lưu như
+  trước (hành vi cũ giữ nguyên, không thêm truy vấn ngoài một lượt đọc `shift_assign`).
+- **Diện xếp ca**: nhân viên có chế độ ca hiệu lực hoặc có ô phân ca trong khoảng ngày. Người ngoài diện (văn phòng không xếp ca)
+  mặc định ẩn trên lưới; chấm công của họ vẫn theo ngày nghỉ hằng tuần như trước.
+- Quy mô: gán 2.000 công nhân vào 3 kíp là 3 dòng chế độ ca; đổi chế độ từ một ngày là thêm một dòng có ngày hiệu lực mới; không
+  có bước "sinh ô" nào phải chạy. Ô phân ca sinh từ mẫu trước đây (nguồn G) vẫn được tôn trọng.
+
+### Màn Xếp ca (`#/roster`, menu Khác > Xếp ca; `spa/payroll/views/roster.js`)
+- Lưới nhân viên x ngày (1 tuần, 2 tuần, 31 ngày); lọc Diện xếp ca / Tất cả, tổ, phòng ban, ô tìm; số người theo ca từng ngày.
+- Nút **Chế độ ca**: danh sách có ô tìm, thêm / sửa / thôi dùng.
+- Sửa ngoại lệ: chọn ca (hoặc Nghỉ, hoặc Theo chế độ ca) rồi bấm ô; Shift để tô đoạn; bấm tiêu đề ngày để tô cho người đang chọn.
+- Hàng loạt trên người được tích chọn (có "Chọn tất cả đang lọc"): xếp một ca cho khoảng ngày (lọc theo thứ, tối đa 6.000 ô mỗi
+  lần, gửi theo lô 200), gán chế độ ca riêng (lô 100 người), trả về chế độ ca.
+- Route: GET `rosterView`; POST `rosterCells`, `rosterReset`, `rosterAssignSave`, `rosterAssignBatch` (`api/RosterView.js`).
+- Test: `tests/core/rostergrid.test.js`, `tests/core/shiftassign.test.js`, `tests/api/rosterview.test.js`.
+
+Giới hạn hiện tại: ô chưa hiện ngày nghỉ phép / công tác; chế độ ca không mang chi nhánh, work center (ô suy ra có hai trường này
+trống); chưa có kiểm tra định biên, tay nghề, luật lao động; chưa có công bố kế hoạch.
+
+Chưa làm (mọi mục còn lại của tài liệu này): lát 0 (cấp `shiftCounts`, `rosterDays` cho bảng lương - khi làm phải đọc qua
+`EffectiveRoster`), chuyền, định biên, tay nghề, kế hoạch có công bố, ca thực tế, sản lượng chuyền ca.
 
 ## 0. Trạng thái kiểm chứng
 

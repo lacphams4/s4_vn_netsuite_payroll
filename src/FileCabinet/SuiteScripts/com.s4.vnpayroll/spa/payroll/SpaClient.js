@@ -2723,10 +2723,10 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // Một dòng gửi punchMapSave. withDates: gửi cả hiệu lực (trống = null để xóa); khung mã chưa đối chiếu không gửi ngày.
     // inactive: thôi dùng dòng đã lưu (chỉ gửi id).
     function mapSaveRow(r, withDates) {
-        if (r.inactive && has$1(r.id))
+        if (r.inactive && has$2(r.id))
             return { id: str$3(r.id), inactive: true };
         const out = { device: str$3(r.device).trim(), machineId: str$3(r.machineId).trim(), employee: str$3(r.employee) };
-        if (has$1(r.id))
+        if (has$2(r.id))
             out.id = str$3(r.id);
         if (withDates) {
             out.effective = str$3(r.effective) || null;
@@ -2743,8 +2743,8 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     const FILE_ID = 's4vp-pi-file';
     const STORE_KEY = 's4vp-pi-source';
     // ------------------------------------------------------------------ hàm thuần
-    const has$1 = (v) => v !== undefined && v !== null && v !== '';
-    const str$3 = (v) => (has$1(v) && typeof v !== 'object' ? String(v) : '');
+    const has$2 = (v) => v !== undefined && v !== null && v !== '';
+    const str$3 = (v) => (has$2(v) && typeof v !== 'object' ? String(v) : '');
     const int = (v) => {
         const n = Number(v);
         return isFinite(n) ? n : 0;
@@ -2949,10 +2949,10 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         if (!rt)
             return '';
         if (/^\d+$/.test(rt))
-            return `/app/common/custom/custrecordentry.nl?rectype=${encodeURIComponent(rt)}${has$1(id) ? `&id=${encodeURIComponent(id)}&e=T` : ''}`;
+            return `/app/common/custom/custrecordentry.nl?rectype=${encodeURIComponent(rt)}${has$2(id) ? `&id=${encodeURIComponent(id)}&e=T` : ''}`;
         try {
             const opts = { recordType: rt, isEditMode: true };
-            if (has$1(id))
+            if (has$2(id))
                 opts.recordId = String(id);
             return (resolve && resolve(opts)) || '';
         }
@@ -11136,19 +11136,19 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     // Cách máy chủ biểu diễn tỷ lệ (core/CommissionEngine.js): mọi tỷ lệ là số phần trăm (105,5 = 105,5%), kể cả % ghi nhận
     // của credit (100 = 100%). Đổi ở đây nếu API trả tỷ lệ 0..1.
     const PCT = { attainmentIsRatio: false, creditIsRatio: false };
-    const has = (v) => v !== undefined && v !== null && v !== '';
+    const has$1 = (v) => v !== undefined && v !== null && v !== '';
     /** Giá trị đầu tiên có nội dung theo danh sách tên khóa (camelCase rồi snake_case...). */
     function rd(o, ...keys) {
         if (!o || typeof o !== 'object')
             return undefined;
         for (let i = 0; i < keys.length; i++)
-            if (has(o[keys[i]]))
+            if (has$1(o[keys[i]]))
                 return o[keys[i]];
         return undefined;
     }
-    const str$1 = (v) => (has(v) && typeof v !== 'object' ? String(v) : '');
+    const str$1 = (v) => (has$1(v) && typeof v !== 'object' ? String(v) : '');
     const numv = (v) => {
-        if (!has(v) || typeof v === 'object')
+        if (!has$1(v) || typeof v === 'object')
             return null;
         const n = Number(v);
         return isNaN(n) ? null : n;
@@ -11302,7 +11302,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             totalBase: numv(rd(k, 'totalBase', 'base')) !== null ? numv(rd(k, 'totalBase', 'base')) : run && run.totalBase !== null ? run.totalBase : sum('base'),
             totalAmount: numv(rd(k, 'totalAmount', 'totalPayable', 'payable')) !== null ? numv(rd(k, 'totalAmount', 'totalPayable', 'payable')) : run && run.totalAmount !== null ? run.totalAmount : sum('payable'),
             employees: numv(rd(k, 'employees')) !== null ? numv(rd(k, 'employees')) : run && run.employees !== null ? run.employees : people,
-            avgAttainment: has(kAtt) ? pctOf(kAtt, PCT.attainmentIsRatio) : withAtt.length ? withAtt.reduce((s, r) => s + r.attainment, 0) / withAtt.length : null,
+            avgAttainment: has$1(kAtt) ? pctOf(kAtt, PCT.attainmentIsRatio) : withAtt.length ? withAtt.reduce((s, r) => s + r.attainment, 0) / withAtt.length : null,
             warnings: numv(rd(k, 'warnings')) !== null ? numv(rd(k, 'warnings')) : sum('warnings'),
         };
         const months = arr(v.months).map(monthIso).filter(Boolean);
@@ -11406,10 +11406,10 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         keySeq += 1;
         return `${p}${keySeq}`;
     };
-    const s = (v) => (has(v) ? String(v) : '');
-    const mapTier = (x) => ({ key: has(rd(x, 'id')) ? `t:${x.id}` : newKey('nt'), id: str$1(rd(x, 'id')), fromValue: s(rd(x, 'fromValue', 'from_value', 'from')), rate: s(rd(x, 'rate')), amount: rd(x, 'amount') === undefined ? '' : numv(rd(x, 'amount')) });
+    const s = (v) => (has$1(v) ? String(v) : '');
+    const mapTier = (x) => ({ key: has$1(rd(x, 'id')) ? `t:${x.id}` : newKey('nt'), id: str$1(rd(x, 'id')), fromValue: s(rd(x, 'fromValue', 'from_value', 'from')), rate: s(rd(x, 'rate')), amount: rd(x, 'amount') === undefined ? '' : numv(rd(x, 'amount')) });
     const mapRule = (r, i) => ({
-        key: has(rd(r, 'id')) ? `r:${r.id}` : newKey('nr'),
+        key: has$1(rd(r, 'id')) ? `r:${r.id}` : newKey('nr'),
         id: str$1(rd(r, 'id')),
         sequence: s(rd(r, 'sequence')) || String((i + 1) * 10),
         name: str$1(rd(r, 'name')),
@@ -11430,7 +11430,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         tiers: arr(r && r.tiers).map(mapTier),
     });
     const mapAssign = (a) => ({
-        key: has(rd(a, 'id')) ? `a:${a.id}` : newKey('na'),
+        key: has$1(rd(a, 'id')) ? `a:${a.id}` : newKey('na'),
         id: str$1(rd(a, 'id')),
         employee: str$1(rd(a, 'employee')),
         effective: str$1(rd(a, 'effective')),
@@ -11438,13 +11438,13 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         quota: rd(a, 'quota') === undefined ? '' : numv(rd(a, 'quota')),
         manager: str$1(rd(a, 'manager')),
     });
-    const mapQuota = (q) => ({ key: has(rd(q, 'id')) ? `q:${q.id}` : newKey('nq'), id: str$1(rd(q, 'id')), employee: str$1(rd(q, 'employee')), month: monthIso(rd(q, 'month')), quota: rd(q, 'quota') === undefined ? '' : numv(rd(q, 'quota')) });
+    const mapQuota = (q) => ({ key: has$1(rd(q, 'id')) ? `q:${q.id}` : newKey('nq'), id: str$1(rd(q, 'id')), employee: str$1(rd(q, 'employee')), month: monthIso(rd(q, 'month')), quota: rd(q, 'quota') === undefined ? '' : numv(rd(q, 'quota')) });
     /** Một kế hoạch của commissionSetup -> bản nháp của biểu mẫu (số giữ dạng chuỗi / số để đưa thẳng vào ô nhập). */
     function mapPlan(p) {
         const x = p || {};
         const ratesFirst = (keys) => s(rd(x, ...keys));
         return {
-            key: has(rd(x, 'id')) ? `p:${x.id}` : newKey('np'),
+            key: has$1(rd(x, 'id')) ? `p:${x.id}` : newKey('np'),
             id: str$1(rd(x, 'id')),
             name: str$1(rd(x, 'name', 'code')),
             description: str$1(rd(x, 'description')),
@@ -13014,7 +13014,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                     putImp(Object.assign({}, impRef.current, { results: Object.assign({}, impRef.current.results, res), message: t.imp.checked(ok.length - failed.length, bad + failed.length) }));
                     return;
                 }
-                const counted = responses.some((p) => has(rd(p.response, 'written', 'saved')));
+                const counted = responses.some((p) => has$1(rd(p.response, 'written', 'saved')));
                 const n = counted ? responses.reduce((acc, p) => acc + (numv(rd(p.response, 'written', 'saved')) || 0), 0) : ok.length;
                 putImp(null);
                 if (tab === 'ext')
@@ -13245,9 +13245,9 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         };
         const ruleValueText = (r) => {
             if (r.method === 'P')
-                return has(r.rate) ? pctText(toNumber(r.rate)) : '';
+                return has$1(r.rate) ? pctText(toNumber(r.rate)) : '';
             if (r.method === 'U')
-                return has(r.unitAmount) ? money(toNumber(r.unitAmount)) : '';
+                return has$1(r.unitAmount) ? money(toNumber(r.unitAmount)) : '';
             return t.plans.tiersCount(r.tiers.length);
         };
         const rulesGrid = (d) => {
@@ -13347,7 +13347,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             const ok = shown.length - bad;
             const checked = !!v.results;
             const colOpts = v.table.headers.map((h, i) => ({ value: String(i), label: `${i + 1}. ${h || '-'}` }));
-            const missing = IMPORT_FIELDS.filter((f) => f.required && !has(v.mapping[f.key])).map((f) => c.fields[f.key]);
+            const missing = IMPORT_FIELDS.filter((f) => f.required && !has$1(v.mapping[f.key])).map((f) => c.fields[f.key]);
             const delimText = v.table.delimiter === '\t' ? c.delim.tab : v.table.delimiter === ';' ? c.delim.semi : c.delim.comma;
             let why = '';
             if (!checked)
@@ -15396,14 +15396,13 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         vi: {
             crumb: 'Chấm công',
             title: 'Xếp ca',
-            sub: 'Phân ca theo ngày cho từng nhân viên. Chọn một ca rồi bấm ô để xếp; giữ Shift bấm ô thứ hai cùng dòng để tô cả đoạn.',
-            loading: 'Đang tải bảng phân ca...',
-            saving: 'Đang lưu phân ca...',
-            generating: 'Đang sinh phân ca từ mẫu...',
-            noSubsidiary: 'Chọn công ty con ở góc trên để xem phân ca.',
-            noData: 'Chưa tải được bảng phân ca. Kiểm tra thông báo phía trên rồi bấm Tải lại.',
+            sub: 'Lịch ca = chế độ ca (mẫu xoay ca gán cho tổ, phòng ban, nhóm...) cộng các ô sửa tay. Khai chế độ ca một lần cho cả nhóm; lưới này để xem và sửa ngoại lệ.',
+            loading: 'Đang tải lịch ca...',
+            saving: 'Đang lưu...',
+            noSubsidiary: 'Chọn công ty con ở góc trên để xem lịch ca.',
+            noData: 'Chưa tải được lịch ca. Kiểm tra thông báo phía trên rồi bấm Tải lại.',
             reload: 'Tải lại',
-            generate: 'Sinh từ mẫu xoay ca',
+            schemes: 'Chế độ ca',
             save: (n) => `Lưu ${n} ô`,
             discard: 'Bỏ thay đổi',
             prev: 'Trước',
@@ -15414,63 +15413,116 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             spans: { 7: '1 tuần', 14: '2 tuần', 31: '31 ngày' },
             team: 'Tổ',
             allTeams: 'Mọi tổ',
-            search: 'Tìm mã, tên, phòng ban, tổ',
+            dept: 'Phòng ban',
+            allDepts: 'Mọi phòng ban',
+            search: 'Tìm mã, tên, phòng ban, tổ, mẫu',
+            scopeEligible: 'Diện xếp ca',
+            scopeAll: 'Tất cả',
+            scopeLabel: 'Phạm vi nhân viên',
             brush: 'Ca để xếp',
-            brushNone: 'Chọn ca rồi bấm ô. Ô viền cam là thay đổi chưa lưu.',
-            brushOn: (name) => `Đang xếp: ${name}. Bấm ô để gán, bấm lại để bỏ.`,
+            brushNone: 'Chọn ca rồi bấm ô (giữ Shift để tô đoạn; bấm tiêu đề ngày để tô cho người đang chọn). Ô viền cam là thay đổi chưa lưu.',
+            brushOn: (name) => `Đang xếp: ${name}.`,
             off: 'Nghỉ',
             offLong: 'Ngày nghỉ (không ca)',
+            byScheme: 'Theo chế độ ca',
+            bySchemeLong: 'Bỏ ô sửa tay, trở về lịch của chế độ ca',
             employee: 'Nhân viên',
             showMore: (n) => `Hiện thêm ${n} người`,
             shown: (a, b) => `Đang hiện ${a} / ${b} người`,
             empty: 'Không có nhân viên nào đang làm việc trong khoảng ngày này.',
-            noMatch: 'Không có nhân viên nào khớp ô tìm.',
+            emptyEligible: 'Chưa có nhân viên nào thuộc diện xếp ca. Bấm Chế độ ca để gán mẫu xoay ca cho tổ, phòng ban hoặc nhóm; hoặc chọn Tất cả để xếp tay.',
+            noMatch: 'Không có nhân viên nào khớp bộ lọc.',
             noShifts: 'Chưa khai ca làm việc. Vào Thiết lập, mục Ca làm việc để khai ca trước.',
             headcount: 'Số người theo ca',
-            readOnly: 'Vai trò của bạn chỉ được xem phân ca.',
-            locked: (code) => `Kỳ công ${code} đã khóa, không sửa được phân ca của ngày này.`,
+            readOnly: 'Vai trò của bạn chỉ được xem lịch ca.',
+            locked: (code) => `Kỳ công ${code} đã khóa, không sửa được lịch ca của ngày này.`,
             pickBrush: 'Chọn một ca (hoặc Nghỉ) ở dải ca phía trên trước khi bấm ô.',
-            saved: (r) => `Đã lưu phân ca: ${r.created} ô mới, ${r.updated} ô sửa${r.unchanged ? `, ${r.unchanged} ô không đổi` : ''}.`,
-            generated: (r) => `Đã sinh phân ca: ${r.created} ô mới, ${r.updated} ô cập nhật, ${r.keptManual} ô sửa tay giữ nguyên, ${r.unchanged} ô không đổi.`,
+            pickPeople: 'Tích chọn nhân viên trước khi bấm tiêu đề ngày.',
+            saved: (r) => `Đã lưu: ${r.created} ô mới, ${r.updated} ô sửa${r.reset ? `, ${r.reset} ô trở về chế độ ca` : ''}.`,
             confirmDiscard: (n) => `Có ${n} ô đã đổi nhưng chưa lưu. Bỏ các thay đổi này?`,
             cellTitle: (name, day, shift) => `${name} - ${day}: ${shift}`,
             manual: 'sửa tay',
             pending: 'chưa lưu',
+            fromScheme: 'theo chế độ ca',
             noCell: 'chưa xếp',
             dayTypes: { W: 'nghỉ hằng tuần', H: 'ngày lễ' },
             dow: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
-            kinds: { D: 'Ca ngày', E: 'Ca chiều', N: 'Ca đêm' },
-            summary: (people, cells) => `${people} người, ${cells} ô đã xếp ca`,
-            dlg: {
-                title: 'Sinh phân ca từ mẫu xoay ca',
-                team: 'Tổ',
-                pickTeam: 'Chọn tổ',
-                pattern: 'Mẫu xoay ca',
-                pickPattern: 'Chọn mẫu xoay ca',
+            summary: (people, eligible) => `${eligible} / ${people} người thuộc diện xếp ca`,
+            sel: {
+                count: (n) => `Đã chọn ${n} người`,
+                all: (n) => `Chọn tất cả ${n} người đang lọc`,
+                none: 'Bỏ chọn',
+                range: 'Xếp ca theo khoảng ngày',
+                assign: 'Gán chế độ ca riêng',
+                reset: 'Trả về chế độ ca',
+            },
+            rng: {
+                title: (n) => `Xếp ca theo khoảng ngày cho ${n} người`,
+                shift: 'Ca',
+                pickShift: 'Chọn ca hoặc Nghỉ',
                 from: 'Từ ngày',
                 to: 'Đến ngày',
-                anchor: 'Ngày ứng với ngày 1 của chu kỳ',
-                anchorHint: 'Để trống = ngày bắt đầu. Dùng khi chu kỳ đã chạy từ trước khoảng ngày này.',
+                weekdays: 'Chỉ các thứ',
+                note: (cells) => `Sẽ ghi ${cells} ô sửa tay. Ngày thuộc kỳ công đã khóa được bỏ qua. Với thay đổi lâu dài, nên dùng Gán chế độ ca.`,
+                tooMany: (max) => `Quá ${max} ô mỗi lần. Thu hẹp khoảng ngày hoặc số người, hoặc dùng Gán chế độ ca.`,
+                run: 'Xếp ca',
+                done: (r, skipped) => `Đã xếp ca: ${r.created} ô mới, ${r.updated} ô sửa${r.unchanged ? `, ${r.unchanged} ô không đổi` : ''}${skipped ? `, bỏ qua ${skipped} ô thuộc kỳ đã khóa` : ''}.`,
+            },
+            asg: {
+                title: (n) => `Gán chế độ ca riêng cho ${n} người`,
+                note: 'Mỗi người nhận một dòng chế độ ca riêng, ưu tiên hơn chế độ ca của tổ, phòng ban. Dòng riêng cũ được đóng ở ngày trước ngày hiệu lực mới.',
+                run: 'Gán',
+                done: (r) => `Đã gán chế độ ca cho ${r.created} người${r.closed ? `, đóng ${r.closed} dòng cũ` : ''}.`,
+            },
+            rst: {
+                confirm: (n) => `Bỏ ${n} ô sửa tay của những người đang chọn trong khoảng ngày đang xem để trở về lịch của chế độ ca?`,
+                none: 'Những người đang chọn không có ô sửa tay nào trong khoảng ngày đang xem.',
+                done: (r) => `Đã trả ${r.reset} ô về chế độ ca.`,
+            },
+            sch: {
+                title: 'Chế độ ca',
+                intro: 'Mỗi dòng gán một mẫu xoay ca cho một phạm vi. Khi nhiều dòng cùng áp cho một người: nhân viên > tổ > phòng ban > nhóm lương > cả công ty con; cùng mức lấy dòng hiệu lực muộn nhất.',
+                add: 'Thêm chế độ ca',
+                edit: 'Sửa',
+                stop: 'Thôi dùng',
+                confirmStop: (name) => `Thôi dùng chế độ ca của ${name}? Lịch ca suy ra từ dòng này sẽ không còn.`,
+                empty: 'Chưa có chế độ ca nào. Bấm Thêm chế độ ca.',
+                search: 'Tìm phạm vi, mẫu, ghi chú',
+                scope: 'Phạm vi',
+                scopes: { E: 'Nhân viên', T: 'Tổ', D: 'Phòng ban', G: 'Nhóm lương', S: 'Cả công ty con' },
+                target: 'Áp cho',
+                pickTarget: 'Chọn...',
+                whole: 'Mọi nhân viên của công ty con',
+                pattern: 'Mẫu xoay ca',
+                pickPattern: 'Chọn mẫu xoay ca',
                 cycle: (text, n) => `Chu kỳ ${n} ngày: ${text}`,
-                members: (n) => `${n} thành viên hiệu lực trong khoảng đang xem`,
-                note: 'Ô đã sửa tay được giữ nguyên. Ngày thuộc kỳ công đã khóa thì không sinh.',
-                run: 'Sinh phân ca',
+                effective: 'Hiệu lực từ',
+                expiration: 'Hiệu lực đến',
+                expirationHint: 'Để trống = không thời hạn.',
+                anchor: 'Ngày ứng với ngày 1 của chu kỳ',
+                anchorHint: 'Để trống = ngày hiệu lực. Các kíp lệch nhau bằng cách dời ngày này.',
+                note: 'Ghi chú',
+                save: 'Lưu',
                 cancel: 'Hủy',
-                noTeams: 'Công ty con này chưa có tổ. Khai tổ và thành viên ở Sản lượng - khoán tổ, mục Tổ đội.',
+                close: 'Đóng',
+                newTitle: 'Thêm chế độ ca',
+                editTitle: 'Sửa chế độ ca',
+                saved: 'Đã lưu chế độ ca.',
+                stopped: 'Đã thôi dùng chế độ ca.',
                 noPatterns: 'Chưa có mẫu xoay ca. Vào Thiết lập, mục Mẫu xoay ca.',
+                cols: { scope: 'Phạm vi', target: 'Áp cho', pattern: 'Mẫu', effective: 'Từ', expiration: 'Đến', anchor: 'Ngày neo', note: 'Ghi chú', act: '' },
             },
         },
         en: {
             crumb: 'Attendance',
             title: 'Shift roster',
-            sub: 'Daily shift assignment per employee. Pick a shift, then click cells; hold Shift and click a second cell in the same row to fill the range.',
+            sub: 'The roster = shift schemes (a shift pattern assigned to a team, department, group...) plus manual cells. Define a scheme once for a whole group; this grid is for review and exceptions.',
             loading: 'Loading the roster...',
-            saving: 'Saving the roster...',
-            generating: 'Generating the roster from the pattern...',
+            saving: 'Saving...',
             noSubsidiary: 'Select a subsidiary at the top to see the roster.',
             noData: 'The roster could not be loaded. Check the message above and click Reload.',
             reload: 'Reload',
-            generate: 'Generate from pattern',
+            schemes: 'Shift schemes',
             save: (n) => `Save ${n} cells`,
             discard: 'Discard changes',
             prev: 'Previous',
@@ -15481,70 +15533,133 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             spans: { 7: '1 week', 14: '2 weeks', 31: '31 days' },
             team: 'Team',
             allTeams: 'All teams',
-            search: 'Search code, name, department, team',
+            dept: 'Department',
+            allDepts: 'All departments',
+            search: 'Search code, name, department, team, pattern',
+            scopeEligible: 'Rostered',
+            scopeAll: 'All',
+            scopeLabel: 'Employees shown',
             brush: 'Shift to assign',
-            brushNone: 'Pick a shift, then click cells. Orange outlined cells are unsaved changes.',
-            brushOn: (name) => `Assigning: ${name}. Click a cell to assign, click again to undo.`,
+            brushNone: 'Pick a shift, then click cells (hold Shift to fill a range; click a day header to fill the selected employees). Orange outlined cells are unsaved.',
+            brushOn: (name) => `Assigning: ${name}.`,
             off: 'Off',
             offLong: 'Day off (no shift)',
+            byScheme: 'Per scheme',
+            bySchemeLong: 'Drop the manual cell and follow the shift scheme',
             employee: 'Employee',
             showMore: (n) => `Show ${n} more`,
             shown: (a, b) => `Showing ${a} of ${b} employees`,
             empty: 'No employee is working in this date range.',
-            noMatch: 'No employee matches the search.',
+            emptyEligible: 'No employee is rostered yet. Click Shift schemes to assign a pattern to a team, department or group; or choose All to roster manually.',
+            noMatch: 'No employee matches the filters.',
             noShifts: 'No work shift is defined. Open Setup, Work shifts first.',
             headcount: 'Headcount per shift',
             readOnly: 'Your role can only view the roster.',
             locked: (code) => `Attendance of period ${code} is locked; the roster of this day cannot be changed.`,
             pickBrush: 'Pick a shift (or Off) in the shift bar before clicking a cell.',
-            saved: (r) => `Roster saved: ${r.created} new cells, ${r.updated} changed${r.unchanged ? `, ${r.unchanged} unchanged` : ''}.`,
-            generated: (r) => `Roster generated: ${r.created} new cells, ${r.updated} updated, ${r.keptManual} manual cells kept, ${r.unchanged} unchanged.`,
+            pickPeople: 'Tick employees before clicking a day header.',
+            saved: (r) => `Saved: ${r.created} new cells, ${r.updated} changed${r.reset ? `, ${r.reset} back to the scheme` : ''}.`,
             confirmDiscard: (n) => `${n} changed cells are not saved. Discard these changes?`,
             cellTitle: (name, day, shift) => `${name} - ${day}: ${shift}`,
             manual: 'manual',
             pending: 'unsaved',
+            fromScheme: 'per scheme',
             noCell: 'not assigned',
             dayTypes: { W: 'weekly day off', H: 'public holiday' },
             dow: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
-            kinds: { D: 'Day shift', E: 'Evening shift', N: 'Night shift' },
-            summary: (people, cells) => `${people} employees, ${cells} assigned cells`,
-            dlg: {
-                title: 'Generate the roster from a shift pattern',
-                team: 'Team',
-                pickTeam: 'Select a team',
-                pattern: 'Shift pattern',
-                pickPattern: 'Select a shift pattern',
+            summary: (people, eligible) => `${eligible} of ${people} employees are rostered`,
+            sel: {
+                count: (n) => `${n} selected`,
+                all: (n) => `Select all ${n} filtered`,
+                none: 'Clear selection',
+                range: 'Assign a shift for a date range',
+                assign: 'Assign an individual scheme',
+                reset: 'Back to the scheme',
+            },
+            rng: {
+                title: (n) => `Assign a shift for a date range to ${n} employees`,
+                shift: 'Shift',
+                pickShift: 'Select a shift or Off',
                 from: 'From',
                 to: 'To',
-                anchor: 'Date matching day 1 of the cycle',
-                anchorHint: 'Empty = the start date. Use it when the cycle started before this range.',
+                weekdays: 'Only on',
+                note: (cells) => `${cells} manual cells will be written. Days in a locked attendance period are skipped. For a lasting change, use Assign an individual scheme.`,
+                tooMany: (max) => `More than ${max} cells at once. Narrow the dates or the selection, or assign a scheme.`,
+                run: 'Assign',
+                done: (r, skipped) => `Shifts assigned: ${r.created} new cells, ${r.updated} changed${r.unchanged ? `, ${r.unchanged} unchanged` : ''}${skipped ? `, ${skipped} locked cells skipped` : ''}.`,
+            },
+            asg: {
+                title: (n) => `Assign an individual scheme to ${n} employees`,
+                note: 'Each employee gets an individual scheme that wins over the team or department scheme. A previous individual scheme is closed the day before the new effective date.',
+                run: 'Assign',
+                done: (r) => `Scheme assigned to ${r.created} employees${r.closed ? `, ${r.closed} previous rows closed` : ''}.`,
+            },
+            rst: {
+                confirm: (n) => `Drop ${n} manual cells of the selected employees in the range on screen and follow the shift scheme again?`,
+                none: 'The selected employees have no manual cell in the range on screen.',
+                done: (r) => `${r.reset} cells are back to the scheme.`,
+            },
+            sch: {
+                title: 'Shift schemes',
+                intro: 'Each row assigns a shift pattern to a scope. When several rows apply to one employee: employee > team > department > pay group > whole subsidiary; at the same level the latest effective row wins.',
+                add: 'Add a scheme',
+                edit: 'Edit',
+                stop: 'Deactivate',
+                confirmStop: (name) => `Deactivate the scheme of ${name}? The roster derived from this row will be gone.`,
+                empty: 'No shift scheme yet. Click Add a scheme.',
+                search: 'Search scope, pattern, note',
+                scope: 'Scope',
+                scopes: { E: 'Employee', T: 'Team', D: 'Department', G: 'Pay group', S: 'Whole subsidiary' },
+                target: 'Applies to',
+                pickTarget: 'Select...',
+                whole: 'Every employee of the subsidiary',
+                pattern: 'Shift pattern',
+                pickPattern: 'Select a shift pattern',
                 cycle: (text, n) => `${n}-day cycle: ${text}`,
-                members: (n) => `${n} members effective in the range on screen`,
-                note: 'Manually edited cells are kept. Days in a locked attendance period are not generated.',
-                run: 'Generate',
+                effective: 'Effective from',
+                expiration: 'Effective to',
+                expirationHint: 'Empty = no end.',
+                anchor: 'Date matching day 1 of the cycle',
+                anchorHint: 'Empty = the effective date. Crews offset each other by moving this date.',
+                note: 'Note',
+                save: 'Save',
                 cancel: 'Cancel',
-                noTeams: 'This subsidiary has no team. Define teams and members under Output - team piecework, Teams.',
+                close: 'Close',
+                newTitle: 'Add a shift scheme',
+                editTitle: 'Edit the shift scheme',
+                saved: 'Shift scheme saved.',
+                stopped: 'Shift scheme deactivated.',
                 noPatterns: 'No shift pattern is defined. Open Setup, Shift patterns.',
+                cols: { scope: 'Scope', target: 'Applies to', pattern: 'Pattern', effective: 'From', expiration: 'To', anchor: 'Anchor', note: 'Note', act: '' },
             },
         },
     };
     const ROW_STEP = 60;
     const GRID_ID = 's4vp-ros-grid';
     const DAY_W = 46;
-    const NAME_W = 230;
+    const NAME_W = 250;
     const SPANS = [7, 14, 31];
     const OFF = 'OFF';
+    const RESET = 'RESET';
     const SAVE_CHUNK = 200;
+    const ASSIGN_CHUNK = 100;
+    const RANGE_MAX = 6000;
     const CSS = `
 .s4vp-ros-bar{padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
 .s4vp-ros-bar .s4vp-ros-grow{flex:1 1 auto}
 .s4vp-ros-brush{padding:0 12px 8px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:var(--s4vp-sub)}
-.s4vp-ros-wrap{overflow:auto;max-height:560px;max-height:max(300px,calc(100vh - 250px));max-width:100%;border-top:1px solid var(--s4vp-line);border-bottom:1px solid var(--s4vp-line)}
+.s4vp-ros-selbar{padding:6px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:13px;background:var(--s4vp-accent-soft);border-top:1px solid var(--s4vp-line)}
+.s4vp-ros-selbar b{font-weight:700}
+.s4vp-ros-wrap{overflow:auto;max-height:560px;max-height:max(300px,calc(100vh - 270px));max-width:100%;border-top:1px solid var(--s4vp-line);border-bottom:1px solid var(--s4vp-line)}
 .s4vp-ros{border-collapse:separate;border-spacing:0;table-layout:fixed;user-select:none;-webkit-user-select:none}
-.s4vp-ros th{position:sticky;top:0;z-index:2;background:#F7F8F9;font-size:11px;font-weight:600;color:var(--s4vp-sub);text-align:center;padding:5px 0;border-bottom:1px solid #D9DEE2;line-height:1.25;overflow:hidden;white-space:nowrap}
+.s4vp-ros th{position:sticky;top:0;z-index:2;background:#F7F8F9;font-size:11px;font-weight:600;color:var(--s4vp-sub);text-align:center;padding:5px 0;border-bottom:1px solid #D9DEE2;line-height:1.25;overflow:hidden;white-space:nowrap;cursor:pointer}
 .s4vp-ros td{font-size:12px;text-align:center;padding:0;height:34px;border-bottom:1px solid var(--s4vp-line-soft);border-right:1px solid #F0F2F4;overflow:hidden;white-space:nowrap;color:var(--s4vp-text);cursor:pointer;font-weight:600}
-.s4vp-ros .s4vp-ros-l{position:sticky;left:0;z-index:1;background:var(--s4vp-surface);text-align:left;padding:3px 10px;border-right:1px solid #D9DEE2;text-overflow:ellipsis;cursor:default;font-weight:400}
-.s4vp-ros th.s4vp-ros-l{z-index:3;background:#F7F8F9;font-size:12px}
+.s4vp-ros .s4vp-ros-l{position:sticky;left:0;z-index:1;background:var(--s4vp-surface);text-align:left;padding:3px 10px 3px 32px;border-right:1px solid #D9DEE2;text-overflow:ellipsis;font-weight:400}
+.s4vp-ros th.s4vp-ros-l{z-index:3;background:#F7F8F9;font-size:12px;cursor:default}
+.s4vp-ros td.s4vp-ros-l:before{content:'';position:absolute;left:10px;top:10px;width:13px;height:13px;border:1px solid var(--s4vp-ctl);border-radius:3px;background:#fff}
+.s4vp-ros tr.s4vp-ros-on td.s4vp-ros-l{background:var(--s4vp-accent-soft)}
+.s4vp-ros tr.s4vp-ros-on td.s4vp-ros-l:before{background:var(--s4vp-accent);border-color:var(--s4vp-accent);box-shadow:inset 0 0 0 2px #fff}
+.s4vp-ros tr.s4vp-ros-out td.s4vp-ros-l .s4vp-ros-name{color:var(--s4vp-sub)}
 .s4vp-ros-name{display:block;overflow:hidden;text-overflow:ellipsis;font-size:13px;line-height:1.3}
 .s4vp-ros-kind{display:block;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--s4vp-sub);line-height:1.3}
 .s4vp-ros .s4vp-ros-off{background:#ECEEF0}
@@ -15557,9 +15672,11 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
 .s4vp-ros td.s4vp-ros-p{outline:2px solid #C97A12;outline-offset:-2px}
 .s4vp-ros td.s4vp-ros-lock{cursor:not-allowed;opacity:.55}
 .s4vp-ros tr.s4vp-ros-sum td{cursor:default;background:#F7F8F9;font-weight:700;border-top:1px solid #D9DEE2;height:28px}
-.s4vp-ros tr.s4vp-ros-sum td.s4vp-ros-l{background:#F7F8F9;font-weight:600}
+.s4vp-ros tr.s4vp-ros-sum td.s4vp-ros-l{background:#F7F8F9;font-weight:600;padding-left:10px}
+.s4vp-ros tr.s4vp-ros-sum td.s4vp-ros-l:before{display:none}
 .s4vp-ros-foot{padding:8px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;font-size:12px;color:var(--s4vp-sub)}
-.s4vp-ros-cycle{font-size:12px;color:var(--s4vp-sub);margin:-4px 0 8px}
+.s4vp-ros-note{font-size:12px;color:var(--s4vp-sub);margin:0 0 10px}
+.s4vp-ros-two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 `;
     let cssDone = false;
     function ensureCss() {
@@ -15582,6 +15699,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
     const cx = (...names) => names.filter(Boolean).join(' ');
     const ISO = /^\d{4}-\d{2}-\d{2}$/;
     const pad = (n) => String(n).padStart(2, '0');
+    const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
     /** Cộng ngày cho chuỗi yyyy-mm-dd (tính bằng UTC để không lệch múi giờ). */
     function addDays(iso, n) {
         if (!ISO.test(String(iso || '')))
@@ -15589,12 +15707,24 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) + n));
         return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
     }
+    const dowOf = (iso) => new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))).getUTCDay();
     /** Thứ hai của tuần chứa ngày iso. */
     function mondayOf(iso) {
         if (!ISO.test(String(iso || '')))
             return '';
-        const dow = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))).getUTCDay();
+        const dow = dowOf(iso);
         return addDays(iso, dow === 0 ? -6 : 1 - dow);
+    }
+    /** Các ngày yyyy-mm-dd của [from, to] (tối đa 400 ngày), lọc theo thứ nếu có. */
+    function dateList(from, to, weekdays) {
+        const out = [];
+        if (!ISO.test(String(from || '')) || !ISO.test(String(to || '')) || to < from)
+            return out;
+        for (let d = from, n = 0; d <= to && n < 400; d = addDays(d, 1), n += 1) {
+            if (!weekdays || !weekdays.length || weekdays.indexOf(dowOf(d)) >= 0)
+                out.push(d);
+        }
+        return out;
     }
     /** Ô nén của máy chủ {nhân viên: [[chỉ số ngày, ca, nguồn]]} -> {nhân viên: mảng theo ngày của {s, m} hoặc undefined}. */
     function expandCells(cells, dayCount) {
@@ -15614,6 +15744,12 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         return (locks || []).find((l) => (!l.group || !group || l.group === group) && date >= l.from && date <= l.to) || null;
     }
     const shortDay = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+    const chunksOf = (list, size) => {
+        const out = [];
+        for (let i = 0; i < list.length; i += size)
+            out.push(list.slice(i, i + size));
+        return out;
+    };
     function RosterView({ app }) {
         ensureCss();
         const t = pick(TEXT$2);
@@ -15626,31 +15762,37 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const [data, setData] = core.useState(null);
         const [loaded, setLoaded] = core.useState(false);
         const [q, setQ] = core.useState('');
+        const [dept, setDept] = core.useState('');
+        const [scope, setScope] = core.useState('E');
         const [brush, setBrush] = core.useState('');
         const [limit, setLimit] = core.useState(ROW_STEP);
-        // Thay đổi chưa lưu: khóa "nhân viên|chỉ số ngày" -> id ca ('' = nghỉ). Giữ trong ref + bộ đếm để vẽ lại
+        // Thay đổi chưa lưu: khóa "nhân viên|chỉ số ngày" -> id ca ('' = nghỉ) hoặc RESET. Giữ trong ref + bộ đếm để vẽ lại
         const pendingRef = core.useRef({});
+        const selRef = core.useRef({});
         const tickRef = core.useRef(0);
         const [, setTick] = core.useState(0);
         const bump = () => {
             tickRef.current += 1;
             setTick(tickRef.current);
         };
-        const [dialog, setDialog] = core.useState(false);
-        const formRef = core.useRef({ team: '', pattern: '', from: '', to: '', anchor: '' });
-        const [form, setForm] = core.useState(formRef.current);
+        // Hộp thoại: null | {kind: 'schemes'} | {kind: 'scheme', id} | {kind: 'range'} | {kind: 'assign'}
+        const [dialog, setDialog] = core.useState(null);
+        const formRef = core.useRef({});
+        const [form, setForm] = core.useState({});
         const alive = core.useRef(true);
         const request = core.useRef(0);
         const shownRef = core.useRef([]);
         const pickRef = core.useRef(() => undefined);
+        const headRef = core.useRef(() => undefined);
         const lastRef = core.useRef(null);
         const pendingCount = () => Object.keys(pendingRef.current).length;
+        const selected = () => Object.keys(selRef.current);
         const clearPending = () => {
             pendingRef.current = {};
             lastRef.current = null;
             bump();
         };
-        const load = () => {
+        const load = (keepSelection) => {
             if (!subsidiary)
                 return Promise.resolve();
             request.current += 1;
@@ -15666,63 +15808,125 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                     return;
                 pendingRef.current = {};
                 lastRef.current = null;
+                if (!keepSelection)
+                    selRef.current = {};
+                else {
+                    const live = {};
+                    (r.rows || []).forEach((x) => {
+                        if (selRef.current[x.employee])
+                            live[x.employee] = true;
+                    });
+                    selRef.current = live;
+                }
                 setData(r);
             });
         };
         core.useEffect(() => {
             alive.current = true;
             setLimit(ROW_STEP);
-            load();
+            load(false);
             return () => {
                 alive.current = false;
             };
         }, [subsidiary, from, span, team]);
         // Đổi khoảng ngày / tổ: có thay đổi chưa lưu thì hỏi trước
-        const goWith = (next) => {
-            const target = Object.assign({ from, days: String(span), team }, next);
-            const move = () => {
-                pendingRef.current = {};
-                app.go('roster', target);
-            };
+        const guard = (action) => {
             if (pendingCount())
-                app.confirm(t.confirmDiscard(pendingCount()), move);
+                app.confirm(t.confirmDiscard(pendingCount()), () => {
+                    pendingRef.current = {};
+                    action();
+                });
             else
-                move();
+                action();
         };
+        const goWith = (next) => guard(() => app.go('roster', Object.assign({ from, days: String(span), team }, next)));
         const days = data ? data.days || [] : [];
         const shifts = data ? data.shifts || [] : [];
         const shiftById = {};
         shifts.forEach((s) => (shiftById[s.id] = s));
         const rows = data ? data.rows || [] : [];
+        const vrows = data ? data.vrows || [] : [];
         const cellMap = data ? expandCells(data.cells, days.length) : {};
         const canEdit = !!(data && data.canEdit);
+        const nEligible = rows.filter((r) => r.eligible).length;
+        // Chưa ai thuộc diện xếp ca: vẫn mặc định "Diện xếp ca" để thấy hướng dẫn khai chế độ ca
+        const scoped = scope === 'E' ? rows.filter((r) => r.eligible || selRef.current[r.employee]) : rows;
         const needle = fold(q).split(/\s+/).filter((w) => w);
-        const filtered = needle.length ? rows.filter((r) => {
-            const hay = fold([r.code, r.name, r.department, (r.teams || []).join(' ')].join(' '));
+        const filtered = scoped.filter((r) => {
+            if (dept && r.departmentId !== dept)
+                return false;
+            if (!needle.length)
+                return true;
+            const hay = fold([r.code, r.name, r.department, (r.teams || []).join(' '), (r.patterns || []).join(' ')].join(' '));
             return needle.every((w) => hay.indexOf(w) >= 0);
-        }) : rows;
+        });
         const shown = filtered.slice(0, limit);
         shownRef.current = shown;
-        // Giá trị hiện tại của ô (đã tính thay đổi chưa lưu): {s, m, p} hoặc null khi chưa có ô
-        const cellOf = (employee, i) => {
-            const key = `${employee}|${i}`;
-            if (Object.prototype.hasOwnProperty.call(pendingRef.current, key))
-                return { s: pendingRef.current[key], m: true, p: true };
-            const c = (cellMap[employee] || [])[i];
-            return c ? { s: c.s, m: c.m, p: false } : null;
+        // Lịch suy ra từ chế độ ca của một ngày: id ca, '' (nghỉ) hoặc undefined (không có chế độ ca)
+        const schemeOf = (row, i) => {
+            const v = row.v === undefined || row.v === null ? null : vrows[row.v];
+            const s = v ? v[i] : null;
+            return s === null || s === undefined ? undefined : String(s);
         };
-        const setCell = (row, i, value) => {
+        // Giá trị hiện tại của ô: {s, m (sửa tay), p (chưa lưu), v (theo chế độ ca)} hoặc null khi chưa xếp
+        const cellOf = (row, i) => {
             const key = `${row.employee}|${i}`;
-            const orig = (cellMap[row.employee] || [])[i];
-            // Trùng giá trị đã lưu: không coi là thay đổi (ô gốc sinh từ mẫu mà gán lại đúng ca thì vẫn giữ nguồn G)
-            if (orig && orig.s === value)
+            if (has(pendingRef.current, key)) {
+                const pv = pendingRef.current[key];
+                if (pv !== RESET)
+                    return { s: pv, m: true, p: true };
+                const sv = schemeOf(row, i);
+                return sv === undefined ? { s: '', none: true, p: true } : { s: sv, v: true, p: true };
+            }
+            const c = (cellMap[row.employee] || [])[i];
+            if (c)
+                return { s: c.s, m: c.m, p: false };
+            const sv = schemeOf(row, i);
+            return sv === undefined ? null : { s: sv, v: true, p: false };
+        };
+        // Đặt thay đổi cho một ô theo cây bút; trả false khi ô bị khóa
+        const paint = (row, i, value, toggle) => {
+            const lock = lockOf(data.locks, row.group, days[i].date);
+            if (lock)
+                return lock;
+            const key = `${row.employee}|${i}`;
+            const stored = (cellMap[row.employee] || [])[i];
+            if (toggle && has(pendingRef.current, key) && pendingRef.current[key] === value) {
+                delete pendingRef.current[key];
+                return null;
+            }
+            if (value === RESET) {
+                // Chỉ có nghĩa khi ô đang có bản ghi đã lưu
+                if (stored)
+                    pendingRef.current[key] = RESET;
+                else
+                    delete pendingRef.current[key];
+                return null;
+            }
+            const sv = schemeOf(row, i);
+            // Trùng giá trị đang có (ô đã lưu, hoặc lịch của chế độ ca khi chưa có ô): không coi là thay đổi
+            if ((stored && stored.s === value) || (!stored && sv !== undefined && sv === value))
                 delete pendingRef.current[key];
             else
                 pendingRef.current[key] = value;
+            return null;
         };
-        pickRef.current = (rowIndex, dayIndex, shiftKey) => {
+        const brushValue = () => (brush === OFF ? '' : brush);
+        pickRef.current = (rowIndex, cellIndex, shiftKey) => {
             const row = shownRef.current[rowIndex];
-            if (!row || !data || dayIndex < 0 || dayIndex >= days.length)
+            if (!row || !data)
+                return;
+            if (cellIndex === 0) {
+                // Cột nhân viên: tích chọn
+                if (selRef.current[row.employee])
+                    delete selRef.current[row.employee];
+                else
+                    selRef.current[row.employee] = true;
+                bump();
+                return;
+            }
+            const dayIndex = cellIndex - 1;
+            if (dayIndex < 0 || dayIndex >= days.length)
                 return;
             if (!canEdit) {
                 app.notify(t.readOnly, 'warn');
@@ -15732,32 +15936,48 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 app.notify(t.pickBrush, 'warn');
                 return;
             }
-            const value = brush === OFF ? '' : brush;
             const last = lastRef.current;
-            const list = shiftKey && last && last.employee === row.employee ? (() => {
-                const a = Math.min(last.day, dayIndex);
-                const b = Math.max(last.day, dayIndex);
-                const out = [];
-                for (let i = a; i <= b; i++)
-                    out.push(i);
-                return out;
-            })() : [dayIndex];
+            const list = [];
+            if (shiftKey && last && last.employee === row.employee)
+                for (let i = Math.min(last.day, dayIndex); i <= Math.max(last.day, dayIndex); i++)
+                    list.push(i);
+            else
+                list.push(dayIndex);
             let blocked = null;
-            const single = list.length === 1;
             list.forEach((i) => {
-                const lock = lockOf(data.locks, row.group, days[i].date);
-                if (lock) {
+                const lock = paint(row, i, brushValue(), list.length === 1);
+                if (lock)
                     blocked = lock;
-                    return;
-                }
-                const key = `${row.employee}|${i}`;
-                // Bấm lại một ô đang chờ lưu với cùng ca: bỏ thay đổi của ô đó
-                if (single && Object.prototype.hasOwnProperty.call(pendingRef.current, key) && pendingRef.current[key] === value)
-                    delete pendingRef.current[key];
-                else
-                    setCell(row, i, value);
             });
             lastRef.current = { employee: row.employee, day: dayIndex };
+            if (blocked)
+                app.notify(t.locked(blocked.code), 'warn');
+            bump();
+        };
+        // Bấm tiêu đề ngày: tô cây bút cho cả ngày đó của những người đang chọn
+        headRef.current = (cellIndex) => {
+            const dayIndex = cellIndex - 1;
+            if (!data || dayIndex < 0 || dayIndex >= days.length)
+                return;
+            if (!canEdit) {
+                app.notify(t.readOnly, 'warn');
+                return;
+            }
+            if (!brush) {
+                app.notify(t.pickBrush, 'warn');
+                return;
+            }
+            const people = rows.filter((r) => selRef.current[r.employee]);
+            if (!people.length) {
+                app.notify(t.pickPeople, 'warn');
+                return;
+            }
+            let blocked = null;
+            people.forEach((r) => {
+                const lock = paint(r, dayIndex, brushValue(), false);
+                if (lock)
+                    blocked = lock;
+            });
             if (blocked)
                 app.notify(t.locked(blocked.code), 'warn');
             bump();
@@ -15770,11 +15990,14 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                     return undefined;
                 el.onclick = (ev) => {
                     try {
-                        const td = ev && ev.target && ev.target.closest ? ev.target.closest('td') : null;
-                        const tr = td ? td.parentNode : null;
-                        if (!td || !tr || !el.contains(td) || td.cellIndex < 1)
+                        const cell = ev && ev.target && ev.target.closest ? ev.target.closest('td,th') : null;
+                        const tr = cell ? cell.parentNode : null;
+                        if (!cell || !tr || !el.contains(cell))
                             return;
-                        pickRef.current(tr.rowIndex - 1, td.cellIndex - 1, !!ev.shiftKey);
+                        if (cell.tagName === 'TH')
+                            headRef.current(cell.cellIndex);
+                        else
+                            pickRef.current(tr.rowIndex - 1, cell.cellIndex, !!ev.shiftKey);
                     }
                     catch (e) {
                         // bỏ qua lượt bấm lỗi
@@ -15786,86 +16009,181 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             }
             return undefined;
         });
+        // Gửi nhiều lô nối tiếp, cộng dồn số đếm
+        const sendChunks = (list, size, build) => {
+            const total = {};
+            return chunksOf(list, size)
+                .reduce((p, chunk) => p.then(() => post(build(chunk))).then((r) => {
+                Object.keys(r || {}).forEach((k) => {
+                    if (typeof r[k] === 'number')
+                        total[k] = (total[k] || 0) + r[k];
+                });
+            }), Promise.resolve())
+                .then(() => total);
+        };
         const save = () => {
-            const cells = Object.keys(pendingRef.current).map((key) => {
+            const set = [];
+            const reset = [];
+            Object.keys(pendingRef.current).forEach((key) => {
                 const cut = key.indexOf('|');
-                return { employee: key.slice(0, cut), workDate: days[Number(key.slice(cut + 1))].date, shift: pendingRef.current[key] };
+                const c = { employee: key.slice(0, cut), workDate: days[Number(key.slice(cut + 1))].date };
+                if (pendingRef.current[key] === RESET)
+                    reset.push(c);
+                else
+                    set.push(Object.assign(c, { shift: pendingRef.current[key] }));
             });
-            if (!cells.length)
+            if (!set.length && !reset.length)
                 return;
-            const chunks = [];
-            for (let i = 0; i < cells.length; i += SAVE_CHUNK)
-                chunks.push(cells.slice(i, i + SAVE_CHUNK));
-            const total = { created: 0, updated: 0, unchanged: 0 };
-            const work = chunks.reduce((p, chunk) => p.then(() => post({ action: 'rosterCells', subsidiary, cells: chunk })).then((r) => {
-                ['created', 'updated', 'unchanged'].forEach((k) => (total[k] += Number((r || {})[k]) || 0));
-            }), Promise.resolve());
-            app.run(t.saving, work.then(() => total)).then((r) => {
+            const work = sendChunks(set, SAVE_CHUNK, (cells) => ({ action: 'rosterCells', subsidiary, cells })).then((a) => sendChunks(reset, SAVE_CHUNK, (cells) => ({ action: 'rosterReset', subsidiary, cells })).then((b) => ({ created: a.created || 0, updated: a.updated || 0, reset: b.reset || 0 })));
+            app.run(t.saving, work).then((r) => {
                 if (!alive.current)
                     return;
                 // Lỗi giữa chừng: các lô trước đã ghi, tải lại để thấy đúng hiện trạng
-                load().then(() => {
+                load(true).then(() => {
                     if (r)
                         app.notify(t.saved(r));
                 });
             });
         };
+        // ------------------------------------------------------------------ hộp thoại
         const setField = (k) => (v) => {
             formRef.current = Object.assign({}, formRef.current, { [k]: v });
             setForm(formRef.current);
         };
-        const openDialog = () => {
-            formRef.current = { team: team || '', pattern: '', from, to, anchor: '' };
+        const open = (kind, values) => {
+            formRef.current = values || {};
             setForm(formRef.current);
-            setDialog(true);
+            setDialog({ kind });
         };
-        const generate = () => {
+        const close = () => setDialog(null);
+        const openRange = () => guard(() => open('range', { shift: '', from, to, weekdays: [] }));
+        const openAssign = () => guard(() => open('assign', { pattern: '', effective: from, expiration: '', anchor: '', note: '' }));
+        const openSchemes = () => guard(() => open('schemes', {}));
+        const openScheme = (row) => open('scheme', row
+            ? { id: row.id, scope: row.scope, target: row.target, pattern: row.pattern, effective: row.effective, expiration: row.expiration, anchor: row.anchor, note: row.note }
+            : { id: '', scope: 'T', target: team || '', pattern: '', effective: from, expiration: '', anchor: '', note: '' });
+        const runRange = () => {
             const v = formRef.current;
-            if (!v.team || !v.pattern || !ISO.test(v.from) || !ISO.test(v.to))
+            const people = rows.filter((r) => selRef.current[r.employee]);
+            const dates = dateList(v.from, v.to, v.weekdays);
+            if (!v.shift || !people.length || !dates.length)
                 return;
-            // Action cũ: lỗi phân quyền trả ở khóa error / errorVi (không ném)
-            const work = post({ action: 'generateRoster', team: v.team, pattern: v.pattern, anchor: ISO.test(v.anchor) ? v.anchor : v.from, from: v.from, to: v.to }).then((r) => {
-                if (r && r.error)
-                    throw { message: serverText(r.error, r.errorVi) };
-                return r;
+            const value = v.shift === OFF ? '' : v.shift;
+            const cells = [];
+            let skipped = 0;
+            people.forEach((r) => dates.forEach((d) => {
+                if (lockOf(data.locks, r.group, d))
+                    skipped += 1;
+                else
+                    cells.push({ employee: r.employee, workDate: d, shift: value });
+            }));
+            if (cells.length > RANGE_MAX) {
+                app.notify(t.rng.tooMany(RANGE_MAX), 'warn');
+                return;
+            }
+            const work = sendChunks(cells, SAVE_CHUNK, (chunk) => ({ action: 'rosterCells', subsidiary, cells: chunk }));
+            app.run(t.saving, work).then((r) => {
+                if (!alive.current)
+                    return;
+                close();
+                load(true).then(() => {
+                    if (r)
+                        app.notify(t.rng.done({ created: r.created || 0, updated: r.updated || 0, unchanged: r.unchanged || 0 }, skipped));
+                });
             });
-            app.run(t.generating, work).then((r) => {
+        };
+        const runAssign = () => {
+            const v = formRef.current;
+            const people = selected();
+            if (!v.pattern || !ISO.test(String(v.effective || '')) || !people.length)
+                return;
+            const base = { action: 'rosterAssignBatch', subsidiary, pattern: v.pattern, effective: v.effective, note: v.note || '' };
+            if (ISO.test(String(v.expiration || '')))
+                base.expiration = v.expiration;
+            if (ISO.test(String(v.anchor || '')))
+                base.anchor = v.anchor;
+            const work = sendChunks(people, ASSIGN_CHUNK, (chunk) => Object.assign({}, base, { employees: chunk }));
+            app.run(t.saving, work).then((r) => {
+                if (!alive.current)
+                    return;
+                close();
+                load(true).then(() => {
+                    if (r)
+                        app.notify(t.asg.done({ created: r.created || 0, closed: r.closed || 0 }));
+                });
+            });
+        };
+        const runReset = () => {
+            const cells = [];
+            rows.filter((r) => selRef.current[r.employee]).forEach((r) => {
+                (cellMap[r.employee] || []).forEach((c, i) => {
+                    if (c && !lockOf(data.locks, r.group, days[i].date))
+                        cells.push({ employee: r.employee, workDate: days[i].date });
+                });
+            });
+            if (!cells.length) {
+                app.notify(t.rst.none, 'warn');
+                return;
+            }
+            guard(() => app.confirm(t.rst.confirm(cells.length), () => {
+                app.run(t.saving, sendChunks(cells, SAVE_CHUNK, (chunk) => ({ action: 'rosterReset', subsidiary, cells: chunk }))).then((r) => {
+                    if (!alive.current)
+                        return;
+                    load(true).then(() => {
+                        if (r)
+                            app.notify(t.rst.done({ reset: r.reset || 0 }));
+                    });
+                });
+            }));
+        };
+        const saveScheme = () => {
+            const v = formRef.current;
+            if (!v.scope || !v.pattern || !ISO.test(String(v.effective || '')) || (v.scope !== 'S' && !v.target))
+                return;
+            const values = { scope: v.scope, pattern: v.pattern, effective: v.effective, expiration: ISO.test(String(v.expiration || '')) ? v.expiration : '', anchor: ISO.test(String(v.anchor || '')) ? v.anchor : '', note: v.note || '' };
+            const key = { E: 'employee', T: 'team', D: 'department', G: 'paygroup' }[v.scope];
+            if (key)
+                values[key] = v.target;
+            const body = { action: 'rosterAssignSave', subsidiary, values };
+            if (v.id)
+                body.id = v.id;
+            app.run(t.saving, post(body)).then((r) => {
                 if (!r || !alive.current)
                     return;
-                setDialog(false);
-                load().then(() => app.notify(t.generated({ created: r.created || 0, updated: r.updated || 0, keptManual: r.keptManual || 0, unchanged: r.unchanged || 0 })));
+                load(true).then(() => {
+                    app.notify(t.sch.saved);
+                    open('schemes', {});
+                });
             });
         };
-        const startGenerate = () => {
-            if (pendingCount())
-                app.confirm(t.confirmDiscard(pendingCount()), () => {
-                    clearPending();
-                    openDialog();
-                });
-            else
-                openDialog();
-        };
-        const header = (extra) => (jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('attendance') }], title: t.title, sub: t.sub, actions: [jsx(Button, { label: t.reload, disabled: !subsidiary || !!app.busy, onClick: () => (pendingCount() ? app.confirm(t.confirmDiscard(pendingCount()), () => load()) : load()) })].concat(extra || []) }));
+        const stopScheme = (row) => app.confirm(t.sch.confirmStop(row.targetName || t.sch.scopes[row.scope]), () => {
+            app.run(t.saving, post({ action: 'rosterAssignSave', subsidiary, id: row.id, inactive: true })).then((r) => {
+                if (!r || !alive.current)
+                    return;
+                load(true).then(() => app.notify(t.sch.stopped));
+            });
+        });
+        const header = (extra) => (jsx(PageHeader, { crumbs: [{ label: t.crumb, onClick: () => app.go('attendance') }], title: t.title, sub: t.sub, actions: [jsx(Button, { label: t.reload, disabled: !subsidiary || !!app.busy, onClick: () => guard(() => load(true)) })].concat(extra || []) }));
         if (!data) {
             return (jsxs(Page, { children: [header(), jsx(Card, { children: jsx(Empty, { text: !subsidiary ? t.noSubsidiary : loaded ? t.noData : t.loading }) })] }));
         }
         // ------------------------------------------------------------------ dữ liệu suy ra
         const teams = data.teams || [];
         const patterns = (data.patterns || []).filter((p) => p.active);
+        const schemes = data.schemes || [];
         const activeShifts = shifts.filter((s) => s.active);
         const shiftLabel = (s) => `${s.code} ${s.start}-${s.end}`;
-        const brushItems = activeShifts.map((s) => ({ value: s.id, label: shiftLabel(s) })).concat([{ value: OFF, label: t.off }]);
-        const brushName = brush === OFF ? t.offLong : shiftById[brush] ? `${shiftById[brush].code}${shiftById[brush].description ? ` - ${shiftById[brush].description}` : ''}` : '';
+        const brushItems = activeShifts.map((s) => ({ value: s.id, label: shiftLabel(s) })).concat([{ value: OFF, label: t.off }, { value: RESET, label: t.byScheme }]);
+        const brushName = brush === OFF ? t.offLong : brush === RESET ? t.bySchemeLong : shiftById[brush] ? `${shiftById[brush].code}${shiftById[brush].description ? ` - ${shiftById[brush].description}` : ''}` : '';
         const nPending = pendingCount();
-        // Số người theo ca từng ngày, tính trên mọi nhân viên của lưới (kể cả dòng chưa hiện), gồm thay đổi chưa lưu
+        const nSelected = selected().length;
+        // Số người theo ca từng ngày trên các nhân viên đang lọc (kể cả dòng chưa hiện), gồm thay đổi chưa lưu
         const counts = {};
-        let assigned = 0;
-        rows.forEach((r) => {
+        filtered.forEach((r) => {
             for (let i = 0; i < days.length; i++) {
-                const c = cellOf(r.employee, i);
+                const c = cellOf(r, i);
                 if (!c || !c.s)
                     continue;
-                assigned += 1;
                 (counts[c.s] = counts[c.s] || new Array(days.length).fill(0))[i] += 1;
             }
         });
@@ -15878,28 +16196,95 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                                     if (cls)
                                         a.class = cls;
                                     return (jsxs("th", { ...a, children: [jsx("div", { children: t.dow[d.dow] }), jsx("div", { children: shortDay(d.date) })] }, `h${i}`));
-                                })] }) }), jsxs("tbody", { children: [shown.length ? null : (jsx("tr", { children: jsx("td", { colSpan: String(days.length + 1), style: { cursor: 'default', height: 'auto', textAlign: 'left', fontWeight: '400' }, children: jsx(Empty, { text: rows.length ? t.noMatch : t.empty }) }) }, "s4vp-none")), shown.map((r) => (jsxs("tr", { children: [jsxs("td", { class: "s4vp-ros-l", title: `${r.code} ${r.name}${r.department ? ` - ${r.department}` : ''}`, children: [jsxs("span", { class: "s4vp-ros-name", children: [jsx("span", { class: "s4vp-link", children: r.code }), ` ${r.name}`] }), jsx("span", { class: "s4vp-ros-kind", children: [(r.teams || []).join(', '), r.department].filter(Boolean).join(' · ') })] }), days.map((d, i) => {
-                                        const c = cellOf(r.employee, i);
-                                        const s = c && c.s ? shiftById[c.s] : null;
-                                        const lock = lockOf(data.locks, r.group, d.date);
-                                        const cls = cx(s ? `s4vp-ros-k${s.kind || 'D'}` : c ? cx('s4vp-ros-rest', dayClass(d)) : dayClass(d), c && c.m && !c.p ? 's4vp-ros-m' : '', c && c.p ? 's4vp-ros-p' : '', lock ? 's4vp-ros-lock' : '');
-                                        const label = s ? `${s.code} ${s.start}-${s.end}` : c ? t.offLong : t.noCell;
-                                        const notes = [c && c.p ? t.pending : c && c.m ? t.manual : '', lock ? t.locked(lock.code) : ''].filter(Boolean).join('; ');
-                                        const a = { title: `${t.cellTitle(r.name || r.code, fmtDate(d.date), label)}${notes ? ` (${notes})` : ''}` };
-                                        if (cls)
-                                            a.class = cls;
-                                        return (jsx("td", { ...a, children: s ? s.code : c ? '-' : '' }, `d${i}`));
-                                    })] }, `e${r.employee}`))), countShifts.map((s) => (jsxs("tr", { class: "s4vp-ros-sum", children: [jsx("td", { class: "s4vp-ros-l", title: t.headcount, children: `${t.headcount}: ${s.code}` }), days.map((d, i) => (jsx("td", { children: counts[s.id][i] ? String(counts[s.id][i]) : '' }, `n${i}`)))] }, `c${s.id}`)))] })] }) }));
+                                })] }) }), jsxs("tbody", { children: [shown.length ? null : (jsx("tr", { class: "s4vp-ros-sum", children: jsx("td", { colSpan: String(days.length + 1), style: { height: 'auto', textAlign: 'left', fontWeight: '400', background: '#fff' }, children: jsx(Empty, { text: !rows.length ? t.empty : scope === 'E' && !nEligible && !needle.length && !dept ? t.emptyEligible : t.noMatch }) }) }, "s4vp-none")), shown.map((r) => {
+                                const tr = {};
+                                const cls = cx(selRef.current[r.employee] ? 's4vp-ros-on' : '', r.eligible ? '' : 's4vp-ros-out');
+                                if (cls)
+                                    tr.class = cls;
+                                return (jsxs("tr", { ...tr, children: [jsxs("td", { class: "s4vp-ros-l", title: `${r.code} ${r.name}${r.department ? ` - ${r.department}` : ''}`, children: [jsxs("span", { class: "s4vp-ros-name", children: [jsx("span", { class: "s4vp-link", children: r.code }), ` ${r.name}`] }), jsx("span", { class: "s4vp-ros-kind", children: [(r.patterns || []).join(', '), (r.teams || []).join(', '), r.department].filter(Boolean).join(' · ') })] }), days.map((d, i) => {
+                                            const c = cellOf(r, i);
+                                            const s = c && c.s ? shiftById[c.s] : null;
+                                            const lock = lockOf(data.locks, r.group, d.date);
+                                            const blankCell = !c || c.none;
+                                            const kcls = cx(s ? `s4vp-ros-k${s.kind || 'D'}` : blankCell ? dayClass(d) : cx('s4vp-ros-rest', dayClass(d)), c && c.m && !c.p ? 's4vp-ros-m' : '', c && c.p ? 's4vp-ros-p' : '', lock ? 's4vp-ros-lock' : '');
+                                            const label = s ? `${s.code} ${s.start}-${s.end}` : blankCell ? t.noCell : t.offLong;
+                                            const notes = [c && c.p ? t.pending : c && c.m ? t.manual : c && c.v ? t.fromScheme : '', lock ? t.locked(lock.code) : ''].filter(Boolean).join('; ');
+                                            const a = { title: `${t.cellTitle(r.name || r.code, fmtDate(d.date), label)}${notes ? ` (${notes})` : ''}` };
+                                            if (kcls)
+                                                a.class = kcls;
+                                            return (jsx("td", { ...a, children: s ? s.code : blankCell ? '' : '-' }, `d${i}`));
+                                        })] }, `e${r.employee}`));
+                            }), countShifts.map((s) => (jsxs("tr", { class: "s4vp-ros-sum", children: [jsx("td", { class: "s4vp-ros-l", title: t.headcount, children: `${t.headcount}: ${s.code}` }), days.map((d, i) => (jsx("td", { children: counts[s.id][i] ? String(counts[s.id][i]) : '' }, `n${i}`)))] }, `c${s.id}`)))] })] }) }));
         const teamOptions = teams.map((x) => ({ value: x.id, label: `${x.code}${x.description ? ` - ${x.description}` : ''} (${x.members})` }));
-        const formTeam = teams.find((x) => x.id === form.team) || null;
-        const formPattern = patterns.find((p) => p.id === form.pattern) || null;
-        return (jsxs(Page, { children: [header(canEdit ? [jsx(Button, { label: t.generate, kind: nPending ? 'default' : 'primary', disabled: !!app.busy, onClick: startGenerate })] : []), jsxs(Card, { flush: true, label: t.title, children: [jsxs("div", { class: "s4vp-ros-bar", children: [jsx(Button, { small: true, label: `‹ ${t.prev}`, onClick: () => goWith({ from: addDays(from, -span) }) }), jsx(DateInput, { value: from, onInput: (v) => ISO.test(v) && v !== from && goWith({ from: v }), ariaLabel: t.from, width: 150 }), jsx(Button, { small: true, label: `${t.next} ›`, onClick: () => goWith({ from: addDays(from, span) }) }), jsx(Button, { small: true, kind: "ghost", label: t.today, onClick: () => goWith({ from: mondayOf(localToday()) }) }), jsx(Select, { value: String(span), onInput: (v) => Number(v) !== span && goWith({ days: v }), options: SPANS.map((n) => ({ value: String(n), label: t.spans[n] })), ariaLabel: t.span, width: 110 }), jsx(AutoSelect, { value: team, onInput: (v) => v !== team && goWith({ team: v }), options: teamOptions, placeholder: t.allTeams, ariaLabel: t.team, width: 230 }), jsx("span", { class: "s4vp-ros-grow" }), jsx(SearchBox, { value: q, onInput: (v) => {
+        const deptOptions = (data.departments || []).map((x) => ({ value: x.id, label: x.name }));
+        const patternOptions = patterns.map((p) => ({ value: p.id, label: `${p.code}${p.description ? ` - ${p.description}` : ''}` }));
+        const patternHint = (id) => {
+            const p = patterns.find((x) => x.id === id);
+            return p ? t.sch.cycle(p.cycle.map((c) => c || t.off).join(', '), p.cycle.length) : null;
+        };
+        const targetOptions = (sc) => {
+            if (sc === 'E')
+                return rows.map((r) => ({ value: r.employee, label: `${r.code} ${r.name}` }));
+            if (sc === 'T')
+                return teamOptions;
+            if (sc === 'D')
+                return deptOptions;
+            if (sc === 'G')
+                return (data.paygroups || []).map((g) => ({ value: g.id, label: g.code }));
+            return [];
+        };
+        const selectAll = () => {
+            filtered.forEach((r) => (selRef.current[r.employee] = true));
+            bump();
+        };
+        const selectNone = () => {
+            selRef.current = {};
+            bump();
+        };
+        let dialogNode = null;
+        if (dialog && dialog.kind === 'schemes') {
+            const sRows = schemes.map((x) => Object.assign({}, x, { scopeText: t.sch.scopes[x.scope] || x.scope, targetText: x.scope === 'S' ? t.sch.whole : x.targetName || x.target }));
+            const cols = [
+                { key: 'scopeText', label: t.sch.cols.scope, nowrap: true },
+                { key: 'targetText', label: t.sch.cols.target },
+                { key: 'patternCode', label: t.sch.cols.pattern, nowrap: true },
+                { key: 'effective', label: t.sch.cols.effective, nowrap: true, render: (r) => fmtDate(r.effective) },
+                { key: 'expiration', label: t.sch.cols.expiration, nowrap: true, render: (r) => fmtDate(r.expiration) },
+                { key: 'anchor', label: t.sch.cols.anchor, nowrap: true, render: (r) => fmtDate(r.anchor) },
+                { key: 'note', label: t.sch.cols.note },
+            ];
+            if (canEdit) {
+                cols.push({ key: 'act', label: t.sch.cols.act, nowrap: true, noRowClick: true, render: (r) => (jsxs("span", { class: "s4vp-actions", children: [jsx(Button, { small: true, kind: "link", label: t.sch.edit, onClick: () => openScheme(r) }), jsx(Button, { small: true, kind: "link", label: t.sch.stop, onClick: () => stopScheme(r) })] })) });
+            }
+            dialogNode = (jsxs(Dialog, { title: t.sch.title, onClose: close, width: 920, actions: [jsx(Button, { label: t.sch.close, onClick: close }), canEdit ? jsx(Button, { label: t.sch.add, kind: "primary", disabled: !!app.busy, onClick: () => openScheme(null) }) : null], children: [jsx("div", { class: "s4vp-ros-note", children: t.sch.intro }), jsx(Table, { columns: cols, rows: sRows, keyOf: (r) => r.id, empty: t.sch.empty, search: true, searchPlaceholder: t.sch.search, maxHeight: 360 })] }));
+        }
+        else if (dialog && dialog.kind === 'scheme') {
+            const sc = form.scope || 'T';
+            const ok = !!form.pattern && ISO.test(String(form.effective || '')) && (sc === 'S' || !!form.target);
+            dialogNode = (jsxs(Dialog, { title: form.id ? t.sch.editTitle : t.sch.newTitle, onClose: () => open('schemes', {}), width: 560, actions: [jsx(Button, { label: t.sch.cancel, onClick: () => open('schemes', {}) }), jsx(Button, { label: t.sch.save, kind: "primary", disabled: !ok || !!app.busy, onClick: saveScheme })], children: [patterns.length ? null : jsx("div", { class: "s4vp-ros-note", children: t.sch.noPatterns }), jsxs("div", { class: "s4vp-ros-two", children: [jsx(Field, { label: t.sch.scope, required: true, children: jsx(Select, { value: sc, onInput: (v) => {
+                                        formRef.current = Object.assign({}, formRef.current, { scope: v, target: '' });
+                                        setForm(formRef.current);
+                                    }, options: ['T', 'D', 'G', 'S', 'E'].map((k) => ({ value: k, label: t.sch.scopes[k] })) }) }), jsx(Field, { label: t.sch.target, required: sc !== 'S', children: sc === 'S' ? jsx(TextInput, { value: t.sch.whole, disabled: true }) : jsx(AutoSelect, { value: form.target || '', onInput: setField('target'), options: targetOptions(sc), placeholder: t.sch.pickTarget }) })] }), jsx(Field, { label: t.sch.pattern, required: true, hint: patternHint(form.pattern), children: jsx(AutoSelect, { value: form.pattern || '', onInput: setField('pattern'), options: patternOptions, placeholder: t.sch.pickPattern }) }), jsxs("div", { class: "s4vp-ros-two", children: [jsx(Field, { label: t.sch.effective, required: true, children: jsx(DateInput, { value: form.effective || '', onInput: setField('effective') }) }), jsx(Field, { label: t.sch.expiration, hint: t.sch.expirationHint, children: jsx(DateInput, { value: form.expiration || '', onInput: setField('expiration'), min: form.effective || '' }) })] }), jsx(Field, { label: t.sch.anchor, hint: t.sch.anchorHint, children: jsx(DateInput, { value: form.anchor || '', onInput: setField('anchor') }) }), jsx(Field, { label: t.sch.note, children: jsx(TextInput, { value: form.note || '', onInput: setField('note') }) })] }));
+        }
+        else if (dialog && dialog.kind === 'range') {
+            const dates = dateList(form.from, form.to, form.weekdays);
+            const nCells = dates.length * nSelected;
+            const wd = form.weekdays || [];
+            dialogNode = (jsxs(Dialog, { title: t.rng.title(nSelected), onClose: close, width: 560, actions: [jsx(Button, { label: t.sch.cancel, onClick: close }), jsx(Button, { label: t.rng.run, kind: "primary", disabled: !form.shift || !nCells || nCells > RANGE_MAX || !!app.busy, onClick: runRange })], children: [jsx(Field, { label: t.rng.shift, required: true, children: jsx(Select, { value: form.shift || '', onInput: setField('shift'), options: activeShifts.map((s) => ({ value: s.id, label: shiftLabel(s) })).concat([{ value: OFF, label: t.offLong }]), placeholder: t.rng.pickShift }) }), jsxs("div", { class: "s4vp-ros-two", children: [jsx(Field, { label: t.rng.from, required: true, children: jsx(DateInput, { value: form.from || '', onInput: setField('from') }) }), jsx(Field, { label: t.rng.to, required: true, children: jsx(DateInput, { value: form.to || '', onInput: setField('to'), min: form.from || '' }) })] }), jsx(Field, { label: t.rng.weekdays, children: jsx("span", { class: "s4vp-actions", children: [1, 2, 3, 4, 5, 6, 0].map((n) => (jsx(Button, { small: true, label: t.dow[n], kind: wd.indexOf(n) >= 0 ? 'primary' : 'default', pressed: wd.indexOf(n) >= 0, onClick: () => setField('weekdays')(wd.indexOf(n) >= 0 ? wd.filter((x) => x !== n) : wd.concat([n])) }, `w${n}`))) }) }), jsx("div", { class: "s4vp-ros-note", children: nCells > RANGE_MAX ? t.rng.tooMany(RANGE_MAX) : t.rng.note(nCells) })] }));
+        }
+        else if (dialog && dialog.kind === 'assign') {
+            dialogNode = (jsxs(Dialog, { title: t.asg.title(nSelected), onClose: close, width: 560, actions: [jsx(Button, { label: t.sch.cancel, onClick: close }), jsx(Button, { label: t.asg.run, kind: "primary", disabled: !form.pattern || !ISO.test(String(form.effective || '')) || !nSelected || !!app.busy, onClick: runAssign })], children: [jsx("div", { class: "s4vp-ros-note", children: t.asg.note }), jsx(Field, { label: t.sch.pattern, required: true, hint: patternHint(form.pattern), children: jsx(AutoSelect, { value: form.pattern || '', onInput: setField('pattern'), options: patternOptions, placeholder: t.sch.pickPattern }) }), jsxs("div", { class: "s4vp-ros-two", children: [jsx(Field, { label: t.sch.effective, required: true, children: jsx(DateInput, { value: form.effective || '', onInput: setField('effective') }) }), jsx(Field, { label: t.sch.expiration, hint: t.sch.expirationHint, children: jsx(DateInput, { value: form.expiration || '', onInput: setField('expiration'), min: form.effective || '' }) })] }), jsx(Field, { label: t.sch.anchor, hint: t.sch.anchorHint, children: jsx(DateInput, { value: form.anchor || '', onInput: setField('anchor') }) }), jsx(Field, { label: t.sch.note, children: jsx(TextInput, { value: form.note || '', onInput: setField('note') }) })] }));
+        }
+        return (jsxs(Page, { children: [header([jsx(Button, { label: `${t.schemes}${schemes.length ? ` (${schemes.length})` : ''}`, kind: nPending ? 'default' : 'primary', disabled: !!app.busy, onClick: openSchemes })]), jsxs(Card, { flush: true, label: t.title, children: [jsxs("div", { class: "s4vp-ros-bar", children: [jsx(Button, { small: true, label: `‹ ${t.prev}`, onClick: () => goWith({ from: addDays(from, -span) }) }), jsx(DateInput, { value: from, onInput: (v) => ISO.test(v) && v !== from && goWith({ from: v }), ariaLabel: t.from, width: 150 }), jsx(Button, { small: true, label: `${t.next} ›`, onClick: () => goWith({ from: addDays(from, span) }) }), jsx(Button, { small: true, kind: "ghost", label: t.today, onClick: () => goWith({ from: mondayOf(localToday()) }) }), jsx(Select, { value: String(span), onInput: (v) => Number(v) !== span && goWith({ days: v }), options: SPANS.map((n) => ({ value: String(n), label: t.spans[n] })), ariaLabel: t.span, width: 110 }), jsx(Chips, { items: [{ value: 'E', label: t.scopeEligible, count: nEligible }, { value: 'A', label: t.scopeAll, count: rows.length }], value: scope, onPick: (v) => {
+                                        setScope(v);
+                                        setLimit(ROW_STEP);
+                                    }, label: t.scopeLabel }), jsx(AutoSelect, { value: team, onInput: (v) => v !== team && goWith({ team: v }), options: teamOptions, placeholder: t.allTeams, ariaLabel: t.team, width: 200 }), jsx(AutoSelect, { value: dept, onInput: (v) => {
+                                        setDept(v);
+                                        setLimit(ROW_STEP);
+                                    }, options: deptOptions, placeholder: t.allDepts, ariaLabel: t.dept, width: 200 }), jsx("span", { class: "s4vp-ros-grow" }), jsx(SearchBox, { value: q, onInput: (v) => {
                                         setQ(v);
                                         setLimit(ROW_STEP);
-                                    }, placeholder: t.search, width: 250 })] }), canEdit ? (jsxs("div", { class: "s4vp-ros-brush", children: [activeShifts.length ? jsx(Chips, { items: brushItems, value: brush, onPick: (v) => setBrush(v === brush ? '' : v), label: t.brush }) : jsx("span", { children: t.noShifts }), jsx("span", { children: brush ? t.brushOn(brushName) : t.brushNone })] })) : (jsx("div", { class: "s4vp-ros-brush", children: jsx("span", { children: t.readOnly }) })), grid, jsxs("div", { class: "s4vp-ros-foot", children: [jsxs("span", { children: [t.summary(rows.length, assigned), filtered.length > shown.length || needle.length ? ` · ${t.shown(shown.length, filtered.length)}` : ''] }), jsxs("span", { class: "s4vp-actions", children: [filtered.length > shown.length ? jsx(Button, { small: true, label: t.showMore(Math.min(ROW_STEP, filtered.length - shown.length)), onClick: () => setLimit(limit + ROW_STEP) }) : null, nPending ? jsx(Button, { small: true, label: t.discard, disabled: !!app.busy, onClick: clearPending }) : null, nPending ? jsx(Button, { small: true, kind: "primary", label: t.save(nPending), disabled: !!app.busy, onClick: save }) : null] })] })] }), dialog ? (jsxs(Dialog, { title: t.dlg.title, onClose: () => setDialog(false), width: 520, actions: [
-                        jsx(Button, { label: t.dlg.cancel, onClick: () => setDialog(false) }),
-                        jsx(Button, { label: t.dlg.run, kind: "primary", disabled: !form.team || !form.pattern || !ISO.test(form.from) || !ISO.test(form.to) || !!app.busy, onClick: generate }),
-                    ], children: [teams.length ? null : jsx("div", { class: "s4vp-ros-cycle", children: t.dlg.noTeams }), patterns.length ? null : jsx("div", { class: "s4vp-ros-cycle", children: t.dlg.noPatterns }), jsx(Field, { label: t.dlg.team, required: true, hint: formTeam ? t.dlg.members(formTeam.members) : null, children: jsx(AutoSelect, { value: form.team, onInput: setField('team'), options: teamOptions, placeholder: t.dlg.pickTeam }) }), jsx(Field, { label: t.dlg.pattern, required: true, hint: formPattern ? t.dlg.cycle(formPattern.cycle.map((c) => c || t.off).join(', '), formPattern.cycle.length) : null, children: jsx(AutoSelect, { value: form.pattern, onInput: setField('pattern'), options: patterns.map((p) => ({ value: p.id, label: `${p.code}${p.description ? ` - ${p.description}` : ''}` })), placeholder: t.dlg.pickPattern }) }), jsx(Field, { label: t.dlg.from, required: true, children: jsx(DateInput, { value: form.from, onInput: setField('from') }) }), jsx(Field, { label: t.dlg.to, required: true, children: jsx(DateInput, { value: form.to, onInput: setField('to'), min: form.from }) }), jsx(Field, { label: t.dlg.anchor, hint: t.dlg.anchorHint, children: jsx(DateInput, { value: form.anchor, onInput: setField('anchor') }) }), jsx("div", { class: "s4vp-ros-cycle", children: t.dlg.note })] })) : null] }));
+                                    }, placeholder: t.search, width: 240 })] }), canEdit ? (jsxs("div", { class: "s4vp-ros-brush", children: [activeShifts.length ? jsx(Chips, { items: brushItems, value: brush, onPick: (v) => setBrush(v === brush ? '' : v), label: t.brush }) : jsx("span", { children: t.noShifts }), jsx("span", { children: brush ? t.brushOn(brushName) : t.brushNone })] })) : (jsx("div", { class: "s4vp-ros-brush", children: jsx("span", { children: t.readOnly }) })), canEdit ? (jsxs("div", { class: "s4vp-ros-selbar", children: [jsx("b", { children: t.sel.count(nSelected) }), jsx(Button, { small: true, kind: "link", label: t.sel.all(filtered.length), disabled: !filtered.length, onClick: selectAll }), nSelected ? jsx(Button, { small: true, kind: "link", label: t.sel.none, onClick: selectNone }) : null, jsx("span", { class: "s4vp-ros-grow" }), jsx(Button, { small: true, label: t.sel.range, disabled: !nSelected || !!app.busy, onClick: openRange }), jsx(Button, { small: true, label: t.sel.assign, disabled: !nSelected || !!app.busy, onClick: openAssign }), jsx(Button, { small: true, label: t.sel.reset, disabled: !nSelected || !!app.busy, onClick: runReset })] })) : null, grid, jsxs("div", { class: "s4vp-ros-foot", children: [jsxs("span", { children: [t.summary(rows.length, nEligible), ` · ${t.shown(shown.length, filtered.length)}`] }), jsxs("span", { class: "s4vp-actions", children: [filtered.length > shown.length ? jsx(Button, { small: true, label: t.showMore(Math.min(ROW_STEP, filtered.length - shown.length)), onClick: () => setLimit(limit + ROW_STEP) }) : null, nPending ? jsx(Button, { small: true, label: t.discard, disabled: !!app.busy, onClick: clearPending }) : null, nPending ? jsx(Button, { small: true, kind: "primary", label: t.save(nPending), disabled: !!app.busy, onClick: save }) : null] })] })] }), dialogNode] }));
     }
 
     /**
