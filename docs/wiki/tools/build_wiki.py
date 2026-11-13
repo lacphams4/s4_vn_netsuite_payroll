@@ -35,6 +35,24 @@ def inline(s):
 
 
 LIST_RE = re.compile(r"^(\s*)(\d+\.|-)\s+(.*)$")
+IMG_RE = re.compile(r"^!\[(.*?)\]\((.+?)\)$")
+IMG_MIME = {".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+IMG_MISSING = []
+
+
+def render_figure(caption, path):
+    """Hình minh họa: `![chú thích](img/ten.webp)` trên một dòng riêng. Ảnh nhúng thẳng vào trang (data URI) để sổ tay vẫn là một file."""
+    import base64
+    full = os.path.join(os.path.dirname(os.path.abspath(SHELL)), path)
+    if not os.path.exists(full):
+        IMG_MISSING.append(path)
+        return ""
+    mime = IMG_MIME.get(os.path.splitext(path)[1].lower(), "image/png")
+    data = base64.b64encode(open(full, "rb").read()).decode("ascii")
+    alt = html.escape(re.sub(r"[`*]", "", caption), quote=True)
+    return (f'<figure class="shot"><button type="button" class="shot-btn" aria-label="Phóng to hình: {alt}">'
+            f'<img loading="lazy" alt="{alt}" src="data:{mime};base64,{data}"></button>'
+            f'<figcaption>{inline(caption)}</figcaption></figure>')
 
 
 def render_list(items, steps=False):
@@ -99,6 +117,12 @@ def render_body(lines):
             flush()
             i += 1
             continue
+        mi = IMG_RE.match(st)
+        if mi:
+            flush()
+            out.append(render_figure(mi.group(1), mi.group(2)))
+            i += 1
+            continue
         if st.startswith("### "):
             flush()
             t = st[4:]
@@ -155,7 +179,7 @@ for ln in text.splitlines():
     (cur["lines"] if cur else intro).append(ln)
 
 SHORT = {0: "Bức tranh chung", 17: "Chu kỳ tháng", 18: "Cuối năm, đầu năm", 19: "Thuật ngữ", 20: "Chưa làm, chưa chắc",
-         21: "Máy chấm công", 22: "Sản lượng, năng suất", 23: "Doanh số, hoa hồng", 24: "Xếp ca, chế độ ca"}
+         21: "Máy chấm công", 22: "Sản lượng, năng suất", 23: "Doanh số, hoa hồng", 24: "Xếp ca, chế độ ca", 25: "Trợ lý AI"}
 for p in pages:
     p["id"] = slug(p["title"]) or f"muc-{p['n']}"
     p["short"] = SHORT.get(p["n"], p["title"])
@@ -168,7 +192,7 @@ GROUPS = [
     ("Tính và duyệt lương", [8, 9, 10]),
     ("Hạch toán và chi trả", [11, 12]),
     ("Báo cáo và phân tích", [13, 14]),
-    ("Nhân viên và kiểm soát", [15, 16]),
+    ("Nhân viên và kiểm soát", [15, 16, 25]),
     ("Tra cứu", [19, 20]),
 ]
 byn = {p["n"]: p for p in pages}
@@ -228,7 +252,7 @@ for p in pages:
     arts.append(
         f'<article id="{p["id"]}" data-page hidden><div class="eyebrow">{num}{html.escape(grp)}</div>'
         f'<h1>{html.escape(p["title"])}</h1>{extra if p["n"] == 0 else ""}{body}{nav}'
-        f'<p class="foot">Nguồn: đặc tả chuyển giao S4 eSuite Payroll (20/10/2026), mã nguồn gói s4_vn_netsuite_payroll và tài liệu repo, đối chiếu ngày 12/11/2026.</p></article>'
+        f'<p class="foot">Nguồn: đặc tả chuyển giao S4 eSuite Payroll (20/10/2026), mã nguồn gói s4_vn_netsuite_payroll và tài liệu repo, đối chiếu ngày 13/11/2026.</p></article>'
     )
 
 toc = []
@@ -297,6 +321,17 @@ page = shell + """
     });
     if (first && q === document.activeElement) {} else if (first) first.scrollIntoView({block:'center'});
   }
+  // Hình chụp: bấm để xem lớn, bấm lần nữa hoặc Esc để đóng
+  var lb = document.createElement('div'); lb.className = 'lightbox'; lb.hidden = true; lb.setAttribute('role','dialog'); lb.setAttribute('aria-label','Hình phóng to');
+  var lbImg = document.createElement('img'), lbCap = document.createElement('p'); lb.appendChild(lbImg); lb.appendChild(lbCap); document.body.appendChild(lb);
+  var lbFrom = null;
+  function closeLb(){ if (lb.hidden) return; lb.hidden = true; lbImg.removeAttribute('src'); if (lbFrom) lbFrom.focus(); }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.shot-btn');
+    if (b) { var im = b.querySelector('img'); lbImg.src = im.src; lbImg.alt = im.alt; lbCap.textContent = im.alt; lbFrom = b; lb.hidden = false; return; }
+    if (!lb.hidden) closeLb();
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeLb(); });
   var timer;
   q.addEventListener('input', function(){
     clearTimeout(timer);
@@ -327,4 +362,6 @@ page = shell + """
 </script>
 """
 open(OUT, "w", encoding="utf-8").write(page)
+if IMG_MISSING:
+    print("THIẾU HÌNH (bỏ qua):", ", ".join(IMG_MISSING))
 print("pages", len(pages), "bytes", len(page.encode("utf-8")))

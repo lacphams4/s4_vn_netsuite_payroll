@@ -584,6 +584,7 @@ Bản quản trị (lọc theo chiều) cần ghi rõ không dùng để nộp t
 | Nhật ký | `audit_log` (mọi POST thành công, gắn bảng lương / kỳ / nhân viên), `approval_log` (quyết định duyệt), lịch sử xử lý cảnh báo; System Notes của NetSuite cho record |
 | Dữ liệu cá nhân | Không ghi lương, số định danh vào log; số định danh che hoặc chỉ cờ có / không ở màn hình; bản in lương giới hạn vai trò |
 | Tham số pháp lý | Có ngày hiệu lực, cờ đã đối chiếu, cảnh báo khi chưa đối chiếu |
+| Trợ lý AI (AI Connector) | Bộ công cụ `s4vp_*` chạy bằng vai trò của người kết nối, cùng ma trận quyền và nhật ký; không nhận truy vấn tự do; thao tác ghi phải xác nhận; không ghi sổ, đảo, đóng kỳ qua AI (xem bài 25) |
 
 **Chưa làm.** Phân quyền dữ liệu theo công ty / chi nhánh; "quản trị IT không xem lương"; vai trò Quản lý trực tiếp; nhãn record song ngữ (record, list chỉ tiếng Việt; SPA và bản in song ngữ).
 
