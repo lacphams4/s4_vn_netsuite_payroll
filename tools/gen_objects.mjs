@@ -103,7 +103,7 @@ ${perms}
 function roleXml(role) {
 	// Quyền custom record khai ở cả hai phía (record và role), nếu không SDF báo lỗi tham chiếu một chiều
 	const recPerms = records.filter((r) => r.perms[role.id]).map((r) => [`[${recId(r.id)}]`, r.perms[role.id]]);
-	const perms = role.perms.concat(recPerms).map(([key, level]) => `    <permission>\n      <permkey>${key}</permkey>\n      <permlevel>${level}</permlevel>\n    </permission>`).join("\n");
+	const perms = role.perms.concat(recPerms, role.tail || []).map(([key, level]) => `    <permission>\n      <permkey>${key}</permkey>\n      <permlevel>${level}</permlevel>\n    </permission>`).join("\n");
 	// role.center: trung tâm riêng (tham chiếu [scriptid=custcenter_...]); NetSuite không cho đổi trung tâm của role đã tạo
 	return `<role scriptid="${role.id}">\n  <name>${esc(role.name)}</name>\n  <centertype>${role.center || "ACCOUNTCENTER"}</centertype>\n  <issalesrole>F</issalesrole>\n  <issupportrole>F</issupportrole>\n  <restricttimeandexpenses>F</restricttimeandexpenses>\n  <subsidiaryoption>ALL</subsidiaryoption>\n  <permissions>\n${perms}\n  </permissions>\n</role>\n`;
 }

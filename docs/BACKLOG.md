@@ -10,7 +10,9 @@ Mỗi mục: mã, ngày phát hiện, mức, mô tả, cách tái hiện, hướ
 - Ảnh hưởng nhiều khả năng: mọi thao tác đi qua `queue()` (build, lock, unlock, punches, accrue) với vai trò Demo và vai trò HR (Demo có đủ quyền của HR). Chưa kiểm vai trò HR.
 - Tái hiện: vai trò Demo, kỳ có trên 3.000 nhân viên x ngày, bấm Xử lý chấm công máy.
 - Hướng xử lý: xác định quyền NetSuite cần để submit Map/Reduce từ RESTlet (thử thêm quyền vào role, hoặc chuyển submit sang script chạy với role riêng, ví dụ Suitelet/RESTlet nội bộ có "Execute as role"). Kiểm lại cả build, lock bằng vai trò HR và Demo. Thêm vào `docs/KIEM_THU.md` ca kiểm bằng vai trò không phải Administrator.
-- Trạng thái: mở.
+- Nguyên nhân (đã thử 13/11/2026): `task.submit()` của Map/Reduce đòi quyền NetSuite "SuiteScript" (lỗi gốc: "You need the 'SuiteScript' permission"). Mức View là đủ, kèm "SuiteScript Scheduling".
+- Sửa: `tools/schema.mjs` thêm `BG_TASK_PERMS` (ADMI_CUSTOMSCRIPT VIEW, ADMI_SS_SCHEDULING FULL) cho role HR, Kế toán, Demo; quyền AI Connector (MCP, OAuth 2.0, REST) đưa vào schema (`tail`) để sinh lại không mất. Đã thử bằng role Demo: lập bảng công nền kỳ 38 xếp hàng được, hỏi trạng thái tác vụ được. Chưa thử role HR.
+- Trạng thái: đã sửa (14/11/2026, đã deploy lên td2937310).
 
 ## BUG-002 - Lập bill cơ quan thu lỗi subsidiary 14
 

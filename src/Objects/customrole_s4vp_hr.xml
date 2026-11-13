@@ -39,6 +39,14 @@
       <permlevel>VIEW</permlevel>
     </permission>
     <permission>
+      <permkey>ADMI_CUSTOMSCRIPT</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
+      <permkey>ADMI_SS_SCHEDULING</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+    <permission>
       <permkey>[customrecord_s4vp_setup]</permkey>
       <permlevel>FULL</permlevel>
     </permission>

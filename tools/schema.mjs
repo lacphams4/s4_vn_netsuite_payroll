@@ -847,10 +847,16 @@ function accountFields() {
 	];
 }
 
+// Gửi tác vụ nền Map/Reduce từ RESTlet (task.submit: lập / khóa bảng công, xử lý chấm công máy, tính lương nền) bằng role của
+// người dùng: NetSuite đòi quyền SuiteScript (mức View đủ, đã thử 13/11/2026 - BUG-001) và SuiteScript Scheduling
+const BG_TASK_PERMS = [["ADMI_CUSTOMSCRIPT", "VIEW"], ["ADMI_SS_SCHEDULING", "FULL"]];
+// NetSuite AI Connector (MCP): kết nối MCP, đăng nhập OAuth 2.0, REST Web Services cho công cụ chuẩn (commit 334e7d8)
+const AI_PERMS = [["ADMI_MCP_SERVER", "FULL"], ["ADMI_LOGIN_OAUTH2", "FULL"], ["ADMI_RESTWEBSERVICES", "FULL"]];
+
 export const roles = [
 	{ id: ROLE_ESS, name: "S4VP Self-service (run-as only)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_EMPLOYEE_RECORD", "VIEW"], ["ADMI_CUSTLIST", "VIEW"], ["LIST_FILECABINET", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"]] },
-	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"]] },
-	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"]] },
+	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
+	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
 	{
 		id: ROLE_DEMO, name: "S4 Advanced Payroll - Demo", center: `[scriptid=${DEMO_CENTER}]`,
 		// Quyền chuẩn theo màn và luồng của gói (permkey đã đối chiếu bảng quyền NetSuite); record của gói FULL thêm ở vòng lặp cuối file
@@ -868,7 +874,10 @@ export const roles = [
 			["REPO_FINANCIALS", "VIEW"], ["REPO_PANDL", "VIEW"], ["REPO_GL", "VIEW"], ["REPO_TRIALBALANCE", "VIEW"],
 			// Tìm kiếm, file in PDF / file ngân hàng, giá trị custom list, danh sách custom record
 			["TRAN_FIND", "VIEW"], ["LIST_FIND", "VIEW"], ["LIST_FILECABINET", "EDIT"], ["ADMI_CUSTLIST", "VIEW"], ["LIST_CUSTRECORDENTRY", "VIEW"],
+			// Tác vụ nền
+			...BG_TASK_PERMS,
 		],
+		tail: AI_PERMS,
 	},
 ];
 
