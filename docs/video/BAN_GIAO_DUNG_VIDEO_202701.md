@@ -75,11 +75,23 @@ Cột "Dấu hiệu" giúp tìm điểm vào/ra trong bản ghi (thông báo xan
 
 Câu hỏi: ba giá trị lớn nhất khi dùng S4 Advanced Payroll chạy bên trong NetSuite, so với phần mềm tính lương bên ngoài?
 
-1. **Một nguồn số liệu, không nhập lại, không đối chiếu tay.** Bảng lương ghi sổ thành một bút toán trên sổ cái NetSuite, mỗi dòng đã có tài khoản, phòng ban, địa điểm, khối, dự án; màn phân tích báo "Khớp" với sổ cái. Doanh số tính hoa hồng lấy thẳng từ hóa đơn NetSuite, tạm ứng tự cấn trừ khi ghi sổ. Với phần mềm bên ngoài, kế toán phải xuất file, nhập lại và đối chiếu chênh lệch mỗi tháng. Cảnh minh họa: 6 (giao dịch hoa hồng), 11 (bút toán JE2140), 14 (Khớp sổ cái).
+1. **Lương biến đổi lấy dữ liệu thẳng từ các phân hệ khác của Oracle NetSuite: chính xác, liền mạch, giảm sai sót.** Đây là ý cần nhấn mạnh nhất.
+   - Lương hoa hồng: doanh số đọc từ hóa đơn (Invoice), bán hàng thu tiền ngay (Cash Sale), hàng trả lại (Credit Memo) đã ghi sổ trên NetSuite; cơ sở tính là doanh thu thuần, lãi gộp hoặc số lượng; người được ghi nhận lấy từ Sales Rep hoặc đội bán trên chứng từ. Mỗi đồng hoa hồng truy được về đúng chứng từ.
+   - Lương sản lượng, lương khoán: số lượng lấy từ giao dịch sản xuất, giao hàng của NetSuite (Assembly Build, Work Order Completion, Item Fulfillment) theo bảng đơn giá; ngày công để chia tiền tổ lấy từ bảng công đã tổng hợp.
+   - Lương theo chỉ tiêu: hoa hồng và thưởng tính theo % đạt chỉ tiêu doanh số (thang theo % đạt, thưởng mốc, điều kiện % đạt trên quy tắc thu nhập), với doanh số lấy từ chính các chứng từ bán hàng nói trên.
+   - Giờ công theo dự án lấy từ Time của NetSuite; tạm ứng tự cấn trừ khi ghi sổ.
+   - Đầu ra cũng ở trong NetSuite: bảng lương ghi sổ thành một bút toán, mỗi dòng có tài khoản, phòng ban, địa điểm, khối, dự án; màn phân tích báo "Khớp" với sổ cái.
+   - So với phần mềm bên ngoài: không xuất file doanh số, sản lượng sang hệ thống khác, không nhập lại, không đối chiếu chênh lệch giữa hai hệ thống mỗi tháng, nên giảm hẳn sai sót do nhập tay và lệch phiên bản số liệu.
+   - Cảnh minh họa: 5 (ngày công chia tiền tổ lấy từ bảng công), 6 (tab Giao dịch của bảng tính hoa hồng), 9 (lương khoán trên dòng lương), 11 (bút toán JE2140), 14 (Khớp sổ cái).
+
+   Lưu ý khi lồng tiếng ý 1 (để không nói quá điều hình thấy):
+   - Trong bản ghi, doanh số của E1044 đến từ file DMS (hệ thống ngoài), không phải hóa đơn NetSuite. Lời thoại nói chung "doanh số lấy từ hóa đơn NetSuite và từ hệ thống bán hàng khác như DMS" là đúng; không nói riêng E1044 lấy từ hóa đơn NetSuite. Nếu cần hình hóa đơn NetSuite, chèn thêm cảnh mở một hóa đơn Sao Mai có Sales Rep (kịch bản D13, chưa quay).
+   - Phiếu khoán SL000114 trong bản ghi được nhập sản lượng bằng tay. Lời thoại về "lấy từ giao dịch sản xuất NetSuite" dùng dạng khả năng ("có thể lấy thẳng từ lệnh sản xuất, phiếu nhập thành phẩm"), không nói phiếu trên hình được lấy tự động.
+   - Phân hệ chưa có mô-đun đánh giá KPI tổng quát (chấm điểm hiệu suất nhiều tiêu chí). Chỉ nói "lương, thưởng theo % đạt chỉ tiêu doanh số", không nói "lương KPI" chung chung.
 2. **Chi phí nhân công trở thành số quản trị, không chỉ là bảng lương.** Vì lương, doanh thu và giá vốn nằm chung một hệ thống, phân hệ tách được chi phí lao động trong giá vốn và trong chi phí hoạt động, theo dự án, theo khối, và giải thích vì sao tháng này tăng giảm (lương khoán, làm thêm, thưởng). Giám đốc tài chính thấy giá vốn nhân công của từng dự án ngay khi chốt lương. Cảnh minh họa: 9 (phân bổ), 14 (phân tích, phân rã theo dự án).
 3. **Kiểm soát và phân quyền chung với NetSuite.** Dùng chính vai trò, quy trình duyệt và nhật ký của NetSuite: khóa công, duyệt bảng lương, cảnh báo trước khi duyệt, mọi con số có diễn giải từng bước, tham số pháp lý có ngày hiệu lực và căn cứ. Nhân viên tự xem phiếu lương bằng tài khoản NetSuite của mình, không thêm hệ thống, không thêm mật khẩu để quản lý. Cảnh minh họa: 4 (duyệt đề xuất), 7 (khóa công), 10 (soát), 15 (cổng nhân viên).
 
-Lời thoại gợi ý cho cảnh kết (thay hoặc ghép với lời ở mục 4, cảnh 17): "Chạy ngay trong NetSuite nghĩa là: một nguồn số liệu từ chấm công đến sổ cái, chi phí nhân công thành số quản trị theo từng dự án, và cùng một hệ thống phân quyền, duyệt, nhật ký."
+Lời thoại gợi ý cho cảnh kết (thay hoặc ghép với lời ở mục 4, cảnh 17): "Chạy ngay trong NetSuite nghĩa là: hoa hồng, lương sản lượng, thưởng theo chỉ tiêu lấy dữ liệu thẳng từ bán hàng, sản xuất trên NetSuite, không nhập lại; chi phí nhân công thành số quản trị theo từng dự án; và cùng một hệ thống phân quyền, duyệt, nhật ký."
 
 Không dùng các câu so sánh không chứng minh được trên hình (ví dụ "nhanh gấp N lần", "tiết kiệm X%").
 
