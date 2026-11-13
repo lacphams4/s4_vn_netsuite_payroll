@@ -71,11 +71,23 @@ Cột "Dấu hiệu" giúp tìm điểm vào/ra trong bản ghi (thông báo xan
 - Thanh tải xuống của Chrome không hiện trong vùng ghi; cảnh file chi lương ngân hàng chỉ thấy menu, có thể thêm chữ chú thích "Tải file chi lương ngân hàng".
 - Số liệu nhắc trong lời thoại phải khớp hình: thực lĩnh 1.555.617.361; bảo hiểm phải nộp (thẻ bảng lương) 505.854.000; thuế TNCN 50.006.826; tổng chi phí công ty 2.111.478.187; bút toán JE2140; hoa hồng 18.504.460; phiếu khoán 11.415.000.
 
-## 7. Video intro ngắn (tùy chọn)
+## 7. Thông điệp giá trị (dùng cho lời mở, lời kết, video intro)
+
+Câu hỏi: ba giá trị lớn nhất khi dùng S4 Advanced Payroll chạy bên trong NetSuite, so với phần mềm tính lương bên ngoài?
+
+1. **Một nguồn số liệu, không nhập lại, không đối chiếu tay.** Bảng lương ghi sổ thành một bút toán trên sổ cái NetSuite, mỗi dòng đã có tài khoản, phòng ban, địa điểm, khối, dự án; màn phân tích báo "Khớp" với sổ cái. Doanh số tính hoa hồng lấy thẳng từ hóa đơn NetSuite, tạm ứng tự cấn trừ khi ghi sổ. Với phần mềm bên ngoài, kế toán phải xuất file, nhập lại và đối chiếu chênh lệch mỗi tháng. Cảnh minh họa: 6 (giao dịch hoa hồng), 11 (bút toán JE2140), 14 (Khớp sổ cái).
+2. **Chi phí nhân công trở thành số quản trị, không chỉ là bảng lương.** Vì lương, doanh thu và giá vốn nằm chung một hệ thống, phân hệ tách được chi phí lao động trong giá vốn và trong chi phí hoạt động, theo dự án, theo khối, và giải thích vì sao tháng này tăng giảm (lương khoán, làm thêm, thưởng). Giám đốc tài chính thấy giá vốn nhân công của từng dự án ngay khi chốt lương. Cảnh minh họa: 9 (phân bổ), 14 (phân tích, phân rã theo dự án).
+3. **Kiểm soát và phân quyền chung với NetSuite.** Dùng chính vai trò, quy trình duyệt và nhật ký của NetSuite: khóa công, duyệt bảng lương, cảnh báo trước khi duyệt, mọi con số có diễn giải từng bước, tham số pháp lý có ngày hiệu lực và căn cứ. Nhân viên tự xem phiếu lương bằng tài khoản NetSuite của mình, không thêm hệ thống, không thêm mật khẩu để quản lý. Cảnh minh họa: 4 (duyệt đề xuất), 7 (khóa công), 10 (soát), 15 (cổng nhân viên).
+
+Lời thoại gợi ý cho cảnh kết (thay hoặc ghép với lời ở mục 4, cảnh 17): "Chạy ngay trong NetSuite nghĩa là: một nguồn số liệu từ chấm công đến sổ cái, chi phí nhân công thành số quản trị theo từng dự án, và cùng một hệ thống phân quyền, duyệt, nhật ký."
+
+Không dùng các câu so sánh không chứng minh được trên hình (ví dụ "nhanh gấp N lần", "tiết kiệm X%").
+
+## 8. Video intro ngắn (tùy chọn)
 
 Nếu cần bản 3-5 phút, ghép từ các khoảnh khắc: cảnh 3 (gán mã máy), cảnh 4 (phiếu đề xuất), cảnh 5 (chia tiền tổ), cảnh 6 (diễn giải hoa hồng), cảnh 8 + 10 (tính 114 người, soát), cảnh 11 (bút toán), cảnh 14 + 15 (phân tích chi phí, cổng nhân viên trên điện thoại). Lời thoại tham khảo mục E của `s4-advanced-payroll_kich_ban_quay.md`.
 
-## 8. Đầu ra mong đợi
+## 9. Đầu ra mong đợi
 
 1. Video demo 16:9, 1920x1080, tiếng Việt, 15-20 phút, có thẻ tiêu đề đầu và thẻ kết có logo S4, website s4.com.vn.
 2. File lời thoại (.srt) khớp thời gian.
