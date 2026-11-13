@@ -12,3 +12,9 @@ python -I tools/figures.py figures_block.html && python -I tools/build_wiki.py w
 ```
 
 Bản đang chia sẻ trên claude.ai: https://claude.ai/artifact/LDdwj26JW2JuGD3BERyL3s (riêng tư, chia sẻ qua nút Share).
+
+## Hình chụp màn hình
+
+- `img/*.webp`: hình chụp trên dữ liệu demo Sao Mai (tên và số tiền là dữ liệu giả). Hình được nhúng vào `so-tay-quy-trinh.html` khi dựng.
+- `tools/shots.py`: chuyển ảnh chụp thô (jpg) sang webp, cắt dải trắng, làm mờ cột định danh (MST, CCCD, số sổ BHXH). Bảng `MAP` trong file ghi tên hình và vùng làm mờ.
+- `hinh-noi-bat.html`: trang 10 màn hình tiêu biểu để đưa lên website S4, dùng chung thư mục `img/` (cần tải kèm 10 file hình khi đăng).

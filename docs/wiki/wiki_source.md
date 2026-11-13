@@ -27,6 +27,8 @@ Ghi chú: gói không có vai trò riêng cho "kế toán trưởng"; phân bi�
 
 ### 0.2 Màn hình (tab trong ứng dụng "S4 Advanced Payroll")
 
+![Trang chủ "Việc hôm nay": kỳ đang chạy, việc cần làm, hạn sắp tới và các thao tác nhanh](img/home.webp)
+
 Menu NetSuite: tab **S4 Advanced Payroll** (giao diện tiếng Việt: **S4 Tính Lương Nâng Cao**) **> Lương > Màn hình S4 Advanced Payroll** (SPA `/spa/s4vp-payroll`); tiêu đề ứng dụng cũng đổi theo ngôn ngữ người dùng. Vai trò Demo có menu riêng dẫn thẳng tới từng màn. Hàng tab ngang:
 
 | Tab | Việc chính |
@@ -55,6 +57,10 @@ Ngoài SPA: danh sách record chuẩn NetSuite trong nhóm menu "Thiết lập l
 **Vai trò.** Tư vấn / Administrator (nạp mặc định, gói ngành), kế toán trưởng (đối chiếu tham số pháp lý, khai tài khoản, cơ quan thu, cấp duyệt), HR (nhóm lương, sinh kỳ, danh mục thu nhập, phép).
 
 **Kích hoạt, tần suất.** Một lần khi triển khai; cập nhật khi văn bản pháp luật đổi, khi thêm công ty con, đầu mỗi năm (sinh kỳ, ngày lễ).
+
+![Tab Thiết lập: 26 mục theo nhóm, mỗi mục có tình trạng Đủ, Cần chú ý hoặc Thiếu](img/setup.webp)
+
+![Thiết lập > Tham số pháp lý > Biểu thuế TNCN: từng bậc theo ngày hiệu lực và căn cứ pháp lý](img/setup-tax.webp)
 
 **Các bước.**
 1. Deploy gói; account cần Custom Records, Server SuiteScript; nên bật Departments, Classes, Locations.
@@ -110,6 +116,16 @@ Biểu thuế lũy tiến (record `pit_bracket`) có hai bộ theo ngày hiệu 
 
 **Kích hoạt.** Tuyển mới, điều chỉnh lương, điều chuyển, thêm người phụ thuộc, nghỉ việc.
 
+![Tab Nhân sự: danh sách hồ sơ, bộ lọc nhanh theo tình trạng và khung việc sắp đến hạn](img/employees.webp)
+
+![Hồ sơ một nhân viên: thông tin tóm tắt và dòng thời gian hợp đồng, quyết định, thay đổi lương](img/employee-card.webp)
+
+![Tab Lương và phụ cấp: lịch sử lương theo ngày hiệu lực và mức lương hiện tại](img/employee-salary.webp)
+
+![Tab Hợp đồng: hợp đồng gốc và phụ lục điều chỉnh lương](img/employee-contracts.webp)
+
+![Tab Bảng lương của nhân viên: 6 kỳ gần nhất, bấm một dòng để mở bảng lương tại nhân viên đó](img/employee-payroll.webp)
+
 **Thành phần và bước.**
 1. **Hồ sơ lương nhân viên** (record `employee`, 1-1 với Employee): công ty con, nhóm lương, loại lao động (E nhân viên HĐLĐ / C cộng tác viên HĐDV), loại lương (M tháng / D ngày / H giờ), cách tính thuế (P lũy tiến / F khấu trừ 10% / N không cư trú 20% / X không khấu trừ), cờ đã nộp cam kết 08/CK-TNCN, mã số thuế, CCCD, số sổ BHXH, tham gia BHXH-BHYT, tham gia BHTN, đoàn viên công đoàn, vùng lương, trích trước tháng 13, tài khoản chi phí, phòng ban / class / địa điểm / dự án mặc định, phương pháp phân bổ, ngân hàng, số tài khoản, chính sách phép, ngày tính thâm niên, ngày vào làm, ngày làm việc cuối, người nước ngoài, quốc tịch, chỉ tiêu doanh số / tháng.
 2. **Lịch sử lương** (record `compensation`): theo ngày hiệu lực - lương hợp đồng, lương đóng BHXH, phụ cấp cố định / tháng, gói phúc lợi. Bảng lương lấy dòng hiệu lực muộn nhất không sau ngày cuối kỳ. Không có dòng nào thì dòng nhân viên báo lỗi; lương hợp đồng phải > 0.
@@ -140,6 +156,9 @@ Biểu thuế lũy tiến (record `pit_bracket`) có hai bộ theo ngày hiệu 
 - **S - Bảng công ký hiệu** (record `att_sheet`, 31 ô ngày): ký hiệu tra danh mục (nhóm W làm việc, P nghỉ có lương, U không lương, S BHXH trả, T công tác, N không tính; số ngày mỗi ô). Mặc định: X, /2, P, P/2, K, Ô, TS, CT, L, N. Ký hiệu lạ bị bỏ qua và cảnh báo.
 
 ### 3.2 Chứng từ công (đơn nghỉ NP, đơn OT, đơn công tác CT, phiếu ngoại lệ NL)
+
+![Danh sách chứng từ công (màn hình cũ): đơn nghỉ theo nhân viên, khoảng ngày, lý do và trạng thái](img/attendance-docs.webp)
+
 Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P Chờ duyệt -> (Duyệt) A Đã duyệt / (Từ chối) R Từ chối; P hoặc A -> (Hủy) C Đã hủy.**
 1. Nhân viên hoặc HR lập đơn ở H. Hệ thống tự tính: số ngày đơn nghỉ (bỏ ngày nghỉ tuần, ngày lễ; nửa ngày theo buổi sáng / chiều), loại ngày OT (N thường / W nghỉ tuần / H lễ) và loại thu nhập OT, ngày bị trừ của phiếu trễ sớm, kỳ lương chứa ngày chứng từ.
 2. Gửi duyệt: kiểm tra trùng ngày, số dư phép (loại nghỉ dùng số dư), tối đa ngày / đơn, loại nghỉ cần đính kèm (chỉ cảnh báo người duyệt, chưa kiểm được file trên custom record), giờ OT trong ngày, phiếu ngoại lệ phải có lý do và kỳ. Đơn nghỉ phép năm: giữ chỗ số dư (Pending).
@@ -156,6 +175,11 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 5. Kỳ lớn (quá 200 nhân viên hoặc quá 3.000 ô nhân viên x ngày) tự chạy nền bằng Map/Reduce theo lô 10 nhân viên; màn hình theo dõi tác vụ và báo số phiếu, số đơn làm thêm đề xuất khi xong.
 
 ### 3.4 Lập và khóa bảng công (tab Chấm công)
+
+![Tab Chấm công: 4 bước của kỳ công, lưới công theo ngày với ký hiệu X, P, K, CT và khung ngoại lệ cần xử lý](img/attendance.webp)
+
+![Bấm một ô ngày để xem ký hiệu, công tính, lượt chấm và chứng từ liên quan của ngày đó](img/attendance-day.webp)
+
 1. HR chọn kỳ; thanh bước: thu thập (collect) -> xử lý ngoại lệ (exceptions) -> khóa (lock) -> chuyển sang lương (handoff).
 2. **Lập bảng công** (`buildAttendance`): chạy lại nhiều lần; chỉ hồ sơ cùng nhóm lương, đang làm hoặc nghỉ trong kỳ; **CTV bị loại** khỏi bảng công (CTV lương giờ đi theo giờ Time). Kỳ đóng, kỳ đã khóa công, kỳ đã có bảng lương ghi sổ thì không lập lại được. Trên 150 người chạy Map/Reduce.
 3. Sửa công chỉ bằng chứng từ (phiếu điều chỉnh có lý do) hoặc ô của bảng công ký hiệu.
@@ -184,6 +208,8 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 **Vai trò.** HR (cấp phép, hết hạn, điều chỉnh, duyệt đơn), nhân viên (lập đơn, xem số dư).
 
 **Kích hoạt.** Đầu năm (cấp phép, chuyển phép), hằng tháng nếu cấp theo tháng, ngày hết hạn phép chuyển, mỗi đơn nghỉ, kỳ có người nghỉ việc.
+
+![Số dư phép năm trên hồ sơ nhân viên: được cấp, chuyển sang, đã dùng, chờ duyệt, còn lại](img/employee-leave.webp)
 
 **Các bước.**
 1. **Loại nghỉ** (mặc định nạp sẵn): PN phép năm (trừ số dư), VR việc riêng có lương (tối đa 3 ngày / đơn), OM ốm đau BHXH trả, TS thai sản BHXH trả (hai loại này trừ ngày công, cần đính kèm), KL không lương (trừ ngày công). Cờ: có lương, trừ ngày công, BHXH trả, trừ số dư, bắt buộc đính kèm, cho nửa ngày, tối đa ngày / đơn.
@@ -217,6 +243,10 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 
 **Kích hoạt.** Theo đợt nghiệm thu, tuần hoặc tháng.
 
+![Màn Sản lượng - lương khoán: phiếu sản lượng theo tổ, thành tiền, đã chia và bảng lương đã nhận](img/outputs.webp)
+
+![Chi tiết một phiếu sản lượng: 6 bước từ nhập sản lượng đến vào lương, cách chia và số người](img/output-detail.webp)
+
 **Danh mục.**
 - **Bảng đơn giá** (record `rate_table` + `rate_line`): loại W hạng mục khoán / O công đoạn / P sản phẩm / S thang hoa hồng doanh số; dòng: mã hạng mục, đơn vị tính, đơn giá (hoặc %), từ doanh số (bậc thang), hiệu lực từ - đến, dự án (tùy chọn); cờ cho sửa đơn giá trên phiếu.
 - **Tổ đội** (record `team` + `team_member`): loại C tổ đội / L chuyền / S cửa hàng, tổ trưởng, cách chia mặc định, dự án, địa điểm, class, phòng ban; thành viên theo hiệu lực, hệ số chia, tỷ lệ cố định %. Thành viên có thể là CTV.
@@ -244,6 +274,10 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 **Vai trò.** Kế toán (cấu hình kế hoạch, tính, duyệt, mở lại, hủy, điều chỉnh); HR xem. Tab "Hoa hồng" chỉ hiện với vai trò được xem.
 
 **Kích hoạt.** Hằng tháng trước khi chạy lương.
+
+![Tab Hoa hồng: bảng tính của tháng, cảnh báo doanh số chưa ai được ghi nhận và diễn giải từng nhân viên](img/commission.webp)
+
+![Tab Kế hoạch: nguồn doanh số, cơ sở tính, cửa sổ tính và số nhân viên của từng kế hoạch](img/commission-plans.webp)
 
 **Cấu hình (tab Hoa hồng > Kế hoạch).**
 - Kế hoạch (`comm_plan`): công ty con, hiệu lực; cơ sở R doanh thu thuần chưa thuế / G lãi gộp ước tính / Q số lượng; ghi nhận I khi xuất hóa đơn / P khi thu tiền (tỷ lệ thu trong kỳ); người được ghi nhận R NV kinh doanh trên chứng từ / T đội bán theo % đóng góp / F trường tùy chỉnh; cửa sổ M tháng / Q lũy kế quý / Y lũy kế năm (true-up: trừ phần đã trả các kỳ trước); trừ hàng trả lại; clawback N ngày; loại dòng bỏ qua; loại thu nhập của bảng lương (bắt buộc); ngưỡng % đạt tối thiểu; trần mỗi kỳ; draw N không / R ứng trước có thu hồi / G bảo đảm tối thiểu; hoa hồng quản lý (% trên doanh số B hoặc hoa hồng C của cấp dưới trực tiếp); nguồn dữ liệu N NetSuite / X dữ liệu ngoài / B cả hai; trường nhóm hàng tùy chỉnh.
@@ -273,6 +307,8 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 
 **Trạng thái phiếu (`advance`, mã TU).** **H Tạm giữ -> (Bỏ tạm giữ, bắt buộc tài khoản tiền) B Chờ ghi sổ -> (Ghi sổ) O Đang cấn trừ -> C Đã tất toán (số dư = 0).**
 
+![Tab Tạm ứng: phiếu theo trạng thái Chờ ghi sổ, Đang cấn trừ, Đã tất toán, kèm bút toán](img/advances.webp)
+
 **Các bước (tab Tạm ứng).**
 1. Lập phiếu: công ty con, nhân viên, ngày, số tiền > 0, tài khoản tiền, dự án (tùy chọn), diễn giải.
 2. Bỏ tạm giữ -> B.
@@ -293,6 +329,8 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 
 **Kích hoạt.** Cuối mỗi kỳ lương (tháng; hoặc nửa tháng / tuần với nhóm lương tương ứng).
 
+![Tab Chạy lương: bảng lương theo kỳ với số người, tổng thu nhập, bảo hiểm, thuế, thực lĩnh và bút toán](img/payroll-list.webp)
+
 ### 8.1 Trạng thái bảng lương (`batch`, mã BL)
 **H Tạm giữ, B Chờ tính, C Đã tính, P Chờ duyệt, A Đã duyệt, J Từ chối, R Đã ghi sổ, V Đã đảo.**
 
@@ -311,6 +349,9 @@ Luồng chung (core `AttendanceDocRules`): **H Tạm giữ -> (Gửi duyệt) P 
 | Đảo | R -> V | Không còn bill cơ quan thu hiệu lực |
 
 ### 8.2 Các bước
+
+![Màn một bảng lương: thanh 6 bước, 4 ô số tổng, danh sách nhân viên bên trái và chi tiết thu nhập bên phải](img/run-overview.webp)
+
 1. **Tạo bảng lương** (tab Chạy lương): chọn công ty con, kỳ; ngày chứng từ mặc định = ngày cuối kỳ.
 2. **Nạp nhân viên** (`loadEmployees`): hồ sơ cùng công ty con và nhóm lương, đang hoạt động hoặc nghỉ việc trong kỳ, có làm việc trong kỳ, **chưa nằm trong bảng lương chưa đảo khác của cùng kỳ** (bị bỏ qua và liệt kê). Công lấy từ bảng tổng hợp công nếu có; không có thì công chuẩn trừ ngày ngoài hợp đồng. Chạy lại cập nhật công cho dòng đã có. Bảng lớn chạy theo lượt. Sau đó tự nạp giờ công từ Time.
 3. **Nhập tay** trong tab Thu nhập hoặc Khấu trừ khác của từng nhân viên (record `batch_input`): thu nhập (loại thu nhập, số lượng, đơn giá, hệ số hoặc số tiền tự nhập; tùy chọn dự án, phòng ban, class, địa điểm làm đích chi phí riêng) hoặc khấu trừ sau thuế (mã, diễn giải, số tiền, tài khoản). Sửa ngày công (0 đến 2 lần công chuẩn), giảm trừ khác khi tính thuế (không âm).
@@ -370,6 +411,9 @@ Số tiền = Số lượng x Đơn giá x Hệ số [/ Ngày công chuẩn] x H
 - Giới hạn `OT.LIMIT_MONTH` (xét theo bảng lương hiện tại), `OT.LIMIT_YEAR` hoặc `OT.LIMIT_YEAR_EXTENDED` (ngành được 300 giờ): **chỉ cảnh báo**, bằng giới hạn là hợp lệ. Lũy kế năm từ các bảng lương R cùng năm thuế.
 
 ### 8.5 Kiểm soát của bảng lương
+
+![Tab Cần soát: các điểm lệch so với kỳ trước, trạng thái xử lý và nút Mở để xem chi tiết](img/run-checks.webp)
+
 - RESTlet kiểm tra vai trò và trạng thái phía máy chủ cho mọi thao tác; HR không có Ghi sổ, Đảo, Lập bill, Ghi sổ tạm ứng (cả nút và máy chủ).
 - Một nhân viên chỉ ở một bảng lương chưa đảo của cùng kỳ.
 - Dấu dữ liệu đầu vào kiểm khi duyệt và ghi sổ; User Event dòng nhập tay chặn sửa khi bảng ở A, P, R, V, J và đưa bảng về "chưa tính" khi sửa.
@@ -390,6 +434,10 @@ Số tiền = Số lượng x Đơn giá x Hệ số [/ Ngày công chuẩn] x H
 **Mục đích.** Tính phần người lao động và phần doanh nghiệp của BHXH, BHYT, BHTN, BHTNLĐ-BNN, KPCĐ, đoàn phí trên lương đóng BH khai báo.
 
 **Vai trò.** HR khai lương đóng BH, vùng, cờ tham gia; kế toán khai tài khoản 338x và cơ quan thu; KTT đối chiếu tỷ lệ.
+
+![Tab Bảo hiểm của một nhân viên: căn cứ đóng, tỷ lệ và số tiền phần người lao động, phần doanh nghiệp](img/run-insurance.webp)
+
+![Báo cáo Bảo hiểm phải nộp và D02-LT: số từng người theo từng quỹ, đối chiếu thông báo C12-TS (số sổ BHXH đã làm mờ)](img/report-insurance.webp)
 
 **Quy tắc (core `InsuranceCalculator`), tra theo ngày cuối kỳ (kỳ nhiều lần trong tháng: cuối tháng thuế).**
 1. Căn cứ đóng là **lương đóng BHXH trên lịch sử lương**, không phải thu nhập thực tế.
@@ -413,6 +461,8 @@ Số tiền = Số lượng x Đơn giá x Hệ số [/ Ngày công chuẩn] x H
 
 **Vai trò.** HR khai cách tính thuế, người phụ thuộc, cam kết; kế toán kê khai, nộp.
 
+![Tab Thuế TNCN của một nhân viên: từ tổng thu nhập, miễn thuế, giảm trừ đến thuế phải khấu trừ](img/run-pit.webp)
+
 ### 10.1 Thu nhập miễn thuế (theo dòng, theo loại thu nhập)
 - E: miễn toàn bộ. P: miễn phần chênh (OT, đêm) đã tính trên dòng. C: miễn đến trần tham số (mặc định `PIT.MEAL_EXEMPT_CAP`), cộng dồn theo mã trần trong tháng. T: chịu thuế.
 - Thu nhập chịu thuế = max(0, tổng thu nhập - miễn thuế).
@@ -432,6 +482,11 @@ Chỉ hỗ trợ "L - Kỳ cuối tháng" (khấu trừ BH, thuế ở kỳ cu�
 - Người không BH và cách tính F hoặc N: xét theo từng lần chi.
 
 ### 10.5 Đầu ra và quyết toán
+
+![Tờ khai 05/KK-TNCN theo quý: chỉ tiêu [16] - [32], danh sách cá nhân và phiếu nhập HTKK](img/report-05kk.webp)
+
+![Quyết toán thuế TNCN năm: bảng kê 05-1/BK, 05-2/BK và dữ liệu nhập HTKK (MST, CCCD đã làm mờ)](img/report-finalization.webp)
+
 - Bút toán Có 3335; bill cho nhà cung cấp "Cơ quan thuế".
 - Báo cáo: 05/KK-TNCN quý (chỉ tiêu [16] - [32] và danh sách cá nhân; các chỉ tiêu [24], [25], [32] ghi "chưa tính"), phiếu số liệu nhập HTKK (05kk), sổ theo dõi thuế TNCN đã khấu trừ theo nhân viên 12 tháng, quyết toán năm 05-1/BK (HĐLĐ từ 3 tháng) và 05-2/BK (cá nhân khác), phiếu số liệu 05/QTT (cột theo gói Acumatica, chưa đối chiếu phụ lục mẫu pháp lý).
 - Nguồn số liệu: dòng nhân viên của bảng lương đã tính, không đảo (tùy chọn chỉ bảng đã ghi sổ); kỳ quy về tháng tính thuế.
@@ -446,6 +501,9 @@ Chỉ hỗ trợ "L - Kỳ cuối tháng" (khấu trừ BH, thuế ở kỳ cu�
 **Vai trò.** Kế toán (ghi sổ, đảo, bill), kế toán trưởng (khai tài khoản, quy tắc tài khoản theo đích).
 
 ### 11.1 Phân bổ chi phí (core `AllocationSourceResolver`, `CostAllocationBuilder`)
+
+![Tab Phân bổ dự án của một nhân viên: khoản trích, địa điểm, nguồn phân bổ, tỷ lệ và số tiền](img/run-allocation.webp)
+
 Bất biến: **tổng dòng phân bổ = tổng thu nhập + BH phần DN** (kiểm lại khi ghi sổ). Trích tháng 13 không nằm trong phân bổ nhưng được chia theo cơ cấu phân bổ (11.3).
 
 Thứ tự:
@@ -468,6 +526,9 @@ Mức 1, 2, 3, 5 tra record `cost_account`: theo (đích, loại lao động c�
 Ánh xạ chiều NetSuite: tiểu khoản -> Department; chi nhánh -> Location; work center -> Class; dự án -> entity (Customer:Project) của dòng JE. Task, cost code: chưa ánh xạ. Bút toán liên công ty: chưa làm.
 
 ### 11.2 Bút toán ghi sổ bảng lương (một Journal Entry, ngày = ngày chứng từ bảng lương)
+
+![Tab Bút toán của bảng lương: từng dòng Nợ, Có theo tài khoản, phòng ban, địa điểm, dự án](img/run-journal.webp)
+
 | Bên | Tài khoản | Nội dung |
 | --- | --- | --- |
 | Nợ | TK chi phí theo dòng phân bổ (kèm phòng ban, địa điểm, class, dự án) | "Chi phí lương" (nhân viên), "Thù lao cộng tác viên" (CTV), "BH, KPCĐ doanh nghiệp đóng" (ERINS) |
@@ -509,6 +570,8 @@ Quy tắc: gộp dòng cùng (tài khoản, phòng ban, dự án, task, cost cod
 
 **Vai trò.** Kế toán (file ngân hàng, bảng thanh toán), HR (phiếu lương), nhân viên (tự in phiếu lương).
 
+![Menu In trên bảng lương: phiếu lương, bảng thanh toán lương, quyết toán cộng tác viên, file chi lương ngân hàng](img/run-print.webp)
+
 1. **File chi lương ngân hàng** (`bankFile`, bảng A hoặc R): CSV UTF-8 có BOM, cột STT, Mã NV, Họ tên, Số tài khoản, Ngân hàng, Số tiền, Nội dung (theo tháng thuế MM/yyyy); tên file `ChiLuong_<số bảng>_<kỳ>.csv`; chỉ người có thực lĩnh > 0, sắp theo mã nhân viên; **thiếu số tài khoản -> lỗi liệt kê mã nhân viên** (người trả tiền mặt cần xử lý ngoài file). Định dạng riêng từng ngân hàng: CHƯA LÀM (chỉ một mẫu CSV chung). Bút toán thanh toán (Nợ 334 / Có tiền): làm trên NetSuite theo nghiệp vụ chuẩn, gói không tạo (chưa xác minh có chủ đích).
 2. **Phiếu lương** (`doc=payslip`, VP641000): PDF, tiếng Việt, tiếng Anh hoặc song ngữ; chỉ nhân viên E; một người một trang; thu nhập, khấu trừ (BH NLĐ, thuế, khấu trừ khác, cấn trừ), phần thuế, thực lĩnh bằng chữ.
 3. **Bảng thanh toán tiền lương** (`doc=payment`, VP643000): A4 ngang, chỉ nhân viên E, dòng tổng, thực lĩnh bằng chữ, chữ ký người lập biểu, kế toán trưởng, giám đốc (khai theo công ty con).
@@ -518,6 +581,10 @@ Quy tắc: gộp dòng cùng (tài khoản, phòng ban, dự án, task, cost cod
 ---
 
 ## 13. Báo cáo và kê khai (tab Báo cáo - tờ khai)
+
+![Tab Báo cáo - tờ khai: hồ sơ xếp theo kỳ hạn tháng, quý, năm, mỗi mục gợi ý sẵn kỳ gần nhất có số liệu](img/reports-hub.webp)
+
+![Báo cáo Chi phí lương theo tài khoản: số theo bảng lương so với phát sinh trên bút toán ghi sổ](img/report-cost.webp)
 
 Danh mục thực có (`reportsCatalog`): nguồn là dòng lương đã tính, không đảo; tùy chọn "chỉ đã ghi sổ"; xuất CSV.
 
@@ -548,6 +615,10 @@ Bản quản trị (lọc theo chiều) cần ghi rõ không dùng để nộp t
 **Màn hình.** Thẻ chỉ số (tổng chi phí lao động, tỷ lệ trên doanh thu, phần trong giá vốn, phần trong chi phí hoạt động, số người, chi phí / người, tỷ trọng OT, chi phí / giờ; so kỳ trước và cùng kỳ năm trước), xu hướng 12 tháng, cầu biến động (số người, mức lương bình quân, OT, phụ cấp, thưởng, khoán, khác, BH DN, tháng 13, CTV), phân rã theo phòng ban / dự án / class / địa điểm / tài khoản / thành phần / loại lao động có ô tìm và xem tới nhân viên, lãi lỗ tách phần lao động, đối chiếu với sổ cái theo tài khoản.
 
 **Quy tắc.** Lao động trong giá vốn hay chi phí hoạt động xác định theo **loại tài khoản NetSuite** của tài khoản chi phí (COGS -> giá vốn, còn lại -> chi phí hoạt động), không theo số hiệu tài khoản. Vai trò không có quyền đọc giao dịch thì phần sổ cái để trống (ghi chú NO_GL_ACCESS). Hoa hồng đi vào thành phần theo nhóm của loại thu nhập hoa hồng (chưa có thành phần "commission" riêng).
+
+![Tab Phân tích chi phí: chỉ số của tháng, xu hướng 12 tháng và biểu đồ giải thích vì sao chi phí thay đổi](img/analytics.webp)
+
+![Phân rã chi phí lao động theo phòng ban, dự án, class, địa điểm, tài khoản; kèm lãi lỗ tóm tắt và đối chiếu sổ cái](img/analytics-breakdown.webp)
 
 ---
 

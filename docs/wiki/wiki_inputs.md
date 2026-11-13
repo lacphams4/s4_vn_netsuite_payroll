@@ -32,6 +32,8 @@ Máy chấm công thường đánh số người theo máy (1, 2, 3...), khác m
 
 ### 21.3 Nạp trên màn hình: nút Nạp chấm công
 
+![Hộp Nạp chấm công: chọn hồ sơ nguồn, tải file hoặc dán từ Excel, xem trước rồi mới ghi lượt chấm](img/punch-import.webp)
+
 1. Tab Chấm công, nút **Nạp chấm công** ở hàng tiêu đề (HR, Administrator).
 2. Chọn hồ sơ nguồn; chọn file (.csv, .txt, .dat, tối đa 5 MB mỗi lần) hoặc dán vùng dữ liệu từ Excel.
 3. **Xem trước:** đếm tổng dòng, mới, trùng, lỗi, chưa đối chiếu, thuộc kỳ công đã khóa; lưới có ô tìm nhanh và lọc theo trạng thái (hiện tối đa 1.000 dòng chi tiết, ưu tiên dòng lỗi và chưa đối chiếu; số đếm luôn đủ cả file).
@@ -196,6 +198,8 @@ Luồng: chọn nguồn và khoảng ngày → **Xem trước** (từng dòng: c
 - **Khách mới / khách cũ:** dựa trên ngày mua đầu tiên của khách (hóa đơn hoặc bán thu tiền ngay sớm nhất) so với ngày chứng từ và số ngày khai trên thành phần.
 
 ### 23.3 Doanh số ngoài: nạp từ Excel, CSV, hệ thống khác
+
+![Tab Doanh số ngoài: dòng doanh số từ DMS, POS theo chứng từ, khách, mặt hàng và nhân viên bán](img/commission-external.webp)
 
 **Cách nạp.**
 1. Tab Hoa hồng > **Nạp doanh số ngoài**: nhập tên hệ thống nguồn (ví dụ DMS), dán vùng dữ liệu từ Excel hoặc chọn file CSV (UTF-8, dấu phẩy hoặc chấm phẩy).

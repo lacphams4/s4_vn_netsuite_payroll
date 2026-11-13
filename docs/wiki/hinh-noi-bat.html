@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S4 Advanced Payroll cho NetSuite - 10 màn hình tiêu biểu</title>
+<meta name="description" content="10 màn hình tiêu biểu của S4 Advanced Payroll trên NetSuite: chấm công, xếp ca, chạy lương, BHXH, thuế TNCN, hạch toán và báo cáo theo quy định Việt Nam.">
+<style>
+:root{--ink:#16252d;--muted:#5b6b73;--line:#dfe5e8;--bg:#f5f7f8;--card:#fff;--brand:#24566b;--accent:#e9f1f4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header{background:var(--brand);color:#fff;padding:44px 0 36px}
+header .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;margin:0 0 8px}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.2;margin:0 0 14px;text-wrap:balance}
+header p{max-width:760px;margin:0;opacity:.94}
+nav{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px}
+nav a{white-space:nowrap;font-size:13px;color:var(--brand);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+nav a:hover{background:var(--accent)}
+main{padding:28px 0 12px}
+section.shot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin:0 0 22px}
+section.shot .num{display:inline-block;font-size:12px;font-weight:600;color:var(--brand);background:var(--accent);border-radius:999px;padding:2px 10px;margin-bottom:8px}
+h2{font-size:22px;line-height:1.3;margin:0 0 8px;text-wrap:balance}
+section.shot p{margin:0 0 14px;color:#2a3b43;max-width:860px}
+figure{margin:0}
+figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;cursor:zoom-in;background:#fff}
+figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+.faq{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin:0 0 22px}
+.faq h3{font-size:17px;margin:18px 0 4px}
+.faq h3:first-of-type{margin-top:6px}
+.faq p{margin:0;color:#2a3b43;max-width:860px}
+footer{color:var(--muted);font-size:13px;padding:8px 0 36px}
+footer a{color:var(--brand)}
+.lb{position:fixed;inset:0;background:rgba(10,20,26,.88);display:none;align-items:center;justify-content:center;padding:16px;z-index:20;cursor:zoom-out}
+.lb.on{display:flex}
+.lb img{max-width:100%;max-height:100%;border-radius:6px;background:#fff}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">S4 Consulting - Phân hệ lương trên Oracle NetSuite</p>
+    <h1>S4 Advanced Payroll cho NetSuite: 10 màn hình tiêu biểu</h1>
+    <p>S4 Advanced Payroll (S4 Tính Lương Nâng Cao) là phân hệ tính lương chạy ngay trong NetSuite, do S4 Consulting phát triển cho doanh nghiệp Việt Nam. Phân hệ đi từ chấm công, xếp ca, tính lương, bảo hiểm bắt buộc, thuế TNCN đến bút toán ghi sổ và hồ sơ kê khai. Mười màn hình dưới đây chụp trên bộ dữ liệu minh họa, tên nhân viên và số tiền không phải dữ liệu thật.</p>
+  </div>
+</header>
+
+<nav aria-label="Mục lục">
+  <div class="wrap">
+    <a href="#trang-chu">Trang chủ</a><a href="#cham-cong">Chấm công</a><a href="#xep-ca">Xếp ca</a><a href="#nhan-su">Hồ sơ nhân viên</a><a href="#chay-luong">Chạy lương</a><a href="#can-soat">Soát bảng lương</a><a href="#but-toan">Bút toán</a><a href="#hoa-hong">Hoa hồng</a><a href="#phan-tich">Phân tích chi phí</a><a href="#bao-cao">Báo cáo - tờ khai</a><a href="#hoi-dap">Hỏi đáp</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section class="shot" id="trang-chu">
+  <span class="num">01 - Trang chủ</span>
+  <h2>Người làm lương bắt đầu một ngày làm việc từ đâu?</h2>
+  <p>Từ màn "Việc hôm nay". Màn này cho biết kỳ lương đang chạy, kỳ đang ở bước nào, còn việc gì phải làm và hạn nào sắp tới (khóa công, tính lương, duyệt, chi lương và ghi sổ). Các thao tác hay dùng như tạo bảng lương, mở chấm công, lập phiếu tạm ứng nằm ngay trên một hàng nút.</p>
+  <figure><img src="img/home.webp" alt="Trang chủ Việc hôm nay của S4 Advanced Payroll trên NetSuite" loading="lazy"><figcaption>Trang chủ: kỳ đang chạy, việc cần làm, hạn sắp tới và thao tác nhanh.</figcaption></figure>
+</section>
+
+<section class="shot" id="cham-cong">
+  <span class="num">02 - Chấm công</span>
+  <h2>Bảng công của cả kỳ được theo dõi như thế nào?</h2>
+  <p>Trên một lưới theo ngày cho từng nhân viên, với ký hiệu đi làm, nghỉ có lương, nghỉ không lương, công tác, làm thêm. Kỳ công đi qua bốn bước: thu thập, xử lý ngoại lệ, khóa công, chuyển sang tính lương. Các ngoại lệ như thiếu lượt chấm được gom vào một khung riêng để gửi duyệt hoặc mở chứng từ ngay tại chỗ.</p>
+  <figure><img src="img/attendance.webp" alt="Bảng công theo ngày và khung ngoại lệ cần xử lý" loading="lazy"><figcaption>Tab Chấm công: lưới công theo ngày, số tổng của kỳ và ngoại lệ chờ xử lý.</figcaption></figure>
+</section>
+
+<section class="shot" id="xep-ca">
+  <span class="num">03 - Xếp ca</span>
+  <h2>Doanh nghiệp làm ca kíp xếp lịch ra sao?</h2>
+  <p>Lịch ca được tính từ chế độ ca (mẫu xoay ca gán cho tổ, phòng ban hoặc nhân viên) cộng với các ô sửa tay. Người xếp ca khai chế độ ca một lần cho cả nhóm, sau đó chỉ dùng lưới để xem và sửa ngoại lệ, có thể chọn nhiều người để xếp theo khoảng ngày.</p>
+  <figure><img src="img/roster.webp" alt="Màn Xếp ca với lưới ca theo ngày của từng nhân viên" loading="lazy"><figcaption>Màn Xếp ca: ca hành chính, ca kíp xoay theo tuần và thao tác hàng loạt.</figcaption></figure>
+</section>
+
+<section class="shot" id="nhan-su">
+  <span class="num">04 - Hồ sơ nhân viên</span>
+  <h2>Dữ kiện lương của một nhân viên nằm ở đâu?</h2>
+  <p>Trong một hồ sơ duy nhất: phòng ban, chức danh, hợp đồng hiện tại, lương cơ bản, lương đóng bảo hiểm, người phụ thuộc. Dòng thời gian ghi lại hợp đồng, phụ lục, quyết định điều chỉnh lương theo ngày hiệu lực, nên kỳ lương nào cũng tính đúng theo mức lương của thời điểm đó.</p>
+  <figure><img src="img/employee-card.webp" alt="Hồ sơ nhân viên với dòng thời gian hợp đồng và điều chỉnh lương" loading="lazy"><figcaption>Hồ sơ nhân viên: thông tin tóm tắt và dòng thời gian thay đổi.</figcaption></figure>
+</section>
+
+<section class="shot" id="chay-luong">
+  <span class="num">05 - Chạy lương</span>
+  <h2>Một bảng lương được xử lý qua những bước nào?</h2>
+  <p>Qua sáu bước trên cùng một màn: chuẩn bị, công và giờ, tính lương, soát, duyệt, chi lương và ghi sổ. Bốn ô số tổng cho thấy thực lĩnh phải chi, bảo hiểm phải nộp, thuế TNCN phải nộp và tổng chi phí công ty. Bấm vào một nhân viên để xem từng khoản thu nhập, khấu trừ, bảo hiểm, thuế và cách tính.</p>
+  <figure><img src="img/run-overview.webp" alt="Màn chạy lương sáu bước với danh sách nhân viên và chi tiết thu nhập" loading="lazy"><figcaption>Màn một bảng lương: thanh bước, số tổng, danh sách nhân viên và chi tiết từng người.</figcaption></figure>
+</section>
+
+<section class="shot" id="can-soat">
+  <span class="num">06 - Soát bảng lương</span>
+  <h2>Làm sao phát hiện số bất thường trước khi duyệt?</h2>
+  <p>Phân hệ tự so bảng lương với kỳ trước và liệt kê các điểm cần xem, ví dụ thực lĩnh của một nhân viên lệch trên 20%. Mỗi điểm có chi tiết chênh lệch và trạng thái xử lý, để người soát và người duyệt cùng nhìn một danh sách thay vì dò từng dòng trên Excel.</p>
+  <figure><img src="img/run-checks.webp" alt="Danh sách điểm cần soát của bảng lương" loading="lazy"><figcaption>Tab Cần soát: điểm lệch so với kỳ trước và tình trạng xử lý.</figcaption></figure>
+</section>
+
+<section class="shot" id="but-toan">
+  <span class="num">07 - Bút toán</span>
+  <h2>Chi phí lương lên sổ cái NetSuite như thế nào?</h2>
+  <p>Mỗi bảng lương sinh một bút toán, xem trước được ngay trên màn chạy lương trước khi ghi sổ. Từng dòng Nợ, Có mang theo tài khoản, phòng ban, địa điểm và dự án, nên chi phí lương, bảo hiểm doanh nghiệp đóng và trích trước lương tháng 13 đi thẳng vào báo cáo quản trị của NetSuite.</p>
+  <figure><img src="img/run-journal.webp" alt="Bút toán ghi sổ của bảng lương theo tài khoản và phòng ban" loading="lazy"><figcaption>Tab Bút toán: dòng hạch toán theo tài khoản, phòng ban, địa điểm, dự án.</figcaption></figure>
+</section>
+
+<section class="shot" id="hoa-hong">
+  <span class="num">08 - Hoa hồng</span>
+  <h2>Hoa hồng kinh doanh được tính và đưa vào lương ra sao?</h2>
+  <p>Theo kế hoạch hoa hồng, lấy doanh số từ giao dịch NetSuite hoặc từ dữ liệu nạp ngoài như DMS, POS. Bảng tính của tháng hiển thị cơ sở tính, tỷ lệ đạt, số phải trả cho từng người và cảnh báo phần doanh số chưa ai được ghi nhận. Sau khi duyệt, số hoa hồng tự vào bảng lương của kỳ.</p>
+  <figure><img src="img/commission.webp" alt="Bảng tính hoa hồng theo nhân viên kinh doanh" loading="lazy"><figcaption>Tab Hoa hồng: bảng tính của tháng và diễn giải cho từng nhân viên.</figcaption></figure>
+</section>
+
+<section class="shot" id="phan-tich">
+  <span class="num">09 - Phân tích chi phí</span>
+  <h2>Chi phí lao động tháng này thay đổi vì đâu?</h2>
+  <p>Màn phân tích tách chi phí lao động thành phần nằm trong giá vốn và phần nằm trong chi phí hoạt động, vẽ xu hướng 12 tháng và giải thích chênh lệch so với kỳ so sánh theo từng nguyên nhân: mức lương bình quân, làm thêm, phụ cấp, thưởng, lương khoán. Bên dưới là bảng phân rã theo phòng ban, dự án, địa điểm, tài khoản.</p>
+  <figure><img src="img/analytics.webp" alt="Phân tích chi phí lao động với xu hướng 12 tháng và nguyên nhân thay đổi" loading="lazy"><figcaption>Tab Phân tích chi phí: chỉ số của tháng, xu hướng và nguyên nhân thay đổi.</figcaption></figure>
+</section>
+
+<section class="shot" id="bao-cao">
+  <span class="num">10 - Báo cáo - tờ khai</span>
+  <h2>Hồ sơ bảo hiểm và thuế TNCN lấy từ đâu?</h2>
+  <p>Từ một màn xếp theo kỳ hạn. Hằng tháng có bảo hiểm phải nộp và danh sách D02-LT, chi phí lương theo tài khoản, quỹ lương theo phòng ban. Hằng quý có số liệu tờ khai 05/KK-TNCN. Hằng năm có sổ theo dõi thuế đã khấu trừ và số liệu quyết toán thuế TNCN. Mỗi mục gợi ý sẵn kỳ gần nhất có số liệu.</p>
+  <figure><img src="img/reports-hub.webp" alt="Màn Báo cáo - tờ khai theo kỳ hạn tháng, quý, năm" loading="lazy"><figcaption>Tab Báo cáo - tờ khai: hồ sơ hằng tháng, hằng quý, hằng năm và bản in bảng lương.</figcaption></figure>
+</section>
+
+<section class="faq" id="hoi-dap">
+  <h2>Hỏi đáp thường gặp</h2>
+  <h3>S4 Advanced Payroll chạy ở đâu?</h3>
+  <p>Chạy ngay trong tài khoản NetSuite của doanh nghiệp, dưới dạng một ứng dụng có các tab như trên. Dữ liệu nhân viên, phòng ban, tài khoản kế toán và bút toán dùng chung với NetSuite.</p>
+  <h3>Phân hệ có tính bảo hiểm bắt buộc và thuế TNCN theo quy định Việt Nam không?</h3>
+  <p>Có. Tỷ lệ trích, mức trần, giảm trừ gia cảnh và biểu thuế lũy tiến được lưu thành tham số có ngày hiệu lực và căn cứ pháp lý, nên khi văn bản thay đổi chỉ cần thêm dòng tham số mới.</p>
+  <h3>Dữ liệu chấm công và doanh số có nạp từ hệ thống khác được không?</h3>
+  <p>Được. Chấm công nạp từ file của máy chấm công hoặc dán từ Excel theo hồ sơ nguồn khai sẵn. Doanh số tính hoa hồng lấy từ giao dịch NetSuite hoặc nạp từ hệ thống ngoài.</p>
+  <h3>Bảng lương có tự hạch toán vào sổ cái không?</h3>
+  <p>Có. Sau khi duyệt, kế toán ghi sổ để sinh một bút toán cho cả bảng lương, kèm phòng ban, địa điểm, dự án trên từng dòng.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Hình chụp trên bộ dữ liệu minh họa. S4 Consulting - <a href="https://www.s4.com.vn/">www.s4.com.vn</a></div>
+</footer>
+
+<div class="lb" id="lb" role="dialog" aria-label="Hình phóng to"><img alt=""></div>
+<script>
+(function(){
+  var lb=document.getElementById('lb'),big=lb.querySelector('img');
+  document.querySelectorAll('figure img').forEach(function(i){
+    i.addEventListener('click',function(){big.src=i.src;big.alt=i.alt;lb.classList.add('on');});
+  });
+  lb.addEventListener('click',function(){lb.classList.remove('on');});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')lb.classList.remove('on');});
+})();
+</script>
+</body>
+</html>

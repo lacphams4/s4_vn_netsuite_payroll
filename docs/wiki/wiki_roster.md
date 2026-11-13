@@ -8,6 +8,8 @@
 
 ### 24.1 Cách gói tính lịch ca: chế độ ca cộng ô ngoại lệ
 
+![Hộp Chế độ ca: mỗi dòng gán một mẫu xoay ca cho một phạm vi (tổ, phòng ban, nhân viên)](img/roster-regime.webp)
+
 Các phần mềm lớn không lưu lịch từng ngày cho từng người: SAP gán quy tắc lịch làm việc cho nhân viên theo ngày hiệu lực và chỉ lưu những ngày thay ca; UKG gán mẫu lịch cho nhóm. Gói làm theo cùng cách:
 
 - **Chế độ ca** (record `shift_assign`): một dòng gán một **mẫu xoay ca** cho một **phạm vi**, có hiệu lực từ ngày đến ngày. Phạm vi: **E** một nhân viên, **T** một tổ, **D** một phòng ban, **G** một nhóm lương, **S** cả công ty con. Mỗi dòng có thêm **ngày neo** (ngày ứng với ngày 1 của chu kỳ; trống = ngày hiệu lực) và ghi chú.
@@ -28,6 +30,8 @@ Ví dụ: xưởng 2.000 công nhân chia 3 kíp xoay 3 ca chỉ cần 3 dòng c
 Nhân viên **thuộc diện xếp ca** khi có chế độ ca hiệu lực hoặc có ô phân ca trong khoảng ngày đang xem. Người ngoài diện (thường là khối văn phòng) mặc định ẩn trên lưới; chấm công của họ vẫn theo ngày nghỉ hằng tuần của nhóm lương như trước. Muốn xếp ca cho một người ngoài diện: chọn bộ lọc **Tất cả** rồi xếp tay, hoặc khai chế độ ca cho người đó.
 
 ### 24.3 Màn Xếp ca
+
+![Màn Xếp ca: lưới ca theo ngày của từng nhân viên, thanh chọn ca và các thao tác hàng loạt](img/roster.webp)
 
 Mở từ **Khác > Xếp ca**, hoặc tab **Chấm công > Thao tác khác > Xếp ca** (đường dẫn `#/roster`).
 
