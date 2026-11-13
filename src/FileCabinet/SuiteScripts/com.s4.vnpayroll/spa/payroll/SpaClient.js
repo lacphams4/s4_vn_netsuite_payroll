@@ -1878,7 +1878,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             title: 'Việc hôm nay',
             weekdays: ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
             roleLabel: 'vai trò',
-            roles: { admin: 'Quản trị', hr: 'Nhân sự - tiền lương', acct: 'Kế toán lương', other: 'Người dùng' },
+            roles: { admin: 'Quản trị', demo: 'Nhân sự - tiền lương và kế toán', hr: 'Nhân sự - tiền lương', acct: 'Kế toán lương', other: 'Người dùng' },
             hello: (name) => (name ? `Chào ${name}.` : 'Xin chào.'),
             focus: {
                 admin: 'Bạn thấy toàn bộ việc của kỳ: chốt công, tính lương, duyệt và ghi sổ.',
@@ -2017,7 +2017,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
             title: 'Today',
             weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
             roleLabel: 'role',
-            roles: { admin: 'Administrator', hr: 'HR - payroll', acct: 'Payroll accountant', other: 'User' },
+            roles: { admin: 'Administrator', demo: 'HR, payroll and accounting', hr: 'HR - payroll', acct: 'Payroll accountant', other: 'User' },
             hello: (name) => (name ? `Hello ${name}.` : 'Hello.'),
             focus: {
                 admin: 'You see every task of the period: attendance, calculation, approval and posting.',
@@ -2439,7 +2439,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const go = (target) => target && target.view && app.go(target.view, target.params || {});
         const today = (data && data.today) || localToday();
         const subsidiaryName = (list$3(boot.subsidiaries).find((s) => String(s.id) === String(subsidiary)) || {}).name || '';
-        const headerLine = [`${weekday(today, t.weekdays)}, ${fmtDate(today)}`, subsidiaryName, `${t.roleLabel} ${t.roles[role]}`].filter((x) => x).join(' · ');
+        const headerLine = [`${weekday(today, t.weekdays)}, ${fmtDate(today)}`, subsidiaryName, `${t.roleLabel} ${t.roles[(boot.user || {}).role === 'customrole_s4vp_demo' ? 'demo' : role]}`].filter((x) => x).join(' · ');
         const header = (jsx(PageHeader, { title: t.title, sub: jsxs("div", { style: S.hello, children: [jsx("div", { children: headerLine }), jsx("div", { children: `${t.hello((boot.user || {}).name || '')} ${t.focus[role]}` })] }), actions: [jsx(Button, { label: t.refresh, disabled: !subsidiary || !!app.busy, onClick: () => load() })] }));
         // ---------------------------------------------------------------- trạng thái chưa có dữ liệu
         if (!subsidiary || boot.setupReady === false || !data) {
