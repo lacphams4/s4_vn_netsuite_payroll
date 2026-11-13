@@ -29,6 +29,20 @@ Mỗi mục: mã, ngày phát hiện, mức, mô tả, cách tái hiện, hướ
 - Hướng xử lý: sửa loader (`s4_netsuite_demo_saomai`) để phiếu không quay trên video được chia và duyệt sẵn; với kỳ 202702 (bản tiếng Anh) kiểm trước khi quay. Cân nhắc thao tác hàng loạt "Chia và gửi duyệt các phiếu đã chọn" trên màn Sản lượng.
 - Trạng thái: mở.
 
+## FEAT-001 - Hoa hồng tính từ đơn bán hàng (Sales Order)
+
+- Ghi nhận: 13/11/2026, yêu cầu từ nội dung video ("lấy từ SO, Invoice tùy mô hình").
+- Hiện trạng: nguồn doanh số NetSuite chỉ đọc Invoice, Cash Sale, Credit Memo đã ghi sổ (`api/CommissionV2`, `docs/COMMISSION.md`).
+- Đề xuất: thêm lựa chọn nguồn chứng từ trên kế hoạch hoa hồng: Sales Order (theo ngày đơn, trạng thái đã duyệt, trừ dòng đóng hoặc hủy), có quy tắc tránh đếm trùng khi đơn đã lập hóa đơn; ghi nhận theo Sales Rep hoặc đội bán như hiện tại.
+- Trạng thái: mở.
+
+## FEAT-002 - Lương, thưởng KPI lấy dữ liệu từ báo cáo hoặc saved search NetSuite
+
+- Ghi nhận: 13/11/2026, yêu cầu từ nội dung video ("dữ liệu KPI lấy trực tiếp từ báo cáo NetSuite").
+- Hiện trạng: chỉ có % đạt chỉ tiêu doanh số (kế hoạch hoa hồng, điều kiện P của quy tắc thu nhập); chưa có KPI nhiều tiêu chí, chưa đọc báo cáo hoặc saved search.
+- Đề xuất: record "Nguồn KPI" khai saved search (hoặc dataset) trả về nhân viên, kỳ, chỉ số, giá trị; bảng KPI theo kỳ có trọng số, thang điểm; quy tắc thu nhập dùng điểm KPI làm điều kiện hoặc hệ số. Không nhận SuiteQL tự do; chỉ chọn saved search đã khai.
+- Trạng thái: mở.
+
 ## BUG-004 - SDF deploy lỗi CUSTOM_OBJECT_ACCOUNT_VALIDATION
 
 - Phát hiện: 13/11/2026.

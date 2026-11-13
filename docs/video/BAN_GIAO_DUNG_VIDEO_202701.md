@@ -84,7 +84,14 @@ Câu hỏi: ba giá trị lớn nhất khi dùng S4 Advanced Payroll chạy bên
    - So với phần mềm bên ngoài: không xuất file doanh số, sản lượng sang hệ thống khác, không nhập lại, không đối chiếu chênh lệch giữa hai hệ thống mỗi tháng, nên giảm hẳn sai sót do nhập tay và lệch phiên bản số liệu.
    - Cảnh minh họa: 5 (ngày công chia tiền tổ lấy từ bảng công), 6 (tab Giao dịch của bảng tính hoa hồng), 9 (lương khoán trên dòng lương), 11 (bút toán JE2140), 14 (Khớp sổ cái).
 
+   Lời thoại bắt buộc có cho ý 1 (chèn vào cảnh tương ứng, đọc khi hình đang ở màn đó):
+   - Cảnh 5 (màn Sản lượng, khi thấy nút "Lấy từ giao dịch" ở góc phải trên): "Ở đây tổ trưởng nhập sản lượng. Doanh nghiệp dùng phân hệ quản lý sản xuất của NetSuite thì không cần nhập: bấm Lấy từ giao dịch, hệ thống đọc thẳng phiếu hoàn thành lệnh sản xuất, phiếu lắp ráp thành phẩm hoặc phiếu giao hàng để tính lương sản lượng." Có thể phóng to nút "Lấy từ giao dịch".
+   - Cảnh 6 (màn Hoa hồng, tab Giao dịch): "Doanh số tính hoa hồng lấy trực tiếp từ chứng từ bán hàng trên NetSuite: hóa đơn, phiếu bán hàng thu tiền ngay, phiếu hàng trả lại; tùy mô hình doanh nghiệp, ghi nhận theo nhân viên kinh doanh hoặc theo đội bán trên chứng từ. Cửa hàng bán trên hệ thống khác như DMS thì nạp file, như ví dụ này."
+   - Cảnh 6 (khi thấy cột "% đạt" và chỉ tiêu): "Lương, thưởng theo chỉ tiêu tính từ % đạt chỉ tiêu doanh số, và doanh số này lấy trực tiếp từ số liệu bán hàng trên NetSuite, không qua bảng tính trung gian."
+
    Lưu ý khi lồng tiếng ý 1 (để không nói quá điều hình thấy):
+   - Chưa nói "lấy từ đơn bán hàng (Sales Order)": phân hệ hiện đọc hóa đơn, phiếu bán hàng thu tiền ngay, phiếu hàng trả lại; chưa đọc Sales Order (đã đưa vào backlog FEAT-001). Khi S4 làm xong thì lời thoại đổi thành "từ đơn bán hàng hoặc hóa đơn, tùy mô hình".
+   - Chưa nói "KPI lấy từ báo cáo NetSuite": phân hệ chưa đọc báo cáo hoặc saved search của NetSuite làm đầu vào KPI (đã đưa vào backlog FEAT-002). Chỉ tiêu hiện có là % đạt chỉ tiêu doanh số, tính từ chứng từ bán hàng. Khi S4 làm xong thì lời thoại đổi thành "chỉ số KPI lấy trực tiếp từ báo cáo NetSuite".
    - Trong bản ghi, doanh số của E1044 đến từ file DMS (hệ thống ngoài), không phải hóa đơn NetSuite. Lời thoại nói chung "doanh số lấy từ hóa đơn NetSuite và từ hệ thống bán hàng khác như DMS" là đúng; không nói riêng E1044 lấy từ hóa đơn NetSuite. Nếu cần hình hóa đơn NetSuite, chèn thêm cảnh mở một hóa đơn Sao Mai có Sales Rep (kịch bản D13, chưa quay).
    - Phiếu khoán SL000114 trong bản ghi được nhập sản lượng bằng tay. Lời thoại về "lấy từ giao dịch sản xuất NetSuite" dùng dạng khả năng ("có thể lấy thẳng từ lệnh sản xuất, phiếu nhập thành phẩm"), không nói phiếu trên hình được lấy tự động.
    - Phân hệ chưa có mô-đun đánh giá KPI tổng quát (chấm điểm hiệu suất nhiều tiêu chí). Chỉ nói "lương, thưởng theo % đạt chỉ tiêu doanh số", không nói "lương KPI" chung chung.
