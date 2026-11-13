@@ -95,6 +95,21 @@ Lời thoại gợi ý cho cảnh kết (thay hoặc ghép với lời ở mục
 
 Không dùng các câu so sánh không chứng minh được trên hình (ví dụ "nhanh gấp N lần", "tiết kiệm X%").
 
+### 7.1 Điểm nổi bật S4 muốn nêu và cách nói đúng
+
+S4 nêu ba điểm nổi bật của phân hệ. Dùng đúng câu chữ ở cột "Cách nói", không dùng câu ở cột "Không nói".
+
+| Điểm nổi bật | Cách nói | Không nói | Cảnh minh họa |
+| --- | --- | --- | --- |
+| 1. Linh hoạt tùy chỉnh sâu theo đặc thù doanh nghiệp | Quy tắc thu nhập, kế hoạch hoa hồng, bảng đơn giá khoán, chế độ ca, nguồn dữ liệu (NetSuite, máy chấm công, DMS, Excel) đều cấu hình theo từng doanh nghiệp; có gói thiết lập sẵn theo ngành (thương mại, sản xuất, xây dựng); tham số pháp lý có ngày hiệu lực nên đổi luật chỉ cần thêm dòng mới. S4 tùy chỉnh thêm khi doanh nghiệp có quy trình riêng. | "Không cần lập trình cho mọi trường hợp" | 2 (chế độ ca), 3 (hồ sơ nguồn máy chấm công), 5 (bảng đơn giá), 6 (kế hoạch hoa hồng), màn Thiết lập (ảnh trong sổ tay) |
+| 2. Có cổng tự phục vụ cho nhân viên | Nhân viên xem phiếu lương, phép, gửi đơn trên điện thoại bằng quyền Employee Center của NetSuite, không cần cấp license người dùng đầy đủ (Full User) cho từng nhân viên. | "Không phát sinh license NetSuite", "miễn phí license" | 15 |
+| 3. Tích hợp trợ lý AI | Người làm lương hỏi và thao tác với phân hệ bằng lời qua trợ lý AI kết nối NetSuite (NetSuite AI Connector), như Claude, ChatGPT; vẫn đúng phân quyền, ghi sổ và các việc ảnh hưởng sổ cái vẫn làm trên màn hình. | "Đã chạy với Copilot", "nhân viên hỏi lương qua ChatGPT" | Chưa có cảnh quay (xem lưu ý) |
+
+Lưu ý bắt buộc:
+- Điểm 2: theo tài liệu Oracle, người dùng chỉ có vai trò Employee Center dùng **license Employee Center** (loại license nhân viên, giá thấp hơn nhiều so với Full User, nhiều doanh nghiệp đã có sẵn cho chấm công, chi phí). Vì vậy không được nói "không phát sinh license"; chỉ nói "không cần license người dùng đầy đủ". Giá license do Oracle báo theo hợp đồng, không nêu số trong video.
+- Điểm 3: bộ công cụ AI của gói đã triển khai trên account thử nhưng **chưa gọi thành công qua connector thật** (13/11/2026: ChatGPT kết nối được NetSuite nhưng chưa thấy công cụ `s4vp_*`). Chưa có cảnh quay nào cho điểm này. Không nêu Copilot: Microsoft Copilot (qua Copilot Studio) có hỗ trợ MCP nhưng S4 chưa thử. Trợ lý AI dành cho người làm lương (HR, kế toán), không dành cho tài khoản Employee Center của nhân viên.
+- Nếu muốn có cảnh trợ lý AI: chờ S4 sửa kết nối (URL connector dạng `/all`, quyền vai trò), quay riêng một đoạn 1-1:30 hỏi ChatGPT hoặc Claude: "kỳ lương này đang ở bước nào", "thực lĩnh BL000016 so với kỳ trước", "giải thích lương của E1067", và một câu xin ghi sổ bị từ chối.
+
 ## 8. Video intro ngắn (tùy chọn)
 
 Nếu cần bản 3-5 phút, ghép từ các khoảnh khắc: cảnh 3 (gán mã máy), cảnh 4 (phiếu đề xuất), cảnh 5 (chia tiền tổ), cảnh 6 (diễn giải hoa hồng), cảnh 8 + 10 (tính 114 người, soát), cảnh 11 (bút toán), cảnh 14 + 15 (phân tích chi phí, cổng nhân viên trên điện thoại). Lời thoại tham khảo mục E của `s4-advanced-payroll_kich_ban_quay.md`.
