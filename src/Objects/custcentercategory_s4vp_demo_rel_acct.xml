@@ -1,0 +1,32 @@
+<centercategory scriptid="custcentercategory_s4vp_demo_rel_acct">
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <centertab>[scriptid=custcentertab_s4vp_demo_2_hr]</centertab>
+  <label>Accounting</label>
+  <links>
+    <link>
+      <linkid>LIST_TRAN_JOURNAL</linkid>
+      <linklabel>Journal entries</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>TRAN_JOURNALAPPROVAL</linkid>
+      <linklabel>Approve journal entries</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_VENDBILL</linkid>
+      <linklabel>Vendor bills</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>TRAN_VENDBILLAPPRV</linkid>
+      <linklabel>Approve vendor bills</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_ACCOUNT</linkid>
+      <linklabel>Chart of accounts</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

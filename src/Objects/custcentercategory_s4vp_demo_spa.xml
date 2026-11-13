@@ -1,65 +1,41 @@
 <centercategory scriptid="custcentercategory_s4vp_demo_spa">
   <center>[scriptid=custcenter_s4vp_demo]</center>
   <centertab>[scriptid=custcentertab_s4vp_demo_1_payroll]</centertab>
-  <label>Màn hình S4 Advanced Payroll</label>
+  <label>Payroll</label>
   <links>
     <link>
-      <linklabel>Trang chủ lương</linklabel>
+      <linklabel>Home</linklabel>
       <linkobject>[scriptid=custlink_s4vp_demo_home]</linkobject>
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>
     <link>
-      <linklabel>Chấm công</linklabel>
-      <linkobject>[scriptid=custlink_s4vp_demo_attendance]</linkobject>
-      <linktasktype>LINK</linktasktype>
-      <shortlist>F</shortlist>
-    </link>
-    <link>
-      <linklabel>Chạy lương</linklabel>
+      <linklabel>Run payroll</linklabel>
       <linkobject>[scriptid=custlink_s4vp_demo_payroll]</linkobject>
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>
     <link>
-      <linklabel>Nhân sự</linklabel>
-      <linkobject>[scriptid=custlink_s4vp_demo_employees]</linkobject>
-      <linktasktype>LINK</linktasktype>
-      <shortlist>F</shortlist>
-    </link>
-    <link>
-      <linklabel>Tạm ứng</linklabel>
+      <linklabel>Advances</linklabel>
       <linkobject>[scriptid=custlink_s4vp_demo_advances]</linkobject>
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>
     <link>
-      <linklabel>Hoa hồng</linklabel>
+      <linklabel>Commission</linklabel>
       <linkobject>[scriptid=custlink_s4vp_demo_commission]</linkobject>
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>
     <link>
-      <linklabel>Sản lượng</linklabel>
-      <linkobject>[scriptid=custlink_s4vp_demo_outputs]</linkobject>
-      <linktasktype>LINK</linktasktype>
-      <shortlist>F</shortlist>
-    </link>
-    <link>
-      <linklabel>Phân tích chi phí lương</linklabel>
+      <linklabel>Cost analysis</linklabel>
       <linkobject>[scriptid=custlink_s4vp_demo_analytics]</linkobject>
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>
     <link>
-      <linklabel>Báo cáo - tờ khai</linklabel>
+      <linklabel>Reports - declarations</linklabel>
       <linkobject>[scriptid=custlink_s4vp_demo_reports]</linkobject>
-      <linktasktype>LINK</linktasktype>
-      <shortlist>F</shortlist>
-    </link>
-    <link>
-      <linklabel>Thiết lập</linklabel>
-      <linkobject>[scriptid=custlink_s4vp_demo_setup]</linkobject>
       <linktasktype>LINK</linktasktype>
       <shortlist>F</shortlist>
     </link>

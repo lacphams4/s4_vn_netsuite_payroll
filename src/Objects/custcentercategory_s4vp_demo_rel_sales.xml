@@ -1,0 +1,32 @@
+<centercategory scriptid="custcentercategory_s4vp_demo_rel_sales">
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <centertab>[scriptid=custcentertab_s4vp_demo_2_hr]</centertab>
+  <label>Sales (commission source)</label>
+  <links>
+    <link>
+      <linkid>LIST_TRAN_CUSTINVC</linkid>
+      <linklabel>Invoices</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_CASHSALE</linkid>
+      <linklabel>Cash sales</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_CUSTCRED</linkid>
+      <linklabel>Credit memos</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_TRAN_CUSTPYMT</linkid>
+      <linklabel>Customer payments</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>LIST_CUSTJOB</linkid>
+      <linklabel>Customers</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

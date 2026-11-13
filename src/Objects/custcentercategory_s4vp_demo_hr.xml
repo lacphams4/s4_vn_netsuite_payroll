@@ -1,26 +1,26 @@
 <centercategory scriptid="custcentercategory_s4vp_demo_hr">
   <center>[scriptid=custcenter_s4vp_demo]</center>
   <centertab>[scriptid=custcentertab_s4vp_demo_2_hr]</centertab>
-  <label>Nhân sự &amp; thời gian</label>
+  <label>Employees &amp; time</label>
   <links>
     <link>
       <linkid>LIST_EMPLOYEE_RECORD</linkid>
-      <linklabel>Nhân viên</linklabel>
+      <linklabel>Employees</linklabel>
       <shortlist>F</shortlist>
     </link>
     <link>
       <linkid>TRAN_TIMEBILL</linkid>
-      <linklabel>Nhập giờ công (Track Time)</linklabel>
+      <linklabel>Track time</linklabel>
       <shortlist>F</shortlist>
     </link>
     <link>
       <linkid>REPO_223</linkid>
-      <linklabel>Báo cáo thời gian theo nhân viên</linklabel>
+      <linklabel>Time by employee</linklabel>
       <shortlist>F</shortlist>
     </link>
     <link>
       <linkid>LIST_JOB</linkid>
-      <linklabel>Dự án</linklabel>
+      <linklabel>Projects</linklabel>
       <shortlist>F</shortlist>
     </link>
   </links>

@@ -1,0 +1,32 @@
+<centercategory scriptid="custcentercategory_s4vp_demo_rel_reports">
+  <center>[scriptid=custcenter_s4vp_demo]</center>
+  <centertab>[scriptid=custcentertab_s4vp_demo_2_hr]</centertab>
+  <label>Financial reports</label>
+  <links>
+    <link>
+      <linkid>REPO_NEG200</linkid>
+      <linklabel>Income statement</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_NEG202</linkid>
+      <linklabel>Balance sheet</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_292</linkid>
+      <linklabel>Trial balance</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_293</linkid>
+      <linklabel>General ledger</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkid>REPO_250</linkid>
+      <linklabel>Transaction detail</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>
