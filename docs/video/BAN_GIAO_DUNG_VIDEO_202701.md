@@ -71,51 +71,46 @@ Cột "Dấu hiệu" giúp tìm điểm vào/ra trong bản ghi (thông báo xan
 - Thanh tải xuống của Chrome không hiện trong vùng ghi; cảnh file chi lương ngân hàng chỉ thấy menu, có thể thêm chữ chú thích "Tải file chi lương ngân hàng".
 - Số liệu nhắc trong lời thoại phải khớp hình: thực lĩnh 1.555.617.361; bảo hiểm phải nộp (thẻ bảng lương) 505.854.000; thuế TNCN 50.006.826; tổng chi phí công ty 2.111.478.187; bút toán JE2140; hoa hồng 18.504.460; phiếu khoán 11.415.000.
 
-## 7. Thông điệp giá trị (dùng cho lời mở, lời kết, video intro)
+## 7. Thông điệp giá trị và điểm nổi bật (quyết định của S4, 13/11/2026)
 
-Câu hỏi: ba giá trị lớn nhất khi dùng S4 Advanced Payroll chạy bên trong NetSuite, so với phần mềm tính lương bên ngoài?
+Mục này tổng hợp các ý S4 đã chốt cho lời thoại. Dùng đúng câu chữ ở đây; lời thoại chỉ nói phân hệ làm được gì, không nói về tính năng chưa có hay đang phát triển.
 
-1. **Lương biến đổi lấy dữ liệu thẳng từ các phân hệ khác của Oracle NetSuite: chính xác, liền mạch, giảm sai sót.** Đây là ý cần nhấn mạnh nhất.
-   - Lương hoa hồng: doanh số đọc từ hóa đơn (Invoice), bán hàng thu tiền ngay (Cash Sale), hàng trả lại (Credit Memo) đã ghi sổ trên NetSuite; cơ sở tính là doanh thu thuần, lãi gộp hoặc số lượng; người được ghi nhận lấy từ Sales Rep hoặc đội bán trên chứng từ. Mỗi đồng hoa hồng truy được về đúng chứng từ.
-   - Lương sản lượng, lương khoán: số lượng lấy từ giao dịch sản xuất, giao hàng của NetSuite (Assembly Build, Work Order Completion, Item Fulfillment) theo bảng đơn giá; ngày công để chia tiền tổ lấy từ bảng công đã tổng hợp.
-   - Lương theo chỉ tiêu: hoa hồng và thưởng tính theo % đạt chỉ tiêu doanh số (thang theo % đạt, thưởng mốc, điều kiện % đạt trên quy tắc thu nhập), với doanh số lấy từ chính các chứng từ bán hàng nói trên.
-   - Giờ công theo dự án lấy từ Time của NetSuite; tạm ứng tự cấn trừ khi ghi sổ.
-   - Đầu ra cũng ở trong NetSuite: bảng lương ghi sổ thành một bút toán, mỗi dòng có tài khoản, phòng ban, địa điểm, khối, dự án; màn phân tích báo "Khớp" với sổ cái.
-   - So với phần mềm bên ngoài: không xuất file doanh số, sản lượng sang hệ thống khác, không nhập lại, không đối chiếu chênh lệch giữa hai hệ thống mỗi tháng, nên giảm hẳn sai sót do nhập tay và lệch phiên bản số liệu.
-   - Cảnh minh họa: 5 (ngày công chia tiền tổ lấy từ bảng công), 6 (tab Giao dịch của bảng tính hoa hồng), 9 (lương khoán trên dòng lương), 11 (bút toán JE2140), 14 (Khớp sổ cái).
+### 7.1 Ba giá trị khi chạy bên trong NetSuite (so với phần mềm tính lương bên ngoài)
 
-   Lời thoại bắt buộc có cho ý 1 (chèn vào cảnh tương ứng, đọc khi hình đang ở màn đó):
-   - Cảnh 5 (màn Sản lượng, khi thấy nút "Lấy từ giao dịch" ở góc phải trên): "Ở đây tổ trưởng nhập sản lượng. Doanh nghiệp dùng phân hệ quản lý sản xuất của NetSuite thì không cần nhập: bấm Lấy từ giao dịch, hệ thống đọc thẳng phiếu hoàn thành lệnh sản xuất, phiếu lắp ráp thành phẩm hoặc phiếu giao hàng để tính lương sản lượng." Có thể phóng to nút "Lấy từ giao dịch".
-   - Cảnh 6 (màn Hoa hồng, tab Giao dịch): "Doanh số tính hoa hồng lấy trực tiếp từ chứng từ bán hàng trên NetSuite, từ đơn bán hàng hoặc hóa đơn, tùy mô hình và yêu cầu từng doanh nghiệp; ghi nhận theo nhân viên kinh doanh hoặc theo đội bán trên chứng từ. Cửa hàng bán trên hệ thống khác như DMS thì nạp file, như ví dụ này."
-   - Cảnh 6 (khi thấy cột "% đạt" và chỉ tiêu): "Lương, thưởng theo KPI lấy dữ liệu trực tiếp từ NetSuite, không qua bảng tính trung gian. Ví dụ ở đây là % đạt chỉ tiêu doanh số. Nguồn và cách tính KPI được S4 cấu hình, tùy chỉnh linh hoạt theo yêu cầu từng doanh nghiệp."
+**Giá trị 1 (nhấn mạnh nhất): lương hoa hồng, lương sản lượng, lương thưởng theo KPI lấy dữ liệu trực tiếp từ các phân hệ khác của Oracle NetSuite, nên chính xác, liền mạch và giảm sai sót.**
 
-   Lưu ý khi lồng tiếng ý 1 (để không nói quá điều hình thấy):
-   - Nguồn hoa hồng: S4 quyết định (13/11/2026) nói "từ đơn bán hàng hoặc hóa đơn, tùy mô hình và yêu cầu từng doanh nghiệp" vì mỗi khách hàng được tùy chỉnh riêng. Dùng đúng câu ở trên.
-   - KPI: S4 quyết định (13/11/2026) nói KPI "lấy linh hoạt theo yêu cầu từng doanh nghiệp" vì mỗi khách hàng được tùy chỉnh riêng. Dùng đúng câu ở trên; ví dụ trên hình là % đạt chỉ tiêu doanh số.
-   - Trong bản ghi, doanh số của E1044 đến từ file DMS (hệ thống ngoài), không phải hóa đơn NetSuite. Lời thoại nói chung "doanh số lấy từ hóa đơn NetSuite và từ hệ thống bán hàng khác như DMS" là đúng; không nói riêng E1044 lấy từ hóa đơn NetSuite. Nếu cần hình hóa đơn NetSuite, chèn thêm cảnh mở một hóa đơn Sao Mai có Sales Rep (kịch bản D13, chưa quay).
-   - Phiếu khoán SL000114 trong bản ghi được nhập sản lượng bằng tay. Lời thoại về "lấy từ giao dịch sản xuất NetSuite" dùng dạng khả năng ("có thể lấy thẳng từ lệnh sản xuất, phiếu nhập thành phẩm"), không nói phiếu trên hình được lấy tự động.
-   - Phân hệ chưa có mô-đun đánh giá KPI tổng quát (chấm điểm hiệu suất nhiều tiêu chí). Chỉ nói "lương, thưởng theo % đạt chỉ tiêu doanh số", không nói "lương KPI" chung chung.
-2. **Chi phí nhân công trở thành số quản trị, không chỉ là bảng lương.** Vì lương, doanh thu và giá vốn nằm chung một hệ thống, phân hệ tách được chi phí lao động trong giá vốn và trong chi phí hoạt động, theo dự án, theo khối, và giải thích vì sao tháng này tăng giảm (lương khoán, làm thêm, thưởng). Giám đốc tài chính thấy giá vốn nhân công của từng dự án ngay khi chốt lương. Cảnh minh họa: 9 (phân bổ), 14 (phân tích, phân rã theo dự án).
-3. **Kiểm soát và phân quyền chung với NetSuite.** Dùng chính vai trò, quy trình duyệt và nhật ký của NetSuite: khóa công, duyệt bảng lương, cảnh báo trước khi duyệt, mọi con số có diễn giải từng bước, tham số pháp lý có ngày hiệu lực và căn cứ. Nhân viên tự xem phiếu lương bằng tài khoản NetSuite của mình, không thêm hệ thống, không thêm mật khẩu để quản lý. Cảnh minh họa: 4 (duyệt đề xuất), 7 (khóa công), 10 (soát), 15 (cổng nhân viên).
+- Hoa hồng: doanh số lấy trực tiếp từ chứng từ bán hàng trên NetSuite, từ đơn bán hàng hoặc hóa đơn, tùy mô hình và yêu cầu từng doanh nghiệp; ghi nhận theo nhân viên kinh doanh hoặc đội bán trên chứng từ; mỗi đồng hoa hồng truy được về đúng chứng từ. Cửa hàng bán trên hệ thống khác như DMS thì nạp file.
+- Lương sản lượng, lương khoán: doanh nghiệp dùng phân hệ quản lý sản xuất của NetSuite lấy sản lượng trực tiếp từ phiếu hoàn thành lệnh sản xuất, phiếu lắp ráp thành phẩm hoặc phiếu giao hàng (nút "Lấy từ giao dịch"); ngày công để chia tiền tổ lấy từ bảng công.
+- Lương, thưởng theo KPI: dữ liệu KPI lấy trực tiếp từ NetSuite, nguồn và cách tính được S4 cấu hình, tùy chỉnh linh hoạt theo yêu cầu từng doanh nghiệp. Ví dụ trên hình: % đạt chỉ tiêu doanh số.
+- Đầu ra cũng nằm trong NetSuite: bảng lương ghi sổ thành một bút toán, mỗi dòng có tài khoản, phòng ban, địa điểm, khối, dự án; màn phân tích báo "Khớp" với sổ cái.
+- Không xuất file sang hệ thống khác, không nhập lại, không đối chiếu chênh lệch giữa hai hệ thống mỗi tháng.
 
-Lời thoại gợi ý cho cảnh kết (thay hoặc ghép với lời ở mục 4, cảnh 17): "Chạy ngay trong NetSuite nghĩa là: hoa hồng, lương sản lượng, thưởng theo chỉ tiêu lấy dữ liệu thẳng từ bán hàng, sản xuất trên NetSuite, không nhập lại; chi phí nhân công thành số quản trị theo từng dự án; và cùng một hệ thống phân quyền, duyệt, nhật ký."
+**Giá trị 2: chi phí nhân công trở thành số quản trị, không chỉ là bảng lương.** Lương, doanh thu, giá vốn nằm chung một hệ thống: tách chi phí lao động trong giá vốn và trong chi phí hoạt động, theo dự án, theo khối, giải thích vì sao tháng này tăng giảm. Giám đốc tài chính thấy giá vốn nhân công từng dự án ngay khi chốt lương.
 
-Không dùng các câu so sánh không chứng minh được trên hình (ví dụ "nhanh gấp N lần", "tiết kiệm X%").
+**Giá trị 3: kiểm soát và phân quyền chung với NetSuite.** Dùng chính vai trò, quy trình duyệt và nhật ký của NetSuite: khóa công, duyệt bảng lương, cảnh báo trước khi duyệt, mọi con số có diễn giải từng bước, tham số pháp lý có ngày hiệu lực và căn cứ.
 
-### 7.1 Điểm nổi bật S4 muốn nêu và cách nói đúng
+### 7.2 Ba điểm nổi bật của phân hệ do S4 phát triển
 
-S4 nêu ba điểm nổi bật của phân hệ. Dùng đúng câu chữ ở cột "Cách nói", không dùng câu ở cột "Không nói".
+1. **Linh hoạt, tùy chỉnh sâu theo đặc thù doanh nghiệp.** Quy tắc thu nhập, kế hoạch hoa hồng, KPI, bảng đơn giá khoán, chế độ ca, nguồn dữ liệu (NetSuite, máy chấm công, DMS, Excel) đều cấu hình theo từng doanh nghiệp; có gói thiết lập sẵn theo ngành; tham số pháp lý có ngày hiệu lực nên đổi luật chỉ cần thêm dòng mới; S4 tùy chỉnh thêm theo quy trình riêng của khách hàng.
+2. **Có cổng tự phục vụ cho nhân viên.** Nhân viên xem phiếu lương, phép, gửi đơn trên điện thoại bằng quyền Employee Center của NetSuite, không cần cấp license người dùng đầy đủ (Full User) cho từng nhân viên. Không nói "miễn phí license" hay "không phát sinh license", không nêu giá license (Employee Center là loại license nhân viên riêng, giá theo hợp đồng Oracle).
+3. **Tích hợp trợ lý AI cá nhân như Claude, ChatGPT, Copilot, rất thuận tiện.** Người làm lương hỏi và thao tác với phân hệ bằng lời qua trợ lý AI kết nối NetSuite; vẫn đúng phân quyền của từng người. Bản ghi hiện chưa có cảnh trợ lý AI: chỉ nói ý này trên thẻ chữ hoặc ở phần kết, không ghép với hình thao tác khác; nếu S4 gửi thêm đoạn quay trợ lý AI thì chèn trước cảnh kết.
 
-| Điểm nổi bật | Cách nói | Không nói | Cảnh minh họa |
-| --- | --- | --- | --- |
-| 1. Linh hoạt tùy chỉnh sâu theo đặc thù doanh nghiệp | Quy tắc thu nhập, kế hoạch hoa hồng, bảng đơn giá khoán, chế độ ca, nguồn dữ liệu (NetSuite, máy chấm công, DMS, Excel) đều cấu hình theo từng doanh nghiệp; có gói thiết lập sẵn theo ngành (thương mại, sản xuất, xây dựng); tham số pháp lý có ngày hiệu lực nên đổi luật chỉ cần thêm dòng mới. S4 tùy chỉnh thêm khi doanh nghiệp có quy trình riêng. | "Không cần lập trình cho mọi trường hợp" | 2 (chế độ ca), 3 (hồ sơ nguồn máy chấm công), 5 (bảng đơn giá), 6 (kế hoạch hoa hồng), màn Thiết lập (ảnh trong sổ tay) |
-| 2. Có cổng tự phục vụ cho nhân viên | Nhân viên xem phiếu lương, phép, gửi đơn trên điện thoại bằng quyền Employee Center của NetSuite, không cần cấp license người dùng đầy đủ (Full User) cho từng nhân viên. | "Không phát sinh license NetSuite", "miễn phí license" | 15 |
-| 3. Tích hợp trợ lý AI | Người làm lương hỏi và thao tác với phân hệ bằng lời qua trợ lý AI kết nối NetSuite (NetSuite AI Connector), như Claude, ChatGPT; vẫn đúng phân quyền, ghi sổ và các việc ảnh hưởng sổ cái vẫn làm trên màn hình. | "Đã chạy với Copilot", "nhân viên hỏi lương qua ChatGPT" | Chưa có cảnh quay (xem lưu ý) |
+### 7.3 Lời thoại bắt buộc (chèn vào đúng cảnh)
 
-Lưu ý bắt buộc:
-- Điểm 2: theo tài liệu Oracle, người dùng chỉ có vai trò Employee Center dùng **license Employee Center** (loại license nhân viên, giá thấp hơn nhiều so với Full User, nhiều doanh nghiệp đã có sẵn cho chấm công, chi phí). Vì vậy không được nói "không phát sinh license"; chỉ nói "không cần license người dùng đầy đủ". Giá license do Oracle báo theo hợp đồng, không nêu số trong video.
-- Điểm 3: bộ công cụ AI của gói đã triển khai trên account thử nhưng **chưa gọi thành công qua connector thật** (13/11/2026: ChatGPT kết nối được NetSuite nhưng chưa thấy công cụ `s4vp_*`). Chưa có cảnh quay nào cho điểm này. Không nêu Copilot: Microsoft Copilot (qua Copilot Studio) có hỗ trợ MCP nhưng S4 chưa thử. Trợ lý AI dành cho người làm lương (HR, kế toán), không dành cho tài khoản Employee Center của nhân viên.
-- Nếu muốn có cảnh trợ lý AI: chờ S4 sửa kết nối (URL connector dạng `/all`, quyền vai trò), quay riêng một đoạn 1-1:30 hỏi ChatGPT hoặc Claude: "kỳ lương này đang ở bước nào", "thực lĩnh BL000016 so với kỳ trước", "giải thích lương của E1067", và một câu xin ghi sổ bị từ chối.
+| Cảnh | Thời điểm | Lời thoại |
+| --- | --- | --- |
+| 5 | Màn Sản lượng, khi thấy nút "Lấy từ giao dịch" (có thể phóng to nút) | "Ở đây tổ trưởng nhập sản lượng. Doanh nghiệp dùng phân hệ quản lý sản xuất của NetSuite thì không cần nhập: bấm Lấy từ giao dịch, hệ thống đọc thẳng phiếu hoàn thành lệnh sản xuất, phiếu lắp ráp thành phẩm hoặc phiếu giao hàng để tính lương sản lượng." |
+| 6 | Tab Giao dịch của bảng tính hoa hồng | "Doanh số tính hoa hồng lấy trực tiếp từ chứng từ bán hàng trên NetSuite, từ đơn bán hàng hoặc hóa đơn, tùy mô hình và yêu cầu từng doanh nghiệp; ghi nhận theo nhân viên kinh doanh hoặc theo đội bán trên chứng từ. Cửa hàng bán trên hệ thống khác như DMS thì nạp file, như ví dụ này." |
+| 6 | Khi thấy cột "% đạt" và chỉ tiêu | "Lương, thưởng theo KPI lấy dữ liệu trực tiếp từ NetSuite, không qua bảng tính trung gian. Ví dụ ở đây là % đạt chỉ tiêu doanh số. Nguồn và cách tính KPI được S4 cấu hình, tùy chỉnh linh hoạt theo yêu cầu từng doanh nghiệp." |
+| 15 | Mở đầu cảnh cổng nhân viên | "Nhân viên tự xem phiếu lương, phép và gửi đơn ngay trên điện thoại, bằng quyền Employee Center của NetSuite, không cần license người dùng đầy đủ cho từng nhân viên." |
+| Trước 17 | Thẻ chữ ba điểm nổi bật | "S4 Advanced Payroll linh hoạt theo đặc thù từng doanh nghiệp, có cổng tự phục vụ cho nhân viên, và tích hợp trợ lý AI như Claude, ChatGPT, Copilot để người làm lương hỏi và thao tác bằng lời." |
+| 17 | Kết | "Chạy ngay trong NetSuite nghĩa là: hoa hồng, lương sản lượng, lương thưởng theo KPI lấy dữ liệu thẳng từ bán hàng, sản xuất trên NetSuite, không nhập lại; chi phí nhân công thành số quản trị theo từng dự án; và cùng một hệ thống phân quyền, duyệt, nhật ký. Liên hệ S4, nhà tư vấn Oracle NetSuite tại Việt Nam, để xem demo trên dữ liệu của bạn: s4.com.vn." |
+
+### 7.4 Khớp lời với hình
+
+- Cảnh 6: doanh số của E1044 trên hình đến từ file DMS; lời thoại nói chung "từ chứng từ NetSuite và từ hệ thống bán hàng khác như DMS", không nói riêng E1044 lấy từ hóa đơn NetSuite. Nếu S4 gửi thêm cảnh mở một hóa đơn có Sales Rep thì chèn trước tab Giao dịch.
+- Cảnh 5: phiếu SL000114 trên hình được nhập sản lượng tay; lời thoại "lấy từ phân hệ sản xuất" đọc khi hình ở nút "Lấy từ giao dịch", không nói phiếu trên hình được lấy tự động.
+- Không dùng các câu so sánh không chứng minh được (ví dụ "nhanh gấp N lần", "tiết kiệm X%").
 
 ## 8. Video intro ngắn (tùy chọn)
 
