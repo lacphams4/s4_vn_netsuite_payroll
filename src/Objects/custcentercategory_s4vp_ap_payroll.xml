@@ -1,0 +1,43 @@
+<centercategory scriptid="custcentercategory_s4vp_ap_payroll">
+  <center>ACCOUNTCENTER</center>
+  <centertab>[scriptid=custcentertab_s4vp_acct_pay]</centertab>
+  <label>Payroll</label>
+  <links>
+    <link>
+      <linklabel>Home</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_home]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Run payroll</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_payroll]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Advances</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_advances]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Commission</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_commission]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Cost analysis</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_analytics]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Reports - declarations</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_reports]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

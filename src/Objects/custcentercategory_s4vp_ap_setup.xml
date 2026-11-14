@@ -1,0 +1,13 @@
+<centercategory scriptid="custcentercategory_s4vp_ap_setup">
+  <center>ACCOUNTCENTER</center>
+  <centertab>[scriptid=custcentertab_s4vp_acct_pay]</centertab>
+  <label>Setup</label>
+  <links>
+    <link>
+      <linklabel>Setup</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_setup]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

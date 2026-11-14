@@ -1,0 +1,9 @@
+<centertab scriptid="custcentertab_s4vp_acct_pay">
+  <allcustomers>F</allcustomers>
+  <allemployees>F</allemployees>
+  <allroles>F</allroles>
+  <allvendors>F</allvendors>
+  <audslctrole>[customrole_s4vp_hr]|[customrole_s4vp_accountant]</audslctrole>
+  <center>ACCOUNTCENTER</center>
+  <label>S4 Advanced Payroll</label>
+</centertab>

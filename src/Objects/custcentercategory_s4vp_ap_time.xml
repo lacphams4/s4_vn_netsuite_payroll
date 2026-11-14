@@ -1,0 +1,25 @@
+<centercategory scriptid="custcentercategory_s4vp_ap_time">
+  <center>ACCOUNTCENTER</center>
+  <centertab>[scriptid=custcentertab_s4vp_acct_pay]</centertab>
+  <label>Time &amp; output</label>
+  <links>
+    <link>
+      <linklabel>Attendance</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_attendance]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Shift roster</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_roster]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linklabel>Output - team piecework</linklabel>
+      <linkobject>[scriptid=custlink_s4vp_demo_outputs]</linkobject>
+      <linktasktype>LINK</linktasktype>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>
