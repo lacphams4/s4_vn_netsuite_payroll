@@ -131,3 +131,33 @@ Người dùng gán ba vai trò của gói cho tài khoản thử; chạy qua AP
 | HS-08 | Đ | API hồ sơ trả số định danh dạng che (ví dụ ******3794) với cả ba vai trò; HR xem số đầy đủ qua revealIds |
 | Menu | Đ | Tab S4 Advanced Payroll hiện với cả ba vai trò; HR vận hành chỉ có nhóm Time; mở thẳng địa chỉ bảng lương bằng HR vận hành thì giao diện chuyển về Chấm công |
 | PQ-03 | C | Chưa có vai trò nhân bản giới hạn công ty con để thử |
+
+## 7. UAT vòng 2 bằng vai trò thật (15/11/2026)
+
+Chạy qua API của gói và mở trực tiếp trang NetSuite, lần lượt bằng các vai trò của tài khoản thử: HR vận hành, HR tiền lương, A/P Clerk, Employee Centre. Phiên điều khiển trình duyệt mất kết nối giữa chừng nên chưa thử vai trò Administrator, Kế toán (phần luồng) và Self-service.
+
+| Testcase | Kết quả | Ghi chú |
+| --- | --- | --- |
+| CC (HR vận hành) | Đ | Lập, gửi, duyệt đơn nghỉ; lập phiếu trễ, đơn làm thêm; lập bảng công (E1020 có 1 ngày nghỉ có lương); sửa và trả ô ca; xem trước file chấm công |
+| PQ-02 (HR vận hành, HR) | Đ | Lập bảng công nền bằng HR vận hành và tính lương nền bảng 114 người bằng HR đều xếp hàng và chạy xong |
+| CC-16 (tác vụ nền) | Đ | Trong lúc bảng công đang xử lý nền, gửi, hủy chứng từ của kỳ bị chặn "đang được xử lý nền" |
+| BL-15 (HR) | Đ | Duyệt chứng từ công sau khi tính: duyệt bảng lương bị chặn "dữ liệu đã đổi sau khi tính". Ghi nhận: Gửi duyệt vẫn cho qua, chỉ Duyệt mới chặn |
+| PQ-06 (A/P Clerk qua API) | Đ | RESTlet của gói trả lỗi quyền (HTTP 400); Suitelet in và bút toán lương báo lỗi quyền |
+| PQ-06 (xem record gốc) | **K** | Xem UAT-016 |
+| CC-23 | K | Xem UAT-015 |
+
+### Lỗi mới
+
+| Mã | Mức | Mô tả | Bằng chứng |
+| --- | --- | --- | --- |
+| UAT-014 | S3 | Chứng từ công nhận công ty con khác công ty con của nhân viên (đơn làm thêm của nhân viên pháp nhân 14 lưu được với công ty con 13). Không lộ dữ liệu nhưng chứng từ nằm sai công ty | saveDoc type ot, subsidiary 13, employee 4494: tạo OT000967, OT000968 (đã hủy) |
+| UAT-015 | S2 | Hủy đơn công tác đã duyệt có tạm ứng chưa ghi sổ báo lỗi gốc NetSuite "This record cannot be deleted because it has dependent records" (kèm mã HTML). Đơn không hủy được, phiếu tạm ứng nằm lại | Đơn CT id 33 (E1020, 22-23/03/2027), phiếu TU000038 1.000.000 Tạm giữ - còn trên account |
+| UAT-016 | **S1, cần xác minh nguyên nhân** | Với tài khoản thử (Lac Pham), đăng nhập vai trò A/P Clerk hoặc Employee Centre vẫn mở được danh sách "S4VP Lịch sử lương" (1.136 dòng, có nút Edit) và record "Dòng nhân viên bảng lương" có đủ lương, bảo hiểm, thực lĩnh. Cấu hình record đúng (Use Permission List, không mở công khai). Hai giả thuyết: (a) NetSuite cho người tạo record type hoặc người tạo từng dòng (owner) truy cập bất kể vai trò - tài khoản này là owner của mọi record type và của hầu hết dữ liệu; (b) quyền theo danh sách vai trò không có tác dụng như thiết kế. Nếu (b) thì toàn bộ lớp bảo vệ theo record của gói vô hiệu | Mở `/app/common/custom/custrecordentrylist.nl?rectype=2552` và `custrecordentry.nl?rectype=2547&id=2887` bằng hai vai trò trên |
+
+**Cách xác minh UAT-016 (cần người dùng thứ hai):** đăng nhập bằng nhân viên E1069 (Employee Centre) rồi mở địa chỉ danh sách Lịch sử lương ở trên. Không thấy dữ liệu: giả thuyết (a), ghi vào hướng dẫn triển khai (người cài gói và người tạo dữ liệu giữ quyền xem ở mọi vai trò của họ). Thấy dữ liệu: giả thuyết (b), phải xử lý trước mọi việc khác.
+
+### Dữ liệu thử còn lại sau vòng 2
+
+- Đơn công tác id 33 của E1020 (Đã duyệt) và phiếu TU000038 (Tạm giữ, 1.000.000): không hủy được do UAT-015.
+- Bảng lương BL000018 kỳ 03: Tạm giữ, đã tính lại bằng tác vụ nền.
+- Các đơn thử khác của vòng 2 đã hủy.
