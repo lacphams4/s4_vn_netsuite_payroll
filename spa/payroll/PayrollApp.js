@@ -69,6 +69,8 @@ const TEXT = {
 };
 
 // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
+// Màn mà vai trò HR vận hành (không xem tiền lương) được mở; máy chủ cũng chặn mọi API khác (api/Dispatch OPS_*)
+const OPS_VIEWS = ['attendance', 'attendanceLegacy', 'roster', 'permits'];
 const VIEWS = {home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView, roster: RosterView};
 const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
 // Tab đang sáng theo view
@@ -243,6 +245,8 @@ export default function PayrollApp() {
 			if (subs.length) setSubsidiary(String((subs.find((s) => s.enabled) || subs[0]).id));
 			// Chưa có thiết lập lương: vào thẳng Thiết lập
 			if (!b.setupReady) go('setupHub');
+			// HR vận hành (không xem tiền lương): chỉ dùng Chấm công, Xếp ca, Giấy phép lao động
+			else if (b.user && b.user.opsOnly && !OPS_VIEWS.includes(routeRef.current.view)) go('attendance');
 		});
 		const onHash = () => {
 			const next = parseHash(window.location.hash);
@@ -273,7 +277,8 @@ export default function PayrollApp() {
 
 	const activeTab = TAB_OF[current.view] || '';
 	// Tab Hoa hồng chỉ hiện với vai trò được xem (administrator, kế toán, HR - docs/COMMISSION.md mục 6)
-	const tabs = Object.keys(VIEW_OF_TAB).filter((k) => k !== 'commission' || canSeeCommission(boot)).map((k) => {
+	const opsOnly = !!(boot && boot.user && boot.user.opsOnly);
+	const tabs = Object.keys(VIEW_OF_TAB).filter((k) => (opsOnly ? k === 'attendance' : k !== 'commission' || canSeeCommission(boot))).map((k) => {
 		const attrs = {type: 'button', class: `s4vp-navtab${activeTab === k ? ' s4vp-on' : ''}`, onClick: () => go(VIEW_OF_TAB[k])};
 		if (activeTab === k) attrs['aria-current'] = 'page';
 		return (
@@ -287,7 +292,9 @@ export default function PayrollApp() {
 
 	let content = null;
 	if (boot) {
-		if (VIEWS[current.view]) {
+		if (opsOnly && !OPS_VIEWS.includes(current.view)) {
+			content = null;
+		} else if (VIEWS[current.view]) {
 			const View = VIEWS[current.view];
 			content = <View key={current.view} app={app} />;
 		} else {
@@ -300,7 +307,7 @@ export default function PayrollApp() {
 			<nav class="s4vp-nav" aria-label={t.nav}>
 				<div class="s4vp-brand">{t.title}</div>
 				{tabs}
-				<Menu key="more" kind="tab" active={activeTab === 'more'} label={t.more} items={[{label: t.roster, onClick: () => go('roster')}, {label: t.outputs, onClick: () => go('outputsV2')}, {label: t.permits, onClick: () => go('permits')}]} />
+				<Menu key="more" kind="tab" active={activeTab === 'more'} label={t.more} items={[{label: t.roster, onClick: () => go('roster')}].concat(opsOnly ? [] : [{label: t.outputs, onClick: () => go('outputsV2')}], [{label: t.permits, onClick: () => go('permits')}])} />
 				<div class="s4vp-navright">
 					{busy ? (
 						<span class="s4vp-busy" role="status" aria-live="polite">

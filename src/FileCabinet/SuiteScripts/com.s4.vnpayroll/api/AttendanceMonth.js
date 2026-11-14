@@ -38,7 +38,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean", "./EffectiveRoster", "../core/Dates", "../core/RunSteps", "../core/RosterPlan", "../core/AttendanceMonthGrid"], (runtime, Store, Settings, TimeLines, Clock, Lean, ER, Dates, RunSteps, Plan, Grid) => {
+define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean", "./EffectiveRoster", "../core/Dates", "../core/RunSteps", "../core/RosterPlan", "../core/AttendanceMonthGrid", "./Access"], (runtime, Store, Settings, TimeLines, Clock, Lean, ER, Dates, RunSteps, Plan, Grid, Access) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(blank(s) ? "" : s).trim().toUpperCase();
 	const DATE = "TO_DATE(?, 'YYYY-MM-DD')";
@@ -61,7 +61,7 @@ define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean"
 	// Cùng ngưỡng với api/Attendance.SYNC_LIMIT: kỳ nhiều nhân viên hơn thì lập / khóa công chạy nền
 	const SYNC_LIMIT = 150;
 	// customrole_s4vp_demo: vai trò trình diễn, quyền như administrator với dữ liệu của gói
-	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_demo"];
+	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_hr_ops", "customrole_s4vp_demo"];
 
 	function fail(en, vi) {
 		const e = new Error(`${en} / ${vi}`);
@@ -71,7 +71,7 @@ define(["N/runtime", "./Store", "./Settings", "./TimeLines", "./Clock", "./Lean"
 
 	function canEdit() {
 		try {
-			return EDIT_ROLES.includes(String(runtime.getCurrentUser().roleId || ""));
+			return EDIT_ROLES.includes(Access.role());
 		} catch (e) {
 			return false;
 		}

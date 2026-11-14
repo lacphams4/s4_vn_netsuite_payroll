@@ -19,8 +19,7 @@ define([
 	"N/query", "N/record", "N/runtime", "./Store", "./Settings", "./Lean", "../core/StatutoryParameterProvider",
 	"../core/Money", "../core/Dates", "../core/PayrollEngine", "../core/EmploymentDays", "../core/PayrollJournalBuilder", "../core/BankFileWriter",
 	"../core/VietnameseNumberReader", "../core/LeaveLedger", "./Output", "./WorkPermits", "./AllocationPlans", "../core/PlanRecords", "./Clock", "./TimeLines", "./Checks", "./LaborAnalytics", "./CostAccounts",
-	"../core/PitCalculator", "../core/ApprovalFlow", "./EffectiveRoster",
-], (query, record, runtime, Store, Settings, Lean, Provider, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts, Pit, ApprovalFlow, EffectiveRoster) => {
+	"../core/PitCalculator", "../core/ApprovalFlow", "./EffectiveRoster", "./Access"], (query, record, runtime, Store, Settings, Lean, Provider, Money, Dates, Engine, EmploymentDays, Journal, BankFile, Words, Ledger, Output, WorkPermits, AllocationPlans, PlanRecords, Clock, TimeLines, Checks, LaborAnalytics, CostAccounts, Pit, ApprovalFlow, EffectiveRoster, Access) => {
 	const norm = (s) => String(s === null || s === undefined ? "" : s).trim().toUpperCase();
 	const blank = (v) => v === null || v === undefined || v === "";
 	const LOCK_AFTER = ["A", "R", "V"];
@@ -1021,7 +1020,7 @@ define([
 	function approvalInput(b) {
 		let role = "";
 		try {
-			role = String(runtime.getCurrentUser().roleId || "");
+			role = Access.role();
 		} catch (e) {
 			role = "";
 		}

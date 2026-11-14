@@ -222,6 +222,39 @@
       <isparent>F</isparent>
       <showinlist>T</showinlist>
     </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_co_role_alias_hr">
+      <label>Vai trò tương đương HR tiền lương</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Script IDs of cloned roles that act as S4VP Payroll HR, comma separated (for example customrole_hr_company_a). Lets one role per subsidiary use the package with the subsidiary restriction set on the NetSuite role.</description>
+      <help>Script IDs of cloned roles that act as S4VP Payroll HR, comma separated (for example customrole_hr_company_a). Lets one role per subsidiary use the package with the subsidiary restriction set on the NetSuite role.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_co_role_alias_acct">
+      <label>Vai trò tương đương Kế toán lương</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Script IDs of cloned roles that act as S4VP Payroll Accountant, comma separated.</description>
+      <help>Script IDs of cloned roles that act as S4VP Payroll Accountant, comma separated.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_s4vp_co_role_alias_ops">
+      <label>Vai trò tương đương HR vận hành</label>
+      <fieldtype>TEXT</fieldtype>
+      <description>Script IDs of cloned roles that act as S4VP HR Operations (attendance, leave, shifts; no pay amounts), comma separated.</description>
+      <help>Script IDs of cloned roles that act as S4VP HR Operations (attendance, leave, shifts; no pay amounts), comma separated.</help>
+      <ismandatory>F</ismandatory>
+      <storevalue>T</storevalue>
+      <displaytype>NORMAL</displaytype>
+      <isparent>F</isparent>
+      <showinlist>T</showinlist>
+    </customrecordcustomfield>
     <customrecordcustomfield scriptid="custrecord_s4vp_co_preparer">
       <label>Người lập biểu</label>
       <fieldtype>TEXT</fieldtype>
@@ -268,6 +301,10 @@
     <permission>
       <permittedlevel>VIEW</permittedlevel>
       <permittedrole>[customrole_s4vp_selfservice]</permittedrole>
+    </permission>
+    <permission>
+      <permittedlevel>VIEW</permittedlevel>
+      <permittedrole>[customrole_s4vp_hr_ops]</permittedrole>
     </permission>
     <permission>
       <permittedlevel>FULL</permittedlevel>

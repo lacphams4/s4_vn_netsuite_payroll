@@ -25,7 +25,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./Defaults", "./Periods", "./Payroll", "./Profiles", "./Advances", "./TestData", "./Reports", "./Attendance", "./Output", "./WorkPermits", "./AllocationPlans", "./Shifts", "./Home", "./PayrollRun", "./Checks", "./AuditLog", "./AttendanceMonth", "./LaborAnalytics", "./HrCore", "./ReportsHub", "./AdvancesV2", "./SetupHub", "./OutputsV2", "./Approvals", "./CommissionV2", "./OutputSources", "./PunchImport", "./RosterView"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport, RosterView) => {
+define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./Defaults", "./Periods", "./Payroll", "./Profiles", "./Advances", "./TestData", "./Reports", "./Attendance", "./Output", "./WorkPermits", "./AllocationPlans", "./Shifts", "./Home", "./PayrollRun", "./Checks", "./AuditLog", "./AttendanceMonth", "./LaborAnalytics", "./HrCore", "./ReportsHub", "./AdvancesV2", "./SetupHub", "./OutputsV2", "./Approvals", "./CommissionV2", "./OutputSources", "./PunchImport", "./RosterView", "./Access"], (runtime, log, task, cache, Store, Settings, Defaults, Periods, Payroll, Profiles, Advances, TestData, Reports, Attendance, Output, WorkPermits, AllocationPlans, Shifts, Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport, RosterView, Access) => {
 	// Bảng lương lớn hơn ngưỡng này tính bằng Map/Reduce
 	const SYNC_LIMIT = 120;
 	// Ma trận quyền 1.4.1, kiểm tra phía máy chủ (POST mặc định từ chối). Administrator làm mọi thao tác.
@@ -35,7 +35,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 	const ACCOUNTANT_ONLY = ["release", "reverse", "agencyBills", "releaseAdvance"];
 	const HR_ACTIONS = BATCH_ACTIONS.concat([
 		"loadDefaults", "loadIndustryPack", "generatePeriods", "closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance",
-		"saveProfile", "saveSetup", "saveCompany", "setInsuranceAccount", "saveDoc", "docAction", "accrueLeave", "expireLeave", "adjustLeave",
+		"saveProfile", "revealIds", "saveSetup", "saveCompany", "setInsuranceAccount", "saveDoc", "docAction", "accrueLeave", "expireLeave", "adjustLeave",
 		"saveOutput", "outputAction", "voidOutput", "loadTeamMembers", "splitOutput", "saveRateLine", "saveTeam", "saveWorkPermit", "workPermitAction", "updateExpiredPermits",
 		"newAllocVersion", "saveAllocLines", "activateAllocVersion", "deleteAllocVersion",
 		"saveShift", "savePattern", "generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
@@ -46,6 +46,95 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 	// Vai trò trình diễn (customrole_s4vp_demo, quay video): mọi thao tác của HR lẫn kế toán như administrator, trừ thao tác bảo
 	// trì ADMIN_ONLY (sinh dữ liệu test, gỡ cờ job treo) - các thao tác này không thuộc kịch bản trình diễn
 	const ROLE_DEMO = "customrole_s4vp_demo";
+	// HR vận hành (công, phép, đơn từ, ca, máy chấm công): KHÔNG thấy số tiền lương. Chỉ được các thao tác và lượt đọc dưới đây;
+	// mọi action khác (bảng lương, tạm ứng, sản lượng, hoa hồng, báo cáo, thiết lập) bị từ chối ở máy chủ.
+	const ROLE_OPS = Access.ROLES.OPS;
+	const OPS_ACTIONS = [
+		"lockAttendance", "unlockAttendance", "buildAttendance", "saveDoc", "docAction", "accrueLeave", "expireLeave", "adjustLeave",
+		"saveShift", "savePattern", "generateRoster", "setRosterCell", "importPunches", "processPunches", "loadSheetEmployees", "saveSheet",
+		"saveWorkPermit", "workPermitAction", "updateExpiredPermits", "jobStatus",
+	];
+	const OPS_GET = ["bootstrap", "docs", "leaveBalances", "attendance", "workPermits", "shifts", "roster", "attSheet", "profiles"];
+	// Route của giao diện bản 2 mà HR vận hành được dùng dù nhóm quyền của route là "payroll" hoặc "hr"
+	const OPS_ROUTES = ["punchSourcesView", "punchMappings", "punchPreview", "punchCommit", "punchMapSave", "rosterView", "rosterCells", "rosterReset", "rosterAssignSave", "rosterAssignBatch"];
+
+	// Route nhóm "all" có số tiền lương: HR vận hành không được dùng
+	const OPS_DENY_ROUTES = ["homeSummary"];
+
+	function deny() {
+		const e = new Error("Your role is not allowed to perform this action");
+		e.userMessage = { en: "Your role is not allowed to perform this action", vi: "Vai trò của bạn không được thực hiện thao tác này" };
+		return e;
+	}
+
+	// ---------------------------------------------------------------- phạm vi và cổng vào chung (api/Access)
+	const scopeCache = () => cache.getCache({ name: "s4vp_scope", scope: cache.Scope.PROTECTED });
+
+	/** Vai trò nhân bản khai ở Thiết lập chung -> vai trò chuẩn. Chưa có thiết lập thì bảng rỗng. */
+	function loadAliases() {
+		const out = {};
+		const setup = Store.find("setup")[0];
+		if (!setup) return out;
+		Access.parseAliases(setup.role_alias_hr, Access.ROLES.HR, out);
+		Access.parseAliases(setup.role_alias_acct, Access.ROLES.ACCT, out);
+		Access.parseAliases(setup.role_alias_ops, Access.ROLES.OPS, out);
+		return out;
+	}
+
+	/**
+	 * Công ty con mà vai trò NetSuite của người dùng được phép: truy vấn bảng subsidiary bằng chính vai trò đó (NetSuite tự áp
+	 * giới hạn công ty con của vai trò). Số công ty con toàn account do lượt gọi của Administrator ghi vào cache; khi người dùng
+	 * thấy đủ số đó thì coi như không giới hạn (không ghép điều kiện lọc). Chưa có số đó thì vẫn lọc theo danh sách thấy được.
+	 */
+	function loadSubsidiaries() {
+		const ids = Store.run("SELECT id FROM subsidiary WHERE isinactive = 'F'", [], "s4vp_scope_subs").map((r) => String(r.id));
+		let total = null;
+		try {
+			const raw = scopeCache().get({ key: "total" });
+			total = raw === null || raw === undefined || raw === "" ? null : Number(raw);
+		} catch (e) {
+			total = null;
+		}
+		return total !== null && ids.length >= total ? null : ids;
+	}
+
+	function rememberSubsidiaryTotal() {
+		if (Access.realRole() !== "administrator") return;
+		try {
+			const n = Store.run("SELECT COUNT(*) AS n FROM subsidiary WHERE isinactive = 'F'", [], "s4vp_scope_total")[0];
+			scopeCache().put({ key: "total", value: String(Number((n && n.n) || 0)) });
+		} catch (e) {
+			// không ghi được cache: người dùng bị giới hạn vẫn được lọc đúng, chỉ chậm hơn
+		}
+	}
+
+	/**
+	 * Cổng chung cho mọi yêu cầu GET / POST: cấu hình Access, từ chối vai trò ngoài gói, chặn công ty con ngoài phạm vi (tham số
+	 * subsidiary ở params / body / body.values), và giới hạn lượt đọc của HR vận hành. Record đọc qua Store còn được lọc theo
+	 * phạm vi ở Store.find.
+	 */
+	function enter(method, action, input) {
+		Access.configure({ aliases: loadAliases, subsidiaries: loadSubsidiaries });
+		if (!Access.isMember()) {
+			log.audit({ title: "s4vp_rl_api denied", details: `${Access.realRole()} ${action}` });
+			throw deny();
+		}
+		const src = input || {};
+		const vals = src.values && typeof src.values === "object" ? src.values : {};
+		for (const holder of [src, vals]) {
+			if (!Object.prototype.hasOwnProperty.call(holder, "subsidiary")) continue;
+			const v = holder.subsidiary;
+			if (v === null || v === undefined || v === "") {
+				if (Access.restricted() && holder === src && method === "get") throw deny();
+				continue;
+			}
+			Access.assertSubsidiary(v);
+		}
+		if (role() === ROLE_OPS && method === "get" && !OPS_GET.includes(action) && !OPS_ROUTES.includes(action)) {
+			const route = findRoute("get", action);
+			if (!route || route.roles !== "all" || OPS_DENY_ROUTES.includes(action)) throw deny();
+		}
+	}
 
 	function allowed(action) {
 		const r = role();
@@ -53,12 +142,14 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 		if (ADMIN_ONLY.includes(action)) return false;
 		if (r === ROLE_DEMO) return true;
 		if (r === "customrole_s4vp_hr") return HR_ACTIONS.includes(action);
+		if (r === ROLE_OPS) return OPS_ACTIONS.includes(action);
 		if (r === "customrole_s4vp_accountant") return ACCOUNTANT_ACTIONS.includes(action);
 		return false;
 	}
 
+	/** Vai trò hiệu lực (api/Access): vai trò chuẩn của gói, kể cả khi đăng nhập bằng vai trò nhân bản đã khai tương đương. */
 	function role() {
-		return String(runtime.getCurrentUser().roleId || "");
+		return Access.role();
 	}
 
 	function isHr() {
@@ -74,7 +165,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 	// RosterView: màn Xếp ca (rosterView đọc "payroll"; rosterCells ghi "hr"); sinh từ mẫu vẫn là action cũ generateRoster
 	const ROUTE_MODULES = [Home, PayrollRun, Checks, AuditLog, AttendanceMonth, LaborAnalytics, HrCore, ReportsHub, AdvancesV2, SetupHub, OutputsV2, Approvals, CommissionV2, OutputSources, PunchImport, RosterView];
 	const ROLE_SETS = {
-		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", ROLE_DEMO],
+		all: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", ROLE_DEMO, ROLE_OPS],
 		payroll: ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", ROLE_DEMO],
 		hr: ["administrator", "customrole_s4vp_hr", ROLE_DEMO],
 		acct: ["administrator", "customrole_s4vp_accountant", ROLE_DEMO],
@@ -98,7 +189,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 	/** Chạy route sau khi kiểm tra vai trò; roles thiếu hoặc lạ thì chỉ administrator được chạy. */
 	function runRoute(route, action, input) {
 		const roles = ROLE_SETS[route.roles] || ROLE_SETS.admin;
-		if (!roles.includes(role())) {
+		if (!roles.includes(role()) && !(role() === ROLE_OPS && OPS_ROUTES.includes(String(action)))) {
 			log.audit({ title: "s4vp_rl_api denied", details: `${role()} ${action}` });
 			const e = new Error("Your role is not allowed to perform this action");
 			e.userMessage = { en: "Your role is not allowed to perform this action", vi: "Vai trò của bạn không được thực hiện thao tác này" };
@@ -109,7 +200,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 	}
 
 	// Action cũ nhận id bảng lương / id kỳ ở body.id: suy ra batch, period cho nhật ký
-	const BATCH_ID_ACTIONS = ["loadEmployees", "syncTime", "calculate", "removeHold", "hold", "approve", "reject", "reopen", "release", "reverse", "agencyBills", "clearJob", "submitRun"];
+	const BATCH_ID_ACTIONS = ["bankFile", "printDoc", "loadEmployees", "syncTime", "calculate", "removeHold", "hold", "approve", "reject", "reopen", "release", "reverse", "agencyBills", "clearJob", "submitRun"];
 	const PERIOD_ID_ACTIONS = ["closePeriod", "reopenPeriod", "lockAttendance", "unlockAttendance", "buildAttendance", "processPunches", "loadSheetEmployees"];
 	// Thao tác trên phiếu sản lượng: body.id là id phiếu; kỳ của phiếu lấy từ kết quả (Output.act / voidEntry trả period)
 	const OUTPUT_ACTIONS = ["outputAction", "voidOutput"];
@@ -172,6 +263,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 	}
 
 	function bootstrap() {
+		rememberSubsidiaryTotal();
 		let subsidiaries = [];
 		try {
 			subsidiaries = Store.run("SELECT id, name, iselimination FROM subsidiary WHERE isinactive = 'F' ORDER BY name", [], "s4vp_subs").filter((s) => s.iselimination !== "T").map((s) => ({ id: String(s.id), name: s.name }));
@@ -186,7 +278,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 		const enabled = new Set(companies.filter((c) => c.enabled !== false).map((c) => c.subsidiary));
 		const u = runtime.getCurrentUser();
 		return {
-			user: { id: u.id, name: u.name, role: role(), isHr: isHr(), isAccountant: role() === "customrole_s4vp_accountant" || role() === ROLE_DEMO, fullAccess: role() === "administrator" || role() === ROLE_DEMO, canEditSetup: allowed("saveSetup"), canAttendance: allowed("saveDoc"), lang: /^vi/i.test(String(u.getPreference({ name: "LANGUAGE" }) || "")) ? "vi" : "en" },
+			user: { id: u.id, name: u.name, role: role(), isHr: isHr(), isAccountant: role() === "customrole_s4vp_accountant" || role() === ROLE_DEMO, fullAccess: role() === "administrator" || role() === ROLE_DEMO, canPay: Access.canPay(), canIds: Access.canIds(), opsOnly: role() === ROLE_OPS, restricted: Access.restricted(), canEditSetup: allowed("saveSetup"), canAttendance: allowed("saveDoc"), lang: /^vi/i.test(String(u.getPreference({ name: "LANGUAGE" }) || "")) ? "vi" : "en" },
 			setupReady: setup.length > 0,
 			subsidiaries: subsidiaries.map((s) => Object.assign(s, { enabled: !companies.length || enabled.has(s.id) })),
 			paygroups: Store.find("paygroup").map((g) => ({ id: g.id, code: g.name, description: g.description, frequency: g.frequency, subsidiary: g.subsidiary })),
@@ -244,6 +336,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 		return wrap(() => {
 			// Lượt đọc: gộp các truy vấn trùng (cùng câu lệnh, cùng tham số)
 			if (typeof Store.memoize === "function") Store.memoize(true);
+			enter("get", params && params.action, params);
 			switch (params.action) {
 				case "bootstrap":
 					return cachedBootstrap(params.fresh === "1");
@@ -255,8 +348,12 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 					return Payroll.journalPreview(params.id);
 				case "timesheet":
 					return Payroll.timesheet(params.id, params.employee);
-				case "bankfile":
-					return Payroll.bankFile(params.id);
+				case "bankfile": {
+					const out = Payroll.bankFile(params.id);
+					// Xuất file chứa lương từng người: ghi nhật ký (không ghi số tiền)
+					audit("bankFile", { id: params.id }, out);
+					return out;
+				}
 				case "docs":
 					return { docs: Attendance.list(params.type, params.subsidiary, { status: params.status || "", employee: params.employee || "", from: params.from || "", to: params.to || "" }) };
 				case "leaveBalances":
@@ -328,6 +425,7 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 	function postAction(body) {
 		return wrap(() => {
 			const a = body && body.action;
+			enter("post", a, body);
 			// Action của giao diện bản 2: quyền theo roles của route, không theo ma trận action cũ
 			if (!LEGACY_POST.has(a)) {
 				const route = findRoute("post", a);
@@ -451,6 +549,8 @@ define(["N/runtime", "N/log", "N/task", "N/cache", "./Store", "./Settings", "./D
 					return Shifts.saveSheet(body.period, body.employee, body.cells || []);
 				case "createBatch":
 					return { id: Payroll.create(body) };
+				case "revealIds":
+					return Profiles.revealIds(body.employee);
 				case "saveInput":
 					return Payroll.saveInput(body.values || {});
 				case "deleteInput":

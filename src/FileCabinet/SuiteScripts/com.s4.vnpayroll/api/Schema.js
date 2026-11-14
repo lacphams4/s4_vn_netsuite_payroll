@@ -180,6 +180,21 @@ define([], () => {
 					"id": "custrecord_s4vp_set_location",
 					"type": "select",
 					"target": "location"
+				},
+				"role_alias_hr": {
+					"id": "custrecord_s4vp_set_role_alias_hr",
+					"type": "text",
+					"target": null
+				},
+				"role_alias_acct": {
+					"id": "custrecord_s4vp_set_role_alias_acct",
+					"type": "text",
+					"target": null
+				},
+				"role_alias_ops": {
+					"id": "custrecord_s4vp_set_role_alias_ops",
+					"type": "text",
+					"target": null
 				}
 			}
 		},
@@ -272,6 +287,21 @@ define([], () => {
 					"id": "custrecord_s4vp_co_location",
 					"type": "select",
 					"target": "location"
+				},
+				"role_alias_hr": {
+					"id": "custrecord_s4vp_co_role_alias_hr",
+					"type": "text",
+					"target": null
+				},
+				"role_alias_acct": {
+					"id": "custrecord_s4vp_co_role_alias_acct",
+					"type": "text",
+					"target": null
+				},
+				"role_alias_ops": {
+					"id": "custrecord_s4vp_co_role_alias_ops",
+					"type": "text",
+					"target": null
 				},
 				"preparer": {
 					"id": "custrecord_s4vp_co_preparer",

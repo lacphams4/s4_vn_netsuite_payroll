@@ -80,6 +80,21 @@ const ROLE_ESS = "customrole_s4vp_selfservice";
 // hoa hồng, phân tích chi phí), menu riêng custcenter_s4vp_demo; không giới hạn công ty con. RESTlet coi như administrator với
 // thao tác của gói, trừ thao tác bảo trì chỉ dành cho administrator (sinh dữ liệu test, gỡ cờ job treo) - docs/ARCHITECTURE.md mục 5.1
 const ROLE_DEMO = "customrole_s4vp_demo";
+// HR vận hành: công, phép, đơn từ, ca, máy chấm công. KHÔNG có quyền trên record chứa số tiền lương (lịch sử lương, bảng lương,
+// tạm ứng, sản lượng, hoa hồng, chi phí) nên không xem được lương cả trên màn hình gói lẫn danh sách record, tìm kiếm của NetSuite.
+// Máy chủ kiểm lại bằng api/Access + api/Dispatch (OPS_ACTIONS, OPS_GET, OPS_ROUTES).
+const ROLE_OPS = "customrole_s4vp_hr_ops";
+const OPS_PERMS = {
+	// Danh mục chỉ xem
+	setup: "VIEW", company: "VIEW", paygroup: "VIEW", period: "VIEW", param: "VIEW", holiday: "VIEW", earning_type: "VIEW",
+	leave_type: "VIEW", leave_policy: "VIEW", att_rule: "VIEW", att_symbol: "VIEW", team: "VIEW", team_member: "VIEW", employee: "VIEW",
+	// Công, phép, đơn từ, ca, máy chấm công
+	attendance: "FULL", leave_request: "FULL", ot_request: "FULL", business_trip: "FULL", att_exception: "FULL", leave_balance: "FULL",
+	leave_tran: "FULL", roster: "FULL", punch: "FULL", att_sheet: "FULL", shift_assign: "FULL", shift: "FULL", shift_pattern: "FULL",
+	work_permit: "FULL", punch_source: "EDIT", punch_map: "EDIT",
+	// Nhật ký chỉ thêm
+	audit_log: "CREATE",
+};
 const DEMO_CENTER = "custcenter_s4vp_demo";
 // Record cổng tự phục vụ được ghi (đơn của nhân viên và phần giữ chỗ phép khi gửi duyệt); mọi record khác của gói chỉ xem
 const ESS_WRITE =["leave_request", "ot_request", "business_trip", "leave_balance", "leave_tran", "audit_log"];
@@ -844,6 +859,9 @@ function accountFields() {
 		["acc_contractor", "TK phải trả CTV (3388 / 331)", "select:account"],
 		["pit_vendor", "Cơ quan thuế", "select:vendor"],
 		["location", "Địa điểm mặc định cho chứng từ", "select:location", { help: "Default location for payroll journal entries and agency bills when the account requires a location." }],
+		["role_alias_hr", "Vai trò tương đương HR tiền lương", "text", { help: "Script IDs of cloned roles that act as S4VP Payroll HR, comma separated (for example customrole_hr_company_a). Lets one role per subsidiary use the package with the subsidiary restriction set on the NetSuite role." }],
+		["role_alias_acct", "Vai trò tương đương Kế toán lương", "text", { help: "Script IDs of cloned roles that act as S4VP Payroll Accountant, comma separated." }],
+		["role_alias_ops", "Vai trò tương đương HR vận hành", "text", { help: "Script IDs of cloned roles that act as S4VP HR Operations (attendance, leave, shifts; no pay amounts), comma separated." }],
 	];
 }
 
@@ -856,6 +874,7 @@ const AI_PERMS = [["ADMI_MCP_SERVER", "FULL"], ["ADMI_LOGIN_OAUTH2", "FULL"], ["
 export const roles = [
 	{ id: ROLE_ESS, name: "S4VP Self-service (run-as only)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_EMPLOYEE_RECORD", "VIEW"], ["ADMI_CUSTLIST", "VIEW"], ["LIST_FILECABINET", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"]] },
 	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
+	{ id: ROLE_OPS, name: "S4VP HR Operations (no pay)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["ADMI_CUSTLIST", "VIEW"], ...BG_TASK_PERMS] },
 	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
 	{
 		id: ROLE_DEMO, name: "S4 Advanced Payroll - Demo", center: `[scriptid=${DEMO_CENTER}]`,
@@ -910,6 +929,12 @@ for (const file of partFiles) {
 for (const rec of records) {
 	if (!rec.perms) continue;
 	rec.perms = Object.assign({}, rec.perms, { [ROLE_ESS]: ESS_WRITE.includes(rec.id) ? "EDIT" : "VIEW" });
+}
+
+// HR vận hành: chỉ các record trong OPS_PERMS; record khác (mọi record có số tiền lương) không có dòng quyền
+for (const rec of records) {
+	if (!rec.perms || !OPS_PERMS[rec.id]) continue;
+	rec.perms = Object.assign({}, rec.perms, { [ROLE_OPS]: OPS_PERMS[rec.id] });
 }
 
 // Vai trò trình diễn: toàn quyền mọi record của gói (User Event của gói vẫn chặn sửa trực tiếp record kiểm soát)

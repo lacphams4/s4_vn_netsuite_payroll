@@ -9,7 +9,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/query", "N/record", "N/format", "N/cache", "./Schema"], (query, record, format, cache, Schema) => {
+define(["N/query", "N/record", "N/format", "N/cache", "./Schema", "./Access"], (query, record, format, cache, Schema, Access) => {
 	const listCache = {};
 	// Bảng {mã <-> internal id} của custom list là dữ liệu cố định theo bản deploy: nhớ chung trong N/cache (một lần đọc cho
 	// mọi list) thay vì mỗi list một truy vấn ở mỗi lượt gọi. Mã lạ / id lạ thì đọc lại list đó từ cơ sở dữ liệu.
@@ -156,16 +156,71 @@ define(["N/query", "N/record", "N/format", "N/cache", "./Schema"], (query, recor
 		return o;
 	}
 
+	// Record cấu hình dùng chung: dòng không gắn công ty con (NULL) là dòng áp cho mọi công ty, người bị giới hạn vẫn thấy
+	const SHARED_WHEN_NULL = ["company", "paygroup", "team", "out_source", "cost_account", "approval_step", "comm_plan", "punch_source", "shift_assign"];
+
+	/**
+	 * Điều kiện phạm vi công ty con của người đang thao tác (api/Access), ghép vào mọi lượt đọc qua find / get / findIn.
+	 * Thứ tự: record có trường công ty con -> lọc trực tiếp; record con của bảng lương -> theo bảng lương; record theo nhân
+	 * viên -> theo công ty con của hồ sơ lương; record con của hồ sơ lương -> theo hồ sơ. Record danh mục khác không lọc.
+	 * Trả "" khi người dùng không bị giới hạn (hoặc Access chưa được cấu hình: Map/Reduce, Suitelet vai trò ẩn).
+	 */
+	function scopeClause(def) {
+		let list = null;
+		try {
+			list = Access && typeof Access.subsidiaries === "function" ? Access.subsidiaries() : null;
+		} catch (e) {
+			list = [];
+		}
+		if (list === null) return "";
+		const ids = list.filter((x) => /^\d+$/.test(String(x))).join(",") || "-1";
+		const f = def.fields;
+		const name = Object.keys(Schema.records).find((k) => Schema.records[k] === def);
+		if (f.subsidiary && f.subsidiary.target === "subsidiary") {
+			const col = `t.${f.subsidiary.id}`;
+			return SHARED_WHEN_NULL.includes(name) ? `(${col} IS NULL OR ${col} IN (${ids}))` : `${col} IN (${ids})`;
+		}
+		const batch = Schema.records.batch;
+		const prof = Schema.records.employee;
+		if (f.batch && f.batch.target === "rec:batch") {
+			return `(t.${f.batch.id} IS NULL OR t.${f.batch.id} IN (SELECT sb.id FROM ${batch.type} sb WHERE sb.${batch.fields.subsidiary.id} IN (${ids})))`;
+		}
+		if (f.employee && f.employee.target === "employee") {
+			return `(t.${f.employee.id} IS NULL OR t.${f.employee.id} IN (SELECT sp.${prof.fields.employee.id} FROM ${prof.type} sp WHERE sp.${prof.fields.subsidiary.id} IN (${ids})))`;
+		}
+		if (f.profile && f.profile.target === "rec:employee") {
+			return `t.${f.profile.id} IN (SELECT sp.id FROM ${prof.type} sp WHERE sp.${prof.fields.subsidiary.id} IN (${ids}))`;
+		}
+		return "";
+	}
+
+	/** Chặn ghi record sang công ty con ngoài phạm vi của người đang thao tác. */
+	function assertWriteScope(name, values) {
+		const f = rec(name).fields.subsidiary;
+		if (!f || f.target !== "subsidiary" || !values || values.subsidiary === undefined) return;
+		if (!Access || typeof Access.restricted !== "function" || !Access.restricted()) return;
+		if ((values.subsidiary === null || values.subsidiary === "") && SHARED_WHEN_NULL.includes(name)) throw scopeError();
+		if (!Access.allowsSubsidiary(values.subsidiary)) throw scopeError();
+	}
+
+	function scopeError() {
+		const e = new Error("Your role is not allowed to access this subsidiary / Vai trò của bạn không được truy cập công ty con này");
+		e.userMessage = { en: "Your role is not allowed to access this subsidiary", vi: "Vai trò của bạn không được truy cập công ty con này" };
+		return e;
+	}
+
 	/**
 	 * Đọc record theo điều kiện.
 	 * @param {string} name tên logic (Schema.records)
-	 * @param {{where?: string, params?: Array, order?: string, includeInactive?: boolean}} [opt]
+	 * @param {{where?: string, params?: Array, order?: string, includeInactive?: boolean, unscoped?: boolean}} [opt]
 	 *   where dùng tên trường logic dạng {field}, ví dụ "{batch} = ?"
 	 */
 	function find(name, opt = {}) {
 		const def = rec(name);
 		let where = opt.where ? substitute(name, opt.where) : "1 = 1";
 		if (!opt.includeInactive) where = `(${where}) AND t.isinactive = 'F'`;
+		const scope = opt.unscoped ? null : scopeClause(def);
+		if (scope) where = `(${where}) AND ${scope}`;
 		const sql = `SELECT ${columns(name)} FROM ${def.type} t WHERE ${where}` + (opt.order ? ` ORDER BY ${substitute(name, opt.order)}` : " ORDER BY t.id");
 		return run(sql, opt.params, "s4vp_find_" + name).map((r) => convertRow(name, r));
 	}
@@ -226,6 +281,7 @@ define(["N/query", "N/record", "N/format", "N/cache", "./Schema"], (query, recor
 
 	function create(name, values) {
 		forget();
+		assertWriteScope(name, values);
 		const r = record.create({ type: rec(name).type, isDynamic: false });
 		setValues(r, name, values);
 		return String(r.save({ enableSourcing: false, ignoreMandatoryFields: true }));
@@ -233,6 +289,7 @@ define(["N/query", "N/record", "N/format", "N/cache", "./Schema"], (query, recor
 
 	function update(name, id, values) {
 		forget();
+		assertWriteScope(name, values);
 		const r = record.load({ type: rec(name).type, id, isDynamic: false });
 		setValues(r, name, values);
 		return String(r.save({ enableSourcing: false, ignoreMandatoryFields: true }));
@@ -241,6 +298,7 @@ define(["N/query", "N/record", "N/format", "N/cache", "./Schema"], (query, recor
 	/** Cập nhật nhanh không tải record (không qua User Event của record khác). */
 	function submit(name, id, values) {
 		forget();
+		assertWriteScope(name, values);
 		const def = rec(name);
 		const out = {};
 		for (const [key, v] of Object.entries(values)) {

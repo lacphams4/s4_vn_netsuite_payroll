@@ -83,6 +83,9 @@ define(["N/runtime", "N/log", "./Store", "./Clock"], (runtime, log, Store, Clock
 		reject: { vi: "Từ chối bảng lương", en: "Rejected the batch" },
 		reopen: { vi: "Mở lại bảng lương", en: "Reopened the batch" },
 		release: { vi: "Ghi sổ bảng lương", en: "Released the batch" },
+		bankFile: { vi: "Xuất file chi lương ngân hàng", en: "Exported the bank payment file" },
+		printDoc: { vi: "In chứng từ lương", en: "Printed a payroll document" },
+		revealIds: { vi: "Xem số định danh đầy đủ", en: "Viewed full identifiers" },
 		reverse: { vi: "Đảo bảng lương", en: "Reversed the batch" },
 		agencyBills: {
 			vi: "Lập bill cơ quan thu", en: "Created agency bills",

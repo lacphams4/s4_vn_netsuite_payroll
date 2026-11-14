@@ -13,7 +13,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "./Profiles", "./WorkPermits", "./AllocationPlans", "./Clock", "../core/Dates", "../core/HrTimeline", "../core/LeaveLedger"], (runtime, Store, Profiles, WorkPermits, AllocationPlans, Clock, Dates, Timeline, Ledger) => {
+define(["N/runtime", "./Store", "./Profiles", "./WorkPermits", "./AllocationPlans", "./Clock", "../core/Dates", "../core/HrTimeline", "../core/LeaveLedger", "./Access"], (runtime, Store, Profiles, WorkPermits, AllocationPlans, Clock, Dates, Timeline, Ledger, Access) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const num = (v) => (blank(v) || isNaN(Number(v)) ? null : Number(v));
 	// customrole_s4vp_demo: vai trò trình diễn, quyền như administrator với dữ liệu của gói
@@ -35,7 +35,7 @@ define(["N/runtime", "./Store", "./Profiles", "./WorkPermits", "./AllocationPlan
 
 	function role() {
 		try {
-			return String(runtime.getCurrentUser().roleId || "");
+			return Access.role();
 		} catch (e) {
 			return "";
 		}

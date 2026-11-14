@@ -18,7 +18,7 @@
  * @NScriptType Suitelet
  * @NModuleScope SameAccount
  */
-define(["N/file", "N/query", "N/render", "N/runtime", "N/log", "../api/Payroll", "../api/Settings", "../api/Store", "../core/PrintModel", "../core/Dates", "../api/PrintData", "../core/PrintModelExtra"], (
+define(["N/file", "N/query", "N/render", "N/runtime", "N/log", "../api/Payroll", "../api/Settings", "../api/Store", "../core/PrintModel", "../core/Dates", "../api/PrintData", "../core/PrintModelExtra", "../api/Access", "../api/AuditLog"], (
 	file,
 	query,
 	render,
@@ -30,10 +30,9 @@ define(["N/file", "N/query", "N/render", "N/runtime", "N/log", "../api/Payroll",
 	PrintModel,
 	Dates,
 	PrintData,
-	Extra
-) => {
+	Extra, Access, AuditLog) => {
 	// customrole_s4vp_demo: vai trò trình diễn, in như administrator
-	const ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", "customrole_s4vp_demo"];
+	const ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", "customrole_s4vp_hr_ops", "customrole_s4vp_demo"];
 	// Vai trò được xem số tiền lương (cùng danh sách với api/HrCore.PAY_ROLES). Hiện trùng ROLES; tách riêng để khi mở bản in
 	// không có số tiền cho vai trò khác thì bản có lương vẫn bị chặn.
 	const PAY_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_accountant", "customrole_s4vp_demo"];
@@ -135,7 +134,7 @@ define(["N/file", "N/query", "N/render", "N/runtime", "N/log", "../api/Payroll",
 
 	function onRequest(context) {
 		const p = context.request.parameters;
-		const role = String(runtime.getCurrentUser().roleId || "");
+		const role = Access.role();
 		if (!ROLES.includes(role)) return message(context.response, "Không có quyền in bảng lương. / You are not allowed to print payroll documents.");
 		const doc = DOCS[p.doc] || DOCS.payslip;
 		const showPay = PAY_ROLES.includes(role);
@@ -174,6 +173,12 @@ define(["N/file", "N/query", "N/render", "N/runtime", "N/log", "../api/Payroll",
 			return;
 		}
 		const pdf = renderer.renderAsPdf();
+		// In chứng từ có lương từng người: ghi nhật ký (không ghi số tiền); lỗi ghi nhật ký không chặn việc in
+		try {
+			if (doc.pay && p.batch) AuditLog.record({ action: "printDoc", batch: p.batch, result: {} });
+		} catch (e) {
+			log.error({ title: "s4vp_sl_print audit", details: String(e.message || e).slice(0, 200) });
+		}
 		pdf.name = `${doc.name}_${String(key || "").replace(/[^\w.-]+/g, "_")}.pdf`;
 		context.response.writeFile({ file: pdf, isInline: true });
 	}

@@ -102,6 +102,10 @@
       <permittedrole>[customrole_s4vp_selfservice]</permittedrole>
     </permission>
     <permission>
+      <permittedlevel>VIEW</permittedlevel>
+      <permittedrole>[customrole_s4vp_hr_ops]</permittedrole>
+    </permission>
+    <permission>
       <permittedlevel>FULL</permittedlevel>
       <permittedrole>[customrole_s4vp_demo]</permittedrole>
     </permission>

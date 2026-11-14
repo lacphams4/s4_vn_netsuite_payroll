@@ -8071,6 +8071,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 accounts: { name: 'Tài khoản kế toán mặc định', desc: 'Tài khoản 334, thuế TNCN, tạm ứng, chi phí mặc định, cơ quan thuế.' },
                 insAccounts: { name: 'Tài khoản bảo hiểm theo thành phần', desc: 'Tài khoản phải trả và cơ quan thu của từng khoản trích theo lương.' },
                 costAccounts: { name: 'Tài khoản chi phí lương theo đích', desc: 'Tài khoản chi phí riêng theo dự án, class hoặc phòng ban.' },
+                security: { name: 'Bảo mật vai trò', desc: 'Vai trò chạy của cổng nhân viên không được gán cho người dùng nào.' },
                 approvals: { name: 'Cấp duyệt bảng lương', desc: 'Các cấp phải duyệt trước khi ghi sổ bảng lương, người duyệt và ngưỡng tổng thực lĩnh.' },
                 paygroups: { name: 'Nhóm lương', desc: 'Tần suất kỳ, ngày công chuẩn và nguồn công của từng nhóm.' },
                 periods: { name: 'Kỳ lương', desc: 'Sinh kỳ theo năm, đóng và mở kỳ, trạng thái công.' },
@@ -8107,6 +8108,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 INHERITS: () => 'Chưa có bản ghi riêng: công ty con dùng toàn bộ thiết lập chung.',
                 COMPANY_DISABLED: () => 'Phân hệ lương đang tắt cho công ty con này.',
                 NO_SIGNERS: () => 'Chưa khai người lập biểu, kế toán trưởng, giám đốc để in báo cáo.',
+                ESS_ROLE_ASSIGNED: (i) => `Vai trò "S4VP Self-service (run-as only)" đang được gán cho ${i.count} người dùng. Vai trò này xem được lương của mọi nhân viên: hãy gỡ khỏi người dùng (Setup > Users/Roles > Manage Users).`,
                 NO_EMPLOYEES: () => 'Công ty con này chưa có hồ sơ lương nào.',
                 ACCOUNTS_MISSING: (i, t) => `Thiếu tài khoản bắt buộc: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
                 ACCOUNTS_OPTIONAL: (i, t) => `Chưa khai: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
@@ -8487,6 +8489,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 accounts: { name: 'Default GL accounts', desc: 'Accounts for wages payable, PIT, advances, default expense, tax authority.' },
                 insAccounts: { name: 'Insurance accounts by component', desc: 'Payable account and agency of each payroll contribution.' },
                 costAccounts: { name: 'Payroll expense accounts by target', desc: 'Specific expense accounts by project, class or department.' },
+                security: { name: 'Role security', desc: 'The run-as role of the employee portal must not be assigned to any user.' },
                 approvals: { name: 'Payroll approval levels', desc: 'Levels that must approve a payroll batch before release, their approvers and net pay thresholds.' },
                 paygroups: { name: 'Pay groups', desc: 'Period frequency, standard days and attendance source of each group.' },
                 periods: { name: 'Pay periods', desc: 'Generate periods by year, close and reopen periods, attendance status.' },
@@ -8523,6 +8526,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 INHERITS: () => 'No specific record: the subsidiary uses the general setup.',
                 COMPANY_DISABLED: () => 'Payroll is turned off for this subsidiary.',
                 NO_SIGNERS: () => 'Preparer, chief accountant and director are not set for printed reports.',
+                ESS_ROLE_ASSIGNED: (i) => `The role "S4VP Self-service (run-as only)" is assigned to ${i.count} user(s). This role can read every employee's pay: remove it from users (Setup > Users/Roles > Manage Users).`,
                 NO_EMPLOYEES: () => 'This subsidiary has no payroll profile yet.',
                 ACCOUNTS_MISSING: (i, t) => `Required accounts missing: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
                 ACCOUNTS_OPTIONAL: (i, t) => `Not set: ${i.list.map((k) => t.accountNames[k] || k).join(', ')}.`,
@@ -8879,6 +8883,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         accounts: { section: 'accounts' },
         insAccounts: { section: 'accounts', tab: 'ins' },
         costAccounts: { section: 'costAccounts' },
+        security: {},
         approvals: { section: 'approvals', list: 'approval_step' },
         paygroups: { list: 'paygroup' },
         periods: { section: 'periods', list: 'period' },
@@ -17923,6 +17928,8 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         },
     };
     // View mới (HTML thuần) và view cũ (UIF, trong legacy.js). Tên view cũng là phần đầu của hash.
+    // Màn mà vai trò HR vận hành (không xem tiền lương) được mở; máy chủ cũng chặn mọi API khác (api/Dispatch OPS_*)
+    const OPS_VIEWS = ['attendance', 'attendanceLegacy', 'roster', 'permits'];
     const VIEWS = { home: HomeView, attendance: AttendanceView, payrollList: PayrollListView, payrollRun: PayrollRunView, checkDetail: CheckDetailView, laborAnalytics: LaborAnalyticsView, employees: EmployeesView, employee: EmployeesView, reportsHub: ReportsHubView, advancesV2: AdvancesView, setupHub: SetupHubView, outputsV2: OutputsView, commission: CommissionView, roster: RosterView };
     const LEGACY = ['batches', 'attendanceLegacy', 'outputs', 'permits', 'reports', 'profiles', 'advances', 'setup'];
     // Tab đang sáng theo view
@@ -18101,6 +18108,9 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 // Chưa có thiết lập lương: vào thẳng Thiết lập
                 if (!b.setupReady)
                     go('setupHub');
+                // HR vận hành (không xem tiền lương): chỉ dùng Chấm công, Xếp ca, Giấy phép lao động
+                else if (b.user && b.user.opsOnly && !OPS_VIEWS.includes(routeRef.current.view))
+                    go('attendance');
             });
             const onHash = () => {
                 const next = parseHash(window.location.hash);
@@ -18130,7 +18140,8 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         };
         const activeTab = TAB_OF[current.view] || '';
         // Tab Hoa hồng chỉ hiện với vai trò được xem (administrator, kế toán, HR - docs/COMMISSION.md mục 6)
-        const tabs = Object.keys(VIEW_OF_TAB).filter((k) => k !== 'commission' || canSeeCommission(boot)).map((k) => {
+        const opsOnly = !!(boot && boot.user && boot.user.opsOnly);
+        const tabs = Object.keys(VIEW_OF_TAB).filter((k) => (opsOnly ? k === 'attendance' : k !== 'commission' || canSeeCommission(boot))).map((k) => {
             const attrs = { type: 'button', class: `s4vp-navtab${activeTab === k ? ' s4vp-on' : ''}`, onClick: () => go(VIEW_OF_TAB[k]) };
             if (activeTab === k)
                 attrs['aria-current'] = 'page';
@@ -18140,7 +18151,10 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
         const unverified = boot && Array.isArray(boot.unverified) ? boot.unverified.length : 0;
         let content = null;
         if (boot) {
-            if (VIEWS[current.view]) {
+            if (opsOnly && !OPS_VIEWS.includes(current.view)) {
+                content = null;
+            }
+            else if (VIEWS[current.view]) {
                 const View = VIEWS[current.view];
                 content = jsx(View, { app: app }, current.view);
             }
@@ -18148,7 +18162,7 @@ div.s4vp-pi-err{padding:6px 10px;border-radius:8px;background:var(--s4vp-err-bg)
                 content = jsx(LegacyView, { app: app, view: current.view }, "legacy");
             }
         }
-        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.roster, onClick: () => go('roster') }, { label: t.outputs, onClick: () => go('outputsV2') }, { label: t.permits, onClick: () => go('permits') }] }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view === 'home' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setupHub') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot(true) })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
+        return (jsxs("div", { class: "s4vp-app", children: [jsxs("nav", { class: "s4vp-nav", "aria-label": t.nav, children: [jsx("div", { class: "s4vp-brand", children: t.title }), tabs, jsx(Menu, { kind: "tab", active: activeTab === 'more', label: t.more, items: [{ label: t.roster, onClick: () => go('roster') }].concat(opsOnly ? [] : [{ label: t.outputs, onClick: () => go('outputsV2') }], [{ label: t.permits, onClick: () => go('permits') }]) }, "more"), jsxs("div", { class: "s4vp-navright", children: [busy ? (jsxs("span", { class: "s4vp-busy", role: "status", "aria-live": "polite", children: [jsx("span", { class: "s4vp-spin" }), jsx("span", { children: busy })] })) : null, subs.length ? jsx("span", { class: "s4vp-lbl", children: t.subsidiary }) : null, subs.length ? jsx(Select, { value: subsidiary, ariaLabel: t.subsidiary, width: 240, options: subs.map((s) => ({ value: String(s.id), label: s.name })), onInput: (v) => v && v !== subsidiary && setSubsidiary(v) }, "sub") : null] })] }), boot && unverified && current.view === 'home' ? (jsxs("div", { class: "s4vp-strip s4vp-strip-warn", role: "status", children: [jsx("span", { class: "s4vp-strip-text", children: t.unverifiedShort(unverified) }), jsx(Button, { kind: "link", label: t.openSetup, onClick: () => go('setupHub') })] })) : null, bootError ? (jsxs("div", { class: "s4vp-strip s4vp-strip-error", role: "alert", children: [jsx("span", { class: "s4vp-strip-text", children: bootError }), jsx(Button, { label: t.retry, onClick: () => reloadBoot(true) })] })) : null, notice ? (jsxs("div", { class: `s4vp-strip s4vp-strip-${notice.kind}`, role: notice.kind === 'error' ? 'alert' : 'status', children: [jsx("span", { class: "s4vp-strip-text", children: notice.text }), jsx("button", { type: "button", class: "s4vp-x", "aria-label": t.dismiss, title: t.dismiss, onClick: () => setNotice(null), children: '×' })] })) : null, content, confirm ? (jsx(Dialog, { title: t.confirmTitle, onClose: () => setConfirm(null), width: 460, actions: [
                         jsx(Button, { label: t.cancel, onClick: () => setConfirm(null) }),
                         jsx(Button, { kind: "primary", label: t.yes, onClick: () => {
                                 const c = confirm;

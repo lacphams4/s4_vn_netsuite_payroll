@@ -234,9 +234,17 @@ define(["./Store", "./Settings", "./Profiles", "./CostAccounts", "./Clock", "../
 		else if (n.employee === null) employees = unreadable("employees");
 		else employees = item("employees", n.employee > 0 ? "ok" : "missing", n.employee, n.employee > 0 ? [] : [{ code: "NO_EMPLOYEES" }]);
 
+		// Bảo mật: vai trò chạy của cổng tự phục vụ xem được lương mọi người nên KHÔNG được gán cho người dùng nào. Đếm theo tên
+		// vai trò (bảng role không đọc được với vai trò thường); không đọc được thì báo "chưa kiểm được".
+		const essUsers = safe(() => {
+			const r = Store.run("SELECT COUNT(*) AS n FROM employeerolesforsearch er WHERE BUILTIN.DF(er.role) LIKE 'S4VP Self-service%'", [], "s4vp_setup_ess_users")[0];
+			return Number((r && r.n) || 0);
+		}, null);
+		const security = essUsers === null ? unreadable("security") : item("security", essUsers > 0 ? "attention" : "ok", essUsers, essUsers > 0 ? [{ code: "ESS_ROLE_ASSIGNED", count: essUsers }] : []);
+
 		const sections = [
 			{ key: "start", items: [defaults, industry, employees] },
-			{ key: "company", items: [general, companyItem, accounts, insAccounts, catalog("costAccounts", n.cost_account, false), approvalItem(subsidiary)] },
+			{ key: "company", items: [general, companyItem, accounts, insAccounts, catalog("costAccounts", n.cost_account, false), approvalItem(subsidiary), security] },
 			{ key: "periods", items: [catalog("paygroups", activeGroups.length, true), per.item] },
 			{ key: "legal", items: [legal, catalog("pitBrackets", n.pit_bracket, true), catalog("insComps", comps === null ? null : comps.length, true), holidays] },
 			{ key: "earnings", items: [catalog("earningTypes", n.earning_type, true), catalog("earningRules", n.earning_rule, true), catalog("benefitPkgs", n.benefit_pkg, false)] },

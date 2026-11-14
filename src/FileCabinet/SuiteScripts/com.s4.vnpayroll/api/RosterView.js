@@ -32,11 +32,11 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/runtime", "./Store", "./Settings", "./Lean", "./Shifts", "./PayGroupPeriods", "./EffectiveRoster", "../core/Dates", "../core/RosterPlan", "../core/RosterGrid", "../core/ShiftMatcher", "../core/AttendanceSummaryCalculator", "../core/ShiftAssign"], (runtime, Store, Settings, Lean, Shifts, PG, ER, Dates, Plan, Grid, Matcher, Summary, Assign) => {
+define(["N/runtime", "./Store", "./Settings", "./Lean", "./Shifts", "./PayGroupPeriods", "./EffectiveRoster", "../core/Dates", "../core/RosterPlan", "../core/RosterGrid", "../core/ShiftMatcher", "../core/AttendanceSummaryCalculator", "../core/ShiftAssign", "./Access"], (runtime, Store, Settings, Lean, Shifts, PG, ER, Dates, Plan, Grid, Matcher, Summary, Assign, Access) => {
 	const blank = (v) => v === null || v === undefined || v === "";
 	const norm = (s) => String(blank(s) ? "" : s).trim().toUpperCase();
 	const DATE = "TO_DATE(?, 'YYYY-MM-DD')";
-	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_demo"];
+	const EDIT_ROLES = ["administrator", "customrole_s4vp_hr", "customrole_s4vp_hr_ops", "customrole_s4vp_demo"];
 	const PROFILE_KEYS = ["isinactive", "employee", "subsidiary", "paygroup", "hire_date", "termination_date"];
 	const CELL_KEYS = ["employee", "work_date", "shift", "source"];
 	const ASSIGN_BATCH = 100;
@@ -49,7 +49,7 @@ define(["N/runtime", "./Store", "./Settings", "./Lean", "./Shifts", "./PayGroupP
 
 	function canEdit() {
 		try {
-			return EDIT_ROLES.includes(String(runtime.getCurrentUser().roleId || ""));
+			return EDIT_ROLES.includes(Access.role());
 		} catch (e) {
 			return false;
 		}

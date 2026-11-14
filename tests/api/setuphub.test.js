@@ -7,6 +7,8 @@ const API = path.join(__dirname, "../../src/FileCabinet/SuiteScripts/com.s4.vnpa
 const mockDb = { t: {}, accounts: [], calls: [], writes: [], today: "2026-11-10", failUnion: false, failTables: [], nextId: 900 };
 const db = mockDb;
 
+// api/Profiles nạp api/Access (lớp quyền), mô-đun này cần N/runtime
+jest.mock("N/runtime", () => ({ getCurrentUser: () => ({ id: 5, roleId: "administrator" }) }), { virtual: true });
 jest.mock("N/log", () => ({ error: () => {}, audit: () => {}, debug: () => {} }), { virtual: true });
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Clock", () => ({ today: () => mockDb.today }));
 jest.mock("../../src/FileCabinet/SuiteScripts/com.s4.vnpayroll/api/Store", () => {
