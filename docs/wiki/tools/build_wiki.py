@@ -179,7 +179,7 @@ for ln in text.splitlines():
     (cur["lines"] if cur else intro).append(ln)
 
 SHORT = {0: "Bức tranh chung", 17: "Chu kỳ tháng", 18: "Cuối năm, đầu năm", 19: "Thuật ngữ", 20: "Chưa làm, chưa chắc",
-         21: "Máy chấm công", 22: "Sản lượng, năng suất", 23: "Doanh số, hoa hồng", 24: "Xếp ca, chế độ ca", 25: "Trợ lý AI"}
+         21: "Máy chấm công", 22: "Sản lượng, năng suất", 23: "Doanh số, hoa hồng", 24: "Xếp ca, chế độ ca", 25: "Trợ lý AI", 26: "Tổ chức vai trò, bảo mật lương"}
 for p in pages:
     p["id"] = slug(p["title"]) or f"muc-{p['n']}"
     p["short"] = SHORT.get(p["n"], p["title"])
@@ -192,7 +192,7 @@ GROUPS = [
     ("Tính và duyệt lương", [8, 9, 10]),
     ("Hạch toán và chi trả", [11, 12]),
     ("Báo cáo và phân tích", [13, 14]),
-    ("Nhân viên và kiểm soát", [15, 16, 25]),
+    ("Nhân viên và kiểm soát", [15, 16, 26, 25]),
     ("Tra cứu", [19, 20]),
 ]
 byn = {p["n"]: p for p in pages}
