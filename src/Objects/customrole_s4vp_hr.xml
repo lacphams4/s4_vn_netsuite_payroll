@@ -11,6 +11,10 @@
       <permlevel>VIEW</permlevel>
     </permission>
     <permission>
+      <permkey>LIST_EMPLOYEE_RECORD</permkey>
+      <permlevel>VIEW</permlevel>
+    </permission>
+    <permission>
       <permkey>LIST_SUBSIDIARY</permkey>
       <permlevel>VIEW</permlevel>
     </permission>

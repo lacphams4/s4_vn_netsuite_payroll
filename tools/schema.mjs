@@ -871,11 +871,13 @@ const BG_TASK_PERMS = [["ADMI_CUSTOMSCRIPT", "VIEW"], ["ADMI_SS_SCHEDULING", "FU
 // NetSuite AI Connector (MCP): kết nối MCP, đăng nhập OAuth 2.0, REST Web Services cho công cụ chuẩn (commit 334e7d8)
 const AI_PERMS = [["ADMI_MCP_SERVER", "FULL"], ["ADMI_LOGIN_OAUTH2", "FULL"], ["ADMI_RESTWEBSERVICES", "FULL"]];
 
+// LIST_EMPLOYEE_RECORD (Employee Record): thiếu quyền này thì SuiteQL không đọc được bảng employee (lỗi "Record 'employee' was not
+// found") và hầu hết màn hình của gói hỏng với vai trò đó - phát hiện khi thử bằng vai trò HR thật ngày 14/11/2026
 export const roles = [
 	{ id: ROLE_ESS, name: "S4VP Self-service (run-as only)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_EMPLOYEE_RECORD", "VIEW"], ["ADMI_CUSTLIST", "VIEW"], ["LIST_FILECABINET", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"]] },
-	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
-	{ id: ROLE_OPS, name: "S4VP HR Operations (no pay)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["ADMI_CUSTLIST", "VIEW"], ...BG_TASK_PERMS] },
-	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
+	{ id: ROLE_HR, name: "S4VP Payroll HR", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_EMPLOYEE_RECORD", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
+	{ id: ROLE_OPS, name: "S4VP HR Operations (no pay)", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_EMPLOYEE_RECORD", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["ADMI_CUSTLIST", "VIEW"], ...BG_TASK_PERMS] },
+	{ id: ROLE_ACCT, name: "S4VP Payroll Accountant", perms: [["LIST_EMPLOYEE", "VIEW"], ["LIST_EMPLOYEE_RECORD", "VIEW"], ["LIST_SUBSIDIARY", "VIEW"], ["LIST_DEPARTMENT", "VIEW"], ["LIST_CLASS", "VIEW"], ["LIST_LOCATION", "VIEW"], ["LIST_JOB", "VIEW"], ["LIST_VENDOR", "VIEW"], ["LIST_ACCOUNT", "VIEW"], ["TRAN_JOURNAL", "FULL"], ["TRAN_VENDBILL", "FULL"], ["TRAN_FIND", "VIEW"], ...BG_TASK_PERMS], tail: AI_PERMS },
 	{
 		id: ROLE_DEMO, name: "S4 Advanced Payroll - Demo", center: `[scriptid=${DEMO_CENTER}]`,
 		// Quyền chuẩn theo màn và luồng của gói (permkey đã đối chiếu bảng quyền NetSuite); record của gói FULL thêm ở vòng lặp cuối file

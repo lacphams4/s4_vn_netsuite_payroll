@@ -72,3 +72,4 @@ Chi tiết, bằng chứng và testcase liên quan: `docs/UAT_KET_QUA_VONG1.md` 
 | UAT-010 | S2 | Màn Chấm công mở mặc định kỳ của nhóm lương khác, đổi công ty con vẫn giữ kỳ cũ; ô chọn kỳ hiện nhãn "10" |
 | UAT-011 | S3 | Tờ khai 05/KK-TNCN mặc định gộp cả bảng lương đã tính chưa ghi sổ |
 | UAT-012 | S3 | Xử lý chấm công đề xuất "vắng" cho ngày lễ; cần kiểm lại trên account không dời ngày |
+| UAT-013 | S1 | Vai trò HR, Kế toán, HR vận hành thiếu quyền "Employee Record": SuiteQL không đọc được bảng employee, hầu hết màn hình báo "Record 'employee' was not found". **Đã sửa và deploy 14/11/2026** (thêm LIST_EMPLOYEE_RECORD mức View); thử lại bằng ba vai trò thật: các màn chạy. Người dùng phải đổi vai trò hoặc đăng nhập lại để nhận quyền mới |

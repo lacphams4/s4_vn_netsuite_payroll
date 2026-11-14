@@ -117,3 +117,17 @@ Ký hiệu: Đ đạt; K không đạt; C bị chặn (thiếu dữ liệu, vai 
 - Tính toán: không thấy sai số nào. 114 dòng lương kỳ 02 khớp tính độc lập về bảo hiểm, thuế, thực lĩnh, phân bổ, trích tháng 13; bút toán, báo cáo bảo hiểm, chi phí theo tài khoản, tờ khai quý, phân tích chi phí khớp nhau đến đồng. Một dòng phức tạp của kỳ 03 (nghỉ không lương, đi trễ, làm thêm hai loại ngày, đoàn phí chạm trần, cấn hai phiếu tạm ứng) khớp tính tay.
 - Kiểm soát: các chốt chặn theo trạng thái, khóa công, dấu dữ liệu, duyệt nhiều cấp hoạt động đúng. Điểm yếu là lộ số định danh qua API hồ sơ (UAT-001) và vài chỗ từ chối không cần lý do.
 - Dễ dùng: hai lỗi giữ ngữ cảnh (UAT-009, UAT-010) là thứ người dùng gặp mỗi ngày; nên sửa trước khi cho key user chạy phần UX.
+
+## 6. Thử bổ sung bằng vai trò thật (14/11/2026, sau khi có lớp quyền api/Access)
+
+Người dùng gán ba vai trò của gói cho tài khoản thử; chạy qua API và màn hình.
+
+| Testcase | Kết quả | Ghi chú |
+| --- | --- | --- |
+| PQ-02 | K rồi Đ | Lần đầu ba vai trò đều lỗi đọc bảng nhân viên (UAT-013). Sau khi thêm quyền Employee Record: HR và Kế toán mở được bảng lương, file ngân hàng, báo cáo, chấm công, xếp ca, nhân sự |
+| PQ-01 (HR vận hành) | Đ | Mọi API về lương (bảng lương, bút toán, file ngân hàng, tạm ứng, sản lượng, báo cáo, hoa hồng, phân tích, trang chủ lương) bị từ chối; chấm công, xếp ca, đơn từ, phép dùng được; danh sách hồ sơ không trả lịch sử lương |
+| PQ-01 (HR) | Đ | Ghi sổ, đảo, ghi sổ tạm ứng, lập bill bị từ chối |
+| PQ-01 (Kế toán) | Đ | Lưu đơn từ, lưu hồ sơ, khóa công, xem số định danh đầy đủ bị từ chối; phân tích chi phí dùng được |
+| HS-08 | Đ | API hồ sơ trả số định danh dạng che (ví dụ ******3794) với cả ba vai trò; HR xem số đầy đủ qua revealIds |
+| Menu | Đ | Tab S4 Advanced Payroll hiện với cả ba vai trò; HR vận hành chỉ có nhóm Time; mở thẳng địa chỉ bảng lương bằng HR vận hành thì giao diện chuyển về Chấm công |
+| PQ-03 | C | Chưa có vai trò nhân bản giới hạn công ty con để thử |
