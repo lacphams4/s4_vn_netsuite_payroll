@@ -53,3 +53,22 @@ Mỗi mục: mã, ngày phát hiện, mức, mô tả, cách tái hiện, hướ
 - Đang chờ deploy: commit 334e7d8 (thêm REST Web Services cho vai trò HR, Accountant, Demo).
 - Hướng xử lý: thử lại khi account ổn định; kiểm token SDF (`account:setup`), quyền Administrator của token; nếu vẫn lỗi, deploy thử một project nhỏ để khoanh vùng.
 - Trạng thái: mở.
+
+## Lỗi ghi nhận từ UAT vòng 1 (14/11/2026)
+
+Chi tiết, bằng chứng và testcase liên quan: `docs/UAT_KET_QUA_VONG1.md` mục 1. Tất cả ở trạng thái mở, chưa sửa.
+
+| Mã | Mức | Tóm tắt |
+| --- | --- | --- |
+| UAT-001 | S1 | API `profiles` trả MST, CCCD, số sổ BHXH, số tài khoản ngân hàng dạng rõ về trình duyệt. **Đã sửa trong mã 14/11/2026** (che còn 4 ký tự cuối, `revealIds` có nhật ký); chờ kiểm trên account |
+| UAT-002 | S2 | Vai trò Demo lập bill cơ quan thu báo lỗi quyền gốc NetSuite (record Budget Preferences); chưa thử vai trò Kế toán |
+| UAT-003 | S4 | Thông báo "cần mở lại trước" trên bảng lương đã ghi sổ dẫn sai hướng, lộ mã trạng thái R |
+| UAT-004 | S4 | Dòng thu nhập hiện đơn giá đã làm tròn, số lượng x đơn giá không ra đúng số tiền |
+| UAT-005 | S3 | Từ chối đơn nghỉ không cần ghi lý do |
+| UAT-006 | S3 | `saveOutput` nhận phiếu sản lượng không có công ty con; GET `outputs` thiếu công ty con trả phiếu của mọi công ty. **Một phần đã xử lý 14/11/2026**: người dùng bị giới hạn công ty con chỉ thấy phiếu trong phạm vi; người không giới hạn vẫn như cũ |
+| UAT-007 | S3 | Duyệt một cấp: từ chối bảng lương không cần ghi chú; người lập tự duyệt được |
+| UAT-008 | S3 | Phiếu tạm ứng Tạm giữ không sửa được (thiếu tài khoản tiền phải lập phiếu mới) |
+| UAT-009 | S3 | Ô Công ty con không được nhớ, trở về công ty đầu danh sách khi tải lại trang hoặc mở thẳng bảng lương |
+| UAT-010 | S2 | Màn Chấm công mở mặc định kỳ của nhóm lương khác, đổi công ty con vẫn giữ kỳ cũ; ô chọn kỳ hiện nhãn "10" |
+| UAT-011 | S3 | Tờ khai 05/KK-TNCN mặc định gộp cả bảng lương đã tính chưa ghi sổ |
+| UAT-012 | S3 | Xử lý chấm công đề xuất "vắng" cho ngày lễ; cần kiểm lại trên account không dời ngày |
